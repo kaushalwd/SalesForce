@@ -25,9 +25,9 @@ Evergage.init({
           return SalesforceInteractions.cashDom(".preheader .user").length == 0
         },
         catalog: {
-          UserData: {
-            _id: "9",
-            id: "9",
+          UserBrowserData: {
+            _id: "1",
+            id: "1",
             userName: Evergage.cashDom(".preheader nav section:nth-of-type(3) > div > a > span").text(),
             browserFingerPrint: _ub_data()
           }
