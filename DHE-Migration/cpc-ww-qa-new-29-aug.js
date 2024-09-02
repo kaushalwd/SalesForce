@@ -17,7 +17,7 @@
     IF NOT Empty(@crmId) THEN
     SET @contactRows =
     RetrieveSalesforceObjects("Contact",
-    "Title,FirstName,LastName,Email,MobilePhone,Mobile_Code__c,Date_of_Birth__c,Language__c,Nationality__c,Marital_Status__c,Country__c,No_of_Kids__c,Gender__c,City__c,Do_you_have_kids__c",
+    "Salutation,FirstName,LastName,Email,Phone,Country_Code__c,BirthDate,Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c",
     "Id","=", @crmId )
     if RowCount(@contactRows) == 1 then /* there should only be one row */
     
@@ -25,17 +25,17 @@
     set @contactRow = Row(@contactRows, 1)
     set @firstName = Field(@contactRow, "FirstName")
     set @lastName = Field(@contactRow, "LastName")
-    set @city = Field(@contactRow, "City__c")
-    set @gender = Field(@contactRow, "Gender__c")
+    set @city = Field(@contactRow, "MailingCity")
+    set @gender = Field(@contactRow, "GenderIdentity")
     set @email = Field(@contactRow, "Email")
-    set @title = Field(@contactRow, "Title")
-    set @Phone = Field(@contactRow, "MobilePhone")
-    set @mobilePhoneCode = Field(@contactRow, "Mobile_Code__c")
-    set @birthdate = Field(@contactRow, "Date_of_Birth__c")
+    set @title = Field(@contactRow, "Salutation")
+    set @Phone = Field(@contactRow, "Phone")
+    set @mobilePhoneCode = Field(@contactRow, "Country_Code__c")
+    set @birthdate = Field(@contactRow, "BirthDate")
     /*set @birthdate  = Format(@birth, "dd/MM/yyyy")*/
-    set @language = Field(@contactRow, "Language__c")
+    set @language = Field(@contactRow, "Registration_Language__c")
     set @nationality = Field(@contactRow, "Nationality__c")
-    set @country = Field(@contactRow, "Country__c")
+    set @country = Field(@contactRow, "Residence_Country__c")
     set @married = Field(@contactRow, "Marital_Status__c")
     set @doYouHaveKids = Field(@contactRow, "Do_you_have_kids__c")
     If @doYouHaveKids == true then
@@ -55,7 +55,7 @@
     /* Fetching Children details */
     var @j
     
-    SET @childDetails = RetrieveSalesforceObjects("Family_Members__c","Gender__c,Date_Of_Birth__c,First_Name__c",
+    SET @childDetails = RetrieveSalesforceObjects("Family_Member__c","Gender__c,Date_Of_Birth__c,First_Name__c",
     "Contact__c", "=", @crmId,
     "Relationship__c", "=", "Child")
     SET @childDetailsRowCount = Rowcount(@childDetails)
@@ -75,12 +75,11 @@
    
     
     /* Fetching Guest Subscription details */
-    SET @GuestDetails = RetrieveSalesforceObjects("Guest_Subscription__c","Asset__c, Id,Offers_and_Promotions__c,Upcoming_events_for_families__c,Latest_news_about_other_DHE_parks__c,New_food_and_restaurants__c,Customer_Survey__c,Emails_are_too_frequent__c,Content_isn_t_relevant__c,I_m_no_longer_in_Dubai__c,Temporary_Pause_30_Days__c,
-    Other_Please_specify__c,Reason_of_Unsubscribe__c",
-    "Contact__c", "=", @crmId,"Asset__c","=","WW")
+    SET @GuestDetails = RetrieveSalesforceObjects("Guest_Subscription__c","Asset__c, Id,Offers_and_Promotions__c,Upcoming_events_for_families__c,Latest_news_about_other_DHE_parks__c,New_food_and_restaurants__c,Customer_Survey__c,Emails_are_too_frequent__c,Content_isn_t_relevant__c,I_m_no_longer_in_Dubai__c,Temporary_Pause_30_Days__c,Other_Please_specify__c,Reason_of_Unsubscribe__c, What_is_the_primary_reason_your_visit__c, How_often_do_you_visit_Wild_Wadi_Waterpa__c, What_do_you_like_most_about_Wild_Wadi_Wa__c", 
+    "Contact__c", "=", @crmId,"Asset__c","=","Wild Wadi Waterpark")
      
     SET @guestDetailsRowCount = Rowcount(@GuestDetails)
-    IF @guestDetailsRowCount > 0 THEN /*Roxy*/
+    IF @guestDetailsRowCount > 0 THEN 
     
         SET @guestDetailsRow = Row(@GuestDetails, 1)
         SET @assetType = Field(@guestDetailsRow, "Asset__c")
@@ -96,6 +95,9 @@
         set @tempPause = Field(@guestDetailsRow, "Temporary_Pause_30_Days__c")
         set @otherSpecify = Field(@guestDetailsRow, "Other_Please_specify__c")
         set @reasonForUnsub = Field(@guestDetailsRow, "Reason_of_Unsubscribe__c")
+        SET @primaryReason = Field(@guestDetailsRow, "What_is_the_primary_reason_your_visit__c")
+        SET @oftenVisit = Field(@guestDetailsRow, "How_often_do_you_visit_Wild_Wadi_Waterpa__c")
+        SET @likeTheMost = Field(@guestDetailsRow, "What_do_you_like_most_about_Wild_Wadi_Wa__c")
 
     
     ENDIF
@@ -115,6 +117,7 @@
 
         var submittedProfile = Platform.Request.GetFormField('submittedProfile') || "";
         var submittedCommunications = Platform.Request.GetFormField('submittedCommunications') || "";
+        var submittedInterests = Platform.Request.GetFormField('submittedInterests') || "";
         
         var submittedUnsub = Platform.Request.GetFormField('submittedUnsub') || "";
    
@@ -1471,7 +1474,7 @@
     IF NOT EMPTY(@crmId) THEN
         /* Fetching Children details */
         var @j
-        SET @childDetails = RetrieveSalesforceObjects("Family_Members__c","Gender__c,Date_Of_Birth__c,First_Name__c,ID,Last_Name__c,Deleted_kid__c",
+        SET @childDetails = RetrieveSalesforceObjects("Family_Member__c","Gender__c,Date_Of_Birth__c,First_Name__c,ID,Last_Name__c,Deleted_kid__c",
         "Contact__c", "=", @crmId,
         "Relationship__c", "=", "Child")
         SET @childDetailsRowCount = Rowcount(@childDetails)
@@ -1594,12 +1597,12 @@
                                         IF Empty(@birthdate) THEN
                                             SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "fieldsToNull", "Date_of_Birth__c"
+                                            "fieldsToNull", "BirthDate"
                                             )
                                        ELSE
                                            SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "Date_of_Birth__c", @birthdate
+                                            "BirthDate", @birthdate
                                             )
                                         ENDIF
                                         
@@ -1630,24 +1633,24 @@
                                         IF Empty(@city) THEN
                                             SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "fieldsToNull", "City__c"
+                                            "fieldsToNull", "MailingCity"
                                             )
                                        ELSE
                                            SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "City__c", @city
+                                            "MailingCity", @city
                                             )
                                         ENDIF
                                         
                                         IF Empty(@phone) THEN
                                             SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "fieldsToNull", "MobilePhone"
+                                            "fieldsToNull", "Phone"
                                             )
                                         ELSE
                                            SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "MobilePhone", @phone
+                                            "Phone", @phone
                                             )
                                         ENDIF
                                         IF Empty(@phonecode) THEN
@@ -1655,30 +1658,26 @@
                                         ENDIF
                                             SET @updateRecord = UpdateSingleSalesforceObject(
                                             "Contact", @sfid,
-                                            "Title", @profileSalutation,
+                                            "Salutation", @profileSalutation,
                                             "FirstName", @firstName,
                                             "LastName", @lastName, 
                                             "Email", @email,
-                                            "City__c", @city,
-                                            "Mobile_Code__c", @phonecode,
-                                            "Language__c", @profileLang,
-                                            "Gender__c", @gender,
+                                            "MailingCity", @city,
+                                            "Country_Code__c", @phonecode,
+                                            "Registration_Language__c", @profileLang,
+                                            "GenderIdentity", @gender,
                                             "Nationality__c", @profileNationality,
-                                            "Country__c", @profileCountry,
+                                            "Residence_Country__c", @profileCountry,
                                             "Do_you_have_kids__c", @doYouHaveKids
                                             )
                                             /*output(concat("<br>updateRecord: ",@updateRecord))*/
+                                        
                                         SET @contactRows = RetrieveSalesforceObjects("Contact","Email","Id","=", @sfid )
                                         if RowCount(@contactRows) == 1 then /* there should only be one row */
                                           set @contactRow = Row(@contactRows, 1)
                                           set @emailContact = Field(@contactRow, "Email")
                                         ENDIF
                                         
-                                        SET @contactCPCUpdateRecord = CreateSalesforceObject("CPC_Contact_Update__c", 2,
-                                                      "Contact_Id__c", @sfid, 
-                                                      "Email__c" , @emailContact)
-                                            
-                                     
                                  
                                    /*Creating and Updating child records based on value selected above*/
                                        
@@ -1689,7 +1688,7 @@
                                         /*RETRIVAL OF ALL CRM KID ID AND CREATE STRING*/
                                        
                                        var @CRMIdList
-                                       SET @childIDs = RetrieveSalesforceObjects("Family_Members__c","ID",
+                                       SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
                                                            "Contact__c", "=", @sfid,
                                                            "Relationship__c", "=", "Child")
                                                             SET @childIDRowCount = Rowcount(@childIDs)
@@ -1728,7 +1727,7 @@
                                                 SET @kidRecIdVal = RequestParameter(@kidRecId)
                                                 IF Not Empty(@kidRecIdVal) THEN
                                                 
-                                                SET @childIDs = RetrieveSalesforceObjects("Family_Members__c","ID",
+                                                SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
                                                            "id", "=", @kidRecIdVal,
                                                            "Relationship__c", "=", "Child")
                                                             SET @childIDRowCount = Rowcount(@childIDs)
@@ -1740,7 +1739,7 @@
                                                 
                                                    IF EMPTY(@kidDOBVal) THEN
                                                           SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                                          "Family_Members__c", @kidRecIdVal,
+                                                          "Family_Member__c", @kidRecIdVal,
                                                           "First_Name__c", @kidFirstName,
                                                           "Last_Name__c" , @kidLastName,
                                                           "Gender__c", @kidGenderVal,
@@ -1749,7 +1748,7 @@
                                                           )
                                                    ELSE
                                                          SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                                          "Family_Members__c", @kidRecIdVal,
+                                                          "Family_Member__c", @kidRecIdVal,
                                                           "First_Name__c", @kidFirstName,
                                                           "Last_Name__c" , @kidLastName,
                                                           "Gender__c", @kidGenderVal,
@@ -1759,7 +1758,7 @@
                                                    ENDIF
                                                    IF EMPTY(@kidGenderVal) THEN
                                                           SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                                          "Family_Members__c", @kidRecIdVal,
+                                                          "Family_Member__c", @kidRecIdVal,
                                                           "First_Name__c", @kidFirstName,
                                                           "Last_Name__c" , @kidLastName,
                                                           "Name", @kidNameval,
@@ -1767,7 +1766,7 @@
                                                           )
                                                    ELSE
                                                          SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                                          "Family_Members__c", @kidRecIdVal,
+                                                          "Family_Member__c", @kidRecIdVal,
                                                           "First_Name__c", @kidFirstName,
                                                           "Last_Name__c" , @kidLastName,
                                                           "Gender__c", @kidGenderVal,
@@ -1787,7 +1786,7 @@
                                                                         )
                                                     
                                                     
-                                                       SET @newKidRecord = CreateSalesforceObject("Family_Members__c", 6,
+                                                       SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 6,
                                                           "First_Name__c", @kidFirstName,
                                                           "Last_Name__c" , @kidLastName,
                                                           "Gender__c", @kidGenderVal,
@@ -1796,7 +1795,7 @@
                                                           "Name", @kidNameval,
                                                           "fieldsToNull", "Date_Of_Birth__c")
                                                    ELSE
-                                                       SET @newKidRecord = CreateSalesforceObject("Family_Members__c", 7,
+                                                       SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 7,
                                                           "First_Name__c", @kidFirstName,
                                                           "Last_Name__c" , @kidLastName,
                                                           "Gender__c", @kidGenderVal,
@@ -1815,7 +1814,7 @@
                                         IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-no' THEN
                                               
                                               
-                                              SET @childIDs = RetrieveSalesforceObjects("Family_Members__c","id","Contact__c", "=", @sfid,"Relationship__c", "=", "Child")
+                                              SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","id","Contact__c", "=", @sfid,"Relationship__c", "=", "Child")
                                               /*Output(Concat("childIDs: ", @childIDs, "<br>"))*/
                                               SET @childIDRowCount = Rowcount(@childIDs)
                                               /*Output(Concat("childIDRowCount: ", @childIDRowCount, "<br>"))*/
@@ -1824,14 +1823,14 @@
                                                   set @KidID = Field(@childIDRow, "ID")
                                                   /*Output(Concat("number of kids v1: ", @numOfKids))*/
                                                   SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
-                                                  "Family_Members__c", @KidID,
+                                                  "Family_Member__c", @KidID,
                                                   "Deleted_kid__c", "True"
                                                   )
                                                   /*Output(Concat("updatedeletedKidRecord: ", @updatedeletedKidRecord, "<br>"))*/
                                              next @n
                                              SET @childIDRowCount = Rowcount(@childIDs)
                                                   SET @updateNoOfKidRecord = UpdateSingleSalesforceObject("Contact", @sfid,"Number_of_kids__c", @childIDRowCount)
-                                    endif 
+                                        endif 
                                    endif
               
                                    set @interests = '#interests'
@@ -1840,6 +1839,7 @@
                                    ELSE
                                       Set @ampError = ''
                                    ENDIF
+                                   
                                    Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","ProfilePage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
                                    if @methodType== 'Old' then
                                       Redirect(Concat("https://cloud.explore.wildwadi.com/CPC_WW_QA?sfid=", Base64Encode(@sfid), "#interests"))
@@ -1858,6 +1858,84 @@
                 </div>
             </div>
             <!-- 2nd card Interest tab-->
+            %%[
+                                
+            set @primaryReasonString = BuildRowsetFromString(@primaryReason,";")
+            set @primaryReasonCount = rowCount(@primaryReasonString)
+
+            if @primaryReasonCount > 0 then
+            for @i = 1 to @primaryReasonCount do
+                    
+                    SET @val = Field(Row(@primaryReasonString,@i),1)
+                    
+                    IF @val == "Fun family activities" THEN
+                    SET @funFamily = "checked"
+                    ELSEIF @val == "It's on my Dubai bucket list" THEN
+                    SET @dubaiBucketList = "checked"
+                    ELSEIF @val == "I love slides, rides and water parks" THEN
+                    SET @slidesRidesWaterparks = "checked"
+                    ELSEIF @val == "I want a fun experience at Waterpark with Burj Al Arab view" THEN
+                    SET @waterparkWithView = "checked"
+                    ELSEIF @val == "I want to celebrate my birthday" THEN       
+                    SET @celebrateMyBirthday = "checked"
+                    ELSEIF @val == "I am a regular (Annual Pass member)" THEN       
+                    SET @annualPassmember = "checked"
+                    ENDIF
+                    
+            next @i
+            endif
+            
+            set @oftenVisitString = BuildRowsetFromString(@oftenVisit,";")
+            set @oftenVisitCount = rowCount(@oftenVisitString)
+
+            if @oftenVisitCount > 0 then
+            for @i = 1 to @oftenVisitCount do
+                    
+                    SET @val = Field(Row(@oftenVisitString,@i),1)
+                    
+                    IF @val == "Every week" THEN
+                    SET @everyWeek = "checked"
+                    ELSEIF @val == "Every month" THEN
+                    SET @everyMonth = "checked"
+                    ELSEIF @val == "Once a year" THEN
+                    SET @onceAyear = "checked"
+                    ELSEIF @val == "Two times per year" THEN
+                    SET @twoTimesPerYear = "checked"
+                    ELSEIF @val == "Every two years" THEN
+                    SET @everyTwoYears = "checked"
+                    ENDIF
+                    
+            next @i
+            endif
+
+            set @likeTheMostString = BuildRowsetFromString(@likeTheMost,";")
+            set @likeTheMostCount = rowCount(@likeTheMostString)
+
+            if @likeTheMostCount > 0 then
+            for @i = 1 to @likeTheMostCount do
+                    
+                    SET @val = Field(Row(@likeTheMostString,@i),1)
+                    
+                    IF @val == "The rides" THEN
+                    SET @theRides = "checked"
+                    ELSEIF @val == "Live entertainment" THEN
+                    SET @liveEntertainment = "checked"
+                    ELSEIF @val == "Food and restaurants" THEN
+                    SET @foodAndRestaurants = "checked"
+                    ELSEIF @val == "Free events" THEN
+                    SET @events = "checked"
+                    ELSEIF @val == "The original waterpark in the region" THEN
+                    SET @theOriginalWaterpark = "checked"
+                    ELSEIF @val == "The Slides" THEN
+                    SET @theSlides = "checked"
+                    ELSEIF @val == "The Iconic view of Burj Al Arab" THEN
+                    SET @iconicView = "checked"
+                    ENDIF
+                    
+            next @i
+            endif
+
+            ]%%    
             <div class="tab-pane fade interest-tab-content" id="interests" role="tabpanel" aria-labelledby="interests-tab">
                 <div class="wrapper wrapper--w700">
                     <form class="interest-form" action="" method="post" name="myForm" id="interest-form" autocomplete="off">
@@ -1866,89 +1944,168 @@
                             <div class="radio-wrapper primary-reason radio-width">
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="reason1">Fun family activities</label>
-                                    <input class="form-check-input" type="checkbox" name="reason1" id="reason1">
+                                    <input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@funFamily)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="reason2">It's on my Dubai bucket list</label>
-                                    <input class="form-check-input" type="checkbox" name="reason2" id="reason2">
+                                    <input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@dubaiBucketList)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="reason3">I love slides, rides and water parks</label>
-                                    <input class="form-check-input" type="checkbox" name="reason3" id="reason3">
+                                    <input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@slidesRidesWaterparks)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="reason4">I want a fun experience at Waterpark with Burj Al Arab view</label>
-                                    <input class="form-check-input" type="checkbox" name="reason4" id="reason4">
+                                    <input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@waterparkWithView)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="reason5">I want to celebrate my birthday</label>
-                                    <input class="form-check-input" type="checkbox" name="reason5" id="reason5">
+                                    <input class="form-check-input" type="checkbox" name="reason5" id="reason5" %%=v(@celebrateMyBirthday)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="reason6">I am a regular (Annual Pass member)</label>
-                                    <input class="form-check-input" type="checkbox" name="reason6" id="reason6">
+                                    <input class="form-check-input" type="checkbox" name="reason6" id="reason6" %%=v(@annualPassmember)=%% >
                                 </div>
                             </div>
                             <h4 class="pt-4 pb-3">How often do you visit Wild Wadi Waterpark&trade;?</h4>
                             <div class="radio-wrapper often-visit radio-width">
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="visit1">Every week</label>
-                                    <input class="form-check-input" type="radio" name="visit" id="visit1" value="Every week">
+                                    <input class="form-check-input" type="radio" name="visit" id="visit1" value="Every week" %%=v(@everyWeek)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="visit2">Every month</label>
-                                    <input class="form-check-input" type="radio" name="visit" id="visit2" value="Every month">
+                                    <input class="form-check-input" type="radio" name="visit" id="visit2" value="Every month" %%=v(@everyMonth)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="visit3">Once a year</label>
-                                    <input class="form-check-input" type="radio" name="visit" id="visit3" value="Once a year">
+                                    <input class="form-check-input" type="radio" name="visit" id="visit3" value="Once a year" %%=v(@onceAyear)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="visit4">Two times per year</label>
-                                    <input class="form-check-input" type="radio" name="visit" id="visit4" value="Two times per year">
+                                    <input class="form-check-input" type="radio" name="visit" id="visit4" value="Two times per year" %%=v(@twoTimesPerYear)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="visit5">Every two years</label>
-                                    <input class="form-check-input" type="radio" name="visit" id="visit5" value="Every two years">
+                                    <input class="form-check-input" type="radio" name="visit" id="visit5" value="Every two years" %%=v(@everyTwoYears)=%% >
                                 </div>
                             </div>
                             <h4 class="pt-4 pb-3">What do you like the most about Wild Wadi Waterpark&trade;?</h4>
                             <div class="radio-wrapper like-most radio-width">
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="like1">The rides</label>
-                                    <input class="form-check-input" type="checkbox" name="like1" id="like1">
+                                    <input class="form-check-input" type="checkbox" name="like1" id="like1" %%=v(@theRides)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="like2">Live entertainment</label>
-                                    <input class="form-check-input" type="checkbox" name="like2" id="like2">
+                                    <input class="form-check-input" type="checkbox" name="like2" id="like2" %%=v(@liveEntertainment)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="like3">Food and restaurants</label>
-                                    <input class="form-check-input" type="checkbox" name="like3" id="like3">
+                                    <input class="form-check-input" type="checkbox" name="like3" id="like3" %%=v(@foodAndRestaurants)=%% >
                                 </div>
                                 <div class="form-check form-check">
-                                    <label class="form-check-label" for="like4">Events</label>
-                                    <input class="form-check-input" type="checkbox" name="like4" id="like4">
+                                    <label class="form-check-label" for="like4">Free events</label>
+                                    <input class="form-check-input" type="checkbox" name="like4" id="like4" %%=v(@events)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="like5">The original waterpark in the region</label>
-                                    <input class="form-check-input" type="checkbox" name="like5" id="like5">
+                                    <input class="form-check-input" type="checkbox" name="like5" id="like5" %%=v(@theOriginalWaterpark)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="like6">The Slides</label>
-                                    <input class="form-check-input" type="checkbox" name="like6" id="like6">
+                                    <input class="form-check-input" type="checkbox" name="like6" id="like6" %%=v(@theSlides)=%% >
                                 </div>
                                 <div class="form-check form-check">
                                     <label class="form-check-label" for="like7">The Iconic view of Burj Al Arab</label>
-                                    <input class="form-check-input" type="checkbox" name="like7" id="like7">
+                                    <input class="form-check-input" type="checkbox" name="like7" id="like7" %%=v(@iconicView)=%% >
                                 </div>
                             </div>
                         </div>
+                        <input name="submittedInterests" type="hidden" value="true"><br>
+                        <input name="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
+                        <input name="emails" type="hidden" value="%%=v(@email)=%%">
+                        <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br></br>
                         <div class="text-end">
                             <button type="submit" class="btn btn-success" id="interest-submit" name="button">Save</button>
                         </div>
                     </form>
                 </div>
+                %%[
+                IF RequestParameter("submittedInterests") == "true" then
+                    SET @sfid = RequestParameter("crmId")
+                    SET @guestId = RequestParameter("guestId")
+                    SET @emailContact = RequestParameter("emails")  
+                    
+                    SET @primaryReasonValue = CONCAT(
+                        Iif(RequestParameter("reason1") == "on", "Fun family activities;", ""),
+                        Iif(RequestParameter("reason2") == "on", "It's on my Dubai bucket list;", ""),
+                        Iif(RequestParameter("reason3") == "on", "I love slides, rides and water parks;", ""),
+                        Iif(RequestParameter("reason4") == "on", "I want a fun experience at Waterpark with Burj Al Arab view;", ""),
+                        Iif(RequestParameter("reason5") == "on", "I want to celebrate my birthday;", ""),
+                        Iif(RequestParameter("reason6") == "on", "I am a regular (Annual Pass member);", ""),
+                        )  
+                    if not Empty(@primaryReasonValue) then
+                        SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "What_is_the_primary_reason_your_visit__c", @primaryReasonValue)
+                    else
+                        SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "fieldsToNull", "What_is_the_primary_reason_your_visit__c")
+
+                    endif
+                        
+                    SET @oftenVisitValue = RequestParameter("visit")
+                    
+                    if not Empty(@oftenVisitValue) then
+                    SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "How_often_do_you_visit_Wild_Wadi_Waterpa__c", @oftenVisitValue)
+                    else
+                        SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "fieldsToNull", "How_often_do_you_visit_Wild_Wadi_Waterpa__c")
+
+                    endif
+                    
+                    SET @likeTheMostValue = CONCAT(
+                        Iif(RequestParameter("like1") == "on", "The rides;", ""),
+                        Iif(RequestParameter("like2") == "on", "Live entertainment;", ""),
+                        Iif(RequestParameter("like3") == "on", "Food and restaurants;", ""),
+                        Iif(RequestParameter("like4") == "on", "Free events;", ""),
+                        Iif(RequestParameter("like5") == "on", "The original waterpark in the region;", ""),
+                        Iif(RequestParameter("like6") == "on", "The Slides;", ""),
+                        Iif(RequestParameter("like7") == "on", "The Iconic view of Burj Al Arab;", ""),
+                    )  
+                    
+                    if not Empty(@likeTheMostValue) then
+                    SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "What_do_you_like_most_about_Wild_Wadi_Wa__c", @likeTheMostValue)
+                    else
+                        SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "fieldsToNull", "What_do_you_like_most_about_Wild_Wadi_Wa__c")
+
+                    endif
+                    
+                set @communications = '#communications'
+                if empty(@sfid) OR IsNull(@sfid) then
+                    Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+                ELSE
+                    Set @ampError = ''
+                ENDIF
+                
+                Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","InterestPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+                                                
+                if @methodType== 'Old' then
+                    Redirect(Concat("https://cloud.explore.wildwadi.com/CPC_WW_QA?sfid=", Base64Encode(@sfid), "#communications"))
+                ELSE
+                    Redirect(CONCAT(CloudPagesURL(3059),@communications))
+                endif
+                ENDIF
+                ]%%
             </div>
             <!-- Interest Tab End -->
       
@@ -2000,62 +2157,66 @@
                             <button type="submit" class="btn btn-orange" id="communications-submit" name="button">Save</button>
                         </div>
                       <input name="submittedCommunications" type="hidden" value="true">
-                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
-              <input name="guestId" type="hidden" id="guestId" value="%%=v(@Id)=%%"><br>
+                        <input name="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
+                        <input name="emails" type="hidden" value="%%=v(@email)=%%">
+                        <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br></br>
                     </form>
                     <hr>
                   
                   
                   %%[
-                                  IF RequestParameter("submittedCommunications")==true then
+                    IF RequestParameter("submittedCommunications")==true then
+                    
+                        SET @sfid = RequestParameter("crmId")
+                        SET @guestId = RequestParameter("guestId")
+                        SET @emailContact = RequestParameter("emails") 
+                        
+                        set @Updatedoffersandpromotions =  RequestParameter("hearOffers")
+                        set @Updatedupcomingevents=  RequestParameter("hearEvents")
+                        set @Updatednewslides =  RequestParameter("hearNews")
+                        set @Updatednewfood =  RequestParameter("newProduct")
+                        set @Updatedlatestnews =  RequestParameter("hearOtherParks")
+                        set @UpdatedcustomerSurvey =  RequestParameter("hearSurvey")
+                
+                        output(concat("< br/>Updatedoffersandpromotions ==> ",@Updatedoffersandpromotions))
+                        output(concat("< br/>Updatedupcomingevents ==> ",@Updatedupcomingevents))
+                        output(concat("< br/>Updatednewslides ==> ",@Updatednewslides))
+                        output(concat("< br/>Updatednewfood ==> ",@Updatednewfood))
+                        output(concat("< br/>Updatedlatestnews ==> ",@Updatedlatestnews))
+                        output(concat("< br/>Updatedoffersandpromotions ==> ",@UpdatedcustomerSurvey))
+                    
+                        IF NOT Empty(@sfid) THEN
+                            SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Guest_Subscription__c", @guestId,
+                            "Offers_and_Promotions__c", IIF(EMPTY(@Updatedoffersandpromotions), 'False', 'True'), 
+                            "Upcoming_events_for_families__c", IIF(EMPTY(@Updatedupcomingevents), 'False', 'True'),
+                            "New_slides_rides_and_entertainment__c", IIF(EMPTY(@Updatednewslides), 'False', 'True'),
+                            "New_food_and_restaurants__c", IIF(EMPTY(@Updatednewfood), 'False', 'True'),
+                            "Latest_news_about_other_DHE_parks__c", IIF(EMPTY(@Updatedlatestnews), 'False', 'True'),
+                            "Customer_Survey__c",IIF(EMPTY(@UpdatedcustomerSurvey), 'False', 'True')
+                        )
+                            SET @contactRows = RetrieveSalesforceObjects("Contact","Email","Id","=", @sfid )
+                                    if RowCount(@contactRows) == 1 then 
+                                        set @contactRow = Row(@contactRows, 1)
+                                        set @emailContact = Field(@contactRow, "Email")
+                                    ENDIF
+                            
+                            set @thankYouPage = '#ThankYou'
+                            if empty(@sfid) OR IsNull(@sfid) then
+                                Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+                            ELSE
+                                Set @ampError = ''
+                            ENDIF
+                                Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
                                 
-                                    SET @sfid = RequestParameter("crmId")
-                                    SET @guestId = RequestParameter("guestId")
-                                    
-                                    set @Updatedoffersandpromotions =  RequestParameter("hearOffers")
-                                    set @Updatedupcomingevents=  RequestParameter("hearEvents")
-                                    set @Updatednewslides =  RequestParameter("hearNews")
-                                    set @Updatednewfood =  RequestParameter("newProduct")
-                                    set @Updatedlatestnews =  RequestParameter("hearOtherParks")
-                                    set @UpdatedcustomerSurvey =  RequestParameter("hearSurvey")
-                           
-                                    
-
-                                    IF NOT Empty(@sfid) THEN
-                                    SET @updateRecord = UpdateSingleSalesforceObject(
-                                    "Guest_Subscription__c", @guestId,
-                                    "Offers_and_Promotions__c", IIF(EMPTY(@Updatedoffersandpromotions), 'False', 'True'), 
-                                    "Upcoming_events_for_families__c", IIF(EMPTY(@Updatedupcomingevents), 'False', 'True'),
-                                    "Upcoming_events_for_families__c", IIF(EMPTY(@Updatednewslides), 'False', 'True'),
-                                    "New_food_and_restaurants__c", IIF(EMPTY(@Updatednewfood), 'False', 'True'),
-                                    "Latest_news_about_other_DHE_parks__c", IIF(EMPTY(@Updatedlatestnews), 'False', 'True'),
-                                    "Customer_Survey__c",IIF(EMPTY(@UpdatedcustomerSurvey), 'False', 'True')
-                                )
-                                SET @contactRows = RetrieveSalesforceObjects("Contact","Email","Id","=", @sfid )
-                                        if RowCount(@contactRows) == 1 then /* there should only be one row */
-                                          set @contactRow = Row(@contactRows, 1)
-                                          set @emailContact = Field(@contactRow, "Email")
-                                        ENDIF
-                                        
-                                        SET @contactCPCUpdateRecord = CreateSalesforceObject("CPC_Contact_Update__c", 2,
-                                                      "Contact_Id__c", @sfid, 
-                                                      "Email__c" , @emailContact)
-                               set @thankYouPage = '#ThankYou'
-                                if empty(@sfid) OR IsNull(@sfid) then
-                                      Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
-                                   ELSE
-                                      Set @ampError = ''
-                                   ENDIF
-                                       Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                               
-                               if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.wildwadi.com/Thankyou_WW_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
-                               ELSE
-                                      Redirect(CONCAT(CloudPagesURL(3060),@thankYouPage))
-                              ENDIF
-                                ENDIF
-                                ENDIF
-                        ]%%
+                            if @methodType== 'Old' then
+                                    Redirect(Concat("https://cloud.explore.wildwadi.com/Thankyou_WW_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+                            ELSE
+                                    Redirect(CONCAT(CloudPagesURL(3060),@thankYouPage))
+                            endif
+                        ENDIF
+                    ENDIF
+                    ]%%
                   
                   
                   
@@ -2170,11 +2331,7 @@
                                           set @emailContact = Field(@contactRow, "Email")
                                         ENDIF
                                         
-                                        SET @contactCPCUpdateRecord = CreateSalesforceObject("CPC_Contact_Update__c", 2,
-                                                      "Contact_Id__c", @sfid, 
-                                                      "Email__c" , @emailContact)
-                                    
-                                    
+                                        
                                     IF NOT Empty(@unsubTempBox) THEN
                                      SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email",
                                                             @emailContact,"DateAdded",@currentDate,"ContactId",@sfid, "UnsubscribeType","Individual","Asset","WW")
@@ -2363,12 +2520,6 @@ W
                                       IF RowCount(@contactRows) == 1 then
                                           SET @contactRow = Row(@contactRows, 1)
                                           SET @emailContact = Field(@contactRow, "Email")
-
-                                          /* Update CPC_Contact_Update__c object */
-                                          SET @contactCPCUpdateRecord = CreateSalesforceObject("CPC_Contact_Update__c", 2,
-                                              "Contact_Id__c", @sfid,
-                                              "Email__c", @emailContact
-                                          )
                                       ENDIF
                                   ENDIF
                                 
