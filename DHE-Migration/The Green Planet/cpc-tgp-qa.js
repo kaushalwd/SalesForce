@@ -111,7 +111,7 @@
         
         set @getintouchWhatsapp = Field(@guestDetailsRow, "WhatsApp__c")
         set @getintouchEmail = Field(@guestDetailsRow, "Email__c")
-        
+
 <!-- END : Changes done on 02-09-2024 for DHE-8087 from Kaushal Patel -->
      
     ENDIF
@@ -175,8 +175,8 @@
 
         var listOfInput = [];
         listOfInput.push({Name : 'The Green Planet - Offers and Promotions', Status: listpromotions })
-  listOfInput.push({Name : 'The Green Planet - Plus,Annual Pass,VIP Offers', Status: listannualpass })
-  listOfInput.push({Name : 'The Green Planet - Weekly, Bi-weekly Announcements', Status: listweeklyannouncements})
+        listOfInput.push({Name : 'The Green Planet - Plus,Annual Pass,VIP Offers', Status: listannualpass })
+        listOfInput.push({Name : 'The Green Planet - Weekly, Bi-weekly Announcements', Status: listweeklyannouncements})
         listOfInput.push({Name : 'The Green Planet - New Product,Offering', Status: listnewproductoffering})
         listOfInput.push({Name : 'The Green Planet - Latest news', Status: listlatestnews})
         listOfInput.push({Name : 'The Green Planet - Customer Survey', Status: listCustomer})
