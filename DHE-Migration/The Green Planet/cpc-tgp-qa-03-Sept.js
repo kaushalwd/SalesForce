@@ -2337,7 +2337,7 @@ ENDIF
           </div>
           <!-- channel preference block end -->
             <div class="mt-5 pl-2" style="font-size: 16px;">
-              <p>If you wish to unsubscribe from all The Green Planet™ communications please click on ‘Unsubscribe’.</p>
+              <p>To manage SMS subscriptions, please refer to the opt-out feature from the latest SMS message. If you wish to unsubscribe from all The Green Planet™ communications please click on ‘Unsubscribe’.</p>
             </div>
            <div class="unsrb-btn mt-5">
       <button type="button" name="button" class="btn btn-orange unsubscribe-btn"
