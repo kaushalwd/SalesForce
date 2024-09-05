@@ -2283,7 +2283,7 @@ IF RequestParameter("submittedCommunications")==true then
     Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
 
     if @methodType== 'Old' then
-      Redirect(Concat("https://cloud.explore.thegreenplanetdubai.com/Thankyou_TGP?sfid=", Base64Encode(@sfid), "#ThankYou"))
+      Redirect(Concat("https://cloud.explore.thegreenplanetdubai.com/TGP_ThankYou_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
     ELSE
     Redirect(CONCAT(CloudPagesURL(2758),@thankYouPage))
     ENDIF
@@ -2316,18 +2316,17 @@ ENDIF
           </form>
           <!-- thank you pop up -->
           <div class="box-form mt-5" id="channel-preference" style="display:none;">
-            <span class="close-buttonCM" style="
-                                                text-align: right;
+            <span class="close-buttonCM" style="text-align: right;
                                                 font-size: 30px;
                                                 position: relative;
                                                 left: 94%;
                                                 top: 0;
                                                 cursor: pointer;
-                                                color:#ce5a5e;">×</span>
+                                                color:#567F2E;">×</span>
             <div class="container">
               <div class="unsubscribe-wrapper form group">
                 <div class="thanYou-img mb-2">
-                  <img src="https://image.explore.theroxycinemas.com/lib/fe37117373640479751476/m/1/6909e80c-a127-4526-a4a9-89b823125a7f.png" alt="" class="banner-bg-img">
+                  <img src="https://image.explore.thegreenplanetdubai.com/lib/fe3b117373640479751472/m/1/274f476f-7123-4c2d-b8e7-aa0cce3c2cc3.png" alt="" class="banner-bg-img">
                 </div>
                 <div class="thankYou-text">
                   <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-bottom:3rem;">Your channel subscription preferences have been successfully updated.
@@ -2660,7 +2659,7 @@ IF RequestParameter("unsubAll") == true then
   Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
 
   if @methodType== 'Old' then
-    Redirect(Concat("https://cloud.explore.thegreenplanetdubai.com/Thankyou_TGP?sfid=", Base64Encode(@sfid), "#ThankYou"))
+    Redirect(Concat("https://cloud.explore.thegreenplanetdubai.com/TGP_ThankYou_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
   ELSE
    Redirect(CONCAT(CloudPagesURL(2758),@thankYouPage))
   ENDIF
@@ -3050,6 +3049,9 @@ $(document).on("click", ".del", function() {
         var subsKey = document.getElementById('crmId').value;
          var emailPref = document.getElementById('emailPref');
         var whatsAppPref = document.getElementById('WhatsAppPref');
+        var fName = document.getElementById('firstName').value;
+        var lName = document.getElementById('lname').value;
+        var gEmail = document.getElementById('email').value;
         console.log('emailPref: ',emailPref.checked);
         console.log('whatsAppPref: ',whatsAppPref.checked);
     /* if( emailPref.checked !='undefined'){
@@ -3075,6 +3077,9 @@ $(document).on("click", ".del", function() {
                 var dataToSend = {
                     guestId: guestId,
                     subsKey: subsKey,
+                    firstName: fName,
+                    lastName: lName,
+                    email: gEmail,
                     emailPref: emailPref.checked,
                     whatsAppPref: whatsAppPref.checked
                 };
