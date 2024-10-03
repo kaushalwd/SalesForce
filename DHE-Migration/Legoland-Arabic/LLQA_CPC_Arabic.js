@@ -2,9 +2,10 @@
 
 %%[
     var @numOfKids
-    /*SET @crmIdEn = "0036M00004SEQwKQAX"*/
-    SET @crmIdEn = QueryParameter("sfid")
-    SET @crmId = Base64Decode(@crmIdEn)
+    SET @crmIdEn = "003Qs00000EKRNPIA5"
+    /* SET @crmIdEn = QueryParameter("sfid") */
+    /*SET @crmId = Base64Decode(@crmIdEn)*/
+    SET @crmId = "003Qs00000EKRNPIA5"    
     
     /*SET @crmId = _subscriberkey*/
     IF (empty(@crmId)) THEN
@@ -460,7 +461,7 @@ ul {
                                 </head>
                           
             <body onload="handleNumOfKidsChange(%%=v(@numOfKids)=%%); kidsPrepopulation(); ShowHideDivkids();">
-                                   <!-- Header start -->003
+                                   <!-- Header start -->0909
         <header>
           <div class="container">
               <div class="row align-items-center" style="margin: 0 auto;">
@@ -493,13 +494,13 @@ ul {
       <!-- nav options -->
       <ul class="nav nav-pills mb-3 d-flex justify-content-center" id="pills-tab" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" id="my-profile-tab" data-toggle="pill" href="#my-profile" role="tab" aria-controls="my-profile" aria-selected="true"onclick="updateUrlHash('#my-profile')"> MY PROFILE</a>
+          <a class="nav-link active" id="my-profile-tab" data-toggle="pill" href="#my-profile" role="tab" aria-controls="my-profile" aria-selected="true"onclick="updateUrlHash('#my-profile')">الملف الشخصي</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" id="interests-tab" data-toggle="pill" href="#interests" role="tab" aria-controls="interests" aria-selected="false" onclick="updateUrlHash('#interests')">INTERESTS</a>
+          <a class="nav-link" id="interests-tab" data-toggle="pill" href="#interests" role="tab" aria-controls="interests" aria-selected="false" onclick="updateUrlHash('#interests')">الاهتمامات</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" id="communications-tab" data-toggle="pill" href="#communications" role="tab" aria-controls="communications" aria-selected="false" onclick="updateUrlHash('#communications')">COMMUNICATIONS</a>
+          <a class="nav-link" id="communications-tab" data-toggle="pill" href="#communications" role="tab" aria-controls="communications" aria-selected="false" onclick="updateUrlHash('#communications')">قنوات الاتصال</a>
         </li>
       </ul>
 
@@ -510,20 +511,20 @@ ul {
           <div class="wrapper wrapper--w1200">
             
             <form class="profile-form" action="" method="post" name="myForm" id="profile-form" autocomplete="off">
-              <h4 class="pt-4 pb-4">Tell us about yourself</h4>
+              <h4 class="pt-4 pb-4">أخبرنا عن نفسك</h4>
               <div class="row">
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">Title (Mr./Ms./Mrs.)</label>
+                          <label for="">اللقب (السيد/آنسة/السيدة)</label>
                           <div class="select-wrapper hide-icon">
-                              <select class="form-control" name="profileSalutation">
-                                <option value=" " %%=IIF(@title=='' ,'selected', "" )=%%>Select</option>
-                                  <option value="Mr." %%=IIF(@title=='Mr.' ,'selected', "" )=%%>Mr.    
+                          <select class="form-control" name="profileSalutation">
+                                <option value=" " %%=IIF(@title=='' ,'selected', "" )=%%>اختر</option>
+                                  <option value="Mr." %%=IIF(@title=='Mr.' ,'selected', "" )=%%>السيد  
                                   </option>
-                                  <option value="Ms." %%=IIF(@title=='Ms.' ,'selected', "" )=%%>Ms.
+                                  <option value="Ms." %%=IIF(@title=='Ms.' ,'selected', "" )=%%>آنسة
                                   </option>
-                                  <option value="Mrs." %%=IIF(@title=='Mrs.' ,'selected', "" )=%%>Mrs.
+                                  <option value="Mrs." %%=IIF(@title=='Mrs.' ,'selected', "" )=%%>السّيدة
                                   </option>
                               </select>
                               
@@ -534,14 +535,14 @@ ul {
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">First Name<sup class="text-danger">*</sup></label>
+                          <label for="">الاسم الأول<sup class="text-danger">*</sup></label>
                           <input type="text" id="firstName" name="firstName" id="fname" value="%%=v(ProperCase(@firstName))=%%"
                               class="form-control" required aria-required="true" />
                       </div>
                   </div>
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group">
-                          <label for="">Last Name<sup class="text-danger">*</sup></label>
+                          <label for="">اسم العائلة<sup class="text-danger">*</sup></label>
                           <input type="text" id="lname" name="lastName" value="%%=v(ProperCase(@lastName))=%%"
                               class="form-control" required aria-required="true" />
                       </div>
@@ -549,7 +550,7 @@ ul {
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">Email Address<sup class="text-danger">*</sup></label>
+                          <label for="">عنوان البريد الإلكتروني<sup class="text-danger">*</sup></label>
                           <input type="email" id="email" name="email" value="%%=v(@email)=%%"
                               class="form-control" required aria-required="true" />
                       </div>
@@ -557,7 +558,7 @@ ul {
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12 phone_num">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">Phone<sup class="text-danger">*</sup></label>
+                          <label for="">رقم الهاتف<sup class="text-danger">*</sup></label>
                          <div class="input-group mb-3">
   
                               <div class="select-wrapper hide-icon">
@@ -839,285 +840,270 @@ ul {
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">Country of Residence<sup class="text-danger">*</sup></label>
+                          <label for="">بلد الإقامة<sup class="text-danger">*</sup></label>
                           <div class="select-wrapper hide-icon profilecountry">
   
-                              <select class="form-control" name="profileCountry" id="profileCountry" required>
-                                <option value="">Select Country</option>
-                                  <option value="Afghanistan" %%=IIF(@country=='Afghanistan', "selected", "")=%% >Afghanistan</option>
-                              <option value="Aland Islands" %%=IIF(@country=='Aland Islands', 'selected', "")=%%>Aland Islands</option>
-                              <option value="Albania" %%=IIF(@country=='Albania', "selected", "")=%%>Albania</option>
-                              <option value="Algeria" %%=IIF(@country=='Algeria', "selected", "")=%%>Algeria</option>
-                              <option value="American Samoa" %%=IIF(@country=='American Samoa', "selected", "")=%%>American Samoa</option>
-                              <option value="Andorra" %%=IIF(@country=='Andorra', "selected", "")=%%>Andorra</option>
-                              <option value="Angola" %%=IIF(@country=='Angola', "selected", "")=%%>Angola</option>
-                              <option value="Anguilla" %%=IIF(@country=='Anguilla', "selected", "")=%%>Anguilla</option>
-                              <option value="Antarctica" %%=IIF(@country=='Antarctica', "selected", "")=%%>Antarctica</option>
-                              <option value="Antigua And Barbuda" %%=IIF(@country=='Antigua And Barbuda', "selected", "")=%%>Antigua And Barbuda</option>
-                              <option value="Argentina" %%=IIF(@country=='Argentina', "selected", "")=%%>Argentina</option>
-                              <option value="Armenia" %%=IIF(@country=='Armenia', "selected", "")=%%>Armenia</option>
-                              <option value="Aruba" %%=IIF(@country=='Aruba', "selected", "")=%%>Aruba</option>
-                              <option value="Australia" %%=IIF(@country=='Australia', "selected", "")=%%>Australia</option>
-                              <option value="Austria" %%=IIF(@country=='Austria', "selected", "")=%%>Austria</option>
-                              <option value="Azerbaijan" %%=IIF(@country=='Azerbaijan', "selected", "")=%%>Azerbaijan</option>
-                              <option value="Bahamas" %%=IIF(@country=='Bahamas', "selected", "")=%%>Bahamas</option>
-                              <option value="Bahrain" %%=IIF(@country=='Bahrain', "selected", "")=%%>Bahrain</option>
-                              <option value="Bangladesh" %%=IIF(@country=='Bangladesh', "selected", "")=%%>Bangladesh</option>
-                              <option value="Barbados" %%=IIF(@country=='Barbados', "selected", "")=%%>Barbados</option>
-                              <option value="Belarus" %%=IIF(@country=='Belarus', "selected", "")=%%>Belarus</option>
-                              <option value="Belgium" %%=IIF(@country=='Belgium', "selected", "")=%%>Belgium</option>
-                              <option value="Belize" %%=IIF(@country=='Belize', "selected", "")=%%>Belize</option>
-                              <option value="Benin" %%=IIF(@country=='Benin', "selected", "")=%%>Benin</option>
-                              <option value="Bermuda" %%=IIF(@country=='Bermuda', "selected", "")=%%>Bermuda</option>
-                              <option value="Bhutan" %%=IIF(@country=='Bhutan', "selected", "")=%%>Bhutan</option>
-                              <option value="Bolivia" %%=IIF(@country=='Bolivia', "selected", "")=%%>Bolivia</option>
-                              <option value="Bosnia and Herzegovina" %%=IIF(@country=='Bosnia and Herzegovina', "selected", "")=%%>Bosnia and Herzegovina</option>
-                              <option value="Botswana"  %%=IIF(@country=='Botswana', "selected", "")=%%>Botswana</option>
-                              <option value="Bouvet Island" %%=IIF(@country=='Bouvet Island', "selected", "")=%%>Bouvet Island</option>
-                              <option value="Brazil" %%=IIF(@country=='Brazil', "selected", "")=%%>Brazil</option>
-                              <option value="British Indian Ocean Territory" %%=IIF(@country=='British Indian Ocean Territory', "selected", "")=%%>British Indian Ocean
-                                  Territory</option>
-                              <option value="Brunei Darussalam" %%=IIF(@country=='Brunei Darussalam', "selected", "")=%%>Brunei Darussalam</option>
-                              <option value="Bulgaria" %%=IIF(@country=='Bulgaria', "selected", "")=%%>Bulgaria</option>
-                              <option value="Burkina Faso" %%=IIF(@country=='Burkina Faso', "selected", "")=%%>Burkina Faso</option>
-                              <option value="Burundi" %%=IIF(@country=='Burundi', "selected", "")=%%>Burundi</option>
-                              <option value="Cambodia" %%=IIF(@country=='Cambodia', "selected", "")=%%>Cambodia</option>
-                              <option value="Cameroon" %%=IIF(@country=='Cameroon', "selected", "")=%%>Cameroon</option>
-                              <option value="Canada" %%=IIF(@country=='Canada', "selected", "")=%%>Canada</option>
-                              <option value="Canary Islands" %%=IIF(@country=='Canary Islands', "selected", "")=%%>Canary Islands</option>
-                              <option value="Cabo Verde" %%=IIF(@country=='Cabo Verde', "selected", "")=%%>Cabo Verde</option>                    
-                              <option value="Caribbean Netherlands" %%=IIF(@country=='Caribbean Netherlands', "selected", "")=%%>Caribbean Netherlands</option>
-                              <option value="Cayman Islands" %%=IIF(@country=='Cayman Islands', "selected", "")=%%>Cayman Islands</option>
-                              <option value="Central African Republic" %%=IIF(@country=='Central African Republic', selected, "")=%%>Central African Republic
-                              </option>
-                              <option value="Ceuta & Melilla" %%=IIF(@country=='Ceuta & Melilla', selected, "")=%%>Ceuta & Melilla
-                              </option>
-                              <option value="Chad" %%=IIF(@country=='Chad', "selected", "")=%%>Chad</option>
-                              <option value="Chile" %%=IIF(@country=='Chile', "selected", "")=%%>Chile</option>
-                              <option value="China" %%=IIF(@country=='China', "selected", "")=%%>China</option>
-                              <option value="Christmas Island" %%=IIF(@country=='Christmas Island', "selected", "")=%%>Christmas Island</option>
-                              <option value="Clipperton Island" %%=IIF(@country=='Clipperton Island', "selected", "")=%%>Clipperton Island</option>
-                              <option value="Cocos (Keeling) Islands" %%=IIF(@country=='Cocos (Keeling) Islands', "selected", "")=%%>Cocos (Keeling) Islands</option>
-                              <option value="Colombia" %%=IIF(@country=='Colombia', "selected", "")=%%>Colombia</option>
-                              <option value="Commonwealth of Dominica" %%=IIF(@country=='Commonwealth of Dominica', "selected", "")=%%>Commonwealth of Dominica</option>
-                              <option value="Comoros" %%=IIF(@country=='Comoros', "selected", "")=%%>Comoros</option>
-                              <option value="Congo" %%=IIF(@country=='Congo', "selected", "")=%%>Congo</option>
-                              <option value="Cook Islands" %%=IIF(@country=='Cook Islands', "selected", "")=%%>Cook Islands</option>
-                              <option value="Costa Rica" %%=IIF(@country=='Costa Rica', "selected", "")=%%>Costa Rica</option>
-                              <option value="Cote d'Ivoire" %%=IIF(@country=="Cote d'Ivoire", "selected", "")=%%>Cote d'Ivoire
-                              </option>
-                              <option value="Croatia" %%=IIF(@country=='Croatia', "selected", "")=%%>Croatia</option>
-                              <option value="Cuba" %%=IIF(@country=='Cuba', "selected", "")=%%>Cuba</option>
-                              <option value="Curaçao" %%=IIF(@country=='Curaçao', "selected", "")=%%>Curaçao</option>
-                              <option value="Cyprus" %%=IIF(@country=='Cyprus', "selected", "")=%%>Cyprus</option>
-                              <option value="Czech Republic" %%=IIF(@country=='Czech Republic', "selected", "")=%%>Czech Republic</option>
-                              <option value="Democratic Republic of the Congo" %%=IIF(@country=='Democratic Republic of the Congo', "selected", "")=%%>Congo The Democratic Republic Of The</option>
-                              <option value="Denmark" %%=IIF(@country=='Denmark', "selected", "")=%%>Denmark</option>
-                              <option value="Djibouti" %%=IIF(@country=='Djibouti', "selected", "")=%%>Djibouti</option>
-                              <option value="Dominican Republic" %%=IIF(@country=='Dominican Republic', "selected", "")=%%>Dominican Republic</option>
-                              <option value="Ecuador" %%=IIF(@country=='Ecuador', "selected", "")=%%>Ecuador</option>
-                              <option value="Egypt" %%=IIF(@country=='Egypt', "selected", "")=%%>Egypt</option>
-                              <option value="El Salvador" %%=IIF(@country=='El Salvador', "selected", "")=%%>El Salvador</option>
-                              <option value="Equatorial Guinea" %%=IIF(@country=='Equatorial Guinea', "selected", "")=%%>Equatorial Guinea</option>
-                              <option value="Eritrea" %%=IIF(@country=='Eritrea', "selected", "")=%%>Eritrea</option>
-                              <option value="Estonia"  %%=IIF(@country=='Estonia', "selected", "")=%%>Estonia</option>
-                              <option value="Eswatini"  %%=IIF(@country=='Eswatini', "selected", "")=%%>Eswatini</option>
-                              <option value="Ethiopia" %%=IIF(@country=='Ethiopia', "selected", "")=%%>Ethiopia</option>
-                              <option value="Falkland Islands" %%=IIF(@country=='Falkland Islands', "selected", "")=%%>Falkland Islands</option>
-                              <option value="Faroe Islands" %%=IIF(@country=='Faroe Islands', "selected", "")=%%>Faroe Islands</option>
-                              <option value="Fiji" %%=IIF(@country=='Fiji', "selected", "")=%%>Fiji</option>
-                              <option value="Finland" %%=IIF(@country=='Finland', "selected", "")=%%>Finland</option>
-                              <option value="France" %%=IIF(@country=='France', "selected", "")=%%>France</option>
-                              <option value="French Guiana" %%=IIF(@country=='French Guiana', "selected", "")=%%>French Guiana</option>
-                              <option value="French Polynesia" %%=IIF(@country=='French Polynesia', "selected", "")=%%>French Polynesia</option>
-                              <option value="French Southern Territories" %%=IIF(@country=='French Southern Territories', "selected", "")=%%>French Southern Territories
-                              </option>
-                              <option value="Gabon" %%=IIF(@country=='Gabon', "selected", "")=%%>Gabon</option>
-                              <option value="Gambia" %%=IIF(@country=='Gambia', "selected", "")=%%>Gambia</option>
-                              <option value="Georgia" %%=IIF(@country=='Georgia', "selected", "")=%%>Georgia</option>
-                              <option value="Germany" %%=IIF(@country=='Germany', "selected", "")=%%>Germany</option>
-                              <option value="Ghana" %%=IIF(@country=='Ghana', "selected", "")=%%>Ghana</option>
-                              <option value="Gibraltar" %%=IIF(@country=='Gibraltar', "selected", "")=%%>Gibraltar</option>
-                              <option value="Greece" %%=IIF(@country=='Greece', "selected", "")=%%>Greece</option>
-                              <option value="Greenland" %%=IIF(@country=='Greenland', "selected", "")=%%>Greenland</option>
-                              <option value="Grenada" %%=IIF(@country=='Grenada', "selected", "")=%%>Grenada</option>
-                              <option value="Guadeloupe" %%=IIF(@country=='Guadeloupe', "selected", "")=%%>Guadeloupe</option>
-                              <option value="Guam"  %%=IIF(@country=='Guam', "selected", "")=%%>Guam</option>
-                              <option value="Guatemala" %%=IIF(@country=='Guatemala', "selected", "")=%%>Guatemala</option>
-                              <option value="Guernsey" %%=IIF(@country=='Guernsey', "selected", "")=%%>Guernsey</option>
-                              <option value="Guinea" %%=IIF(@country=='Guinea', "selected", "")=%%>Guinea</option>
-                              <option value="Guinea-Bissau" %%=IIF(@country=='Guinea-Bissau', "selected", "")=%%>Guinea-Bissau</option>
-                              <option value="Guyana" %%=IIF(@country=='Guyana', "selected", "")=%%>Guyana</option>
-                              <option value="Haiti" %%=IIF(@country=='Haiti', "selected", "")=%%>Haiti</option>
-                              <option value="Heard Island and McDonald Islands" %%=IIF(@country=='Heard Island and McDonald Islands', "selected", "")=%%>Heard Island and
-                                  McDonald Islands</option>
-                              <option value="Holy See (Vatican)" %%=IIF(@country=='Holy See (Vatican)', "selected", "")=%%>Holy See (Vatican)</option>
-                              <option value="Honduras" %%=IIF(@country=='Honduras', "selected", "")=%%>Honduras</option>
-                              <option value="Hong Kong Special Administrative Region" %%=IIF(@country=='Hong Kong Special Administrative Region', "selected", "")=%%>Hong Kong Special Administrative Region</option>
-                              <option value="Hungary" %%=IIF(@country=='Hungary', "selected", "")=%%>Hungary</option>
-                              <option value="Iceland" %%=IIF(@country=='Iceland', "selected", "")=%%>Iceland</option>
-                              <option value="India"  %%=IIF(@country=='India', "selected", "")=%%>India</option>
-                              <option value="Indonesia" %%=IIF(@country=='Indonesia', "selected", "")=%%>Indonesia</option>
-                              <option value="Iran (Islamic Republic of)" %%=IIF(@country=='Iran (Islamic Republic of)', "selected", "")=%%>Iran (Islamic Republic of)</option>
-                              <option value="Iraq" %%=IIF(@country=='Iraq', "selected", "")=%%>Iraq</option>
-                              <option value="Ireland" %%=IIF(@country=='Ireland', "selected", "")=%%>Ireland</option>
-                              <option value="Israel" %%=IIF(@country=='Israel', "selected", "")=%%>Israel</option>
-                              <option value="Isle of Man" %%=IIF(@country=='Isle of Man', "selected", "")=%%>Isle of Man</option>
-                              <option value="Italy" %%=IIF(@country=='Italy', "selected", "")=%%>Italy</option>
-                              <option value="Jamaica" %%=IIF(@country=='Jamaica', "selected", "")=%%>Jamaica</option>
-                              <option value="Japan" %%=IIF(@country=='Japan', "selected", "")=%%>Japan</option>
-                              <option value="Jersey" %%=IIF(@country=='Jersey', "selected", "")=%%>Jersey</option>
-                              <option value="Jordan" %%=IIF(@country=='Jordan', "selected", "")=%%>Jordan</option>
-                              <option value="Kazakhstan" %%=IIF(@country=='Kazakhstan', "selected", "")=%%>Kazakhstan</option>
-                              <option value="Kenya"  %%=IIF(@country=='Kenya', "selected", "")=%%>Kenya</option>
-                              <option value="Kiribati" %%=IIF(@country=='Kiribati', "selected", "")=%%>Kiribati</option>
-                              <option value="Kosovo" %%=IIF(@country=='Kosovo', "selected", "")=%%>Kosovo</option>
-                              <option value="Kuwait" %%=IIF(@country=='Kuwait', "selected", "")=%%>Kuwait</option>
-                              <option value="Kyrgyzstan" %%=IIF(@country=='Kyrgyzstan', "selected", "")=%%>Kyrgyzstan</option>
-                              <option value="Laos People's Democratic Republic"  %%=IIF(@country=='Laos People's Democratic Republic', "selected", "")=%%>Laos People's Democratic Republic</option>
-                              <option value="Latvia" %%=IIF(@country=='Latvia', 'selected', "")=%%>Latvia</option>
-                              <option value="Latvia Resident" %%=IIF(@country=='Latvia Resident', 'selected', "")=%%>Latvia Resident</option>
-                              <option value="Lebanon" %%=IIF(@country=='Lebanon', "selected", "")=%%>Lebanon</option>
-                              <option value="Lesotho" %%=IIF(@country=='Lesotho', "selected", "")=%%>Lesotho</option>
-                              <option value="Liberia" %%=IIF(@country=='Liberia', "selected", "")=%%>Liberia</option>
-                              <option value="Libya" %%=IIF(@country=='Libya', "selected", "")=%%>Libya</option>
-                              <option value="Liechtenstein" %%=IIF(@country=='Liechtenstein', "selected", "")=%%>Liechtenstein</option>
-                              <option value="Lithuania" %%=IIF(@country=='Lithuania', "selected", "")=%%>Lithuania</option>
-                              <option value="Luxembourg" %%=IIF(@country=='Luxembourg', "selected", "")=%%>Luxembourg</option>
-                              <option value="Macao" %%=IIF(@country=='Macao', "selected", "")=%%>Macao</option>
-                              <option value="Madagascar"  %%=IIF(@country=='Madagascar', "selected", "")=%%>Madagascar</option>
-                              <option value="Malawi" %%=IIF(@country=='Malawi', "selected", "")=%%>Malawi</option>
-                              <option value="Malaysia" %%=IIF(@country=='Malaysia', 'selected', "")=%%>Malaysia</option>
-                              <option value="Maldives" %%=IIF(@country=='Maldives', "selected", "")=%%>Maldives</option>
-                              <option value="Mali" %%=IIF(@country=='Mali', "selected", "")=%%>Mali</option>
-                              <option value="Malta" %%=IIF(@country=='Malta', "selected", "")=%%>Malta</option>
-                              <option value="Marshall Islands" %%=IIF(@country=='Marshall Islands', "selected", "")=%%>Marshall Islands</option>
-                              <option value="Martinique" %%=IIF(@country=='Martinique', "selected", "")=%%>Martinique</option>
-                              <option value="Mauritania" %%=IIF(@country=='Mauritania', "selected", "")=%%>Mauritania</option>
-                              <option value="Mauritius" %%=IIF(@country=='Mauritius', "selected", "")=%%>Mauritius</option>
-                              <option value="Mayotte" %%=IIF(@country=='Mayotte', "selected", "")=%%>Mayotte</option>
-                              <option value="Mexico" %%=IIF(@country=='Mexico', "selected", "")=%%>Mexico</option>
-                              <option value="Micronesia (Federated States of)" %%=IIF(@country=='Micronesia (Federated States of)', "selected", "")=%%>Micronesia (Federated States of)</option>
-                              <option value="Republic of Moldova" %%=IIF(@country=='Republic of Moldova', "selected", "")=%%>Republic of Moldova</option>
-                              <option value="Monaco" %%=IIF(@country=='Monaco', "selected", "")=%%>Monaco</option>
-                              <option value="Mongolia" %%=IIF(@country=='Mongolia', "selected", "")=%%>Mongolia</option>
-                              <option value="Montenegro" %%=IIF(@country=='Montenegro', "selected", "")=%%>Montenegro</option>
-                              <option value="Montserrat"  %%=IIF(@country=='Montserrat', "selected", "")=%%>Montserrat</option>
-                              <option value="Morocco" %%=IIF(@country=='Morocco', "selected", "")=%%>Morocco</option>
-                              <option value="Mozambique" %%=IIF(@country=='Mozambique', "selected", "")=%%>Mozambique</option>
-                              <option value="Myanmar" %%=IIF(@country=='Myanmar', "selected", "")=%%>Myanmar</option>
-                              <option value="Namibia" %%=IIF(@country=='Namibia', "selected", "")=%%>Namibia</option>
-                              <option value="Nauru" %%=IIF(@country=='Nauru', "selected", "")=%%>Nauru</option>
-                              <option value="Nepal" %%=IIF(@country=='Nepal', "selected", "")=%%>Nepal</option>
-                              <option value="Netherlands Antilles" %%=IIF(@country=='Netherlands Antilles', "selected", "")=%%>Netherlands Antilles</option>
-                              <option value="Netherlands" %%=IIF(@country=='Netherlands', "selected", "")=%%>Netherlands</option>
-                              <option value="New Caledonia" %%=IIF(@country=='New Caledonia', "selected", "")=%%>New Caledonia</option>
-                              <option value="New Zealand" %%=IIF(@country=='New Zealand', "selected", "")=%%>New Zealand</option>
-                              <option value="Nicaragua" %%=IIF(@country=='Nicaragua', "selected", "")=%%>Nicaragua</option>
-                              <option value="Niger" %%=IIF(@country=='Niger', "selected", "")=%%>Niger</option>
-                              <option value="Nigeria" %%=IIF(@country=='Nigeria', "selected", "")=%%>Nigeria</option>
-                              <option value="Niue" %%=IIF(@country=='Niue', "selected", "")=%%>Niue</option>
-                              <option value="Norfolk Island" %%=IIF(@country=='Norfolk Island', "selected", "")=%%>Norfolk Island</option>
-                              <option value="North Korea" %%=IIF(@country=='North Korea', "selected", "")=%%>North Korea</option>
-                              <option value="Northern Mariana Islands" %%=IIF(@country=='Northern Mariana Islands', "selected", "")=%%>Northern Mariana Islands
-                              </option>
-                              <option value="Norway" %%=IIF(@country=='Norway', "selected", "")=%%>Norway</option>
-                              <option value="Oman" %%=IIF(@country=='Oman', "selected", "")=%%>Oman</option>
-                              <option value="Pakistan" %%=IIF(@country=='Pakistan', "selected", "")=%%>Pakistan</option>
-                              <option value="Palau" %%=IIF(@country=='Palau', "selected", "")=%%>Palau</option>
-                              <option value="Panama" %%=IIF(@country=='Panama', "selected", "")=%%>Panama</option>
-                              <option value="Papua new Guinea" %%=IIF(@country=='Papua new Guinea', "selected", "")=%%>Papua new Guinea</option>
-                              <option value="Paraguay" %%=IIF(@country=='Paraguay', "selected", "")=%%>Paraguay</option>
-                              <option value="Peru" %%=IIF(@country=='Peru', "selected", "")=%%>Peru</option>
-                              <option value="Philippines" %%=IIF(@country=='Philippines', "selected", "")=%%>Philippines</option>
-                              <option value="Pitcairn" %%=IIF(@country=='Pitcairn', "selected", "")=%%>Pitcairn</option>
-                              <option value="Poland" %%=IIF(@country=='Poland', "selected", "")=%%>Poland</option>
-                              <option value="Portugal" %%=IIF(@country=='Portugal', "selected", "")=%%>Portugal</option>
-                              <option value="Puerto Rico" %%=IIF(@country=='Puerto Rico', "selected", "")=%%>Puerto Rico</option>
-                              <option value="Qatar" %%=IIF(@country=='Qatar', "selected", "")=%%>Qatar</option>
-                              <option value="Republic of Macedonia" %%=IIF(@country=='Republic of Macedonia', "selected", "")=%%>Republic of Macedonia</option>
-                              <option value="Republic of Moldova" %%=IIF(@country=='Republic of Moldova', "selected", "")=%%>Republic of Moldova</option>
-                              <option value="Republic of Somaliland" %%=IIF(@country=='Republic of Somaliland', "selected", "")=%%>Republic of Somaliland</option>
-                              <option value="Reunion" %%=IIF(@country=='Reunion', "selected", "")=%%>Reunion</option>
-                              <option value="Romania" %%=IIF(@country=='Romania', "selected", "")=%%>Romania</option>
-                              <option value="Russian Federation" %%=IIF(@country=='Russian Federation', "selected", "")=%%>Russian Federation</option>
-                              <option value="Rwanda"  %%=IIF(@country=='Rwanda', "selected", "")=%%>Rwanda</option>
-                              <option value="Saint Helena" %%=IIF(@country=='Saint Helena', "selected", "")=%%>Saint Helena</option>
-                              <option value="Saint Kitts And Nevis" %%=IIF(@country=='Saint Kitts And Nevis', "selected", "")=%%>Saint Kitts And Nevis</option>
-                              <option value="Saint Lucia" %%=IIF(@country=='Saint Lucia', "selected", "")=%%>Saint Lucia</option>
-                              <option value="Saint Pierre and Miquelon"  %%=IIF(@country=='Saint Pierre and Miquelon', "selected", "")=%%>Saint Pierre and Miquelon
-                              </option>
-                              <option value="Saint Vincent And The Grenadines" %%=IIF(@country=='Saint Vincent And The Grenadines', "selected", "")=%%>Saint Vincent And The
-                                  Grenadines</option>
-                              <option value="Saint-Barthelemy" %%=IIF(@country=='Saint-Barthelemy', "selected", "")=%%>Saint-Barthelemy</option>
-                              <option value="Saint-Martin (French part)" %%=IIF(@country=='Saint-Martin (French part)', "selected", "")=%%>Saint-Martin (French part)
-                              </option>
-                              <option value="Samoa" %%=IIF(@country=='Samoa', "selected", "")=%%>Samoa</option>
-                              <option value="San Marino" %%=IIF(@country=='San Marino', "selected", "")=%%>San Marino</option>
-                              <option value="Sao Tome and Principe" %%=IIF(@country=='Sao Tome and Principe', "selected", "")=%%>Sao Tome and Principe</option>
-                              <option value="Saudi Arabia" %%=IIF(@country=='Saudi Arabia', "selected", "")=%%>Saudi Arabia</option>
-                              <option value="Senegal" %%=IIF(@country=='Senegal', "selected", "")=%%>Senegal</option>
-                              <option value="Serbia" %%=IIF(@country=='Serbia', "selected", "")=%%>Serbia</option>
-                              <option value="Seychelles" %%=IIF(@country=='Seychelles', "selected", "")=%%>Seychelles</option>
-                              <option value="Sierra Leone" %%=IIF(@country=='Sierra Leone', "selected", "")=%%>Sierra Leone</option>
-                              <option value="Singapore" %%=IIF(@country=='Singapore', "selected", "")=%%>Singapore</option>
-                              <option value="Sint Maarten" %%=IIF(@country=='Sint Maarten', "selected", "")=%%>Sint Maarten
-                              </option>
-                              <option value="Slovakia" %%=IIF(@country=='Slovakia', "selected", "")=%%>Slovakia</option>
-                              <option value="Slovenia" %%=IIF(@country=='Slovenia', "selected", "")=%%>Slovenia</option>
-                              <option value="Solomon Islands" %%=IIF(@country=='Solomon Islands', "selected", "")=%%>Solomon Islands</option>
-                              <option value="Somalia" %%=IIF(@country=='Somalia', "selected", "")=%%>Somalia</option>
-                              <option value="South Africa" %%=IIF(@country=='South Africa', 'selected', "")=%%>South Africa</option>
-                              <option value="South Georgia and the South Sandwich Islands" %%=IIF(@country=='South Georgia and the South Sandwich Islands', "selected", "")=%%>South Georgia and the South Sandwich Islands</option>
-                              <option value="South Sudan" %%=IIF(@country=='South Sudan', "selected", "")=%%>South Sudan</option>
-                              <option value="Spain" %%=IIF(@country=='Spain', "selected", "")=%%>Spain</option>
-                              <option value="Sri Lanka" %%=IIF(@country=='Sri Lanka', "selected", "")=%%>Sri Lanka</option>
-                              <option value="State of Palestine" %%=IIF(@country=='State of Palestine', "selected", "")=%%>State of Palestine</option>
-                              <option value="Sudan" %%=IIF(@country=='Sudan', "selected", "")=%%>Sudan</option>
-                              <option value="Suriname" %%=IIF(@country=='Suriname', "selected", "")=%%>Suriname</option>
-                              <option value="Svalbard And Jan Mayen" %%=IIF(@country=='Svalbard And Jan Mayen', "selected", "")=%%>Svalbard And Jan Mayen</option>
-                              <option value="Swaziland" %%=IIF(@country=='Swaziland', "selected", "")=%%>Swaziland</option>
-                              <option value="Sweden" %%=IIF(@country=='Sweden', "selected", "")=%%>Sweden</option>
-                              <option value="Switzerland" %%=IIF(@country=='Switzerland', "selected", "")=%%>Switzerland</option>
-                              <option value="Syrian Arab Republic" %%=IIF(@country=='Syrian Arab Republic', "selected", "")=%%>Syrian Arab Republic</option>
-                              <option value="Taiwan" %%=IIF(@country=='Taiwan', "selected", "")=%%>Taiwan</option>
-                              <option value="Tajikistan" %%=IIF(@country=='Tajikistan', "selected", "")=%%>Tajikistan</option>
-                              <option value="Thailand" %%=IIF(@country=='Thailand', "selected", "")=%%>Thailand</option>
-                              <option value="Timor-Leste" %%=IIF(@country=='Timor-Leste', "selected", "")=%%>Timor-Leste</option>
-                              <option value="Togo" %%=IIF(@country=='Togo', "selected", "")=%%>Togo</option>
-                              <option value="Tokelau" %%=IIF(@country=='Tokelau', "selected", "")=%%>Tokelau</option>
-                              <option value="Tonga" %%=IIF(@country=='Tonga', "selected", "")=%%>Tonga</option>
-                              <option value="Trinidad And Tobago" %%=IIF(@country=='Trinidad And Tobago', "selected", "")=%%>Trinidad And Tobago</option>
-                              <option value="Tunisia" %%=IIF(@country=='Tunisia', "selected", "")=%%>Tunisia</option>
-                              <option value="Turkey"  %%=IIF(@country=='Turkey', "selected", "")=%%>Turkey</option>
-                              <option value="Turkmenistan" %%=IIF(@country=='Turkmenistan', "selected", "")=%%>Turkmenistan</option>
-                              <option value="Turks And Caicos Islands" %%=IIF(@country=='Turks And Caicos Islands', "selected", "")=%%>Turks And Caicos Islands
-                              </option>
-                              <option value="Tuvalu" %%=IIF(@country=='Tuvalu', "selected", "")=%%>Tuvalu</option>
-                              <option value="Uganda" %%=IIF(@country=='Uganda', "selected", "")=%%>Uganda</option>
-                              <option value="Ukraine" %%=IIF(@country=='Ukraine', "selected", "")=%%>Ukraine</option>
-                              <option value="United Arab Emirates" %%=IIF(@country=='United Arab Emirates', "selected", "")=%%>United Arab Emirates</option>
-                              <option value="United Kingdom (UK)" %%=IIF(@country=='United Kingdom (UK)', "selected", "")=%%>United Kingdom (UK)</option>
-                              <option value="United Republic of Tanzania" %%=IIF(@country=='United Republic of Tanzania', "selected", "")=%%>United Republic of Tanzania</option>
-                              <option value="United States of America" %%=IIF(@country=='United States of America', "selected", "")=%%>United States of America</option>
-                              <option value="United States Minor Outlying Islands" %%=IIF(@country=='United States Minor Outlying Islands', "selected", "")=%%>United States Minor
-                                  Outlying Islands</option>
-                              <option value="Uruguay" %%=IIF(@country=='Uruguay', "selected", "")=%%>Uruguay</option>
-                              <option value="Uzbekistan" %%=IIF(@country=='Uzbekistan', "selected", "")=%%>Uzbekistan</option>
-                              <option value="Vanuatu" %%=IIF(@country=='Vanuatu', "selected", "")=%%>Vanuatu</option>
-                              <option value="Venezuela" %%=IIF(@country=='Venezuela', "selected", "")=%%>Venezuela</option>
-                              <option value="Viet Nam" %%=IIF(@country=='Viet Nam', "selected", "")=%%>Viet Nam</option>
-                              <option value="Virgin Islands, British" %%=IIF(Replace(@country, ",", "") == 'Virgin Islands British', "selected", "")=%%>Virgin Islands, British</option>
-                              <option value="Virgin Islands, U.S." %%=IIF(Replace(@country, ",", "") == 'Virgin Islands U.S.', "selected", "")=%%>Virgin Islands, U.S.</option>
-                              <option value="Wallis And Futuna Islands" %%=IIF(@country=='Wallis And Futuna Islands', "selected", "")=%%>Wallis And Futuna Islands
-                              </option>
-                              <option value="Western Sahara" %%=IIF(@country=='Western Sahara', "selected", "")=%%>Western Sahara</option>
-                              <option value="Yemen" %%=IIF(@country=='Yemen', "selected", "")=%%>Yemen</option>
-                              <option value="Zambia" %%=IIF(@country=='Zambia', "selected", "")=%%>Zambia</option>
-                              <option value="Zimbabwe" %%=IIF(@country=='Zimbabwe', "selected", "")=%%>Zimbabwe</option>
+                          <select class="form-control" name="profileCountry" id="profileCountry" required>
+                                <option value="">اختر الدولة</option>
+                               <option value="Afghanistan" %%=IIF(@country=='Afghanistan', "selected", "")=%% >أفغانستان</option>
+<option value="Aland Islands" %%=IIF(@country=='Aland Islands', 'selected', "")=%%>جزر آلاند</option>
+<option value="Albania" %%=IIF(@country=='Albania', "selected", "")=%%>ألبانيا</option>
+<option value="Algeria" %%=IIF(@country=='Algeria', "selected", "")=%%>الجزائر</option>
+<option value="American Samoa" %%=IIF(@country=='American Samoa', "selected", "")=%%>ساموا الأمريكية</option>
+<option value="Andorra" %%=IIF(@country=='Andorra', "selected", "")=%%>أندورا</option>
+<option value="Angola" %%=IIF(@country=='Angola', "selected", "")=%%>أنغولا</option>
+<option value="Anguilla" %%=IIF(@country=='Anguilla', "selected", "")=%%>أنغيلا</option>
+<option value="Antarctica" %%=IIF(@country=='Antarctica', "selected", "")=%%>أنتاركتيكا</option>
+<option value="Antigua And Barbuda" %%=IIF(@country=='Antigua And Barbuda', "selected", "")=%%>أنتيغوا وباربودا</option>
+<option value="Argentina" %%=IIF(@country=='Argentina', "selected", "")=%%>الأرجنتين</option>
+<option value="Armenia" %%=IIF(@country=='Armenia', "selected", "")=%%>أرمينيا</option>
+<option value="Aruba" %%=IIF(@country=='Aruba', "selected", "")=%%>أروبا</option>
+<option value="Australia" %%=IIF(@country=='Australia', "selected", "")=%%>أستراليا</option>
+<option value="Austria" %%=IIF(@country=='Austria', "selected", "")=%%>النمسا</option>
+<option value="Azerbaijan" %%=IIF(@country=='Azerbaijan', "selected", "")=%%>أذربيجان</option>
+<option value="Bahamas" %%=IIF(@country=='Bahamas', "selected", "")=%%>الباهاما</option>
+<option value="Bahrain" %%=IIF(@country=='Bahrain', "selected", "")=%%>البحرين</option>
+<option value="Bangladesh" %%=IIF(@country=='Bangladesh', "selected", "")=%%>بنغلاديش</option>
+<option value="Barbados" %%=IIF(@country=='Barbados', "selected", "")=%%>بربادوس</option>
+<option value="Belarus" %%=IIF(@country=='Belarus', "selected", "")=%%>بيلاروسيا</option>
+<option value="Belgium" %%=IIF(@country=='Belgium', "selected", "")=%%>بلجيكا</option>
+<option value="Belize" %%=IIF(@country=='Belize', "selected", "")=%%>بليز</option>
+<option value="Benin" %%=IIF(@country=='Benin', "selected", "")=%%>بنين</option>
+<option value="Bermuda" %%=IIF(@country=='Bermuda', "selected", "")=%%>برمودا</option>
+<option value="Bhutan" %%=IIF(@country=='Bhutan', "selected", "")=%%>بوتان</option>
+<option value="Bolivia" %%=IIF(@country=='Bolivia', "selected", "")=%%>بوليفيا</option>
+<option value="Bosnia and Herzegovina" %%=IIF(@country=='Bosnia and Herzegovina', "selected", "")=%%>البوسنة والهرسك</option>
+<option value="Botswana"  %%=IIF(@country=='Botswana', "selected", "")=%%>بوتسوانا</option>
+<option value="Bouvet Island" %%=IIF(@country=='Bouvet Island', "selected", "")=%%>جزيرة بوفيه</option>
+<option value="Brazil" %%=IIF(@country=='Brazil', "selected", "")=%%>البرازيل</option>
+<option value="British Indian Ocean Territory" %%=IIF(@country=='British Indian Ocean Territory', "selected", "")=%%>إقليم المحيط الهندي البريطاني</option>
+<option value="Brunei Darussalam" %%=IIF(@country=='Brunei Darussalam', "selected", "")=%%>بروناي دار السلام</option>
+<option value="Bulgaria" %%=IIF(@country=='Bulgaria', "selected", "")=%%>بلغاريا</option>
+<option value="Burkina Faso" %%=IIF(@country=='Burkina Faso', "selected", "")=%%>بوركينا فاسو</option>
+<option value="Burundi" %%=IIF(@country=='Burundi', "selected", "")=%%>بوروندي</option>
+<option value="Cambodia" %%=IIF(@country=='Cambodia', "selected", "")=%%>كمبوديا</option>
+<option value="Cameroon" %%=IIF(@country=='Cameroon', "selected", "")=%%>الكاميرون</option>
+<option value="Canada" %%=IIF(@country=='Canada', "selected", "")=%%>كندا</option>
+<option value="Canary Islands" %%=IIF(@country=='Canary Islands', "selected", "")=%%>جزر الكناري</option>
+<option value="Cabo Verde" %%=IIF(@country=='Cabo Verde', "selected", "")=%%>الرأس الأخضر</option>
+<option value="Caribbean Netherlands" %%=IIF(@country=='Caribbean Netherlands', "selected", "")=%%>الكاريبي هولندا</option>
+<option value="Cayman Islands" %%=IIF(@country=='Cayman Islands', "selected", "")=%%>جزر كايمان</option>
+<option value="Central African Republic" %%=IIF(@country=='Central African Republic', selected, "")=%%>جمهورية أفريقيا الوسطى</option>
+<option value="Ceuta & Melilla" %%=IIF(@country=='Ceuta & Melilla', selected, "")=%%>سبتة ومليلية</option>
+<option value="Chad" %%=IIF(@country=='Chad', "selected", "")=%%>تشاد</option>
+<option value="Chile" %%=IIF(@country=='Chile', "selected", "")=%%>تشيلي</option>
+<option value="China" %%=IIF(@country=='China', "selected", "")=%%>الصين</option>
+<option value="Christmas Island" %%=IIF(@country=='Christmas Island', "selected", "")=%%>جزيرة كريسماس</option>
+<option value="Clipperton Island" %%=IIF(@country=='Clipperton Island', "selected", "")=%%>جزيرة كليبرتون</option>
+<option value="Cocos (Keeling) Islands" %%=IIF(@country=='Cocos (Keeling) Islands', "selected", "")=%%>جزر كوكوس (كيلينغ)</option>
+<option value="Colombia" %%=IIF(@country=='Colombia', "selected", "")=%%>كولومبيا</option>
+<option value="Commonwealth of Dominica" %%=IIF(@country=='Commonwealth of Dominica', "selected", "")=%%>دومينيكا</option>
+<option value="Comoros" %%=IIF(@country=='Comoros', "selected", "")=%%>جزر القمر</option>
+<option value="Congo" %%=IIF(@country=='Congo', "selected", "")=%%>الكونغو</option>
+<option value="Cook Islands" %%=IIF(@country=='Cook Islands', "selected", "")=%%>جزر كوك</option>
+<option value="Costa Rica" %%=IIF(@country=='Costa Rica', "selected", "")=%%>كوستاريكا</option>
+<option value="Cote d'Ivoire" %%=IIF(@country=="Cote d'Ivoire", "selected", "")=%%>كوت ديفوار</option>
+<option value="Croatia" %%=IIF(@country=='Croatia', "selected", "")=%%>كرواتيا</option>
+<option value="Cuba" %%=IIF(@country=='Cuba', "selected", "")=%%>كوبا</option>
+<option value="Curaçao" %%=IIF(@country=='Curaçao', "selected", "")=%%>كوراساو</option>
+<option value="Cyprus" %%=IIF(@country=='Cyprus', "selected", "")=%%>قبرص</option>
+<option value="Czech Republic" %%=IIF(@country=='Czech Republic', "selected", "")=%%>جمهورية التشيك</option>
+<option value="Democratic Republic of the Congo" %%=IIF(@country=='Democratic Republic of the Congo', "selected", "")=%%>جمهورية الكونغو الديمقراطية</option>
+<option value="Denmark" %%=IIF(@country=='Denmark', "selected", "")=%%>الدنمارك</option>
+<option value="Djibouti" %%=IIF(@country=='Djibouti', "selected", "")=%%>جيبوتي</option>
+<option value="Dominican Republic" %%=IIF(@country=='Dominican Republic', "selected", "")=%%>جمهورية الدومينيكان</option>
+<option value="Ecuador" %%=IIF(@country=='Ecuador', "selected", "")=%%>الإكوادور</option>
+<option value="Egypt" %%=IIF(@country=='Egypt', "selected", "")=%%>مصر</option>
+<option value="El Salvador" %%=IIF(@country=='El Salvador', "selected", "")=%%>السلفادور</option>
+<option value="Equatorial Guinea" %%=IIF(@country=='Equatorial Guinea', "selected", "")=%%>غينيا الاستوائية</option>
+<option value="Eritrea" %%=IIF(@country=='Eritrea', "selected", "")=%%>إريتريا</option>
+<option value="Estonia"  %%=IIF(@country=='Estonia', "selected", "")=%%>إستونيا</option>
+<option value="Eswatini"  %%=IIF(@country=='Eswatini', "selected", "")=%%>إسواتيني</option>
+<option value="Ethiopia" %%=IIF(@country=='Ethiopia', "selected", "")=%%>إثيوبيا</option>
+<option value="Falkland Islands" %%=IIF(@country=='Falkland Islands', "selected", "")=%%>جزر فوكلاند</option>
+<option value="Faroe Islands" %%=IIF(@country=='Faroe Islands', "selected", "")=%%>جزر فارو</option>
+<option value="Fiji" %%=IIF(@country=='Fiji', "selected", "")=%%>فيجي</option>
+<option value="Finland" %%=IIF(@country=='Finland', "selected", "")=%%>فنلندا</option>
+<option value="France" %%=IIF(@country=='France', "selected", "")=%%>فرنسا</option>
+<option value="French Guiana" %%=IIF(@country=='French Guiana', "selected", "")=%%>غويانا الفرنسية</option>
+<option value="French Polynesia" %%=IIF(@country=='French Polynesia', "selected", "")=%%>بولينيزيا الفرنسية</option>
+<option value="French Southern Territories" %%=IIF(@country=='French Southern Territories', "selected", "")=%%>الأقاليم الجنوبية الفرنسية</option>
+<option value="Gabon" %%=IIF(@country=='Gabon', "selected", "")=%%>الغابون</option>
+<option value="Gambia" %%=IIF(@country=='Gambia', "selected", "")=%%>غامبيا</option>
+<option value="Georgia" %%=IIF(@country=='Georgia', "selected", "")=%%>جورجيا</option>
+<option value="Germany" %%=IIF(@country=='Germany', "selected", "")=%%>ألمانيا</option>
+<option value="Ghana" %%=IIF(@country=='Ghana', "selected", "")=%%>غانا</option>
+<option value="Gibraltar" %%=IIF(@country=='Gibraltar', "selected", "")=%%>جبل طارق</option>
+<option value="Greece" %%=IIF(@country=='Greece', "selected", "")=%%>اليونان</option>
+<option value="Greenland" %%=IIF(@country=='Greenland', "selected", "")=%%>جرينلاند</option>
+<option value="Grenada" %%=IIF(@country=='Grenada', "selected", "")=%%>غرينادا</option>
+<option value="Guadeloupe" %%=IIF(@country=='Guadeloupe', "selected", "")=%%>غوادلوب</option>
+<option value="Guam"  %%=IIF(@country=='Guam', "selected", "")=%%>غوام</option>
+<option value="Guatemala" %%=IIF(@country=='Guatemala', "selected", "")=%%>غواتيمالا</option>
+<option value="Guernsey" %%=IIF(@country=='Guernsey', "selected", "")=%%>غيرنزي</option>
+<option value="Guinea" %%=IIF(@country=='Guinea', "selected", "")=%%>غينيا</option>
+<option value="Guinea-Bissau" %%=IIF(@country=='Guinea-Bissau', "selected", "")=%%>غينيا بيساو</option>
+    <option value="Guyana" %%=IIF(@country=='Guyana', "selected", "")=%%>غيانا</option>
+    <option value="Haiti" %%=IIF(@country=='Haiti', "selected", "")=%%>هايتي</option>
+    <option value="Heard Island and McDonald Islands" %%=IIF(@country=='Heard Island and McDonald Islands', "selected", "")=%%>جزيرة هيرد وجزر ماكدونالد</option>
+    <option value="Holy See (Vatican)" %%=IIF(@country=='Holy See (Vatican)', "selected", "")=%%>الفاتيكان</option>
+<option value="Honduras" %%=IIF(@country=='Honduras', "selected", "")=%%>هندوراس</option>
+<option value="Hong Kong Special Administrative Region" %%=IIF(@country=='Hong Kong Special Administrative Region', "selected", "")=%%>هونغ كونغ</option>
+<option value="Hungary" %%=IIF(@country=='Hungary', "selected", "")=%%>المجر</option>
+<option value="Iceland" %%=IIF(@country=='Iceland', "selected", "")=%%>أيسلندا</option>
+<option value="India"  %%=IIF(@country=='India', "selected", "")=%%>الهند</option>
+<option value="Indonesia" %%=IIF(@country=='Indonesia', "selected", "")=%%>إندونيسيا</option>
+<option value="Iran (Islamic Republic of)" %%=IIF(@country=='Iran (Islamic Republic of)', "selected", "")=%%>إيران</option>
+<option value="Iraq" %%=IIF(@country=='Iraq', "selected", "")=%%>العراق</option>
+<option value="Ireland" %%=IIF(@country=='Ireland', "selected", "")=%%>أيرلندا</option>
+<option value="Israel" %%=IIF(@country=='Israel', "selected", "")=%%>إسرائيل</option>
+<option value="Isle of Man" %%=IIF(@country=='Isle of Man', "selected", "")=%%>جزيرة مان</option>
+<option value="Italy" %%=IIF(@country=='Italy', "selected", "")=%%>إيطاليا</option>
+<option value="Jamaica" %%=IIF(@country=='Jamaica', "selected", "")=%%>جامايكا</option>
+<option value="Japan" %%=IIF(@country=='Japan', "selected", "")=%%>اليابان</option>
+<option value="Jersey" %%=IIF(@country=='Jersey', "selected", "")=%%>جيرسي</option>
+<option value="Jordan" %%=IIF(@country=='Jordan', "selected", "")=%%>الأردن</option>
+<option value="Kazakhstan" %%=IIF(@country=='Kazakhstan', "selected", "")=%%>كازاخستان</option>
+<option value="Kenya" %%=IIF(@country=='Kenya', "selected", "")=%%>كينيا</option>
+<option value="Kiribati" %%=IIF(@country=='Kiribati', "selected", "")=%%>كيريباتي</option>
+<option value="Kosovo" %%=IIF(@country=='Kosovo', "selected", "")=%%>كوسوفو</option>
+<option value="Kuwait" %%=IIF(@country=='Kuwait', "selected", "")=%%>الكويت</option>
+<option value="Kyrgyzstan" %%=IIF(@country=='Kyrgyzstan', "selected", "")=%%>قيرغيزستان</option>
+<option value="Laos People's Democratic Republic" %%=IIF(@country=='Laos People's Democratic Republic', "selected", "")=%%>لاوس</option>
+<option value="Latvia" %%=IIF(@country=='Latvia', "selected", "")=%%>لاتفيا</option>
+<option value="Latvia Resident" %%=IIF(@country=='Latvia Resident', "selected", "")=%%>مقيم في لاتفيا</option>
+<option value="Lebanon" %%=IIF(@country=='Lebanon', "selected", "")=%%>لبنان</option>
+<option value="Lesotho" %%=IIF(@country=='Lesotho', "selected", "")=%%>ليسوتو</option>
+<option value="Liberia" %%=IIF(@country=='Liberia', "selected", "")=%%>ليبيريا</option>
+<option value="Libya" %%=IIF(@country=='Libya', "selected", "")=%%>ليبيا</option>
+<option value="Liechtenstein" %%=IIF(@country=='Liechtenstein', "selected", "")=%%>ليختنشتاين</option>
+<option value="Lithuania" %%=IIF(@country=='Lithuania', "selected", "")=%%>ليتوانيا</option>
+<option value="Luxembourg" %%=IIF(@country=='Luxembourg', "selected", "")=%%>لوكسمبورغ</option>
+<option value="Macao" %%=IIF(@country=='Macao', "selected", "")=%%>ماكاو</option>
+<option value="Madagascar" %%=IIF(@country=='Madagascar', "selected", "")=%%>مدغشقر</option>
+<option value="Malawi" %%=IIF(@country=='Malawi', "selected", "")=%%>مالاوي</option>
+<option value="Malaysia" %%=IIF(@country=='Malaysia', "selected", "")=%%>ماليزيا</option>
+<option value="Maldives" %%=IIF(@country=='Maldives', "selected", "")=%%>المالديف</option>
+<option value="Mali" %%=IIF(@country=='Mali', "selected", "")=%%>مالي</option>
+<option value="Malta" %%=IIF(@country=='Malta', "selected", "")=%%>مالطا</option>
+<option value="Marshall Islands" %%=IIF(@country=='Marshall Islands', "selected", "")=%%>جزر مارشال</option>
+<option value="Martinique" %%=IIF(@country=='Martinique', "selected", "")=%%>مارتينيك</option>
+<option value="Mauritania" %%=IIF(@country=='Mauritania', "selected", "")=%%>موريتانيا</option>
+<option value="Mauritius" %%=IIF(@country=='Mauritius', "selected", "")=%%>موريشيوس</option>
+<option value="Mayotte" %%=IIF(@country=='Mayotte', "selected", "")=%%>مايوت</option>
+<option value="Mexico" %%=IIF(@country=='Mexico', "selected", "")=%%>المكسيك</option>
+<option value="Micronesia (Federated States of)" %%=IIF(@country=='Micronesia (Federated States of)', "selected", "")=%%>ميكرونيزيا</option>
+<option value="Monaco" %%=IIF(@country=='Monaco', "selected", "")=%%>موناكو</option>
+<option value="Mongolia" %%=IIF(@country=='Mongolia', "selected", "")=%%>منغوليا</option>
+<option value="Montenegro" %%=IIF(@country=='Montenegro', "selected", "")=%%>الجبل الأسود</option>
+<option value="Montserrat" %%=IIF(@country=='Montserrat', "selected", "")=%%>مونتسرات</option>
+<option value="Morocco" %%=IIF(@country=='Morocco', "selected", "")=%%>المغرب</option>
+<option value="Mozambique" %%=IIF(@country=='Mozambique', "selected", "")=%%>موزمبيق</option>
+<option value="Myanmar" %%=IIF(@country=='Myanmar', "selected", "")=%%>ميانمار</option>
+<option value="Namibia" %%=IIF(@country=='Namibia', "selected", "")=%%>ناميبيا</option>
+<option value="Nauru" %%=IIF(@country=='Nauru', "selected", "")=%%>ناورو</option>
+<option value="Nepal" %%=IIF(@country=='Nepal', "selected", "")=%%>نيبال</option>
+<option value="Netherlands Antilles" %%=IIF(@country=='Netherlands Antilles', "selected", "")=%%>جزر الأنتيل الهولندية</option>
+<option value="Netherlands" %%=IIF(@country=='Netherlands', "selected", "")=%%>هولندا</option>
+<option value="New Caledonia" %%=IIF(@country=='New Caledonia', "selected", "")=%%>كاليدونيا الجديدة</option>
+<option value="New Zealand" %%=IIF(@country=='New Zealand', "selected", "")=%%>نيوزيلندا</option>
+<option value="Nicaragua" %%=IIF(@country=='Nicaragua', "selected", "")=%%>نيكاراغوا</option>
+<option value="Niger" %%=IIF(@country=='Niger', "selected", "")=%%>النيجر</option>
+<option value="Nigeria" %%=IIF(@country=='Nigeria', "selected", "")=%%>نيجيريا</option>
+<option value="Niue" %%=IIF(@country=='Niue', "selected", "")=%%>نيوي</option>
+<option value="Norfolk Island" %%=IIF(@country=='Norfolk Island', "selected", "")=%%>جزيرة نورفولك</option>
+<option value="North Korea" %%=IIF(@country=='North Korea', "selected", "")=%%>كوريا الشمالية</option>
+<option value="Northern Mariana Islands" %%=IIF(@country=='Northern Mariana Islands', "selected", "")=%%>جزر ماريانا الشمالية</option>
+<option value="Norway" %%=IIF(@country=='Norway', "selected", "")=%%>النرويج</option>
+<option value="Oman" %%=IIF(@country=='Oman', "selected", "")=%%>عمان</option>
+<option value="Pakistan" %%=IIF(@country=='Pakistan', "selected", "")=%%>باكستان</option>
+<option value="Palau" %%=IIF(@country=='Palau', "selected", "")=%%>بالاو</option>
+<option value="Panama" %%=IIF(@country=='Panama', "selected", "")=%%>بنما</option>
+<option value="Papua new Guinea" %%=IIF(@country=='Papua new Guinea', "selected", "")=%%>بابوا غينيا الجديدة</option>
+<option value="Paraguay" %%=IIF(@country=='Paraguay', "selected", "")=%%>باراغواي</option>
+<option value="Peru" %%=IIF(@country=='Peru', "selected", "")=%%>بيرو</option>
+<option value="Philippines" %%=IIF(@country=='Philippines', "selected", "")=%%>الفلبين</option>
+<option value="Pitcairn" %%=IIF(@country=='Pitcairn', "selected", "")=%%>بيتكيرن</option>
+<option value="Poland" %%=IIF(@country=='Poland', "selected", "")=%%>بولندا</option>
+<option value="Portugal" %%=IIF(@country=='Portugal', "selected", "")=%%>البرتغال</option>
+<option value="Puerto Rico" %%=IIF(@country=='Puerto Rico', "selected", "")=%%>بورتوريكو</option>
+<option value="Qatar" %%=IIF(@country=='Qatar', "selected", "")=%%>قطر</option>
+<option value="Republic of Korea" %%=IIF(@country=='Republic of Korea', "selected", "")=%%>جمهورية كوريا</option>
+<option value="Republic of Macedonia" %%=IIF(@country=='Republic of Macedonia', "selected", "")=%%>جمهورية مقدونيا</option>
+<option value="Republic of Moldova" %%=IIF(@country=='Republic of Moldova', "selected", "")=%%>جمهورية مولدوفا</option>
+<option value="Republic of Somaliland" %%=IIF(@country=='Republic of Somaliland', "selected", "")=%%>جمهورية أرض الصومال</option>
+<option value="Reunion" %%=IIF(@country=='Reunion', "selected", "")=%%>ريونيون</option>
+<option value="Romania" %%=IIF(@country=='Romania', "selected", "")=%%>رومانيا</option>
+<option value="Russian Federation" %%=IIF(@country=='Russian Federation', "selected", "")=%%>الاتحاد الروسي</option>
+<option value="Rwanda" %%=IIF(@country=='Rwanda', "selected", "")=%%>رواندا</option>
+<option value="Saint Helena" %%=IIF(@country=='Saint Helena', "selected", "")=%%>سانت هيلينا</option>
+<option value="Saint Kitts And Nevis" %%=IIF(@country=='Saint Kitts And Nevis', "selected", "")=%%>سانت كيتس ونيفيس</option>
+<option value="Saint Lucia" %%=IIF(@country=='Saint Lucia', "selected", "")=%%>سانت لوسيا</option>
+<option value="Saint Pierre and Miquelon" %%=IIF(@country=='Saint Pierre and Miquelon', "selected", "")=%%>سانت بيير وميكلون</option>
+<option value="Saint Vincent And The Grenadines" %%=IIF(@country=='Saint Vincent And The Grenadines', "selected", "")=%%>سانت فنسنت والغرينادين</option>
+<option value="Saint Barthelemy" %%=IIF(@country=='Saint Barthelemy', "selected", "")=%%>سانت بارتيليمي</option>
+<option value="Saint Martin (French part)" %%=IIF(@country=='Saint Martin (French part)', "selected", "")=%%>سانت مارتن (الجزء الفرنسي)</option>
+<option value="Samoa" %%=IIF(@country=='Samoa', "selected", "")=%%>ساموا</option>
+<option value="San Marino" %%=IIF(@country=='San Marino', "selected", "")=%%>سان مارينو</option>
+<option value="Sao Tome and Principe" %%=IIF(@country=='Sao Tome and Principe', "selected", "")=%%>ساو تومي وبرينسيبي</option>
+<option value="Saudi Arabia" %%=IIF(@country=='Saudi Arabia', "selected", "")=%%>المملكة العربية السعودية</option>
+<option value="Senegal" %%=IIF(@country=='Senegal', "selected", "")=%%>السنغال</option>
+<option value="Serbia" %%=IIF(@country=='Serbia', "selected", "")=%%>صربيا</option>
+<option value="Seychelles" %%=IIF(@country=='Seychelles', "selected", "")=%%>سيشل</option>
+<option value="Sierra Leone" %%=IIF(@country=='Sierra Leone', "selected", "")=%%>سيراليون</option>
+<option value="Singapore" %%=IIF(@country=='Singapore', "selected", "")=%%>سنغافورة</option>
+<option value="Sint Maarten" %%=IIF(@country=='Sint Maarten', "selected", "")=%%>سينت مارتن</option>
+<option value="Slovakia" %%=IIF(@country=='Slovakia', "selected", "")=%%>سلوفاكيا</option>
+<option value="Slovenia" %%=IIF(@country=='Slovenia', "selected", "")=%%>سلوفينيا</option>
+<option value="Solomon Islands" %%=IIF(@country=='Solomon Islands', "selected", "")=%%>جزر سليمان</option>
+<option value="Somalia" %%=IIF(@country=='Somalia', "selected", "")=%%>الصومال</option>
+<option value="South Africa" %%=IIF(@country=='South Africa', 'selected', "")=%%>جنوب أفريقيا</option>
+<option value="South Georgia and the South Sandwich Islands" %%=IIF(@country=='South Georgia and the South Sandwich Islands', "selected", "")=%%>جورجيا الجنوبية وجزر ساندويتش الجنوبية</option>
+<option value="South Sudan" %%=IIF(@country=='South Sudan', "selected", "")=%%>جنوب السودان</option>
+<option value="Spain" %%=IIF(@country=='Spain', "selected", "")=%%>إسبانيا</option>
+<option value="Sri Lanka" %%=IIF(@country=='Sri Lanka', "selected", "")=%%>سريلانكا</option>
+<option value="State of Palestine" %%=IIF(@country=='State of Palestine', "selected", "")=%%>دولة فلسطين</option>
+<option value="Sudan" %%=IIF(@country=='Sudan', "selected", "")=%%>السودان</option>
+<option value="Suriname" %%=IIF(@country=='Suriname', "selected", "")=%%>سورينام</option>
+<option value="Svalbard And Jan Mayen" %%=IIF(@country=='Svalbard And Jan Mayen', "selected", "")=%%>سفالبارد ويان ماين</option>
+<option value="Swaziland" %%=IIF(@country=='Swaziland', "selected", "")=%%>سوازيلاند</option>
+<option value="Sweden" %%=IIF(@country=='Sweden', "selected", "")=%%>السويد</option>
+<option value="Switzerland" %%=IIF(@country=='Switzerland', "selected", "")=%%>سويسرا</option>
+<option value="Syrian Arab Republic" %%=IIF(@country=='Syrian Arab Republic', "selected", "")=%%>الجمهورية العربية السورية</option>
+<option value="Taiwan" %%=IIF(@country=='Taiwan', "selected", "")=%%>تايوان</option>
+<option value="Tajikistan" %%=IIF(@country=='Tajikistan', "selected", "")=%%>طاجيكستان</option>
+<option value="Thailand" %%=IIF(@country=='Thailand', "selected", "")=%%>تايلاند</option>
+<option value="Timor-Leste" %%=IIF(@country=='Timor-Leste', "selected", "")=%%>تيمور الشرقية</option>
+<option value="Togo" %%=IIF(@country=='Togo', "selected", "")=%%>توغو</option>
+<option value="Tokelau" %%=IIF(@country=='Tokelau', "selected", "")=%%>توكلاو</option>
+<option value="Tonga" %%=IIF(@country=='Tonga', "selected", "")=%%>تونغا</option>
+<option value="Trinidad And Tobago" %%=IIF(@country=='Trinidad And Tobago', "selected", "")=%%>ترينيداد وتوباغو</option>
+<option value="Tunisia" %%=IIF(@country=='Tunisia', "selected", "")=%%>تونس</option>
+<option value="Turkey" %%=IIF(@country=='Turkey', "selected", "")=%%>تركيا</option>
+<option value="Turkmenistan" %%=IIF(@country=='Turkmenistan', "selected", "")=%%>تركمانستان</option>
+<option value="Turks And Caicos Islands" %%=IIF(@country=='Turks And Caicos Islands', "selected", "")=%%>جزر تركس وكايكوس</option>
+<option value="Tuvalu" %%=IIF(@country=='Tuvalu', "selected", "")=%%>توفالو</option>
+<option value="Uganda" %%=IIF(@country=='Uganda', "selected", "")=%%>أوغندا</option>
+<option value="Ukraine" %%=IIF(@country=='Ukraine', "selected", "")=%%>أوكرانيا</option>
+<option value="United Arab Emirates" %%=IIF(@country=='United Arab Emirates', "selected", "")=%%>الإمارات العربية المتحدة</option>
+<option value="United Kingdom (UK)" %%=IIF(@country=='United Kingdom (UK)', "selected", "")=%%>المملكة المتحدة (بريطانيا)</option>
+<option value="United Republic of Tanzania" %%=IIF(@country=='United Republic of Tanzania', "selected", "")=%%>جمهورية تنزانيا المتحدة</option>
+<option value="United States of America" %%=IIF(@country=='United States of America', "selected", "")=%%>الولايات المتحدة الأمريكية</option>
+<option value="United States Minor Outlying Islands" %%=IIF(@country=='United States Minor Outlying Islands', "selected", "")=%%>جزر الولايات المتحدة الصغيرة النائية</option>
+<option value="Uruguay" %%=IIF(@country=='Uruguay', "selected", "")=%%>أوروغواي</option>
+<option value="Uzbekistan" %%=IIF(@country=='Uzbekistan', "selected", "")=%%>أوزبكستان</option>
+<option value="Vanuatu" %%=IIF(@country=='Vanuatu', "selected", "")=%%>فانواتو</option>
+<option value="Venezuela" %%=IIF(@country=='Venezuela', "selected", "")=%%>فنزويلا</option>
+<option value="Viet Nam" %%=IIF(@country=='Viet Nam', "selected", "")=%%>فيتنام</option>
+<option value="Virgin Islands, British" %%=IIF(Replace(@country, ",", "") == 'Virgin Islands British', "selected", "")=%%>جزر فيرجن البريطانية</option>
+<option value="Virgin Islands, U.S." %%=IIF(Replace(@country, ",", "") == 'Virgin Islands U.S.', "selected", "")=%%>جزر فيرجن الأمريكية</option>
+<option value="Wallis And Futuna" %%=IIF(@country=='Wallis And Futuna', "selected", "")=%%>واليس وفوتونا</option>
+<option value="Western Sahara" %%=IIF(@country=='Western Sahara', "selected", "")=%%>الصحراء الغربية</option>
+<option value="Yemen" %%=IIF(@country=='Yemen', "selected", "")=%%>اليمن</option>
+<option value="Zambia" %%=IIF(@country=='Zambia', "selected", "")=%%>زامبيا</option>
+<option value="Zimbabwe" %%=IIF(@country=='Zimbabwe', "selected", "")=%%>زمبابوي</option>
+<option value="Others" %%=IIF(@country=='Others', "selected", "")=%%>آخرون</option>
 
-  
-  
                      </select>
                    
                           </div>
@@ -1126,17 +1112,17 @@ ul {
 
                  <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                     <div class="form-group">
-                      <label for="">City (<b>UAE Residents only</b>)</label>
+                      <label for="">المدينة (المقيمين في دولة الإمارات العربية المتحدة فقط)</label>
                         <div class="select-wrapper hide-icon custom-">
-                             <select class="form-control" name="city" id="city">
-                               <option value="" %%=IIF(@city=='', "selected", "")=%% selected>Select City</option>
-                               <option value="Ajman" %%=IIF(@city=='Ajman', "selected", "")=%%>Ajman</option>
-                               <option value="Abu Dhabi" %%=IIF(@city=='Abu Dhabi', "selected", "")=%%>Abu Dhabi</option>
-                               <option value="Fujairah" %%=IIF(@city=='Fujairah', "selected", "")=%%>Fujairah</option>
-                               <option value="Dubai" %%=IIF(@city=='Dubai', "selected", "")=%%>Dubai</option>
-                               <option value="Ras Al Khaimah" %%=IIF(@city=='Ras Al Khaimah', "selected", "")=%%>Ras Al Khaimah</option>
-                               <option value="Sharjah" %%=IIF(@city=='Sharjah', "selected", "")=%%>Sharjah</option>
-                               <option value="Umm AL Quwain" %%=IIF(@city=='Umm AL Quwain', "selected", "")=%%>Umm AL Quwain</option>
+                        <select class="form-control" name="city" id="city">
+                               <option value="" %%=IIF(@city=='', "selected", "")=%% selected>اختر المدينة</option>
+                               <option value="Ajman" %%=IIF(@city=='Ajman', "selected", "")=%%>عجمان</option>
+                               <option value="Abu Dhabi" %%=IIF(@city=='Abu Dhabi', "selected", "")=%%>أبو ظبي</option>
+                               <option value="Fujairah" %%=IIF(@city=='Fujairah', "selected", "")=%%>الفجيرة</option>
+                               <option value="Dubai" %%=IIF(@city=='Dubai', "selected", "")=%%>دبي</option>
+                               <option value="Ras Al Khaimah" %%=IIF(@city=='Ras Al Khaimah', "selected", "")=%%>رأس الخيمة</option>
+                               <option value="Sharjah" %%=IIF(@city=='Sharjah', "selected", "")=%%>الشارقة</option>
+                               <option value="Umm AL Quwain" %%=IIF(@city=='Umm AL Quwain', "selected", "")=%%>أم القيوين</option>
                             </select>
                          
                         </div>
@@ -1146,285 +1132,269 @@ ul {
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                     <div class="form-group" data-aos="fade-up"
                         data-aos-anchor-placement="bottom-bottom">
-                        <label for="">Nationality (<b>UAE Residents only</b>)</label>
+                        <label for="">الجنسية (المقيمين في دولة الإمارات العربية المتحدة فقط)</label>
                         <div class="select-wrapper hide-icon">
-                          <select class="form-control" name="profileNationality" id="nationality">
-                            <option value="">Select Nationality</option>
-                                <option value="Afghanistan" %%=IIF(@nationality=='Afghanistan', "selected", "")=%% >Afghanistan</option>
-                              <option value="Aland Islands" %%=IIF(@nationality=='Aland Islands', 'selected', "")=%%>Aland Islands</option>
-                              <option value="Albania" %%=IIF(@nationality=='Albania', "selected", "")=%%>Albania</option>
-                              <option value="Algeria" %%=IIF(@nationality=='Algeria', "selected", "")=%%>Algeria</option>
-                              <option value="American Samoa" %%=IIF(@nationality=='American Samoa', "selected", "")=%%>American Samoa</option>
-                              <option value="Andorra" %%=IIF(@nationality=='Andorra', "selected", "")=%%>Andorra</option>
-                              <option value="Angola" %%=IIF(@nationality=='Angola', "selected", "")=%%>Angola</option>
-                              <option value="Anguilla" %%=IIF(@nationality=='Anguilla', "selected", "")=%%>Anguilla</option>
-                              <option value="Antarctica" %%=IIF(@nationality=='Antarctica', "selected", "")=%%>Antarctica</option>
-                              <option value="Antigua And Barbuda" %%=IIF(@nationality=='Antigua And Barbuda', "selected", "")=%%>Antigua And Barbuda</option>
-                              <option value="Argentina" %%=IIF(@nationality=='Argentina', "selected", "")=%%>Argentina</option>
-                              <option value="Armenia" %%=IIF(@nationality=='Armenia', "selected", "")=%%>Armenia</option>
-                              <option value="Aruba" %%=IIF(@nationality=='Aruba', "selected", "")=%%>Aruba</option>
-                              <option value="Australia" %%=IIF(@nationality=='Australia', "selected", "")=%%>Australia</option>
-                              <option value="Austria" %%=IIF(@nationality=='Austria', "selected", "")=%%>Austria</option>
-                              <option value="Azerbaijan" %%=IIF(@nationality=='Azerbaijan', "selected", "")=%%>Azerbaijan</option>
-                              <option value="Bahamas" %%=IIF(@nationality=='Bahamas', "selected", "")=%%>Bahamas</option>
-                              <option value="Bahrain" %%=IIF(@nationality=='Bahrain', "selected", "")=%%>Bahrain</option>
-                              <option value="Bangladesh" %%=IIF(@nationality=='Bangladesh', "selected", "")=%%>Bangladesh</option>
-                              <option value="Barbados" %%=IIF(@nationality=='Barbados', "selected", "")=%%>Barbados</option>
-                              <option value="Belarus" %%=IIF(@nationality=='Belarus', "selected", "")=%%>Belarus</option>
-                              <option value="Belgium" %%=IIF(@nationality=='Belgium', "selected", "")=%%>Belgium</option>
-                              <option value="Belize" %%=IIF(@nationality=='Belize', "selected", "")=%%>Belize</option>
-                              <option value="Benin" %%=IIF(@nationality=='Benin', "selected", "")=%%>Benin</option>
-                              <option value="Bermuda" %%=IIF(@nationality=='Bermuda', "selected", "")=%%>Bermuda</option>
-                              <option value="Bhutan" %%=IIF(@nationality=='Bhutan', "selected", "")=%%>Bhutan</option>
-                              <option value="Bolivia" %%=IIF(@nationality=='Bolivia', "selected", "")=%%>Bolivia</option>
-                              <option value="Bosnia and Herzegovina" %%=IIF(@nationality=='Bosnia and Herzegovina', "selected", "")=%%>Bosnia and Herzegovina</option>
-                              <option value="Botswana"  %%=IIF(@nationality=='Botswana', "selected", "")=%%>Botswana</option>
-                              <option value="Bouvet Island" %%=IIF(@nationality=='Bouvet Island', "selected", "")=%%>Bouvet Island</option>
-                              <option value="Brazil" %%=IIF(@nationality=='Brazil', "selected", "")=%%>Brazil</option>
-                              <option value="British Indian Ocean Territory" %%=IIF(@nationality=='British Indian Ocean Territory', "selected", "")=%%>British Indian Ocean
-                                  Territory</option>
-                              <option value="Brunei Darussalam" %%=IIF(@nationality=='Brunei Darussalam', "selected", "")=%%>Brunei Darussalam</option>
-                              <option value="Bulgaria" %%=IIF(@nationality=='Bulgaria', "selected", "")=%%>Bulgaria</option>
-                              <option value="Burkina Faso" %%=IIF(@nationality=='Burkina Faso', "selected", "")=%%>Burkina Faso</option>
-                              <option value="Burundi" %%=IIF(@nationality=='Burundi', "selected", "")=%%>Burundi</option>
-                              <option value="Cambodia" %%=IIF(@nationality=='Cambodia', "selected", "")=%%>Cambodia</option>
-                              <option value="Cameroon" %%=IIF(@nationality=='Cameroon', "selected", "")=%%>Cameroon</option>
-                              <option value="Canada" %%=IIF(@nationality=='Canada', "selected", "")=%%>Canada</option>
-                              <option value="Canary Islands" %%=IIF(@nationality=='Canary Islands', "selected", "")=%%>Canary Islands</option>
-                              <option value="Cabo Verde" %%=IIF(@nationality=='Cabo Verde', "selected", "")=%%>Cabo Verde</option>                    
-                              <option value="Caribbean Netherlands" %%=IIF(@nationality=='Caribbean Netherlands', "selected", "")=%%>Caribbean Netherlands</option>
-                              <option value="Cayman Islands" %%=IIF(@nationality=='Cayman Islands', "selected", "")=%%>Cayman Islands</option>
-                              <option value="Central African Republic" %%=IIF(@nationality=='Central African Republic', selected, "")=%%>Central African Republic
-                              </option>
-                              <option value="Ceuta & Melilla" %%=IIF(@nationality=='Ceuta & Melilla', selected, "")=%%>Ceuta & Melilla
-                              </option>
-                              <option value="Chad" %%=IIF(@nationality=='Chad', "selected", "")=%%>Chad</option>
-                              <option value="Chile" %%=IIF(@nationality=='Chile', "selected", "")=%%>Chile</option>
-                              <option value="China" %%=IIF(@nationality=='China', "selected", "")=%%>China</option>
-                              <option value="Christmas Island" %%=IIF(@nationality=='Christmas Island', "selected", "")=%%>Christmas Island</option>
-                              <option value="Clipperton Island" %%=IIF(@nationality=='Clipperton Island', "selected", "")=%%>Clipperton Island</option>
-                              <option value="Cocos (Keeling) Islands" %%=IIF(@nationality=='Cocos (Keeling) Islands', "selected", "")=%%>Cocos (Keeling) Islands</option>
-                              <option value="Colombia" %%=IIF(@nationality=='Colombia', "selected", "")=%%>Colombia</option>
-                              <option value="Commonwealth of Dominica" %%=IIF(@nationality=='Commonwealth of Dominica', "selected", "")=%%>Commonwealth of Dominica</option>
-                              <option value="Comoros" %%=IIF(@nationality=='Comoros', "selected", "")=%%>Comoros</option>
-                              <option value="Congo" %%=IIF(@nationality=='Congo', "selected", "")=%%>Congo</option>
-                              <option value="Cook Islands" %%=IIF(@nationality=='Cook Islands', "selected", "")=%%>Cook Islands</option>
-                              <option value="Costa Rica" %%=IIF(@nationality=='Costa Rica', "selected", "")=%%>Costa Rica</option>
-                              <option value="Cote d'Ivoire" %%=IIF(@nationality=="Cote d'Ivoire", "selected", "")=%%>Cote d'Ivoire
-                              </option>
-                              <option value="Croatia" %%=IIF(@nationality=='Croatia', "selected", "")=%%>Croatia</option>
-                              <option value="Cuba" %%=IIF(@nationality=='Cuba', "selected", "")=%%>Cuba</option>
-                              <option value="Curaçao" %%=IIF(@nationality=='Curaçao', "selected", "")=%%>Curaçao</option>
-                              <option value="Cyprus" %%=IIF(@nationality=='Cyprus', "selected", "")=%%>Cyprus</option>
-                              <option value="Czech Republic" %%=IIF(@nationality=='Czech Republic', "selected", "")=%%>Czech Republic</option>
-                              <option value="Democratic Republic of the Congo" %%=IIF(@country=='Democratic Republic of the Congo', "selected", "")=%%>Congo The Democratic Republic Of The</option>
-                              <option value="Denmark" %%=IIF(@nationality=='Denmark', "selected", "")=%%>Denmark</option>
-                              <option value="Djibouti" %%=IIF(@nationality=='Djibouti', "selected", "")=%%>Djibouti</option>
-                              <option value="Dominican Republic" %%=IIF(@nationality=='Dominican Republic', "selected", "")=%%>Dominican Republic</option>
-                              <option value="Ecuador" %%=IIF(@nationality=='Ecuador', "selected", "")=%%>Ecuador</option>
-                              <option value="Egypt" %%=IIF(@nationality=='Egypt', "selected", "")=%%>Egypt</option>
-                              <option value="El Salvador" %%=IIF(@nationality=='El Salvador', "selected", "")=%%>El Salvador</option>
-                              <option value="Equatorial Guinea" %%=IIF(@nationality=='Equatorial Guinea', "selected", "")=%%>Equatorial Guinea</option>
-                              <option value="Eritrea" %%=IIF(@nationality=='Eritrea', "selected", "")=%%>Eritrea</option>
-                              <option value="Estonia"  %%=IIF(@nationality=='Estonia', "selected", "")=%%>Estonia</option>
-                              <option value="Eswatini"  %%=IIF(@nationality=='Eswatini', "selected", "")=%%>Eswatini</option>
-                              <option value="Ethiopia" %%=IIF(@nationality=='Ethiopia', "selected", "")=%%>Ethiopia</option>
-                              <option value="Falkland Islands" %%=IIF(@nationality=='Falkland Islands', "selected", "")=%%>Falkland Islands</option>
-                              <option value="Faroe Islands" %%=IIF(@nationality=='Faroe Islands', "selected", "")=%%>Faroe Islands</option>
-                              <option value="Fiji" %%=IIF(@nationality=='Fiji', "selected", "")=%%>Fiji</option>
-                              <option value="Finland" %%=IIF(@nationality=='Finland', "selected", "")=%%>Finland</option>
-                              <option value="France" %%=IIF(@nationality=='France', "selected", "")=%%>France</option>
-                              <option value="French Guiana" %%=IIF(@nationality=='French Guiana', "selected", "")=%%>French Guiana</option>
-                              <option value="French Polynesia" %%=IIF(@nationality=='French Polynesia', "selected", "")=%%>French Polynesia</option>
-                              <option value="French Southern Territories" %%=IIF(@nationality=='French Southern Territories', "selected", "")=%%>French Southern Territories
-                              </option>
-                              <option value="Gabon" %%=IIF(@nationality=='Gabon', "selected", "")=%%>Gabon</option>
-                              <option value="Gambia" %%=IIF(@nationality=='Gambia', "selected", "")=%%>Gambia</option>
-                              <option value="Georgia" %%=IIF(@nationality=='Georgia', "selected", "")=%%>Georgia</option>
-                              <option value="Germany" %%=IIF(@nationality=='Germany', "selected", "")=%%>Germany</option>
-                              <option value="Ghana" %%=IIF(@nationality=='Ghana', "selected", "")=%%>Ghana</option>
-                              <option value="Gibraltar" %%=IIF(@nationality=='Gibraltar', "selected", "")=%%>Gibraltar</option>
-                              <option value="Greece" %%=IIF(@nationality=='Greece', "selected", "")=%%>Greece</option>
-                              <option value="Greenland" %%=IIF(@nationality=='Greenland', "selected", "")=%%>Greenland</option>
-                              <option value="Grenada" %%=IIF(@nationality=='Grenada', "selected", "")=%%>Grenada</option>
-                              <option value="Guadeloupe" %%=IIF(@nationality=='Guadeloupe', "selected", "")=%%>Guadeloupe</option>
-                              <option value="Guam"  %%=IIF(@nationality=='Guam', "selected", "")=%%>Guam</option>
-                              <option value="Guatemala" %%=IIF(@nationality=='Guatemala', "selected", "")=%%>Guatemala</option>
-                              <option value="Guernsey" %%=IIF(@nationality=='Guernsey', "selected", "")=%%>Guernsey</option>
-                              <option value="Guinea" %%=IIF(@nationality=='Guinea', "selected", "")=%%>Guinea</option>
-                              <option value="Guinea-Bissau" %%=IIF(@nationality=='Guinea-Bissau', "selected", "")=%%>Guinea-Bissau</option>
-                              <option value="Guyana" %%=IIF(@nationality=='Guyana', "selected", "")=%%>Guyana</option>
-                              <option value="Haiti" %%=IIF(@nationality=='Haiti', "selected", "")=%%>Haiti</option>
-                              <option value="Heard Island and McDonald Islands" %%=IIF(@nationality=='Heard Island and McDonald Islands', "selected", "")=%%>Heard Island and
-                                  McDonald Islands</option>
-                              <option value="Holy See (Vatican)" %%=IIF(@nationality=='Holy See (Vatican)', "selected", "")=%%>Holy See (Vatican)</option>
-                              <option value="Honduras" %%=IIF(@nationality=='Honduras', "selected", "")=%%>Honduras</option>
-                              <option value="Hong Kong Special Administrative Region" %%=IIF(@nationality=='Hong Kong Special Administrative Region', "selected", "")=%%>Hong Kong Special Administrative Region</option>
-                              <option value="Hungary" %%=IIF(@nationality=='Hungary', "selected", "")=%%>Hungary</option>
-                              <option value="Iceland" %%=IIF(@nationality=='Iceland', "selected", "")=%%>Iceland</option>
-                              <option value="India"  %%=IIF(@nationality=='India', "selected", "")=%%>India</option>
-                              <option value="Indonesia" %%=IIF(@nationality=='Indonesia', "selected", "")=%%>Indonesia</option>
-                              <option value="Iran (Islamic Republic of)" %%=IIF(@nationality=='Iran (Islamic Republic of)', "selected", "")=%%>Iran (Islamic Republic of)</option>
-                              <option value="Iraq" %%=IIF(@nationality=='Iraq', "selected", "")=%%>Iraq</option>
-                              <option value="Ireland" %%=IIF(@nationality=='Ireland', "selected", "")=%%>Ireland</option>
-                              <option value="Israel" %%=IIF(@nationality=='Israel', "selected", "")=%%>Israel</option>
-                              <option value="Isle of Man" %%=IIF(@nationality=='Isle of Man', "selected", "")=%%>Isle of Man</option>
-                              <option value="Italy" %%=IIF(@nationality=='Italy', "selected", "")=%%>Italy</option>
-                              <option value="Jamaica" %%=IIF(@nationality=='Jamaica', "selected", "")=%%>Jamaica</option>
-                              <option value="Japan" %%=IIF(@nationality=='Japan', "selected", "")=%%>Japan</option>
-                              <option value="Jersey" %%=IIF(@nationality=='Jersey', "selected", "")=%%>Jersey</option>
-                              <option value="Jordan" %%=IIF(@nationality=='Jordan', "selected", "")=%%>Jordan</option>
-                              <option value="Kazakhstan" %%=IIF(@nationality=='Kazakhstan', "selected", "")=%%>Kazakhstan</option>
-                              <option value="Kenya"  %%=IIF(@nationality=='Kenya', "selected", "")=%%>Kenya</option>
-                              <option value="Kiribati" %%=IIF(@nationality=='Kiribati', "selected", "")=%%>Kiribati</option>
-                              <option value="Kosovo" %%=IIF(@nationality=='Kosovo', "selected", "")=%%>Kosovo</option>
-                              <option value="Kuwait" %%=IIF(@nationality=='Kuwait', "selected", "")=%%>Kuwait</option>
-                              <option value="Kyrgyzstan" %%=IIF(@nationality=='Kyrgyzstan', "selected", "")=%%>Kyrgyzstan</option>
-                              <option value="Laos People's Democratic Republic"  %%=IIF(@nationality=='Laos People's Democratic Republic', "selected", "")=%%>Laos People's Democratic Republic</option>
-                              <option value="Latvia" %%=IIF(@nationality=='Latvia', 'selected', "")=%%>Latvia</option>
-                              <option value="Latvia Resident" %%=IIF(@nationality=='Latvia Resident', 'selected', "")=%%>Latvia Resident</option>
-                              <option value="Lebanon" %%=IIF(@nationality=='Lebanon', "selected", "")=%%>Lebanon</option>
-                              <option value="Lesotho" %%=IIF(@nationality=='Lesotho', "selected", "")=%%>Lesotho</option>
-                              <option value="Liberia" %%=IIF(@nationality=='Liberia', "selected", "")=%%>Liberia</option>
-                              <option value="Libya" %%=IIF(@nationality=='Libya', "selected", "")=%%>Libya</option>
-                              <option value="Liechtenstein" %%=IIF(@nationality=='Liechtenstein', "selected", "")=%%>Liechtenstein</option>
-                              <option value="Lithuania" %%=IIF(@nationality=='Lithuania', "selected", "")=%%>Lithuania</option>
-                              <option value="Luxembourg" %%=IIF(@nationality=='Luxembourg', "selected", "")=%%>Luxembourg</option>
-                              <option value="Macao" %%=IIF(@nationality=='Macao', "selected", "")=%%>Macao</option>
-                              <option value="Madagascar"  %%=IIF(@nationality=='Madagascar', "selected", "")=%%>Madagascar</option>
-                              <option value="Malawi" %%=IIF(@nationality=='Malawi', "selected", "")=%%>Malawi</option>
-                              <option value="Malaysia" %%=IIF(@nationality=='Malaysia', 'selected', "")=%%>Malaysia</option>
-                              <option value="Maldives" %%=IIF(@nationality=='Maldives', "selected", "")=%%>Maldives</option>
-                              <option value="Mali" %%=IIF(@nationality=='Mali', "selected", "")=%%>Mali</option>
-                              <option value="Malta" %%=IIF(@nationality=='Malta', "selected", "")=%%>Malta</option>
-                              <option value="Marshall Islands" %%=IIF(@nationality=='Marshall Islands', "selected", "")=%%>Marshall Islands</option>
-                              <option value="Martinique" %%=IIF(@nationality=='Martinique', "selected", "")=%%>Martinique</option>
-                              <option value="Mauritania" %%=IIF(@nationality=='Mauritania', "selected", "")=%%>Mauritania</option>
-                              <option value="Mauritius" %%=IIF(@nationality=='Mauritius', "selected", "")=%%>Mauritius</option>
-                              <option value="Mayotte" %%=IIF(@nationality=='Mayotte', "selected", "")=%%>Mayotte</option>
-                              <option value="Mexico" %%=IIF(@nationality=='Mexico', "selected", "")=%%>Mexico</option>
-                              <option value="Micronesia (Federated States of)" %%=IIF(@nationality=='Micronesia (Federated States of)', "selected", "")=%%>Micronesia (Federated States of)</option>
-                              <option value="Republic of Moldova" %%=IIF(@nationality=='Republic of Moldova', "selected", "")=%%>Republic of Moldova</option>
-                              <option value="Monaco" %%=IIF(@nationality=='Monaco', "selected", "")=%%>Monaco</option>
-                              <option value="Mongolia" %%=IIF(@nationality=='Mongolia', "selected", "")=%%>Mongolia</option>
-                              <option value="Montenegro" %%=IIF(@nationality=='Montenegro', "selected", "")=%%>Montenegro</option>
-                              <option value="Montserrat"  %%=IIF(@nationality=='Montserrat', "selected", "")=%%>Montserrat</option>
-                              <option value="Morocco" %%=IIF(@nationality=='Morocco', "selected", "")=%%>Morocco</option>
-                              <option value="Mozambique" %%=IIF(@nationality=='Mozambique', "selected", "")=%%>Mozambique</option>
-                              <option value="Myanmar" %%=IIF(@nationality=='Myanmar', "selected", "")=%%>Myanmar</option>
-                              <option value="Namibia" %%=IIF(@nationality=='Namibia', "selected", "")=%%>Namibia</option>
-                              <option value="Nauru" %%=IIF(@nationality=='Nauru', "selected", "")=%%>Nauru</option>
-                              <option value="Nepal" %%=IIF(@nationality=='Nepal', "selected", "")=%%>Nepal</option>
-                              <option value="Netherlands Antilles" %%=IIF(@nationality=='Netherlands Antilles', "selected", "")=%%>Netherlands Antilles</option>
-                              <option value="Netherlands" %%=IIF(@nationality=='Netherlands', "selected", "")=%%>Netherlands</option>
-                              <option value="New Caledonia" %%=IIF(@nationality=='New Caledonia', "selected", "")=%%>New Caledonia</option>
-                              <option value="New Zealand" %%=IIF(@nationality=='New Zealand', "selected", "")=%%>New Zealand</option>
-                              <option value="Nicaragua" %%=IIF(@nationality=='Nicaragua', "selected", "")=%%>Nicaragua</option>
-                              <option value="Niger" %%=IIF(@nationality=='Niger', "selected", "")=%%>Niger</option>
-                              <option value="Nigeria" %%=IIF(@nationality=='Nigeria', "selected", "")=%%>Nigeria</option>
-                              <option value="Niue" %%=IIF(@nationality=='Niue', "selected", "")=%%>Niue</option>
-                              <option value="Norfolk Island" %%=IIF(@nationality=='Norfolk Island', "selected", "")=%%>Norfolk Island</option>
-                              <option value="North Korea" %%=IIF(@nationality=='North Korea', "selected", "")=%%>North Korea</option>
-                              <option value="Northern Mariana Islands" %%=IIF(@nationality=='Northern Mariana Islands', "selected", "")=%%>Northern Mariana Islands
-                              </option>
-                              <option value="Norway" %%=IIF(@nationality=='Norway', "selected", "")=%%>Norway</option>
-                              <option value="Oman" %%=IIF(@nationality=='Oman', "selected", "")=%%>Oman</option>
-                              <option value="Pakistan" %%=IIF(@nationality=='Pakistan', "selected", "")=%%>Pakistan</option>
-                              <option value="Palau" %%=IIF(@nationality=='Palau', "selected", "")=%%>Palau</option>
-                              <option value="Panama" %%=IIF(@nationality=='Panama', "selected", "")=%%>Panama</option>
-                              <option value="Papua new Guinea" %%=IIF(@nationality=='Papua new Guinea', "selected", "")=%%>Papua new Guinea</option>
-                              <option value="Paraguay" %%=IIF(@nationality=='Paraguay', "selected", "")=%%>Paraguay</option>
-                              <option value="Peru" %%=IIF(@nationality=='Peru', "selected", "")=%%>Peru</option>
-                              <option value="Philippines" %%=IIF(@nationality=='Philippines', "selected", "")=%%>Philippines</option>
-                              <option value="Pitcairn" %%=IIF(@nationality=='Pitcairn', "selected", "")=%%>Pitcairn</option>
-                              <option value="Poland" %%=IIF(@nationality=='Poland', "selected", "")=%%>Poland</option>
-                              <option value="Portugal" %%=IIF(@nationality=='Portugal', "selected", "")=%%>Portugal</option>
-                              <option value="Puerto Rico" %%=IIF(@nationality=='Puerto Rico', "selected", "")=%%>Puerto Rico</option>
-                              <option value="Qatar" %%=IIF(@nationality=='Qatar', "selected", "")=%%>Qatar</option>
-                              <option value="Republic of Macedonia" %%=IIF(@nationality=='Republic of Macedonia', "selected", "")=%%>Republic of Macedonia</option>
-                              <option value="Republic of Moldova" %%=IIF(@nationality=='Republic of Moldova', "selected", "")=%%>Republic of Moldova</option>
-                              <option value="Republic of Somaliland" %%=IIF(@nationality=='Republic of Somaliland', "selected", "")=%%>Republic of Somaliland</option>
-                              <option value="Reunion" %%=IIF(@nationality=='Reunion', "selected", "")=%%>Reunion</option>
-                              <option value="Romania" %%=IIF(@nationality=='Romania', "selected", "")=%%>Romania</option>
-                              <option value="Russian Federation" %%=IIF(@nationality=='Russian Federation', "selected", "")=%%>Russian Federation</option>
-                              <option value="Rwanda"  %%=IIF(@nationality=='Rwanda', "selected", "")=%%>Rwanda</option>
-                              <option value="Saint Helena" %%=IIF(@nationality=='Saint Helena', "selected", "")=%%>Saint Helena</option>
-                              <option value="Saint Kitts And Nevis" %%=IIF(@nationality=='Saint Kitts And Nevis', "selected", "")=%%>Saint Kitts And Nevis</option>
-                              <option value="Saint Lucia" %%=IIF(@nationality=='Saint Lucia', "selected", "")=%%>Saint Lucia</option>
-                              <option value="Saint Pierre and Miquelon"  %%=IIF(@nationality=='Saint Pierre and Miquelon', "selected", "")=%%>Saint Pierre and Miquelon
-                              </option>
-                              <option value="Saint Vincent And The Grenadines" %%=IIF(@nationality=='Saint Vincent And The Grenadines', "selected", "")=%%>Saint Vincent And The
-                                  Grenadines</option>
-                              <option value="Saint-Barthelemy" %%=IIF(@nationality=='Saint-Barthelemy', "selected", "")=%%>Saint-Barthelemy</option>
-                              <option value="Saint-Martin (French part)" %%=IIF(@nationality=='Saint-Martin (French part)', "selected", "")=%%>Saint-Martin (French part)
-                              </option>
-                              <option value="Samoa" %%=IIF(@nationality=='Samoa', "selected", "")=%%>Samoa</option>
-                              <option value="San Marino" %%=IIF(@nationality=='San Marino', "selected", "")=%%>San Marino</option>
-                              <option value="Sao Tome and Principe" %%=IIF(@nationality=='Sao Tome and Principe', "selected", "")=%%>Sao Tome and Principe</option>
-                              <option value="Saudi Arabia" %%=IIF(@nationality=='Saudi Arabia', "selected", "")=%%>Saudi Arabia</option>
-                              <option value="Senegal" %%=IIF(@nationality=='Senegal', "selected", "")=%%>Senegal</option>
-                              <option value="Serbia" %%=IIF(@nationality=='Serbia', "selected", "")=%%>Serbia</option>
-                              <option value="Seychelles" %%=IIF(@nationality=='Seychelles', "selected", "")=%%>Seychelles</option>
-                              <option value="Sierra Leone" %%=IIF(@nationality=='Sierra Leone', "selected", "")=%%>Sierra Leone</option>
-                              <option value="Singapore" %%=IIF(@nationality=='Singapore', "selected", "")=%%>Singapore</option>
-                              <option value="Sint Maarten" %%=IIF(@nationality=='Sint Maarten', "selected", "")=%%>Sint Maarten
-                              </option>
-                              <option value="Slovakia" %%=IIF(@nationality=='Slovakia', "selected", "")=%%>Slovakia</option>
-                              <option value="Slovenia" %%=IIF(@nationality=='Slovenia', "selected", "")=%%>Slovenia</option>
-                              <option value="Solomon Islands" %%=IIF(@nationality=='Solomon Islands', "selected", "")=%%>Solomon Islands</option>
-                              <option value="Somalia" %%=IIF(@nationality=='Somalia', "selected", "")=%%>Somalia</option>
-                              <option value="South Africa" %%=IIF(@nationality=='South Africa', 'selected', "")=%%>South Africa</option>
-                              <option value="South Georgia and the South Sandwich Islands" %%=IIF(@nationality=='South Georgia and the South Sandwich Islands', "selected", "")=%%>South Georgia and the South Sandwich Islands</option>
-                              <option value="South Sudan" %%=IIF(@nationality=='South Sudan', "selected", "")=%%>South Sudan</option>
-                              <option value="Spain" %%=IIF(@nationality=='Spain', "selected", "")=%%>Spain</option>
-                              <option value="Sri Lanka" %%=IIF(@nationality=='Sri Lanka', "selected", "")=%%>Sri Lanka</option>
-                              <option value="State of Palestine" %%=IIF(@nationality=='State of Palestine', "selected", "")=%%>State of Palestine</option>
-                              <option value="Sudan" %%=IIF(@nationality=='Sudan', "selected", "")=%%>Sudan</option>
-                              <option value="Suriname" %%=IIF(@nationality=='Suriname', "selected", "")=%%>Suriname</option>
-                              <option value="Svalbard And Jan Mayen" %%=IIF(@nationality=='Svalbard And Jan Mayen', "selected", "")=%%>Svalbard And Jan Mayen</option>
-                              <option value="Swaziland" %%=IIF(@nationality=='Swaziland', "selected", "")=%%>Swaziland</option>
-                              <option value="Sweden" %%=IIF(@nationality=='Sweden', "selected", "")=%%>Sweden</option>
-                              <option value="Switzerland" %%=IIF(@nationality=='Switzerland', "selected", "")=%%>Switzerland</option>
-                              <option value="Syrian Arab Republic" %%=IIF(@nationality=='Syrian Arab Republic', "selected", "")=%%>Syrian Arab Republic</option>
-                              <option value="Taiwan" %%=IIF(@nationality=='Taiwan', "selected", "")=%%>Taiwan</option>
-                              <option value="Tajikistan" %%=IIF(@nationality=='Tajikistan', "selected", "")=%%>Tajikistan</option>
-                              <option value="Thailand" %%=IIF(@nationality=='Thailand', "selected", "")=%%>Thailand</option>
-                              <option value="Timor-Leste" %%=IIF(@nationality=='Timor-Leste', "selected", "")=%%>Timor-Leste</option>
-                              <option value="Togo" %%=IIF(@nationality=='Togo', "selected", "")=%%>Togo</option>
-                              <option value="Tokelau" %%=IIF(@nationality=='Tokelau', "selected", "")=%%>Tokelau</option>
-                              <option value="Tonga" %%=IIF(@nationality=='Tonga', "selected", "")=%%>Tonga</option>
-                              <option value="Trinidad And Tobago" %%=IIF(@nationality=='Trinidad And Tobago', "selected", "")=%%>Trinidad And Tobago</option>
-                              <option value="Tunisia" %%=IIF(@nationality=='Tunisia', "selected", "")=%%>Tunisia</option>
-                              <option value="Turkey"  %%=IIF(@nationality=='Turkey', "selected", "")=%%>Turkey</option>
-                              <option value="Turkmenistan" %%=IIF(@nationality=='Turkmenistan', "selected", "")=%%>Turkmenistan</option>
-                              <option value="Turks And Caicos Islands" %%=IIF(@nationality=='Turks And Caicos Islands', "selected", "")=%%>Turks And Caicos Islands
-                              </option>
-                              <option value="Tuvalu" %%=IIF(@nationality=='Tuvalu', "selected", "")=%%>Tuvalu</option>
-                              <option value="Uganda" %%=IIF(@nationality=='Uganda', "selected", "")=%%>Uganda</option>
-                              <option value="Ukraine" %%=IIF(@nationality=='Ukraine', "selected", "")=%%>Ukraine</option>
-                              <option value="United Arab Emirates" %%=IIF(@nationality=='United Arab Emirates', "selected", "")=%%>United Arab Emirates</option>
-                              <option value="United Kingdom (UK)" %%=IIF(@nationality=='United Kingdom (UK)', "selected", "")=%%>United Kingdom (UK)</option>
-                              <option value="United Republic of Tanzania" %%=IIF(@nationality=='United Republic of Tanzania', "selected", "")=%%>United Republic of Tanzania</option>
-                              <option value="United States of America" %%=IIF(@nationality=='United States of America', "selected", "")=%%>United States of America</option>
-                              <option value="United States Minor Outlying Islands" %%=IIF(@nationality=='United States Minor Outlying Islands', "selected", "")=%%>United States Minor
-                                  Outlying Islands</option>
-                              <option value="Uruguay" %%=IIF(@nationality=='Uruguay', "selected", "")=%%>Uruguay</option>
-                              <option value="Uzbekistan" %%=IIF(@nationality=='Uzbekistan', "selected", "")=%%>Uzbekistan</option>
-                              <option value="Vanuatu" %%=IIF(@nationality=='Vanuatu', "selected", "")=%%>Vanuatu</option>
-                              <option value="Venezuela" %%=IIF(@nationality=='Venezuela', "selected", "")=%%>Venezuela</option>
-                              <option value="Viet Nam" %%=IIF(@nationality=='Viet Nam', "selected", "")=%%>Viet Nam</option>
-                              <option value="Virgin Islands, British" %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands British', "selected", "")=%%>Virgin Islands, British</option>
-                              <option value="Virgin Islands, U.S." %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands U.S.', "selected", "")=%%>Virgin Islands, U.S.</option>
-                              <option value="Wallis And Futuna Islands" %%=IIF(@nationality=='Wallis And Futuna Islands', "selected", "")=%%>Wallis And Futuna Islands
-                              </option>
-                              <option value="Western Sahara" %%=IIF(@nationality=='Western Sahara', "selected", "")=%%>Western Sahara</option>
-                              <option value="Yemen" %%=IIF(@nationality=='Yemen', "selected", "")=%%>Yemen</option>
-                              <option value="Zambia" %%=IIF(@nationality=='Zambia', "selected", "")=%%>Zambia</option>
-                              <option value="Zimbabwe" %%=IIF(@nationality=='Zimbabwe', "selected", "")=%%>Zimbabwe</option>
-
-
-
-                  </select>
+                        <select class="form-control" name="profileNationality" id="nationality">
+                            <option value="">اختر الجنسية</option>
+                            <option value="Afghanistan" %%=IIF(@nationality=='Afghanistan', "selected", "")=%% >أفغانستان</option>
+                            <option value="Aland Islands" %%=IIF(@nationality=='Aland Islands', 'selected', "")=%%>جزر آلاند</option>
+                            <option value="Albania" %%=IIF(@nationality=='Albania', "selected", "")=%%>ألبانيا</option>
+                            <option value="Algeria" %%=IIF(@nationality=='Algeria', "selected", "")=%%>الجزائر</option>
+                            <option value="American Samoa" %%=IIF(@nationality=='American Samoa', "selected", "")=%%>ساموا الأمريكية</option>
+                            <option value="Andorra" %%=IIF(@nationality=='Andorra', "selected", "")=%%>أندورا</option>
+                            <option value="Angola" %%=IIF(@nationality=='Angola', "selected", "")=%%>أنغولا</option>
+                            <option value="Anguilla" %%=IIF(@nationality=='Anguilla', "selected", "")=%%>أنغيلا</option>
+                            <option value="Antarctica" %%=IIF(@nationality=='Antarctica', "selected", "")=%%>أنتاركتيكا</option>
+                            <option value="Antigua And Barbuda" %%=IIF(@nationality=='Antigua And Barbuda', "selected", "")=%%>أنتيغوا وباربودا</option>
+                            <option value="Argentina" %%=IIF(@nationality=='Argentina', "selected", "")=%%>الأرجنتين</option>
+                            <option value="Armenia" %%=IIF(@nationality=='Armenia', "selected", "")=%%>أرمينيا</option>
+                            <option value="Aruba" %%=IIF(@nationality=='Aruba', "selected", "")=%%>أروبا</option>
+                            <option value="Australia" %%=IIF(@nationality=='Australia', "selected", "")=%%>أستراليا</option>
+                            <option value="Austria" %%=IIF(@nationality=='Austria', "selected", "")=%%>النمسا</option>
+                            <option value="Azerbaijan" %%=IIF(@nationality=='Azerbaijan', "selected", "")=%%>أذربيجان</option>
+                            <option value="Bahamas" %%=IIF(@nationality=='Bahamas', "selected", "")=%%>الباهاما</option>
+                            <option value="Bahrain" %%=IIF(@nationality=='Bahrain', "selected", "")=%%>البحرين</option>
+                            <option value="Bangladesh" %%=IIF(@nationality=='Bangladesh', "selected", "")=%%>بنغلاديش</option>
+                            <option value="Barbados" %%=IIF(@nationality=='Barbados', "selected", "")=%%>بربادوس</option>
+                            <option value="Belarus" %%=IIF(@nationality=='Belarus', "selected", "")=%%>بيلاروسيا</option>
+                            <option value="Belgium" %%=IIF(@nationality=='Belgium', "selected", "")=%%>بلجيكا</option>
+                            <option value="Belize" %%=IIF(@nationality=='Belize', "selected", "")=%%>بليز</option>
+                            <option value="Benin" %%=IIF(@nationality=='Benin', "selected", "")=%%>بنين</option>
+                            <option value="Bermuda" %%=IIF(@nationality=='Bermuda', "selected", "")=%%>برمودا</option>
+                            <option value="Bhutan" %%=IIF(@nationality=='Bhutan', "selected", "")=%%>بوتان</option>
+                            <option value="Bolivia" %%=IIF(@nationality=='Bolivia', "selected", "")=%%>بوليفيا</option>
+                            <option value="Bosnia and Herzegovina" %%=IIF(@nationality=='Bosnia and Herzegovina', "selected", "")=%%>البوسنة والهرسك</option>
+                            <option value="Botswana"  %%=IIF(@nationality=='Botswana', "selected", "")=%%>بوتسوانا</option>
+                            <option value="Bouvet Island" %%=IIF(@nationality=='Bouvet Island', "selected", "")=%%>جزيرة بوفيه</option>
+                            <option value="Brazil" %%=IIF(@nationality=='Brazil', "selected", "")=%%>البرازيل</option>
+                            <option value="British Indian Ocean Territory" %%=IIF(@nationality=='British Indian Ocean Territory', "selected", "")=%%>إقليم المحيط الهندي البريطاني</option>
+                            <option value="Brunei Darussalam" %%=IIF(@nationality=='Brunei Darussalam', "selected", "")=%%>بروناي دار السلام</option>
+                            <option value="Bulgaria" %%=IIF(@nationality=='Bulgaria', "selected", "")=%%>بلغاريا</option>
+                            <option value="Burkina Faso" %%=IIF(@nationality=='Burkina Faso', "selected", "")=%%>بوركينا فاسو</option>
+                            <option value="Burundi" %%=IIF(@nationality=='Burundi', "selected", "")=%%>بوروندي</option>
+                            <option value="Cambodia" %%=IIF(@nationality=='Cambodia', "selected", "")=%%>كمبوديا</option>
+                            <option value="Cameroon" %%=IIF(@nationality=='Cameroon', "selected", "")=%%>الكاميرون</option>
+                            <option value="Canada" %%=IIF(@nationality=='Canada', "selected", "")=%%>كندا</option>
+                            <option value="Canary Islands" %%=IIF(@nationality=='Canary Islands', "selected", "")=%%>جزر الكناري</option>
+                            <option value="Cabo Verde" %%=IIF(@nationality=='Cabo Verde', "selected", "")=%%>الرأس الأخضر</option>
+                            <option value="Caribbean Netherlands" %%=IIF(@nationality=='Caribbean Netherlands', "selected", "")=%%>الكاريبي هولندا</option>
+                            <option value="Cayman Islands" %%=IIF(@nationality=='Cayman Islands', "selected", "")=%%>جزر كايمان</option>
+                            <option value="Central African Republic" %%=IIF(@nationality=='Central African Republic', selected, "")=%%>جمهورية أفريقيا الوسطى</option>
+                            <option value="Ceuta & Melilla" %%=IIF(@nationality=='Ceuta & Melilla', selected, "")=%%>سبتة ومليلية</option>
+                            <option value="Chad" %%=IIF(@nationality=='Chad', "selected", "")=%%>تشاد</option>
+                            <option value="Chile" %%=IIF(@nationality=='Chile', "selected", "")=%%>تشيلي</option>
+                            <option value="China" %%=IIF(@nationality=='China', "selected", "")=%%>الصين</option>
+                            <option value="Christmas Island" %%=IIF(@nationality=='Christmas Island', "selected", "")=%%>جزيرة كريسماس</option>
+                            <option value="Clipperton Island" %%=IIF(@nationality=='Clipperton Island', "selected", "")=%%>جزيرة كليبرتون</option>
+                            <option value="Cocos (Keeling) Islands" %%=IIF(@nationality=='Cocos (Keeling) Islands', "selected", "")=%%>جزر كوكوس (كيلينغ)</option>
+                            <option value="Colombia" %%=IIF(@nationality=='Colombia', "selected", "")=%%>كولومبيا</option>
+                            <option value="Commonwealth of Dominica" %%=IIF(@nationality=='Commonwealth of Dominica', "selected", "")=%%>دومينيكا</option>
+                            <option value="Comoros" %%=IIF(@nationality=='Comoros', "selected", "")=%%>جزر القمر</option>
+                            <option value="Congo" %%=IIF(@nationality=='Congo', "selected", "")=%%>الكونغو</option>
+                            <option value="Cook Islands" %%=IIF(@nationality=='Cook Islands', "selected", "")=%%>جزر كوك</option>
+                            <option value="Costa Rica" %%=IIF(@nationality=='Costa Rica', "selected", "")=%%>كوستاريكا</option>
+                            <option value="Cote d'Ivoire" %%=IIF(@nationality=="Cote d'Ivoire", "selected", "")=%%>كوت ديفوار</option>
+                            <option value="Croatia" %%=IIF(@nationality=='Croatia', "selected", "")=%%>كرواتيا</option>
+                            <option value="Cuba" %%=IIF(@nationality=='Cuba', "selected", "")=%%>كوبا</option>
+                            <option value="Curaçao" %%=IIF(@nationality=='Curaçao', "selected", "")=%%>كوراساو</option>
+                            <option value="Cyprus" %%=IIF(@nationality=='Cyprus', "selected", "")=%%>قبرص</option>
+                            <option value="Czech Republic" %%=IIF(@nationality=='Czech Republic', "selected", "")=%%>جمهورية التشيك</option>
+                            <option value="Democratic Republic of the Congo" %%=IIF(@nationality=='Democratic Republic of the Congo', "selected", "")=%%>جمهورية الكونغو الديمقراطية</option>
+                            <option value="Denmark" %%=IIF(@nationality=='Denmark', "selected", "")=%%>الدنمارك</option>
+                            <option value="Djibouti" %%=IIF(@nationality=='Djibouti', "selected", "")=%%>جيبوتي</option>
+                            <option value="Dominican Republic" %%=IIF(@nationality=='Dominican Republic', "selected", "")=%%>جمهورية الدومينيكان</option>
+                            <option value="Ecuador" %%=IIF(@nationality=='Ecuador', "selected", "")=%%>الإكوادور</option>
+                            <option value="Egypt" %%=IIF(@nationality=='Egypt', "selected", "")=%%>مصر</option>
+                            <option value="El Salvador" %%=IIF(@nationality=='El Salvador', "selected", "")=%%>السلفادور</option>
+                            <option value="Equatorial Guinea" %%=IIF(@nationality=='Equatorial Guinea', "selected", "")=%%>غينيا الاستوائية</option>
+                            <option value="Eritrea" %%=IIF(@nationality=='Eritrea', "selected", "")=%%>إريتريا</option>
+                            <option value="Estonia"  %%=IIF(@nationality=='Estonia', "selected", "")=%%>إستونيا</option>
+                            <option value="Eswatini"  %%=IIF(@nationality=='Eswatini', "selected", "")=%%>إسواتيني</option>
+                            <option value="Ethiopia" %%=IIF(@nationality=='Ethiopia', "selected", "")=%%>إثيوبيا</option>
+                            <option value="Falkland Islands" %%=IIF(@nationality=='Falkland Islands', "selected", "")=%%>جزر فوكلاند</option>
+                            <option value="Faroe Islands" %%=IIF(@nationality=='Faroe Islands', "selected", "")=%%>جزر فارو</option>
+                            <option value="Fiji" %%=IIF(@nationality=='Fiji', "selected", "")=%%>فيجي</option>
+                            <option value="Finland" %%=IIF(@nationality=='Finland', "selected", "")=%%>فنلندا</option>
+                            <option value="France" %%=IIF(@nationality=='France', "selected", "")=%%>فرنسا</option>
+                            <option value="French Guiana" %%=IIF(@nationality=='French Guiana', "selected", "")=%%>غويانا الفرنسية</option>
+                            <option value="French Polynesia" %%=IIF(@nationality=='French Polynesia', "selected", "")=%%>بولينيزيا الفرنسية</option>
+                            <option value="French Southern Territories" %%=IIF(@nationality=='French Southern Territories', "selected", "")=%%>الأقاليم الجنوبية الفرنسية</option>
+                            <option value="Gabon" %%=IIF(@nationality=='Gabon', "selected", "")=%%>الغابون</option>
+                            <option value="Gambia" %%=IIF(@nationality=='Gambia', "selected", "")=%%>غامبيا</option>
+                            <option value="Georgia" %%=IIF(@nationality=='Georgia', "selected", "")=%%>جورجيا</option>
+                            <option value="Germany" %%=IIF(@nationality=='Germany', "selected", "")=%%>ألمانيا</option>
+                            <option value="Ghana" %%=IIF(@nationality=='Ghana', "selected", "")=%%>غانا</option>
+                            <option value="Gibraltar" %%=IIF(@nationality=='Gibraltar', "selected", "")=%%>جبل طارق</option>
+                            <option value="Greece" %%=IIF(@nationality=='Greece', "selected", "")=%%>اليونان</option>
+                            <option value="Greenland" %%=IIF(@nationality=='Greenland', "selected", "")=%%>جرينلاند</option>
+                            <option value="Grenada" %%=IIF(@nationality=='Grenada', "selected", "")=%%>غرينادا</option>
+                            <option value="Guadeloupe" %%=IIF(@nationality=='Guadeloupe', "selected", "")=%%>غوادلوب</option>
+                            <option value="Guam"  %%=IIF(@nationality=='Guam', "selected", "")=%%>غوام</option>
+                            <option value="Guatemala" %%=IIF(@nationality=='Guatemala', "selected", "")=%%>غواتيمالا</option>
+                            <option value="Guernsey" %%=IIF(@nationality=='Guernsey', "selected", "")=%%>غيرنزي</option>
+                            <option value="Guinea" %%=IIF(@nationality=='Guinea', "selected", "")=%%>غينيا</option>
+                            <option value="Guinea-Bissau" %%=IIF(@nationality=='Guinea-Bissau', "selected", "")=%%>غينيا بيساو</option>
+                                <option value="Guyana" %%=IIF(@nationality=='Guyana', "selected", "")=%%>غيانا</option>
+                                <option value="Haiti" %%=IIF(@nationality=='Haiti', "selected", "")=%%>هايتي</option>
+                                <option value="Heard Island and McDonald Islands" %%=IIF(@nationality=='Heard Island and McDonald Islands', "selected", "")=%%>جزيرة هيرد وجزر ماكدونالد</option>
+                                <option value="Holy See (Vatican)" %%=IIF(@nationality=='Holy See (Vatican)', "selected", "")=%%>الفاتيكان</option>
+                            <option value="Honduras" %%=IIF(@nationality=='Honduras', "selected", "")=%%>هندوراس</option>
+                            <option value="Hong Kong Special Administrative Region" %%=IIF(@nationality=='Hong Kong Special Administrative Region', "selected", "")=%%>هونغ كونغ</option>
+                            <option value="Hungary" %%=IIF(@nationality=='Hungary', "selected", "")=%%>المجر</option>
+                            <option value="Iceland" %%=IIF(@nationality=='Iceland', "selected", "")=%%>أيسلندا</option>
+                            <option value="India"  %%=IIF(@nationality=='India', "selected", "")=%%>الهند</option>
+                            <option value="Indonesia" %%=IIF(@nationality=='Indonesia', "selected", "")=%%>إندونيسيا</option>
+                            <option value="Iran (Islamic Republic of)" %%=IIF(@nationality=='Iran (Islamic Republic of)', "selected", "")=%%>إيران</option>
+                            <option value="Iraq" %%=IIF(@nationality=='Iraq', "selected", "")=%%>العراق</option>
+                            <option value="Ireland" %%=IIF(@nationality=='Ireland', "selected", "")=%%>أيرلندا</option>
+                            <option value="Israel" %%=IIF(@nationality=='Israel', "selected", "")=%%>إسرائيل</option>
+                            <option value="Isle of Man" %%=IIF(@nationality=='Isle of Man', "selected", "")=%%>جزيرة مان</option>
+                            <option value="Italy" %%=IIF(@nationality=='Italy', "selected", "")=%%>إيطاليا</option>
+                            <option value="Jamaica" %%=IIF(@nationality=='Jamaica', "selected", "")=%%>جامايكا</option>
+                            <option value="Japan" %%=IIF(@nationality=='Japan', "selected", "")=%%>اليابان</option>
+                            <option value="Jersey" %%=IIF(@nationality=='Jersey', "selected", "")=%%>جيرسي</option>
+                            <option value="Jordan" %%=IIF(@nationality=='Jordan', "selected", "")=%%>الأردن</option>
+                            <option value="Kazakhstan" %%=IIF(@nationality=='Kazakhstan', "selected", "")=%%>كازاخستان</option>
+                            <option value="Kenya" %%=IIF(@nationality=='Kenya', "selected", "")=%%>كينيا</option>
+                            <option value="Kiribati" %%=IIF(@nationality=='Kiribati', "selected", "")=%%>كيريباتي</option>
+                            <option value="Kosovo" %%=IIF(@nationality=='Kosovo', "selected", "")=%%>كوسوفو</option>
+                            <option value="Kuwait" %%=IIF(@nationality=='Kuwait', "selected", "")=%%>الكويت</option>
+                            <option value="Kyrgyzstan" %%=IIF(@nationality=='Kyrgyzstan', "selected", "")=%%>قيرغيزستان</option>
+                            <option value="Laos People's Democratic Republic" %%=IIF(@nationality=='Laos People's Democratic Republic', "selected", "")=%%>لاوس</option>
+                            <option value="Latvia" %%=IIF(@nationality=='Latvia', "selected", "")=%%>لاتفيا</option>
+                            <option value="Latvia Resident" %%=IIF(@nationality=='Latvia Resident', "selected", "")=%%>مقيم في لاتفيا</option>
+                            <option value="Lebanon" %%=IIF(@nationality=='Lebanon', "selected", "")=%%>لبنان</option>
+                            <option value="Lesotho" %%=IIF(@nationality=='Lesotho', "selected", "")=%%>ليسوتو</option>
+                            <option value="Liberia" %%=IIF(@nationality=='Liberia', "selected", "")=%%>ليبيريا</option>
+                            <option value="Libya" %%=IIF(@nationality=='Libya', "selected", "")=%%>ليبيا</option>
+                            <option value="Liechtenstein" %%=IIF(@nationality=='Liechtenstein', "selected", "")=%%>ليختنشتاين</option>
+                            <option value="Lithuania" %%=IIF(@nationality=='Lithuania', "selected", "")=%%>ليتوانيا</option>
+                            <option value="Luxembourg" %%=IIF(@nationality=='Luxembourg', "selected", "")=%%>لوكسمبورغ</option>
+                            <option value="Macao" %%=IIF(@nationality=='Macao', "selected", "")=%%>ماكاو</option>
+                            <option value="Madagascar" %%=IIF(@nationality=='Madagascar', "selected", "")=%%>مدغشقر</option>
+                            <option value="Malawi" %%=IIF(@nationality=='Malawi', "selected", "")=%%>مالاوي</option>
+                            <option value="Malaysia" %%=IIF(@nationality=='Malaysia', "selected", "")=%%>ماليزيا</option>
+                            <option value="Maldives" %%=IIF(@nationality=='Maldives', "selected", "")=%%>المالديف</option>
+                            <option value="Mali" %%=IIF(@nationality=='Mali', "selected", "")=%%>مالي</option>
+                            <option value="Malta" %%=IIF(@nationality=='Malta', "selected", "")=%%>مالطا</option>
+                            <option value="Marshall Islands" %%=IIF(@nationality=='Marshall Islands', "selected", "")=%%>جزر مارشال</option>
+                            <option value="Martinique" %%=IIF(@nationality=='Martinique', "selected", "")=%%>مارتينيك</option>
+                            <option value="Mauritania" %%=IIF(@nationality=='Mauritania', "selected", "")=%%>موريتانيا</option>
+                            <option value="Mauritius" %%=IIF(@nationality=='Mauritius', "selected", "")=%%>موريشيوس</option>
+                            <option value="Mayotte" %%=IIF(@nationality=='Mayotte', "selected", "")=%%>مايوت</option>
+                            <option value="Mexico" %%=IIF(@nationality=='Mexico', "selected", "")=%%>المكسيك</option>
+                            <option value="Micronesia (Federated States of)" %%=IIF(@nationality=='Micronesia (Federated States of)', "selected", "")=%%>ميكرونيزيا</option>
+                            <option value="Monaco" %%=IIF(@nationality=='Monaco', "selected", "")=%%>موناكو</option>
+                            <option value="Mongolia" %%=IIF(@nationality=='Mongolia', "selected", "")=%%>منغوليا</option>
+                            <option value="Montenegro" %%=IIF(@nationality=='Montenegro', "selected", "")=%%>الجبل الأسود</option>
+                            <option value="Montserrat" %%=IIF(@nationality=='Montserrat', "selected", "")=%%>مونتسرات</option>
+                            <option value="Morocco" %%=IIF(@nationality=='Morocco', "selected", "")=%%>المغرب</option>
+                            <option value="Mozambique" %%=IIF(@nationality=='Mozambique', "selected", "")=%%>موزمبيق</option>
+                            <option value="Myanmar" %%=IIF(@nationality=='Myanmar', "selected", "")=%%>ميانمار</option>
+                            <option value="Namibia" %%=IIF(@nationality=='Namibia', "selected", "")=%%>ناميبيا</option>
+                            <option value="Nauru" %%=IIF(@nationality=='Nauru', "selected", "")=%%>ناورو</option>
+                            <option value="Nepal" %%=IIF(@nationality=='Nepal', "selected", "")=%%>نيبال</option>
+                            <option value="Netherlands Antilles" %%=IIF(@nationality=='Netherlands Antilles', "selected", "")=%%>جزر الأنتيل الهولندية</option>
+                            <option value="Netherlands" %%=IIF(@nationality=='Netherlands', "selected", "")=%%>هولندا</option>
+                            <option value="New Caledonia" %%=IIF(@nationality=='New Caledonia', "selected", "")=%%>كاليدونيا الجديدة</option>
+                            <option value="New Zealand" %%=IIF(@nationality=='New Zealand', "selected", "")=%%>نيوزيلندا</option>
+                            <option value="Nicaragua" %%=IIF(@nationality=='Nicaragua', "selected", "")=%%>نيكاراغوا</option>
+                            <option value="Niger" %%=IIF(@nationality=='Niger', "selected", "")=%%>النيجر</option>
+                            <option value="Nigeria" %%=IIF(@nationality=='Nigeria', "selected", "")=%%>نيجيريا</option>
+                            <option value="Niue" %%=IIF(@nationality=='Niue', "selected", "")=%%>نيوي</option>
+                            <option value="Norfolk Island" %%=IIF(@nationality=='Norfolk Island', "selected", "")=%%>جزيرة نورفولك</option>
+                            <option value="North Korea" %%=IIF(@nationality=='North Korea', "selected", "")=%%>كوريا الشمالية</option>
+                            <option value="Northern Mariana Islands" %%=IIF(@nationality=='Northern Mariana Islands', "selected", "")=%%>جزر ماريانا الشمالية</option>
+                            <option value="Norway" %%=IIF(@nationality=='Norway', "selected", "")=%%>النرويج</option>
+                            <option value="Oman" %%=IIF(@nationality=='Oman', "selected", "")=%%>عمان</option>
+                            <option value="Pakistan" %%=IIF(@nationality=='Pakistan', "selected", "")=%%>باكستان</option>
+                            <option value="Palau" %%=IIF(@nationality=='Palau', "selected", "")=%%>بالاو</option>
+                            <option value="Panama" %%=IIF(@nationality=='Panama', "selected", "")=%%>بنما</option>
+                            <option value="Papua new Guinea" %%=IIF(@nationality=='Papua new Guinea', "selected", "")=%%>بابوا غينيا الجديدة</option>
+                            <option value="Paraguay" %%=IIF(@nationality=='Paraguay', "selected", "")=%%>باراغواي</option>
+                            <option value="Peru" %%=IIF(@nationality=='Peru', "selected", "")=%%>بيرو</option>
+                            <option value="Philippines" %%=IIF(@nationality=='Philippines', "selected", "")=%%>الفلبين</option>
+                            <option value="Pitcairn" %%=IIF(@nationality=='Pitcairn', "selected", "")=%%>بيتكيرن</option>
+                            <option value="Poland" %%=IIF(@nationality=='Poland', "selected", "")=%%>بولندا</option>
+                            <option value="Portugal" %%=IIF(@nationality=='Portugal', "selected", "")=%%>البرتغال</option>
+                            <option value="Puerto Rico" %%=IIF(@nationality=='Puerto Rico', "selected", "")=%%>بورتوريكو</option>
+                            <option value="Qatar" %%=IIF(@nationality=='Qatar', "selected", "")=%%>قطر</option>
+                            <option value="Republic of Korea" %%=IIF(@nationality=='Republic of Korea', "selected", "")=%%>جمهورية كوريا</option>
+                            <option value="Republic of Macedonia" %%=IIF(@nationality=='Republic of Macedonia', "selected", "")=%%>جمهورية مقدونيا</option>
+                            <option value="Republic of Moldova" %%=IIF(@nationality=='Republic of Moldova', "selected", "")=%%>جمهورية مولدوفا</option>
+                            <option value="Republic of Somaliland" %%=IIF(@nationality=='Republic of Somaliland', "selected", "")=%%>جمهورية أرض الصومال</option>
+                            <option value="Reunion" %%=IIF(@nationality=='Reunion', "selected", "")=%%>ريونيون</option>
+                            <option value="Romania" %%=IIF(@nationality=='Romania', "selected", "")=%%>رومانيا</option>
+                            <option value="Russian Federation" %%=IIF(@nationality=='Russian Federation', "selected", "")=%%>الاتحاد الروسي</option>
+                            <option value="Rwanda" %%=IIF(@nationality=='Rwanda', "selected", "")=%%>رواندا</option>
+                            <option value="Saint Helena" %%=IIF(@nationality=='Saint Helena', "selected", "")=%%>سانت هيلينا</option>
+                            <option value="Saint Kitts And Nevis" %%=IIF(@nationality=='Saint Kitts And Nevis', "selected", "")=%%>سانت كيتس ونيفيس</option>
+                            <option value="Saint Lucia" %%=IIF(@nationality=='Saint Lucia', "selected", "")=%%>سانت لوسيا</option>
+                            <option value="Saint Pierre and Miquelon" %%=IIF(@nationality=='Saint Pierre and Miquelon', "selected", "")=%%>سانت بيير وميكلون</option>
+                            <option value="Saint Vincent And The Grenadines" %%=IIF(@nationality=='Saint Vincent And The Grenadines', "selected", "")=%%>سانت فنسنت والغرينادين</option>
+                            <option value="Saint Barthelemy" %%=IIF(@nationality=='Saint Barthelemy', "selected", "")=%%>سانت بارتيليمي</option>
+                            <option value="Saint Martin (French part)" %%=IIF(@nationality=='Saint Martin (French part)', "selected", "")=%%>سانت مارتن (الجزء الفرنسي)</option>
+                            <option value="Samoa" %%=IIF(@nationality=='Samoa', "selected", "")=%%>ساموا</option>
+                            <option value="San Marino" %%=IIF(@nationality=='San Marino', "selected", "")=%%>سان مارينو</option>
+                            <option value="Sao Tome and Principe" %%=IIF(@nationality=='Sao Tome and Principe', "selected", "")=%%>ساو تومي وبرينسيبي</option>
+                            <option value="Saudi Arabia" %%=IIF(@nationality=='Saudi Arabia', "selected", "")=%%>المملكة العربية السعودية</option>
+                            <option value="Senegal" %%=IIF(@nationality=='Senegal', "selected", "")=%%>السنغال</option>
+                            <option value="Serbia" %%=IIF(@nationality=='Serbia', "selected", "")=%%>صربيا</option>
+                            <option value="Seychelles" %%=IIF(@nationality=='Seychelles', "selected", "")=%%>سيشل</option>
+                            <option value="Sierra Leone" %%=IIF(@nationality=='Sierra Leone', "selected", "")=%%>سيراليون</option>
+                            <option value="Singapore" %%=IIF(@nationality=='Singapore', "selected", "")=%%>سنغافورة</option>
+                            <option value="Sint Maarten" %%=IIF(@nationality=='Sint Maarten', "selected", "")=%%>سينت مارتن</option>
+                            <option value="Slovakia" %%=IIF(@nationality=='Slovakia', "selected", "")=%%>سلوفاكيا</option>
+                            <option value="Slovenia" %%=IIF(@nationality=='Slovenia', "selected", "")=%%>سلوفينيا</option>
+                            <option value="Solomon Islands" %%=IIF(@nationality=='Solomon Islands', "selected", "")=%%>جزر سليمان</option>
+                            <option value="Somalia" %%=IIF(@nationality=='Somalia', "selected", "")=%%>الصومال</option>
+                            <option value="South Africa" %%=IIF(@nationality=='South Africa', 'selected', "")=%%>جنوب أفريقيا</option>
+                            <option value="South Georgia and the South Sandwich Islands" %%=IIF(@nationality=='South Georgia and the South Sandwich Islands', "selected", "")=%%>جورجيا الجنوبية وجزر ساندويتش الجنوبية</option>
+                            <option value="South Sudan" %%=IIF(@nationality=='South Sudan', "selected", "")=%%>جنوب السودان</option>
+                            <option value="Spain" %%=IIF(@nationality=='Spain', "selected", "")=%%>إسبانيا</option>
+                            <option value="Sri Lanka" %%=IIF(@nationality=='Sri Lanka', "selected", "")=%%>سريلانكا</option>
+                            <option value="State of Palestine" %%=IIF(@nationality=='State of Palestine', "selected", "")=%%>دولة فلسطين</option>
+                            <option value="Sudan" %%=IIF(@nationality=='Sudan', "selected", "")=%%>السودان</option>
+                            <option value="Suriname" %%=IIF(@nationality=='Suriname', "selected", "")=%%>سورينام</option>
+                            <option value="Svalbard And Jan Mayen" %%=IIF(@nationality=='Svalbard And Jan Mayen', "selected", "")=%%>سفالبارد ويان ماين</option>
+                            <option value="Swaziland" %%=IIF(@nationality=='Swaziland', "selected", "")=%%>سوازيلاند</option>
+                            <option value="Sweden" %%=IIF(@nationality=='Sweden', "selected", "")=%%>السويد</option>
+                            <option value="Switzerland" %%=IIF(@nationality=='Switzerland', "selected", "")=%%>سويسرا</option>
+                            <option value="Syrian Arab Republic" %%=IIF(@nationality=='Syrian Arab Republic', "selected", "")=%%>الجمهورية العربية السورية</option>
+                            <option value="Taiwan" %%=IIF(@nationality=='Taiwan', "selected", "")=%%>تايوان</option>
+                            <option value="Tajikistan" %%=IIF(@nationality=='Tajikistan', "selected", "")=%%>طاجيكستان</option>
+                            <option value="Thailand" %%=IIF(@nationality=='Thailand', "selected", "")=%%>تايلاند</option>
+                            <option value="Timor-Leste" %%=IIF(@nationality=='Timor-Leste', "selected", "")=%%>تيمور الشرقية</option>
+                            <option value="Togo" %%=IIF(@nationality=='Togo', "selected", "")=%%>توغو</option>
+                            <option value="Tokelau" %%=IIF(@nationality=='Tokelau', "selected", "")=%%>توكلاو</option>
+                            <option value="Tonga" %%=IIF(@nationality=='Tonga', "selected", "")=%%>تونغا</option>
+                            <option value="Trinidad And Tobago" %%=IIF(@nationality=='Trinidad And Tobago', "selected", "")=%%>ترينيداد وتوباغو</option>
+                            <option value="Tunisia" %%=IIF(@nationality=='Tunisia', "selected", "")=%%>تونس</option>
+                            <option value="Turkey" %%=IIF(@nationality=='Turkey', "selected", "")=%%>تركيا</option>
+                            <option value="Turkmenistan" %%=IIF(@nationality=='Turkmenistan', "selected", "")=%%>تركمانستان</option>
+                            <option value="Turks And Caicos Islands" %%=IIF(@nationality=='Turks And Caicos Islands', "selected", "")=%%>جزر تركس وكايكوس</option>
+                            <option value="Tuvalu" %%=IIF(@nationality=='Tuvalu', "selected", "")=%%>توفالو</option>
+                            <option value="Uganda" %%=IIF(@nationality=='Uganda', "selected", "")=%%>أوغندا</option>
+                            <option value="Ukraine" %%=IIF(@nationality=='Ukraine', "selected", "")=%%>أوكرانيا</option>
+                            <option value="United Arab Emirates" %%=IIF(@nationality=='United Arab Emirates', "selected", "")=%%>الإمارات العربية المتحدة</option>
+                            <option value="United Kingdom (UK)" %%=IIF(@nationality=='United Kingdom (UK)', "selected", "")=%%>المملكة المتحدة (بريطانيا)</option>
+                            <option value="United Republic of Tanzania" %%=IIF(@nationality=='United Republic of Tanzania', "selected", "")=%%>جمهورية تنزانيا المتحدة</option>
+                            <option value="United States of America" %%=IIF(@nationality=='United States of America', "selected", "")=%%>الولايات المتحدة الأمريكية</option>
+                            <option value="United States Minor Outlying Islands" %%=IIF(@nationality=='United States Minor Outlying Islands', "selected", "")=%%>جزر الولايات المتحدة الصغيرة النائية</option>
+                            <option value="Uruguay" %%=IIF(@nationality=='Uruguay', "selected", "")=%%>أوروغواي</option>
+                            <option value="Uzbekistan" %%=IIF(@nationality=='Uzbekistan', "selected", "")=%%>أوزبكستان</option>
+                            <option value="Vanuatu" %%=IIF(@nationality=='Vanuatu', "selected", "")=%%>فانواتو</option>
+                            <option value="Venezuela" %%=IIF(@nationality=='Venezuela', "selected", "")=%%>فنزويلا</option>
+                            <option value="Viet Nam" %%=IIF(@nationality=='Viet Nam', "selected", "")=%%>فيتنام</option>
+                            <option value="Virgin Islands, British" %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands British', "selected", "")=%%>جزر فيرجن البريطانية</option>
+                            <option value="Virgin Islands, U.S." %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands U.S.', "selected", "")=%%>جزر فيرجن الأمريكية</option>
+                            <option value="Wallis And Futuna" %%=IIF(@nationality=='Wallis And Futuna', "selected", "")=%%>واليس وفوتونا</option>
+                            <option value="Western Sahara" %%=IIF(@nationality=='Western Sahara', "selected", "")=%%>الصحراء الغربية</option>
+                            <option value="Yemen" %%=IIF(@nationality=='Yemen', "selected", "")=%%>اليمن</option>
+                            <option value="Zambia" %%=IIF(@nationality=='Zambia', "selected", "")=%%>زامبيا</option>
+                            <option value="Zimbabwe" %%=IIF(@nationality=='Zimbabwe', "selected", "")=%%>زمبابوي</option>
+                            <option value="Others" %%=IIF(@nationality=='Others', "selected", "")=%%>آخرون</option>
+                        </select>
                  
                         </div>
                     </div>
@@ -1432,14 +1402,14 @@ ul {
   
                    <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                     <div class="form-group">
-                        <label for="">Gender</label>
+                        <label for="">الجنس</label>
                         <div class="select-wrapper hide-icon custom-">
 
                           <!-- Priyanka 23 Feb, Added ampscript for gender -->
-                             <select class="form-control" name="gender" id="gender">
-                               <option value=" " selected>Select</option>
-                               <option value="Female" %%=IIF(@gender=='Female', "selected", "")=%%>Female</option>
-                                <option value="Male"  %%=IIF(@gender=='Male', "selected", "")=%%>Male</option> 
+                          <select class="form-control" name="gender" id="gender">
+                               <option value=" " selected>اختر</option>
+                               <option value="Female" %%=IIF(@gender=='Female', "selected", "")=%%>أنثى</option>
+                                <option value="Male" %%=IIF(@gender=='Male', "selected", "")=%%>ذكر</option> 
                             </select>
                          
                         </div>
@@ -1448,7 +1418,7 @@ ul {
           
               <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group">
-                        <label class="label">Birthday</label>
+                        <label class="label">تاريخ الميلاد</label>
                         <div class="bdate">
                           <input class="form-control" type="date" name="birthday" max="getToday();" value="%%=v(@birthdate)=%%" id="birthday">
                 
@@ -1460,13 +1430,13 @@ ul {
                 <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">Language Preference</label>
+                          <label for="">اختيار اللغة</label>
                           <div class="select-wrapper hide-icon custom-">
   
-                               <select class="form-control" name="profilelang">
-                                 <option value=" " %%=IIF(@language==' ', "selected", "")=%%>Select</option>
+                          <select class="form-control" name="profilelang">
+                                 <option value=" " %%=IIF(@language==' ', "selected", "")=%%>اختر</option>
                                  <option value="English" %%=IIF(@language=='English', "selected", "")=%%>English</option>
-                                  <option value="Arabic" %%=IIF(@language=='Arabic', "selected", "")=%%>Arabic</option> 
+                                  <option value="Arabic" %%=IIF(@language=='Arabic', "selected", "")=%%>العربية</option> 
                               </select>
                            
                           </div>
@@ -1475,21 +1445,20 @@ ul {
                  
               </div>
               <!-- Family details section start -->
-              <h4 class="pt-4 pb-4">Tell us a bit more about your family</h4>
+              <h4 class="pt-4 pb-4">أخبرنا المزيد عن عائلتك</h4>
               <!-- marital status new -->
               <div class="col-lg-4 col-md-6 col-sm-12 col-12" style="padding-left:0;">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
-                          <label for="">Marital Status</label>
+                          <label for="">الحالة الاجتماعية</label>
                           <div class="select-wrapper hide-icon">
-                              <select class="form-control" name="maritalstatus">
-                                <option value="">Select</option>
-                                  <option value="single" %%=IIF(@marriedStatus=='Single', "selected", "")=%%>Single  
-                                  </option>
-                                  <option value="Married" %%=IIF(@marriedStatus=='Married', "selected", "")=%%>Married
-                                  </option>
-                                  
-                              </select>
+                          <select class="form-control" name="maritalstatus">
+                            <option value="">اختر</option>
+                            <option value="Single" %%=IIF(@marriedStatus=='Single', "selected", "")=%%>أعزب  
+                            </option>
+                            <option value="Married" %%=IIF(@marriedStatus=='Married', "selected", "")=%%>متزوج
+                            </option>
+                            </select>
                               
                
                           </div>
@@ -1497,8 +1466,7 @@ ul {
                   </div>
               <!-- Marital status section start 
               <div class="form-group" data-aos="fade-up" data-aos-anchor-placement="bottom-bottom">
-                <label for="">Marital Status
-                </label>
+                <label for="">هل لديك أطفال؟</label>
                 <div class="radio-wrapper">
                   <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" %%=IIF(@marriedStatus=='Single', 'checked', '')=%%>
@@ -1514,17 +1482,17 @@ ul {
   
       <!-- Kids section start -->
       <div class="form-group pt-2 pb-4">
-        <label for="">Do you have Children?</label>
+        <label for="">هل لديك أطفال؟</label>
         <div class="radio-wrapper">
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="kidsExists" id="kids"
                     value="kids-yes" onclick="ShowHideDivkids()" %%=v(@childExistsYes)=%%>
-                <label class="form-check-label" for="kids">Yes</label>
+                <label class="form-check-label" for="kids">نعم</label>
             </div>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="kidsExists"
                     id="nokids" value="kids-no" onclick="ShowHideDivkids()" %%=v(@childExistsNo)=%%>
-                <label class="form-check-label" for="nokids">No</label>
+                <label class="form-check-label" for="nokids">لا</label>
             </div>
         </div>
     </div>
@@ -1533,7 +1501,7 @@ ul {
           <div class="row">
               <div class="col-lg-4 col-md-4 col-sm-12 col-12">
                   <div class="form-group">
-                      <label for="numOfKids">Number of Children? </label>
+                      <label for="numOfKids">هل لديك أطفال؟</label>
                       <div class="select-wrapper">
   
                           <select class="form-control selectpicker" name="state" id="numOfKids" onclick="kidsPrepopulation();">
@@ -1563,7 +1531,7 @@ ul {
                 </div>
               </div>
       
-      <p class="disclaimer" style="font-size:12px;"> <i>We request your child’s date of birth to send them birthday greetings and keep you informed about relevant events and promotions.</i></p>
+      <p class="disclaimer" style="font-size:12px;"> <i>نطلب تاريخ ميلاد طفلك لكي نتمكن من إرسال تهاني عيد ميلاده، بالإضافة إلى اطلاعك على أحدث الفعاليات والعروض الترويجية.</i></p>
       </div>
   
   </div>
@@ -1650,7 +1618,7 @@ IF (empty(@crmId)) THEN
     ]%%
               <div class="submit-button">
           
-              <button type="submit" class="btn btn-success"id="profile-submit" name="button">Save</button>
+              <button type="submit" class="btn btn-success"id="profile-submit" name="button">حفظ</button>
  
           </div>
           
@@ -2032,81 +2000,76 @@ IF (empty(@crmId)) THEN
                
                  
                    <div class="form-group">
-                    <h4 class="pt-4 pb-3">What is the primary reason for your visit to LEGOLAND® Dubai Resort?</h4>
+                    <h4 class="pt-4 pb-3">ما هو السبب الرئيسي لزيارتك إلى دبي باركس™  آند ريزورتس؟</h4>
                     <div class="radio-wrapper primary-reason radio-width">
                         <div class="form-check form-check">
-                          <label class="form-check-label" for="reason1">Fun family activities</label>
+                          <label class="form-check-label" for="reason1">أنشطة عائلية ممتعة</label>
                             <input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@funFamilyActivities)=%% >                                
                         </div>
                         <div class="form-check form-check">
-                          <label class="form-check-label" for="reason2">It's on my Dubai bucket list</label>
+                          <label class="form-check-label" for="reason2">انها ضمن قائمة الأشياء التي اريد القيام بها في دبي</label>
                           <input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@dubaiBucketList)=%% >  
                         </div>
                         <div class="form-check form-check">
-                          <label class="form-check-label" for="reason3">I love rides and theme parks</label>
+                          <label class="form-check-label" for="reason3">أحب الجولات والمتنزهات</label>
                           <input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@themePark)=%% >  
                         </div>
                         <div class="form-check form-check">
-                          <label class="form-check-label" for="reason4">I want to celebrate my birthday</label>
+                          <label class="form-check-label" for="reason4">أريد أن أحتفل بعيد ميلادي</label>
                           <input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@celebrateBirthday)=%% >  
                         </div>
                         <div class="form-check form-check">
-                          <label class="form-check-label" for="reason5">I am a regular (Annual Pass member)</label>
+                          <label class="form-check-label" for="reason5">انا زائر منتضم (عضو الاشتراك السنوي</label>
                           <input class="form-check-input" type="checkbox" name="reason5" id="reason5" %%=v(@annualPassMember)=%% >  
                         </div>
                     </div>
                     
 
-                    <h4 class="pt-4 pb-3">How often do you visit LEGOLAND® Dubai Resort?</h4>
+                    <h4 class="pt-4 pb-3">بالعادة كم مرة تقوم بزيارة دبي باركس™ آند ريزورتس؟</h4>
                     <div class="radio-wrapper often-visit radio-width">
                       <div class="form-check form-check">
-                        <label class="form-check-label" for="visit1">Every week</label>
-                          <input class="form-check-input" type="radio" name="visit" id="visit1" value="every week"
-                    %%=IIF(@howOftenVisit=='every week' , 'checked' , '' )=%% >                              
+                        <label class="form-check-label" for="visit1">كل أسبوع</label>
+                          <input class="form-check-input" type="radio" name="visit" id="visit1"value="Every week" %%=IIF(@howOftenVisit=='Every week', 'checked', '')=%% >                            
                       </div>
                       <div class="form-check form-check">
-                        <label class="form-check-label" for="visit2">Every month</label>
-                        <input class="form-check-input" type="radio" name="visit" id="visit2" value="every month"
-                    %%=IIF(@howOftenVisit=='every month' , 'checked' , '' )=%% >  
+                        <label class="form-check-label" for="visit2">كل شهر</label>
+                        <input class="form-check-input" type="radio" name="visit" id="visit2" value="Every month" %%=IIF(@howOftenVisit=='Every month', 'checked', '')=%% >
                       </div>
                       <div class="form-check form-check">
-                        <label class="form-check-label" for="visit3">Once a year</label>
-                        <input class="form-check-input" type="radio" name="visit" id="visit3" value="once a year"
-                    %%=IIF(@howOftenVisit=='once a year' , 'checked' , '' )=%% >  
+                        <label class="form-check-label" for="visit3">مرة كل سنة</label>
+                        <input class="form-check-input" type="radio" name="visit" id="visit3" value="Once a year" %%=IIF(@howOftenVisit=='Once a year', 'checked', '')=%% >
                       </div>
                       <div class="form-check form-check">
-                        <label class="form-check-label" for="visit4">Two times per year</label>
-                        <input class="form-check-input" type="radio" name="visit" id="visit4" value="Two times per year"
-                    %%=IIF(@howOftenVisit=='Two times per year' , 'checked' , '' )=%% >  
+                        <label class="form-check-label" for="visit4">مرتين في السنة</label>
+                        <input class="form-check-input" type="radio" name="visit" id="visit4" value="Two times per year" %%=IIF(@howOftenVisit=='Two times per year', 'checked', '')=%% >
                       </div>
                       <div class="form-check form-check">
-                        <label class="form-check-label" for="visit5">Every two years</label>
-                        <input class="form-check-input" type="radio" name="visit" id="visit5" value="every two years"
-                    %%=IIF(@howOftenVisit=='every two years' , 'checked' , '' )=%%>  
+                        <label class="form-check-label" for="visit5">كل سنتين</label>
+                        <input class="form-check-input" type="radio" name="visit" id="visit5" value="Every two years" %%=IIF(@howOftenVisit=='Every two years', 'checked', '')=%% >
                       </div>
                   </div>
 
-                  <h4 class="pt-4 pb-3">What do you like the most about LEGOLAND® Dubai Resort?</h4>
+                  <h4 class="pt-4 pb-3">ما هو أكثر شيء يعجبك في دبي باركس™ آند ريزورتس؟</h4>
                   <div class="radio-wrapper like-most radio-width">
                     <div class="form-check form-check">
-                      <label class="form-check-label" for="like1">The rides</label>
-                        <input class="form-check-input" type="checkbox" name="like1" id="like1" %%=v(@rides)=%% >                     
+                      <label class="form-check-label" for="like1">الجولات</label>
+                        <input class="form-check-input" type="checkbox" name="like1" id="like1" %%=v(@rides)=%% >                            
                     </div>
                     <div class="form-check form-check">
-                      <label class="form-check-label" for="like2">Live entertainment</label>
-                      <input class="form-check-input" type="checkbox" name="like2" id="like2" %%=v(@liveEntertainment)=%% >  
+                      <label class="form-check-label" for="like2">الفعاليات الترفهيه الحية </label>
+                      <input class="form-check-input" type="checkbox" name="like2" id="like2" %%=v(@liveEntertainment)=%% >
                     </div>
                     <div class="form-check form-check">
-                      <label class="form-check-label" for="like3">Food and restaurants</label>
-                      <input class="form-check-input" type="checkbox" name="like3" id="like3" %%=v(@foodAndRestaurants)=%% >  
+                      <label class="form-check-label" for="like3">المأكواتت والمطاعم </label>
+                      <input class="form-check-input" type="checkbox" name="like3" id="like3" %%=v(@foodAndRestaurants)=%%  >
                     </div>
                     <div class="form-check form-check">
-                      <label class="form-check-label" for="like4">Events</label>
-                      <input class="form-check-input" type="checkbox" name="like4" id="like4" %%=v(@freeEvents)=%% >  
+                      <label class="form-check-label" for="like4">الفعاليات</label>
+                      <input class="form-check-input" type="checkbox" name="like4" id="like4" %%=v(@freeEvents)=%% >
                     </div>
                     <div class="form-check form-check">
-                      <label class="form-check-label" for="like5">Hotels and resorts</label>
-                      <input class="form-check-input" type="checkbox" name="like5" id="like5" %%=v(@hotelsAndResorts)=%% >  
+                      <label class="form-check-label" for="like5">الفنادق والمنتجعات</label>
+                      <input class="form-check-input" type="checkbox" name="like5" id="like5" %%=v(@hotelsAndResorts)=%%  >
                     </div>
                 
                 </div>
@@ -2121,7 +2084,7 @@ IF (empty(@crmId)) THEN
             
               
                  <div class="text-end">
-                  <button type="submit" class="btn btn-success"id="interest-submit" name="button">Save</button>  
+                  <button type="submit" class="btn btn-success"id="interest-submit" name="button">حفظ</button>  
                  </div> 
                 </form>
                  </div>  
@@ -2223,49 +2186,48 @@ IF (empty(@crmId)) THEN
           <div class="wrapper wrapper--w700">
             <form class="preferences-form" action="" method="post">
                <!-- Second -->
-                 <div class="hear-about">
-               <h4 class="pt-4 pb-3">What would you like to hear about?</h4>
+                 <div class="hear-about radio-wrapper radio-width">
+               <h4 class="pt-4 pb-3">ما الذي تريد أن تسمع عنه؟</h4>
                <div class="form-check">
+               <label class="form-check-label" for="informCheck11">
+                   العروض والحملات الترويجية
+                   </label>
                    <input class="form-check-input" type="checkbox" value="%%=v(@promotionaloffersdeals)=%%" id="informCheck11"  name="hearOffers" %%=IIF(@promotionaloffersdeals =='True' ,'checked', "" )=%% >
-                   <label class="form-check-label" for="informCheck11">
-                   Offers and Promotions
-                   </label>
                </div>
                <div class="form-check">
-                   <input class="form-check-input" type="checkbox" value="%%=v(@annualpassvipoffers)=%%" id="informCheck12"  name="hearEvents" %%=IIF(@annualpassvipoffers =='True' ,'checked', "" )=%%>
                    <label class="form-check-label" for="informCheck12">
-                   Upcoming events for families
+                   الفعاليات القادمة للعائلات
                    </label>
+                   <input class="form-check-input" type="checkbox" value="%%=v(@annualpassvipoffers)=%%" id="informCheck12"  name="hearEvents" %%=IIF(@annualpassvipoffers =='True' ,'checked', "" )=%%>
                </div>
                <div class="form-check">
-                   <input class="form-check-input" type="checkbox" value="%%=v(@weeklyannouncements)=%%" id="informCheck13"  name="hearNews" %%=IIF(@weeklyannouncements =='True' ,'checked', "" )=%%>
                    <label class="form-check-label" for="informCheck13">
-                    New rides and entertainment
+                    جولات وانشطة ترفيهية جديدة
                    </label>
+                   <input class="form-check-input" type="checkbox" value="%%=v(@weeklyannouncements)=%%" id="informCheck13"  name="hearNews" %%=IIF(@weeklyannouncements =='True' ,'checked', "" )=%%>
                </div>
                <div class="form-check">
-                   <input class="form-check-input" type="checkbox" value="%%=v(@newproductoffering)=%%" id="informCheck14"  name="newProduct" %%=IIF(@newproductoffering =='True' ,'checked', "" )=%%>
                    <label class="form-check-label" for="informCheck14">
-                    New food and restaurants
+                    مأكواتت و مطاعم جديدة
                    </label>
-               </div>
+                   <input class="form-check-input" type="checkbox" value="%%=v(@newproductoffering)=%%" id="informCheck14"  name="newProduct" %%=IIF(@newproductoffering =='True' ,'checked', "" )=%%>
+                </div>
                <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="%%=v(@latestnews)=%%" id="informCheck15"  name="hearOtherParks" %%=IIF(@latestnews =='True' ,'checked', "" )=%%>
                 <label class="form-check-label" for="informCheck15">
-                 Hotels and resorts
-
+                 الفنادق والمنتجعات
                 </label>
+                <input class="form-check-input" type="checkbox" value="%%=v(@latestnews)=%%" id="informCheck15"  name="hearOtherParks" %%=IIF(@latestnews =='True' ,'checked', "" )=%%>
             </div>
                     <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="%%=v(@customerSurvey)=%%" id="informCheck16"  name="hearSurvey" %%=IIF(@customerSurvey =='True' ,'checked', "" )=%%>
                 <label class="form-check-label" for="informCheck16">
-                 Customer Survey
+                 استبيان العملاء
                 </label>
+                <input class="form-check-input" type="checkbox" value="%%=v(@customerSurvey)=%%" id="informCheck16"  name="hearSurvey" %%=IIF(@customerSurvey =='True' ,'checked', "" )=%%>
             </div>
              </div>
  
              <div class="com-btn mt-5">
-              <button type="submit" class="btn btn-orange"id="communications-submit" name="button">Save</button>
+              <button type="submit" class="btn btn-orange"id="communications-submit" name="button">حفظ</button>
 
           </div>
               <input name="submittedCommunications" type="hidden" value="true">
@@ -2322,35 +2284,35 @@ IF (empty(@crmId)) THEN
 
    <form class="preferences-form" action="" method="post">
     <!-- Second -->
-        <div class="hear-about">
-            <h4 class="pt-4 pb-3">How should we get in touch?</h4>
+        <div class="channel radio-wrapper radio-width">
+        <h4 class="pt-4 pb-3">كيف يمكننا التواصل؟</h4>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="emailPref" name="EmailPref" %%=IIF(@emailPref =='True' ,'checked', "" )=%% >
                 <label class="form-check-label" for="emailPref">
-                    Email
+                البريد الإلكتروني
                 </label>
+                <input class="form-check-input" type="checkbox" id="emailPref" name="EmailPref" %%=IIF(@emailPref =='True' ,'checked', "" )=%% >
             </div>
             <div class="form-check">
+            <label class="form-check-label" for="WhatsAppPref">
+                    عن طريق التطبيق واتساب.
+                </label>
                 <input class="form-check-input" type="checkbox" id="WhatsAppPref" name="WhatsAppPref" %%=IIF(@WhatsAppPref =='True' ,'checked', "" )=%%>
-                <label class="form-check-label" for="WhatsAppPref">
-                    WhatsApp
-                </label>
             </div>
             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="smsPref" name="smsPref" 
-                                       %%=IIF(@smsPref=='True' ,'checked', "" )=%%>
-                                <label class="form-check-label" for="smsPref">
-                                    SMS
-                                </label>
-                            </div>
+                <label class="form-check-label" for="smsPref">
+                    رسالة قصيرة
+                </label>
+                <input class="form-check-input" type="checkbox" id="smsPref" name="smsPref" 
+                        %%=IIF(@smsPref=='True' ,'checked', "" )=%%>
+            </div>
         </div>
    
         <div class="pref-btn mt-5">
             <button type="button" name="button" class="btn btn-orange channelPreference-btn"
-                onclick="channelPreference()" id="channelPreferencess">Save</button>
+                onclick="channelPreference()" id="channelPreferencess">حفظ</button>
           
           <input name="submittedChannelPref" type="hidden" value="true">
-                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+            <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
              <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br> 
         </div>
   </form>
@@ -2361,7 +2323,7 @@ IF (empty(@crmId)) THEN
             text-align: right;
             font-size: 30px;
             position: relative;
-            left: 100%;
+            right: 15px;
             top: 0;
             cursor: pointer;                                                           
             color:#ffd400;">×</span>
@@ -2372,9 +2334,9 @@ IF (empty(@crmId)) THEN
                 </div>
                 <div class="thankYou-text">
 
-                    <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">Your channel subscription preferences have been successfully updated. </p>  
-                  <p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold;padding-top: 0;">Should you wish to receive our communications again, please subscribe through our <a href="https://www.dubaiparksandresorts.com/en/legoland-dubai" style=
-"color:#212529;text-decoration: underline;" target="_blank">website</a>!</p>
+                    <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم تحديث تفضيلات اشتراك القناة الخاصة بك بنجاح.</p>  
+                  <p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold;padding-top: 0;">تم تحديث خيارات اشتراكك على قنوات التواصل بنجاح .إذا كنت ترغب في استلام اتصالاتنا مجددا، يرجى الاشتراك عبر <a href="https://www.dubaiparksandresorts.com/en/legoland-dubai" style=
+"color:#212529;text-decoration: underline;" target="_blank">موقعنا الإلكتروني</a></p>
                 </div>
             </div>
         </div>                      
@@ -2383,15 +2345,15 @@ IF (empty(@crmId)) THEN
             
             
             <div class="mt-5 pl-2" style="font-size: 16px;">
-              <p>To manage SMS subscriptions, please refer to the opt-out feature from the latest SMS message. If you wish to unsubscribe from all Legoland® Dubai communications please click on ‘Unsubscribe’.</p>
+            <p>إذا كنت ترغب في إلغاء الاشتراك من كافة منصات تواصل دبي باركس آند ريزورتس، يرجى الضغط على "إلغاء الاشتراك".</p>
             </div>
            <div class="unsrb-btn mt-5">
       <button type="button" name="button" class="btn btn-orange unsubscribe-btn"
-          onclick="unsubscribeClick()" id="unsubscribeClick">Unsubscribe</button>
+          onclick="unsubscribeClick()" id="unsubscribeClick">إلغاء الاشتراك</button>
   </div>
    <!-- unsubscribe Reason options -->
            <div class="box-form mt-5" id="unsubscribe-reason">
-               <form class="comment-form" action="" method="post">
+               <form class="comment-form radio-wrapper radio-width" action="" method="post">
                  <span class="close-button" style="
 text-align: right;
 font-size: 30px;
@@ -2407,44 +2369,42 @@ color:#ffd400;">×</span>
         </div>
       <div class="thankYou-text">
        
-            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">You’ve been successfully unsubscribed. </p>  
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم إلغاء اشتراكك بنجاح</p>  
       </div>
     
     </div>
     </div>                      
            
                    <div class="orange-notice">
-                       Sorry to see you go!
-
-                   </div>
-                   <p style="font-size: 18px;">Please help us get better by telling us why  you're unsubscribing:</p>
+                   من المؤسف أن نراك تذهب
+                    </div>
+                   <p style="font-size: 18px;">أخبارنا عن سبب إلغاء اشتراكك لمساعدتنا على تحسين خدماتنا</p>
                    <div class="form-check mb-2">
-
+                       <label class="form-check-label" for="chck1">الرسائل الإلكترونية متكررة للغاية</label>
                        <input class="form-check-input" type="checkbox" id="chck1" value="False" name="unsubFreq" %%=IIF(@emailsTooFrequent =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="chck1">Emails are too frequent</label>
                    </div>
                    <div class="form-check mb-2">
+                   <label class="form-check-label" for="chck2">المحتوى ليس له صلة</label>
                        <input class="form-check-input" type="checkbox" id="chck2" value="False" name="unsubRelevance" %%=IIF(@contentIsNotRelevant =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="chck2">Content isn't relevant</label>
                    </div>
                    <div class="form-check mb-2">
+                   <label class="form-check-label" for="chck3">لست مقيماً في دبي</label>
                        <input class="form-check-input" type="checkbox" id="chck3" value="False" name="unsubNoDubai" %%=IIF(@noLongerInDubai =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="chck3">I'm no longer in Dubai</label>
                    </div>
                    <div class="form-check">
+                   <label class="form-check-label" for="chck4">توقف مؤقت لمدة 30 يوما</label>
                     <input class="form-check-input" type="checkbox" id="chck4" value="False" name="unsubTemp" %%=IIF(@tempPause =='True' ,'checked', "" )=%%>
-                    <label class="form-check-label" for="chck4">Temporary Pause (30 Days)</label>
                 </div>
                    <div class="form-check mt-2">
+                   <label class="form-check-label" for="myCheck1">أسباب أخرى (يرجى تحديد السبب)</label>
                        <input class="form-check-input" type="checkbox" id="myCheck1" value="False"
                            onclick="addbox1()" name="unsubOther" %%=IIF(@otherSpecify =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="myCheck1">Other (Please specify)</label>
                    </div>
                    <textarea name="nameReason" rows="6" cols="80" id="area1"
                        class="form-control mt-3" value="%%=v(@reasonForUnsub)=%%" placeholder="Tell us more">%%=v(@reasonForUnsub)=%%</textarea>
                     
                    <div class="com-btn mt-5">
-                    <button type="submit" class="btn btn-orange"id="communications-submitbtn" name="button">Save</button>
+                    <button type="submit" class="btn btn-orange"id="communications-submitbtn" name="button">حفظ</button>
       <input name="submittedUnsub" type="hidden" value="true">
                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
              <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br> 
@@ -2557,11 +2517,11 @@ color:#ffd400;">×</span>
            </div>
 
             <div class="mt-5 pl-2" style="font-size: 16px;">
-              <p>If you wish to unsubscribe from all Dubai Holding Entertainment communications, which include all our <a href="https://eur03.safelinks.protection.outlook.com/?url=https%3A%2F%2Fprivacy.dubaiholding.com%2Fen%2Fdata-controllers-list%2Fdubai-holding-entertainment-llc&data=05%7C02%7CFlorian.Aubat%40dhentertainment.ae%7C7a65fcdf90e541785a7e08dccb397be0%7Ceee3385e742f4e2eb130e496ed7d6a49%7C0%7C0%7C638608694981992397%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&sdata=E6lS0jEueeMxMg2p79r%2FDVLTu9sUuqDypjndDyEIwZU%3D&reserved=0" style="color:#212529;text-decoration: underline;" target="_blank">brands</a> , please click on 'Unsubscribe All'.</p>
+              <p>إذا كنت ترغب في إلغاء اشتراكك من جميع رسائل التسويق لدبي القابضة للترفيه، التي تشمل جميع <a href="https://eur03.safelinks.protection.outlook.com/?url=https%3A%2F%2Fprivacy.dubaiholding.com%2Fen%2Fdata-controllers-list%2Fdubai-holding-entertainment-llc&data=05%7C02%7CFlorian.Aubat%40dhentertainment.ae%7C7a65fcdf90e541785a7e08dccb397be0%7Ceee3385e742f4e2eb130e496ed7d6a49%7C0%7C0%7C638608694981992397%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&sdata=E6lS0jEueeMxMg2p79r%2FDVLTu9sUuqDypjndDyEIwZU%3D&reserved=0" style="color:#212529;text-decoration: underline;" target="_blank">علامتنا </a> التجارية، يرجى الضغط على "إلغاء الاشتراك في الكل </p></p>
 
             </div>
             <div class="unsrb-all-btn mt-5">
-              <button type="button" name="button" class="btn btn-orange unsubscribe-all-btn" id="unsubscribeAllClick" onclick="unsubscribeAllClick()">Unsubscribe All</button>
+              <button type="button" name="button" class="btn btn-orange unsubscribe-all-btn" id="unsubscribeAllClick" onclick="unsubscribeAllClick()">إلغاء اشتراك الكل</button>
           </div>
           
 
@@ -2569,7 +2529,7 @@ color:#ffd400;">×</span>
                   <!-- Unsubscribe All reason options -->
            <div class="box-form mt-5" id="unsubscribe-all-reason">
              
-            <form class="comment-form" action="" method="post">
+            <form class="comment-form radio-wrapper radio-width" action="" method="post">
               <span class="close-buttonAll" style="text-align: right;font-size: 30px;position: relative;left: 100%;top: 0;cursor: pointer;color:#ffd400;">×</span>
                <div class="container">
       <div class="unsubscribe-wrapper form group">
@@ -2578,47 +2538,42 @@ color:#ffd400;">×</span>
         </div>
       <div class="thankYou-text">
        
-            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">You’ve been successfully unsubscribed. </p>  
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم إلغاء اشتراكك بنجاح</p>  
       </div>
     
     </div>
     </div>                      
          
                 <div class="orange-notice">
-                    Sorry to see you go!
+                من المؤسف أن نراك تذهب
 
                 </div>
-                <p style="font-size: 18px;">Please help us get better by telling us why  you're unsubscribing:</p>
+                <p style="font-size: 18px;">أخبارنا عن سبب إلغاء اشتراكك لمساعدتنا على تحسين خدماتنا</p>
              <div class="form-check mb-2">
-
+                       <label class="form-check-label" for="chck_1">الرسائل الإلكترونية متكررة للغاية</label>
                        <input class="form-check-input" type="checkbox" id="chck_1" value="False" name="unsubFreq" %%=IIF(@emailsTooFrequent =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="chck_1">Emails are too frequent</label>
                    </div>
                    <div class="form-check mb-2">
+                        <label class="form-check-label" for="chck_2">المحتوى ليس له صلة</label>
                        <input class="form-check-input" type="checkbox" id="chck_2" value="False" name="unsubRelevance" %%=IIF(@contentIsNotRelevant =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="chck_2">Content isn't relevant</label>
                    </div>
                    <div class="form-check mb-2">
+                        <label class="form-check-label" for="chck_3">لست مقيماً في دبي</label>
                        <input class="form-check-input" type="checkbox" id="chck_3" value="False" name="unsubNoDubai" %%=IIF(@noLongerInDubai =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="chck_3">I'm no longer in Dubai</label>
                    </div>
                    <div class="form-check">
+                   <label class="form-check-label" for="chck_4">توقف مؤقت لمدة 30 يوما</label>
                     <input class="form-check-input" type="checkbox" id="chck_4" value="False" name="unsubAllTemp" %%=IIF(@tempPause =='True' ,'checked', "" )=%%>
-                    <label class="form-check-label" for="chck_4">Temporary Pause (30 Days)</label>
                 </div>
                    <div class="form-check mt-2">
+                   <label class="form-check-label" for="myCheck_1">أسباب أخرى (يرجى تحديد السبب)</label>
                        <input class="form-check-input" type="checkbox" id="myCheck_1" value="False"
                            onclick="addbox_1()" name="unsubOther" %%=IIF(@otherSpecify =='True' ,'checked', "" )=%%>
-                       <label class="form-check-label" for="myCheck_1">Other (Please specify)</label>
                    </div>
                    <textarea name="nameReason" rows="6" cols="80" id="area_1"
                        class="form-control mt-3" value="%%=v(@reasonForUnsub)=%%" placeholder="Tell us more">%%=v(@reasonForUnsub)=%%</textarea>
-                    
-                 
-          
-            
                 <div class="com-btn mt-5">
-                 <button type="submit" class="btn btn-orange"id="communications-submitbtn1" name="button">Save</button>
+                 <button type="submit" class="btn btn-orange"id="communications-submitbtn1" name="button">حفظ</button>
 <input name="unsubAll" type="hidden" value="true">
                                 <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
              <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br>
@@ -2753,50 +2708,48 @@ color:#ffd400;">×</span>
                              <a alias="DPR_link" class="logo-footer"href="https://www.dubaiparksandresorts.com/en" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/4e7abcfd-4466-4353-b1fe-03e7b1ea36ee.png"></a>
                         </div>
                         <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
-                            <h4>Information</h4>
+                            <h4>معلومات</h4>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                                <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">Buy Tickets</a></p>
+                                <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">شراء التذاكر</a></p>
                             </div>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                                <p><a alias="AnnualPass" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">Annual Pass</a></p>
+                                <p><a alias="AnnualPass" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">تذكرة سنوية</a></p>
                             </div>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                              <p><a alias="Offers" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">Offers</a></p>
+                              <p><a alias="Offers" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">العروض</a></p>
                           </div>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p><a alias="Experience" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">Experiences</a></p>
+                            <p><a alias="Experience" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">الخبرات</a></p>
                         </div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                          <p><a alias="ContactUs" href="https://www.dubaiparksandresorts.com/en/contact-us" target="_blank">Contact Us</a></p>
+                          <p><a alias="ContactUs" href="https://www.dubaiparksandresorts.com/en/contact-us" target="_blank">اتصل بنا</a></p>
                       </div>
                         </div>
                         <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
-                          <h4>Legal</h4>
+                          <h4>قانوني</h4>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                              <p><a alias="Disclaimer" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">Disclaimer</a></p>
+                              <p><a alias="Disclaimer" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">إخلاء المسؤولية</a></p>
                           </div>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                              <p><a alias="PrivacyPloicy" href="https://privacy.dubaiholding.com/privacy-notice/customers---dubai-holding-entertainment-llc" target="_blank">Privacy Policy</a></p>
+                              <p><a alias="PrivacyPloicy" href="https://privacy.dubaiholding.com/privacy-notice/customers---dubai-holding-entertainment-llc" target="_blank">سياسة الخصوصية</a></p>
                           </div>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p><a alias="TermsAndCondition" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">Terms &amp; Conditions</a></p>
+                            <p><a alias="TermsAndCondition" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">الشروط والأحكام</a></p>
                         </div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                          <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/en/cookie-policy" target="_blank">Cookies Notice</a></p>
+                          <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/en/cookie-policy" target="_blank">إشعار ملفات تعريف الارتباط</a></p>
                       </div>
                       <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                        <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/en/copyright-trademark" target="_blank">Copyright &amp; Trademark</a></p>
+                        <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/en/copyright-trademark" target="_blank">حقوق الطبع والنشر والعلامة التجارية</a></p>
                     </div>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
-                        <h4>Tickit Rewards</h4>
+                        <h4>مكافآت تيكيت</h4>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p><a alias="Tickit_iOS" href="https://apps.apple.com/us/app/tickit-rewards/id1597908032?_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4jP9gwHIgL%2FmLQAAAA%3D%3D" target="_blank">Download Tickit
-                              for iOS</a></p>
+                            <p><a alias="Tickit_iOS" href="https://apps.apple.com/us/app/tickit-rewards/id1597908032?_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4jP9gwHIgL%2FmLQAAAA%3D%3D" target="_blank">تحميل تيكيت لنظام iOS</a></p>
                         </div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p> <a alias="Tickit_Android" href="https://play.google.com/store/apps/details?id=ae.tickit.primary&_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4h3zUoryM1MAFKNCBjEAAAA%3D&pli=1" target="_blank">Download Tickit
-                              for Android</a></p>
+                            <p> <a alias="Tickit_Android" href="https://play.google.com/store/apps/details?id=ae.tickit.primary&_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4h3zUoryM1MAFKNCBjEAAAA%3D&pli=1" target="_blank">تحميل تيكيت لنظام أندرويد</a></p>
                         </div>
                       
                     </div>
@@ -2820,12 +2773,10 @@ color:#ffd400;">×</span>
                     <div class="row footer-row-2">
                       <div class="col-lg-8 col-md-8 col-sm-12 col-12 ">
                         <p style="color: rgb(238, 238, 238); font-size: 10px; font-family: Arial, Helvetica, sans-serif; font-weight: normal;  text-align: left;line-height:12px">
-                           A&copy;2024 The LEGO Group. &copy;2024 DWA LLC. All Rights Reserved  &copy;2024 CPll. All Rights reserved.<br> &copy;2024 SPAI. All Rights Reserved. &copy;2024 GHI. Movie &copy; 2024 Lions Gate Ent. Inc.<br> &copy; Dubai Parks&trade; and Resorts 2024. All Rights Reserved.</p>
+                        ©2024 مجموعة LEGO. جميع الحقوق محفوظة. ©2024 DWA LLC. جميع الحقوق محفوظة. ©2024 CPII. جميع الحقوق محفوظة.©2024 SPAI. جميع الحقوق محفوظة. ©2024 GHI. الفيلم © 2024 Lions Gate Ent. Inc. جميع الحقوق محفوظة.© متنزهات ومنتجعات دبي 2024. جميع الحقوق محفوظة.</p>
                       </div>
-                     
-                     
                     <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
-                      <h4>Proud partners</h4>
+                      <h4>شركاء فخورون</h4>
                       <ul class="proud-partners">
                       <li class="pp">
                         <img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/0cd6669a-0b94-46ef-b812-aa4db9ab5160.png" style="width: 25px;" width="25">
@@ -2921,14 +2872,14 @@ function handleNumOfKidsChange(numOfKids) {
         $("#kidsTable").append(`
         <div class="row"><div class="col-lg-4 col-md-4 col-sm-12 col-12">
                            <div class="form-group">
-                        <label for="">Child's Name</label>
+                        <label for="">اسم الطفل</label>
                         <input type="text" id="kidsName${i}" name="kidsName${i}" value=""
                             class="form-control nameKids" />
                     </div>
                           </div>
                             <div class="col-lg-3 col-md-3 col-sm-12 col-12">
                       <div class="form-group">
-                        <label class="label">Child's Birthday</label>
+                        <label class="label">تاريخ ميلاد الطفل</label>
                         <div class="bdate">
                           <input class="form-control" type="date"  name="kids-birthday${i}" id="kids-birthday${i}"  value="" class="kbday">
                 
@@ -2941,19 +2892,19 @@ function handleNumOfKidsChange(numOfKids) {
 
                           <div class="col-lg-3 col-md-3 col-sm-12 col-12">
                             <div class="form-group">
-                              <label for="">Child's Gender </label>
+                              <label for="">جنس الطفل</label>
                               <div class="select-wrapper">
                                 <select class="form-control" name="gender${i}" id="gender${i}">
-                                  <option value="">Select</option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
+                                  <option value="">اختر</option>
+                                  <option value="Male">ذكر</option>
+                                  <option value="Female">أنثى</option>
                            
                                 </select>
                                 
                               </div>
                             </div>
                             
-                          </div><div class="col-lg-2 col-md-2 col-sm-12 col-12"><button class="btn btn-primary del" id="${i}" value="" onclick="kidsDeletion(this);">Delete</button></div></div>
+                          </div><div class="col-lg-2 col-md-2 col-sm-12 col-12"><button class="btn btn-primary del" id="${i}" value="" onclick="kidsDeletion(this);">حذف</button></div></div>
         `);
         //Future date restricting Validation
 
