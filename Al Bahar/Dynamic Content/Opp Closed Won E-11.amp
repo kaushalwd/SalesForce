@@ -1,0 +1,81 @@
+%%[
+
+   
+   SET @AccFName = AttributeValue("Contact:FirstName")
+    SET @AccLName = AttributeValue("Contact:LastName")
+    SET @AccCustName = "Customer"
+    SET @CustomerStore = AttributeValue("Opportunity:Customer_Store__c")
+    SET @OppCountry = UpperCase(Lookup("StoreLocationMapping", "Country", "StoreNumber", @CustomerStore))
+   
+   SET @regEx = "^[A-Za-z\s]+$"
+    SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+    SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+
+    IF (@AccFName == "" And @AccLName == "") Or (@AccFName == "NA" And @AccLName == "NA") Or (IsEmailAddress(@AccFName) == 'True' And IsEmailAddress(@AccLName) == 'True') Or (@regExMatchFName  == '' And @regExMatchLName  == '') Then
+       SET @AccCustName = "Customer"
+    ELSEIF (ProperCase(@AccFName) == ProperCase(@AccLName)) Then
+       SET @AccCustName = ProperCase(@AccFName)   
+    ELSE
+         IF @AccFName != "" Or @AccLName != "" Then
+           IF (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '') And (IsEmailAddress(@AccLName) == 'False' And @regExMatchLName != '') And (Uppercase(@AccFName) != "NA" And Uppercase(@AccLName) != "NA") And @AccFName != "" Then
+              SET @AccCustName = Concat(ProperCase(@AccFName), " ", ProperCase(@AccLName))
+           ELSEIF @AccFName != "" And (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '' And Uppercase(@AccFName) != "NA") Then
+              SET @AccCustName = ProperCase(@AccFName)
+           ENDIF
+        ENDIF  
+    ENDIF  
+ 
+   IF @OppCountry == "OMAN" Then
+    SET @companyName = "OASIS TRADING & EQUIPMENT CO. L.L.C"
+    SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/32dbd4ba-24fd-4c97-a9b4-de5d5cbd8303.jpg"
+   ELSE
+    SET @companyName = "MOHAMED ABDULRAHMAN AL-BAHAR"
+    SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b027d73b-0882-4aef-814b-a2bc4737a3b9.jpg"
+   ENDIF   
+   
+   SET @ItemModels = AttributeValue("OppProduct:Model")
+   SET @ItemModelsRows = BuildRowsetFromString(@ItemModels, ",")
+   SET @ItemRowCount = RowCount(@ItemModelsRows)
+   
+   IF @ItemRowCount > 0 THEN
+    FOR @i=1 to @ItemRowCount Do
+        SET @ItemModelRow = Row(@ItemModelsRows, @i)
+        SET @ItemModel = Field(@ItemModelRow, 1)
+    Next @i
+   ELSE
+     SET @ItemModel = @ItemModels
+   ENDIF
+
+   SET @ModelFamily = Lookup("Machine Family", "Group", "Model", @ItemModel)
+   SET @FamilyName = Lookup("Machine Family", "Family Name", "Model", @ItemModel)
+   
+        SET @SubjectLine = Lookup("AssetOwnership_ModelSpecitic", "Subject_Line", "Group", @ModelFamily)
+        SET @BodySubtitle = Lookup("AssetOwnership_ModelSpecitic", "Body_Subtitle", "Group", @ModelFamily)
+        SET @TopBodyCopy = Lookup("AssetOwnership_ModelSpecitic", "Top_Body_Copy", "Group", @ModelFamily)
+        SET @BodyCopy = Lookup("AssetOwnership_ModelSpecitic", "Body", "Group", @ModelFamily)
+        SET @CtaLink = Lookup("AssetOwnership_ModelSpecitic", "CTA_Link", "Group", @ModelFamily)
+        SET @TextOnImage = Lookup("AssetOwnership_ModelSpecitic", "Text_on_Image", "Group", @ModelFamily)
+        SET @BannerImage = Lookup("AssetOwnership_ModelSpecitic", "Banner_Img", "Group", @ModelFamily)
+        /* SET @BodyImage = Lookup("AssetOwnership_ModelSpecitic", "Body_Copy_Img", "Group", @ModelFamily) */
+
+        //Output(Concat("Subject : ",@SubjectLine))
+
+    /*SET @ModelProductData = Lookup("AssetOwnership_ModelSpecitic", "Model", @ItemModel)
+    IF RowCount(@ModelProductData) Then
+        FOR @i=1 to RowCount(@ModelProductData)
+        SET @ProdutData = Row(@ModelProductData, @i)
+        SET @SubjectLine = Field(@ProdutData, "Subject Line")
+        SET @BodySubtitle = Field(@ProdutData, "Body Subtitle")
+        SET @TopBodyCopy = Field(@ProdutData, "Top Body Copy")
+        SET @BodyCopy = Field(@ProdutData, "Body Copy")
+        SET @CtaLink = Field(@ProdutData, "CTA Link")
+        SET @TextOnImage = Field(@ProdutData, "Text on Image")
+        SET @BannerImage = Field(@ProdutData, "Banner Image")
+        SET @BodyImage = Field(@ProdutData, "Body Image")
+        Next @i
+    ENDIF
+    */
+
+   ]%%
+   %%[ SET @en=Base64Encode(Concat('source=EM&CT=AM&SK=',_subscriberkey)) 
+SET @unsubLink=CONCAT('https://cloud.mkt.albahar.com/preferencecenter?key=',@en,'&ln=',listid)]%%

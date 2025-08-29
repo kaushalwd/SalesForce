@@ -1,17 +1,17 @@
+
+
 <!--ampscript starts-->
 
 %%[
-    var @numOfKids
-    SET @crmIdEn = "003Qs00000EKRNPIA5"
-    /* SET @crmIdEn = QueryParameter("sfid") */
-    /*SET @crmId = Base64Decode(@crmIdEn)*/
-    SET @crmId = "003Qs00000EKRNPIA5"    
-    
-    /*SET @crmId = _subscriberkey*/
+
+ var @numOfKids
+    SET @crmId = _subscriberkey
+  
     IF (empty(@crmId)) THEN
     SET @crmIdEn = QueryParameter("sfid")
     SET @crmId = Base64Decode(@crmIdEn)
     SET @methodType= 'Old'
+   
     IF (empty(@crmId)) THEN
       SET @crmId = RequestParameter("sfid")
       IF (empty(@crmId)) THEN
@@ -20,14 +20,31 @@
      ENDIF
     ENDIF
     IF NOT Empty(@crmId) THEN
-    SET @contactRows =
-    RetrieveSalesforceObjects("Contact",
-    "Salutation,FirstName,LastName,Email,Phone,Country_Code__c,BirthDate,Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,GenderIdentity,No_of_Kids__c,Do_you_have_kids__c,MailingCity",
-    "Id","=", @crmId)
-    if RowCount(@contactRows) == 1 then /* there should only be one row */
     
+    /* owner - Priyanka 
+    date - 23 Feb
+    City added */
     
-    set @contactRow = Row(@contactRows, 1)
+ 
+    SET @gfContactRows = RetrieveSalesforceObjects("Contact",
+  "Id,Salutation,FirstName,LastName,Email,Phone,Country_Code__c,Birthdate,Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c,GV_ContactId__c",
+    "Id","=", @crmId )
+SET @bfContactRows =RetrieveSalesforceObjects("Contact",
+  "Id,Salutation,FirstName,LastName,Email,Phone,Country_Code__c,Birthdate,Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c,GV_ContactId__c",
+    "GV_ContactId__c","=", @crmId )
+    
+       IF RowCount(@gfContactRows) == 1 THEN 
+        set @contactRow = Row(@gfContactRows, 1) 
+        /*output(concat("<br>contactRowIf ",@contactRow)) */
+        ELSEIF RowCount(@bfContactRows) == 1 THEN 
+        set @contactRow = Row(@bfContactRows, 1) 
+        /*output(concat("<br>contactRowElse ",@contactRow)) */
+        ENDIF 
+        
+    if not empty(@contactRow) then /* there should only be one row */
+    
+    set @crmId = Field(@contactRow, "Id")
+    set @GVContactId = Field(@contactRow, "GV_ContactId__c")
     set @firstName = Field(@contactRow, "FirstName")
     set @lastName = Field(@contactRow, "LastName")
     set @city = Field(@contactRow, "MailingCity")
@@ -36,7 +53,7 @@
     set @title = Field(@contactRow, "Salutation")
     set @Phone = Field(@contactRow, "Phone")
     set @mobilePhoneCode = Field(@contactRow, "Country_Code__c")
-    set @birthdate = Field(@contactRow, "BirthDate")
+    set @birthdate = Field(@contactRow, "Birthdate")
     /*set @birthdate  = Format(@birth, "dd/MM/yyyy")*/
     set @language = Field(@contactRow, "Registration_Language__c")
     set @nationality = Field(@contactRow, "Nationality__c")
@@ -48,12 +65,10 @@
     else
      SET @childExistsNo = "checked"
    ENDIF
-   /*output(concat("married: ",@married))*/
     IF @married == "Married" THEN
         set @marriedStatus = "Married"
     Elseif @married == "" Then
         set @marriedStatus = ""
-         /*output(concat("<br>married12: ",@married))*/
     ELSE 
     set @marriedStatus = "Single"
     ENDIF
@@ -62,13 +77,13 @@
     
     /* Fetching Children details */
     var @j
-    
+        
     SET @childDetails = RetrieveSalesforceObjects("Family_Member__c","Gender__c,Date_Of_Birth__c,First_Name__c",
     "Contact__c", "=", @crmId,
-    "Relationship__c", "=", "Child")
+    "Relationship__c", "=", "Child") /*.............changed crmiden..............*/
     SET @childDetailsRowCount = Rowcount(@childDetails)
     IF @childDetailsRowCount > 0 THEN
-    SET @childExistsYes = "checked"
+    //SET @childExistsYes = "checked"
     For @j=1 to @childDetailsRowCount do
         SET @ChildDetailsRow = Row(@childDetails, @j)
         set @childGender = Field(@ChildDetailsRow, "Gender__c")
@@ -76,32 +91,38 @@
         set @childFirstName = Field(@ChildDetailsRow, "First_Name__c")
     next @j
     ELSE
-     /*SET @childExistsNo = "checked"*/
+     //SET @childExistsNo = "checked"
     ENDIF
     
    
    
     
     /* Fetching Guest Subscription details */
-    SET @GuestDetails = RetrieveSalesforceObjects("Guest_Subscription__c","Asset__c,Sub_Asset__c, Id,Primary_reason_for_your_visit_Legoland__c,How_often_do_you_visit_Legoland__c,Like_the_most_about_Legoland__c,Offers_and_Promotions__c,Upcoming_events_for_families__c,New_rides_and_entertainment__c,New_food_and_restaurants__c,Hotels_and_resorts__c,Customer_Survey__c,Emails_are_too_frequent__c,Content_isn_t_relevant__c,I_m_no_longer_in_Dubai__c,Temporary_Pause_30_Days__c,
+    SET @GuestDetails = RetrieveSalesforceObjects("Guest_Subscription__c","Asset__c, Id,What_Is_primary_reason_for_your_visit__c,
+    How_often_do_you_visit_this_asset__c,What_do_you_like_the_most_about__c,Offers_and_Promotions__c,New_rides_and_entertainment__c,New_food_and_restaurants__c,Customer_Survey__c,
+    Hotels_and_resorts__c,Upcoming_events_for_families__c,Emails_are_too_frequent__c,Content_isn_t_relevant__c,I_m_no_longer_in_Dubai__c,Temporary_Pause_30_Days__c,
     Other_Please_specify__c,Reason_of_Unsubscribe__c,Email__c,WhatsApp__c,SMS__c,Status__c",
-    "Contact__c", "=", @crmId,"Asset__c","=","Dubai Parks and Resorts","Sub_Asset__c","=","Legoland")
+    "Contact__c", "=", @crmId,"Asset__c","=","Dubai Parks and Resorts","Sub_Asset__c","=","Dubai Parks and Resorts")   /*.............changed crmiden..............*/
      
     SET @guestDetailsRowCount = Rowcount(@GuestDetails)
-    IF @guestDetailsRowCount > 0 THEN /*Roxy*/
+    IF @guestDetailsRowCount > 0 THEN /*DPR*/
     
         SET @guestDetailsRow = Row(@GuestDetails, 1)
+       
         SET @assetType = Field(@guestDetailsRow, "Asset__c")
         SET @Id = Field(@guestDetailsRow, "Id")
-        set @primaryReasonForVisit = Field(@guestDetailsRow, "Primary_reason_for_your_visit_Legoland__c")
-        set @likeMostAbout = Field(@guestDetailsRow, "Like_the_most_about_Legoland__c")
-        set @howOftenVisit = Field(@guestDetailsRow, "How_often_do_you_visit_Legoland__c")
-        set @promotionaloffersdeals = Field(@guestDetailsRow, "Offers_and_Promotions__c")
-        set @annualpassvipoffers = Field(@guestDetailsRow, "Upcoming_events_for_families__c")
-        set @weeklyannouncements= Field(@guestDetailsRow, "New_rides_and_entertainment__c")
-        set @newproductoffering = Field(@guestDetailsRow, "New_food_and_restaurants__c")
-        set @latestnews = Field(@guestDetailsRow, "Hotels_and_resorts__c")
+        set @primaryReasonForVisit = Field(@guestDetailsRow, "What_Is_primary_reason_for_your_visit__c")
         set @customerSurvey = Field(@guestDetailsRow, "Customer_Survey__c")
+        set @primaryReasonForVisit = ProperCase(@primaryReasonForVisit)
+        set @howOftenVisit = Field(@guestDetailsRow, "How_often_do_you_visit_this_asset__c")
+        set @howOftenVisit = ProperCase(@howOftenVisit)
+        set @likeMostAbout = Field(@guestDetailsRow, "What_do_you_like_the_most_about__c")
+        set @likeMostAbout = ProperCase(@likeMostAbout)
+        set @offersAndPromotions = Field(@guestDetailsRow, "Offers_and_Promotions__c")
+        set @newRidesAndEntertainement = Field(@guestDetailsRow, "New_rides_and_entertainment__c")
+        set @newFoodAndRestaurants = Field(@guestDetailsRow, "New_food_and_restaurants__c")
+        set @hotelsNdResorts = Field(@guestDetailsRow, "Hotels_and_resorts__c")
+        set @upcomingEventsAndFamilies = Field(@guestDetailsRow, "Upcoming_events_for_families__c")
         set @emailsTooFrequent = Field(@guestDetailsRow, "Emails_are_too_frequent__c")
         set @contentIsNotRelevant = Field(@guestDetailsRow, "Content_isn_t_relevant__c")
         set @noLongerInDubai = Field(@guestDetailsRow, "I_m_no_longer_in_Dubai__c")
@@ -110,18 +131,25 @@
         set @reasonForUnsub = Field(@guestDetailsRow, "Reason_of_Unsubscribe__c")
         set @emailPref = Field(@guestDetailsRow, "Email__c")
         set @WhatsAppPref = Field(@guestDetailsRow, "WhatsApp__c")
-        set @smsPref = Field(@guestDetailsRow, "SMS__c")
+        set @smsPref = Field(@guestDetailsRow, "SMS__c")    
         set @status = Field(@guestDetailsRow, "Status__c")
+        set @dubaiOptionName = Concat("It", "'", "s on my Dubai bucket list")
         
-        /*Output(concat("<br>LL: ",@assetType))*/
+      
         
+   
+    
     ENDIF
-    ENDIF
+    Endif
     ENDIF
     
 ]%%
 
+
+
+
 <!--ampscript ends-->
+
 
 <script runat="server">
         Platform.Load("core", "1.1.2");
@@ -133,21 +161,19 @@
         var submittedUnsub = Platform.Request.GetFormField('submittedUnsub') || "";
    
 
-        var subscriberKey    = Platform.Request.GetFormField('crmId') || "";
+        var subscriberKey = Platform.Request.GetFormField('crmId') || "";
         var profileSalutation = Platform.Request.GetFormField('profileSalutation') || "";
-        var firstName         = Platform.Request.GetFormField('firstName') || "";
-        var lastName           = Platform.Request.GetFormField('lastName') || "";
-        var phone                = Platform.Request.GetFormField('phone') || "";
-        var birthdate            = Platform.Request.GetFormField('birthday') || "";
-        var profileLang        = Platform.Request.GetFormField('profileLang') || "";
+        var firstName = Platform.Request.GetFormField('firstName') || "";
+        var lastName = Platform.Request.GetFormField('lastName') || "";
+        var phone = Platform.Request.GetFormField('phone') || "";
+        var city = Platform.Request.GetFormField('city') || "";
+        var birthdate = Platform.Request.GetFormField('birthday') || "";
+        var profileLang = Platform.Request.GetFormField('profileLang') || "";
         var profileNationality = Platform.Request.GetFormField('profileNationality') || "";
-        var profileCountry     = Platform.Request.GetFormField('profileCountry') || "";
-        var profileMarried     = Platform.Request.GetFormField('inlineRadioOptions') || "";
+        var profileCountry = Platform.Request.GetFormField('profileCountry') || "";
+        var profileMarried = Platform.Request.GetFormField('inlineRadioOptions') || "";
         if(profileMarried=='option2'){
             profileMarriedStatus = 'Yes';
-        }
-        else if(profileMarried==''){
-          profileMarriedStatus = '';
         }
         else{
             profileMarriedStatus = 'No';
@@ -156,6 +182,9 @@
         if(profileChildren=='kids-yes'){
             profileChildrenStatus = 'Yes';
         }
+        else if(profileMarried==''){
+          profileMarriedStatus = '';
+        }
         else{
             profileChildrenStatus = 'No';
         }
@@ -163,24 +192,23 @@
 
   
   
-        var listpromotions = Platform.Request.GetFormField('hearOffers') || False;
-        var listannualpass = Platform.Request.GetFormField('hearEvents') || false;
-        var listweeklyannouncements = Platform.Request.GetFormField('hearNews') || false;
-        var listnewproductoffering = Platform.Request.GetFormField('newProduct') || false;
-        var listlatestnews= Platform.Request.GetFormField('hearOtherParks') || false;
-        var listCustomer = Platform.Request.GetFormField('hearSurvey') || false;
-        var tempPause = Platform.Request.GetFormField('unsubTemp') || false;
-        
+        var listOffers = Platform.Request.GetFormField('hearOffers') || False;
+        var listEvents = Platform.Request.GetFormField('hearEvents') || false;
+        var listRides = Platform.Request.GetFormField('newRides') || false;
+        var listFood = Platform.Request.GetFormField('newFood') || false;
+        var listHotels = Platform.Request.GetFormField('hotelsResorts') || false;
+        var listCustomer = Platform.Request.GetFormField('cutomerSurvey') || false;
+        var tempPause = Platform.Request.GetFormField('unsubTemp');
 
         var unsubscribe = Platform.Request.GetFormField('submittedUnsub') || false;
 
         var listOfInput = [];
-    listOfInput.push({Name : 'Legoland - Offers and Promotions', Status: listpromotions })
-  listOfInput.push({Name : 'Legoland - Upcoming events for families', Status: listannualpass })
-  listOfInput.push({Name : 'Legoland - New rides and entertainment', Status: listweeklyannouncements})
-        listOfInput.push({Name : 'Legoland - New food and restaurants', Status: listnewproductoffering})
-        listOfInput.push({Name : 'Legoland - Hotels and resorts', Status: listlatestnews})
-        listOfInput.push({Name : 'Legoland - Customer Survey', Status: listCustomer})
+        listOfInput.push({Name : 'Dubai Parks and Resorts - Offers and Promotions', Status: listOffers})
+        listOfInput.push({Name : 'DPR - Upcoming events for families', Status: listEvents})
+        listOfInput.push({Name : 'DPR - New rides and entertainment', Status: listRides})
+        listOfInput.push({Name : 'DPR - New food and restaurants', Status: listFood})
+        listOfInput.push({Name : 'DPR - Hotels and resorts', Status: listHotels})
+        listOfInput.push({Name : 'DPR - Customer Survey', Status: listCustomer})
  
   
   
@@ -242,31 +270,37 @@
                         "Nationality": profileNationality,
                         "Married": profileMarriedStatus,
                         "Do you have Kids": profileChildrenStatus,
-                        "Country of Residence": profileCountry
+                        "Country of Residence": profileCountry,
+                        "City of Residence": city
                     }
                 };
                             
             }
 
-            var subObj = Subscriber.Init(subscriberKey);
+           var subObj = Subscriber.Init(subscriberKey);
+          
            
              if (unsubscribe && submittedUnsub) {
-               if(!tempPause){
-                var unsubscribeSatus = subObj.Unsubscribe();
-                Variable.SetValue("unsubscribeSatus", unsubscribeSatus);
-               }
-               else{
-                  var resub = {              
-                     "SubscriberKey": subscriberKey,
-                     "Lists": {
-                       "ID": '63', 
-                       "Action": "Update"
-                     },
-                     "Status": "Active"
-                  }; 
-                 var subObj = Subscriber.Init(subscriberKey);
-                 var status = subObj.Update(resub); 
-              for (var j in listOfInput) {
+      if (!tempPause) {
+        var unsubscribeSatus = subObj.Unsubscribe();
+        Variable.SetValue("unsubscribeSatus", unsubscribeSatus);
+      }
+      else {
+        /* 21st feb
+        Priyanka
+        DHE- 3644
+        added the code for resubscribing to all the publication list of current Bu */
+        var resubAll = {
+          "SubscriberKey": subscriberKey,
+          "Lists": {
+            "ID": '63',
+            "Action": "Update"
+          },
+          "Status": "Active"
+        };
+        var subObj = Subscriber.Init(subscriberKey);
+        var status = subObj.Update(resubAll);
+        for (var j in listOfInput) {
         Status = 'Active';
       res = api.updateItem("Subscriber", {
         SubscriberKey: subscriberKey,
@@ -291,14 +325,15 @@
     }
       }
     }
-          
-          
-          
             else {
-              var updateStatus = subObj.Update(subscriberData);              
+                var updateStatus = subObj.Update(subscriberData);
+
             }
+
             function getAllPublicationLists() {
-  
+              
+            
+
                 var rr = Platform.Function.CreateObject("RetrieveRequest");
                 Platform.Function.SetObjectProperty(rr, "ObjectType", "Publication");
                 Platform.Function.SetObjectProperty(rr, "QueryAllAccounts", "True");
@@ -321,24 +356,26 @@
 
 <!DOCTYPE html>
                         <html lang="ar" dir="ltr">
-                            <head><meta name="Hotels" content="INDEX,FOLLOW"><meta name="keywords" content=""><meta name="description" content="">
+                            <head>
                               <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-                                <title>Legoland® Dubai</title>
- <link rel="icon" type="image/x-icon" href="https://image.explore.legoland.ae/lib/fe30117373640479741375/m/1/f1d77e47-c8ae-42fe-bd21-2ed9cb496bd2.png">
-                                <link href='https://cloud.explore.legoland.ae/LL_bootstrap_Arabic_QA.min.css' rel='stylesheet'>
+                                <title>Dubai Parks&trade; and Resorts</title>
+ <link rel="icon" type="image/x-icon" href="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/7a114a43-1bec-400c-8b8d-6b527f658a77.png">
+                                <link href='https://cloud.explore.dubaiparksandresorts.com/ARbootstrap.min.css' rel='stylesheet'>
                                 
-                                <script type='text/javascript' src='https://cloud.explore.legoland.ae/LL_jquery_Arabic_QA.min.js'></script>
-                            
+                                <script type='text/javascript' src='https://cloud.explore.dubaiparksandresorts.com/jqueryv2.min_dpr_ar_qa'></script>
+                                <link href="https://cloud.explore.dubaiparksandresorts.com/material-design-iconic-font.min_dpr_ar_qa" rel="stylesheet" media="all">
+                                <link href="https://cloud.explore.dubaiparksandresorts.com/font-awesome.min_dpr_ar_qa" rel="stylesheet" media="all">
                                 <!-- Font special for pages-->
                                 <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-                                <link href="https://cloud.explore.legoland.ae/LL_style_Arabic_QA.css" rel="stylesheet">
+                                <link href="https://cloud.explore.dubaiparksandresorts.com/cpc_dpr_ar_qa_css" rel="stylesheet">
                                 
                               
-                               
+                                <link href="https://cloud.explore.dubaiparksandresorts.com/font_dpr_qa">
                                 <!-- Vendor CSS-->
-                                <link href="https://cloud.explore.legoland.ae/LL_select2_Arabic_QA.min.css" rel="stylesheet" media="all">
-                             
+                                <link href="https://cloud.explore.dubaiparksandresorts.com/select2.min_dpr_ar_qa" rel="stylesheet" media="all">
+                                <link href="https://cloud.explore.dubaiparksandresorts.com/daterangepicker_dpr_ar_qa" rel="stylesheet" media="all">
+                                                         <link href="https://cloud.explore.dubaiparksandresorts.com/dpr_cpc_ar" rel="stylesheet" media="all">
                                 <style>
 /* nav */
 .card {
@@ -349,7 +386,7 @@
 }
 
 
-.nav-link {
+.nav-pills .nav-link {
   color: #000;
     font-weight: 700;
     background: white;
@@ -357,12 +394,12 @@
     font-size: 16px;
 }
 .nav-link:hover {
-  color:#ffd400
+  color:#ee5f02
 }
 
 .nav-pills .nav-link.active {
   color: #fff;
-    background-color: #ffd400!important;
+    background-color: #ee5f02;
  
     font-weight: 700;
 }
@@ -442,59 +479,58 @@ ul {
   padding: 0 1rem;
 }
 </style>
-                              
-                              
-                              <script runat=server>
+<script runat=server>
     Platform.Response.SetResponseHeader("Strict-Transport-Security","max-age=200");
     Platform.Response.SetResponseHeader("X-XSS-Protection","1; mode=block");
     Platform.Response.SetResponseHeader("X-Frame-Options","Deny");
     Platform.Response.SetResponseHeader("X-Content-Type-Options","nosniff");
     Platform.Response.SetResponseHeader("Referrer-Policy","strict-origin-when-cross-origin");
-  Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.explore.legoland.ae; frame-ancestors 'none'");
+  Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.explore.dubaiparksandresorts.com https://cloud.explore.globalvillage.ae; frame-ancestors 'none'");
     
 
 </script>
-                              
-                              
-                              
-                              
                                 </head>
                           
-            <body onload="handleNumOfKidsChange(%%=v(@numOfKids)=%%); kidsPrepopulation(); ShowHideDivkids();">
+            <body onload="handleNumOfKidsChange(%%=v(@numOfKids)=%%); kidsPrepopulation(); ShowHideDivkids(); validateForm();">
+              
                                    <!-- Header start -->
         <header>
           <div class="container">
               <div class="row align-items-center" style="margin: 0 auto;">
                   <div class="col-lg-8 col-md-8 col-sm-8 col-8">
-                      <a href="https://www.legoland.com/dubai/" class="logo-link" target="_blank">
-                          <img src="https://image.explore.legoland.ae/lib/fe30117373640479741375/m/1/dda5f4e4-b08a-4ecb-8032-de4cf558c40d.png"
+                      <a href="https://www.dubaiparksandresorts.com/ar" class="logo-link" target="_blank">
+                          <img src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/44a1fdfe-9986-4157-9713-d11214211a54.png"
                               alt="logo">
                       </a>
                   </div>
                   <div class="col-lg-4 col-md-4 col-sm-4 col-4">
 
-                  <a href="https://dubaiholding.com/en/who-we-are/our-companies/dubai-holding-entertainment/" class="logo-link" target="_blank">
+                  <a href="https://dubaiholding.com/ar/who-we-are/our-companies/dubai-holding-entertainment/" class="logo-link" target="_blank">
                       <img src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/28c95259-4d4e-4178-bae2-94a56198b301.png"
-                          alt="logo-dhe" class="pull-right dhe-logo" style="border-radius:5px">
+                          alt="logo-dhe" class="pull-left dhe-logo">
                   </a>
 
                   </div>
               </div>
           </div>
+          <div class="lang-switcher-text">
+            <a href="https://cloud.explore.dubaiparksandresorts.com/DPRQA_CPC" class="language-toggle-link" id="langSwitcher" onclick="dynamicLangSwitcher();">ENGLISH</a>
+          </div>
       </header>
       <!-- Header End --><section class="banner">
-        <div class="main-banner">
-            <img src= "https://image.explore.legoland.ae/lib/fe30117373640479741375/m/1/e594dc8c-a1fe-46e6-a6cf-619d83e463c4.jpg" alt="banner-img" class="responsive">
-                </div>
-                <div class="container">
-                  <h1 class="username">Hi %%=v(ProperCase(@firstName))=%% </h1>
-              </div>
-              </section>
+                                  <div class="main-banner">
+                                    <img src= "https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/09bacd22-1d90-447c-9a64-87a7aa60de98.jpeg" alt="banner-img" class="responsive" id="desktop-img">
+                                     <img src= "https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/cbf3a169-5261-43bb-9b6c-dc1f799122ff.jpeg" alt="banner-img" class="responsive" id="mob-img">
+                                        </div>
+                                        <div class="container">
+                                          <h1 class="username">مرحباً %%=v(ProperCase(@firstName))=%% </h1>
+                                      </div>
+                                      </section>
                                  <div class="container card content-wrapper">
       <!-- nav options -->
       <ul class="nav nav-pills mb-3 d-flex justify-content-center" id="pills-tab" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" id="my-profile-tab" data-toggle="pill" href="#my-profile" role="tab" aria-controls="my-profile" aria-selected="true"onclick="updateUrlHash('#my-profile')">الملف الشخصي</a>
+          <a class="nav-link active" id="my-profile-tab" data-toggle="pill" href="#my-profile" role="tab" aria-controls="my-profile" aria-selected="true"onclick="updateUrlHash('#my-profile')"> الملف الشخصي</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" id="interests-tab" data-toggle="pill" href="#interests" role="tab" aria-controls="interests" aria-selected="false" onclick="updateUrlHash('#interests')">الاهتمامات</a>
@@ -517,8 +553,8 @@ ul {
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
                           <label for="">اللقب (السيد/آنسة/السيدة)</label>
-                          <div class="select-wrapper hide-icon">
-                          <select class="form-control" name="profileSalutation">
+                          <div class="select-wrapper">
+                              <select class="form-control" name="profileSalutation">
                                 <option value=" " %%=IIF(@title=='' ,'selected', "" )=%%>اختر</option>
                                   <option value="Mr." %%=IIF(@title=='Mr.' ,'selected', "" )=%%>السيد  
                                   </option>
@@ -536,14 +572,14 @@ ul {
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
                           <label for="">الاسم الأول<sup class="text-danger">*</sup></label>
-                          <input type="text" id="firstName" name="firstName" value="%%=v(ProperCase(@firstName))=%%"
+                          <input type="text" id="firstName" name="firstName" id="fname" value="%%=v(ProperCase(@firstName))=%%"
                               class="form-control" required aria-required="true" />
                       </div>
                   </div>
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group">
                           <label for="">اسم العائلة<sup class="text-danger">*</sup></label>
-                          <input type="text" id="lastName" name="lastName" value="%%=v(ProperCase(@lastName))=%%"
+                          <input type="text" id="lname" name="lastName" value="%%=v(ProperCase(@lastName))=%%"
                               class="form-control" required aria-required="true" />
                       </div>
                   </div>
@@ -561,10 +597,10 @@ ul {
                           <label for="">رقم الهاتف<sup class="text-danger">*</sup></label>
                          <div class="input-group mb-3">
   
-                              <div class="select-wrapper hide-icon">
+                              <div class="select-wrapper">
                               <div class="input-group-prepend">
                                
-                         <input type="text"class="form-control" list="codedatalistOptions" name="lang" id="country-code"   placeholder="+971" value="%%=v(@mobilePhoneCode)=%%" required>
+                         <input type="text"class="form-control" list="codedatalistOptions" name="lang" id="country-code"  placeholder="+971" value="%%=v(@mobilePhoneCode)=%%" required>
   
                 <datalist id="codedatalistOptions">
                <option value="+93">Afghanistan </option>
@@ -834,16 +870,17 @@ ul {
                     <div class="col-lg-4 col-md-6 col-sm-12 col-12 hidden">
                       
                   </div>
-                
-                  
+                <!--Hidden field to store Deleted Kids IDs-->
+                <input class="form-control" type="hidden" name="DeletedKidsId"  value="" id="DeletedKidsId">
+                 
 
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
                           <label for="">بلد الإقامة<sup class="text-danger">*</sup></label>
-                          <div class="select-wrapper hide-icon profilecountry">
+                          <div class="select-wrapper profilecountry">
   
-                          <select class="form-control" name="profileCountry" id="profileCountry" required>
+                              <select class="form-control" name="profileCountry" id="profileCountry" required>
                                 <option value="">اختر الدولة</option>
                                <option value="Afghanistan" %%=IIF(@country=='Afghanistan', "selected", "")=%% >أفغانستان</option>
 <option value="Aland Islands" %%=IIF(@country=='Aland Islands', 'selected', "")=%%>جزر آلاند</option>
@@ -1110,11 +1147,15 @@ ul {
                       </div>
                   </div>
 
-                 <div class="col-lg-4 col-md-6 col-sm-12 col-12">
+                  <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                     <div class="form-group">
-                      <label for="">المدينة (المقيمين في دولة الإمارات العربية المتحدة فقط)</label>
-                        <div class="select-wrapper hide-icon custom-">
-                        <select class="form-control" name="city" id="city">
+                      <label for="">المدينة (<b style="
+    font-size: 12px;">المقيمين في دولة الإمارات العربية المتحدة فقط</b>)</label>
+                        <div class="select-wrapper custom-">
+                          
+                          <!-- Priyanka 23 Feb, added ampscript for city -->
+
+                             <select class="form-control" name="city" id="city">
                                <option value="" %%=IIF(@city=='', "selected", "")=%% selected>اختر المدينة</option>
                                <option value="Ajman" %%=IIF(@city=='Ajman', "selected", "")=%%>عجمان</option>
                                <option value="Abu Dhabi" %%=IIF(@city=='Abu Dhabi', "selected", "")=%%>أبو ظبي</option>
@@ -1129,284 +1170,294 @@ ul {
                     </div>
                 </div>
                 
+                
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                     <div class="form-group" data-aos="fade-up"
                         data-aos-anchor-placement="bottom-bottom">
-                        <label for="">الجنسية (المقيمين في دولة الإمارات العربية المتحدة فقط)</label>
+                        <label for="">الجنسية (<b style="
+    font-size: 12px;">المقيمين في دولة الإمارات العربية المتحدة فقط</b>)
+</label>
                         <div class="select-wrapper hide-icon">
-                        <select class="form-control" name="profileNationality" id="nationality">
+                          <select class="form-control" name="profileNationality" id="nationality">
                             <option value="">اختر الجنسية</option>
-                            <option value="Afghanistan" %%=IIF(@nationality=='Afghanistan', "selected", "")=%% >أفغانستان</option>
-                            <option value="Aland Islands" %%=IIF(@nationality=='Aland Islands', 'selected', "")=%%>جزر آلاند</option>
-                            <option value="Albania" %%=IIF(@nationality=='Albania', "selected", "")=%%>ألبانيا</option>
-                            <option value="Algeria" %%=IIF(@nationality=='Algeria', "selected", "")=%%>الجزائر</option>
-                            <option value="American Samoa" %%=IIF(@nationality=='American Samoa', "selected", "")=%%>ساموا الأمريكية</option>
-                            <option value="Andorra" %%=IIF(@nationality=='Andorra', "selected", "")=%%>أندورا</option>
-                            <option value="Angola" %%=IIF(@nationality=='Angola', "selected", "")=%%>أنغولا</option>
-                            <option value="Anguilla" %%=IIF(@nationality=='Anguilla', "selected", "")=%%>أنغيلا</option>
-                            <option value="Antarctica" %%=IIF(@nationality=='Antarctica', "selected", "")=%%>أنتاركتيكا</option>
-                            <option value="Antigua And Barbuda" %%=IIF(@nationality=='Antigua And Barbuda', "selected", "")=%%>أنتيغوا وباربودا</option>
-                            <option value="Argentina" %%=IIF(@nationality=='Argentina', "selected", "")=%%>الأرجنتين</option>
-                            <option value="Armenia" %%=IIF(@nationality=='Armenia', "selected", "")=%%>أرمينيا</option>
-                            <option value="Aruba" %%=IIF(@nationality=='Aruba', "selected", "")=%%>أروبا</option>
-                            <option value="Australia" %%=IIF(@nationality=='Australia', "selected", "")=%%>أستراليا</option>
-                            <option value="Austria" %%=IIF(@nationality=='Austria', "selected", "")=%%>النمسا</option>
-                            <option value="Azerbaijan" %%=IIF(@nationality=='Azerbaijan', "selected", "")=%%>أذربيجان</option>
-                            <option value="Bahamas" %%=IIF(@nationality=='Bahamas', "selected", "")=%%>الباهاما</option>
-                            <option value="Bahrain" %%=IIF(@nationality=='Bahrain', "selected", "")=%%>البحرين</option>
-                            <option value="Bangladesh" %%=IIF(@nationality=='Bangladesh', "selected", "")=%%>بنغلاديش</option>
-                            <option value="Barbados" %%=IIF(@nationality=='Barbados', "selected", "")=%%>بربادوس</option>
-                            <option value="Belarus" %%=IIF(@nationality=='Belarus', "selected", "")=%%>بيلاروسيا</option>
-                            <option value="Belgium" %%=IIF(@nationality=='Belgium', "selected", "")=%%>بلجيكا</option>
-                            <option value="Belize" %%=IIF(@nationality=='Belize', "selected", "")=%%>بليز</option>
-                            <option value="Benin" %%=IIF(@nationality=='Benin', "selected", "")=%%>بنين</option>
-                            <option value="Bermuda" %%=IIF(@nationality=='Bermuda', "selected", "")=%%>برمودا</option>
-                            <option value="Bhutan" %%=IIF(@nationality=='Bhutan', "selected", "")=%%>بوتان</option>
-                            <option value="Bolivia" %%=IIF(@nationality=='Bolivia', "selected", "")=%%>بوليفيا</option>
-                            <option value="Bosnia and Herzegovina" %%=IIF(@nationality=='Bosnia and Herzegovina', "selected", "")=%%>البوسنة والهرسك</option>
-                            <option value="Botswana"  %%=IIF(@nationality=='Botswana', "selected", "")=%%>بوتسوانا</option>
-                            <option value="Bouvet Island" %%=IIF(@nationality=='Bouvet Island', "selected", "")=%%>جزيرة بوفيه</option>
-                            <option value="Brazil" %%=IIF(@nationality=='Brazil', "selected", "")=%%>البرازيل</option>
-                            <option value="British Indian Ocean Territory" %%=IIF(@nationality=='British Indian Ocean Territory', "selected", "")=%%>إقليم المحيط الهندي البريطاني</option>
-                            <option value="Brunei Darussalam" %%=IIF(@nationality=='Brunei Darussalam', "selected", "")=%%>بروناي دار السلام</option>
-                            <option value="Bulgaria" %%=IIF(@nationality=='Bulgaria', "selected", "")=%%>بلغاريا</option>
-                            <option value="Burkina Faso" %%=IIF(@nationality=='Burkina Faso', "selected", "")=%%>بوركينا فاسو</option>
-                            <option value="Burundi" %%=IIF(@nationality=='Burundi', "selected", "")=%%>بوروندي</option>
-                            <option value="Cambodia" %%=IIF(@nationality=='Cambodia', "selected", "")=%%>كمبوديا</option>
-                            <option value="Cameroon" %%=IIF(@nationality=='Cameroon', "selected", "")=%%>الكاميرون</option>
-                            <option value="Canada" %%=IIF(@nationality=='Canada', "selected", "")=%%>كندا</option>
-                            <option value="Canary Islands" %%=IIF(@nationality=='Canary Islands', "selected", "")=%%>جزر الكناري</option>
-                            <option value="Cabo Verde" %%=IIF(@nationality=='Cabo Verde', "selected", "")=%%>الرأس الأخضر</option>
-                            <option value="Caribbean Netherlands" %%=IIF(@nationality=='Caribbean Netherlands', "selected", "")=%%>الكاريبي هولندا</option>
-                            <option value="Cayman Islands" %%=IIF(@nationality=='Cayman Islands', "selected", "")=%%>جزر كايمان</option>
-                            <option value="Central African Republic" %%=IIF(@nationality=='Central African Republic', selected, "")=%%>جمهورية أفريقيا الوسطى</option>
-                            <option value="Ceuta & Melilla" %%=IIF(@nationality=='Ceuta & Melilla', selected, "")=%%>سبتة ومليلية</option>
-                            <option value="Chad" %%=IIF(@nationality=='Chad', "selected", "")=%%>تشاد</option>
-                            <option value="Chile" %%=IIF(@nationality=='Chile', "selected", "")=%%>تشيلي</option>
-                            <option value="China" %%=IIF(@nationality=='China', "selected", "")=%%>الصين</option>
-                            <option value="Christmas Island" %%=IIF(@nationality=='Christmas Island', "selected", "")=%%>جزيرة كريسماس</option>
-                            <option value="Clipperton Island" %%=IIF(@nationality=='Clipperton Island', "selected", "")=%%>جزيرة كليبرتون</option>
-                            <option value="Cocos (Keeling) Islands" %%=IIF(@nationality=='Cocos (Keeling) Islands', "selected", "")=%%>جزر كوكوس (كيلينغ)</option>
-                            <option value="Colombia" %%=IIF(@nationality=='Colombia', "selected", "")=%%>كولومبيا</option>
-                            <option value="Commonwealth of Dominica" %%=IIF(@nationality=='Commonwealth of Dominica', "selected", "")=%%>دومينيكا</option>
-                            <option value="Comoros" %%=IIF(@nationality=='Comoros', "selected", "")=%%>جزر القمر</option>
-                            <option value="Congo" %%=IIF(@nationality=='Congo', "selected", "")=%%>الكونغو</option>
-                            <option value="Cook Islands" %%=IIF(@nationality=='Cook Islands', "selected", "")=%%>جزر كوك</option>
-                            <option value="Costa Rica" %%=IIF(@nationality=='Costa Rica', "selected", "")=%%>كوستاريكا</option>
-                            <option value="Cote d'Ivoire" %%=IIF(@nationality=="Cote d'Ivoire", "selected", "")=%%>كوت ديفوار</option>
-                            <option value="Croatia" %%=IIF(@nationality=='Croatia', "selected", "")=%%>كرواتيا</option>
-                            <option value="Cuba" %%=IIF(@nationality=='Cuba', "selected", "")=%%>كوبا</option>
-                            <option value="Curaçao" %%=IIF(@nationality=='Curaçao', "selected", "")=%%>كوراساو</option>
-                            <option value="Cyprus" %%=IIF(@nationality=='Cyprus', "selected", "")=%%>قبرص</option>
-                            <option value="Czech Republic" %%=IIF(@nationality=='Czech Republic', "selected", "")=%%>جمهورية التشيك</option>
-                            <option value="Democratic Republic of the Congo" %%=IIF(@nationality=='Democratic Republic of the Congo', "selected", "")=%%>جمهورية الكونغو الديمقراطية</option>
-                            <option value="Denmark" %%=IIF(@nationality=='Denmark', "selected", "")=%%>الدنمارك</option>
-                            <option value="Djibouti" %%=IIF(@nationality=='Djibouti', "selected", "")=%%>جيبوتي</option>
-                            <option value="Dominican Republic" %%=IIF(@nationality=='Dominican Republic', "selected", "")=%%>جمهورية الدومينيكان</option>
-                            <option value="Ecuador" %%=IIF(@nationality=='Ecuador', "selected", "")=%%>الإكوادور</option>
-                            <option value="Egypt" %%=IIF(@nationality=='Egypt', "selected", "")=%%>مصر</option>
-                            <option value="El Salvador" %%=IIF(@nationality=='El Salvador', "selected", "")=%%>السلفادور</option>
-                            <option value="Equatorial Guinea" %%=IIF(@nationality=='Equatorial Guinea', "selected", "")=%%>غينيا الاستوائية</option>
-                            <option value="Eritrea" %%=IIF(@nationality=='Eritrea', "selected", "")=%%>إريتريا</option>
-                            <option value="Estonia"  %%=IIF(@nationality=='Estonia', "selected", "")=%%>إستونيا</option>
-                            <option value="Eswatini"  %%=IIF(@nationality=='Eswatini', "selected", "")=%%>إسواتيني</option>
-                            <option value="Ethiopia" %%=IIF(@nationality=='Ethiopia', "selected", "")=%%>إثيوبيا</option>
-                            <option value="Falkland Islands" %%=IIF(@nationality=='Falkland Islands', "selected", "")=%%>جزر فوكلاند</option>
-                            <option value="Faroe Islands" %%=IIF(@nationality=='Faroe Islands', "selected", "")=%%>جزر فارو</option>
-                            <option value="Fiji" %%=IIF(@nationality=='Fiji', "selected", "")=%%>فيجي</option>
-                            <option value="Finland" %%=IIF(@nationality=='Finland', "selected", "")=%%>فنلندا</option>
-                            <option value="France" %%=IIF(@nationality=='France', "selected", "")=%%>فرنسا</option>
-                            <option value="French Guiana" %%=IIF(@nationality=='French Guiana', "selected", "")=%%>غويانا الفرنسية</option>
-                            <option value="French Polynesia" %%=IIF(@nationality=='French Polynesia', "selected", "")=%%>بولينيزيا الفرنسية</option>
-                            <option value="French Southern Territories" %%=IIF(@nationality=='French Southern Territories', "selected", "")=%%>الأقاليم الجنوبية الفرنسية</option>
-                            <option value="Gabon" %%=IIF(@nationality=='Gabon', "selected", "")=%%>الغابون</option>
-                            <option value="Gambia" %%=IIF(@nationality=='Gambia', "selected", "")=%%>غامبيا</option>
-                            <option value="Georgia" %%=IIF(@nationality=='Georgia', "selected", "")=%%>جورجيا</option>
-                            <option value="Germany" %%=IIF(@nationality=='Germany', "selected", "")=%%>ألمانيا</option>
-                            <option value="Ghana" %%=IIF(@nationality=='Ghana', "selected", "")=%%>غانا</option>
-                            <option value="Gibraltar" %%=IIF(@nationality=='Gibraltar', "selected", "")=%%>جبل طارق</option>
-                            <option value="Greece" %%=IIF(@nationality=='Greece', "selected", "")=%%>اليونان</option>
-                            <option value="Greenland" %%=IIF(@nationality=='Greenland', "selected", "")=%%>جرينلاند</option>
-                            <option value="Grenada" %%=IIF(@nationality=='Grenada', "selected", "")=%%>غرينادا</option>
-                            <option value="Guadeloupe" %%=IIF(@nationality=='Guadeloupe', "selected", "")=%%>غوادلوب</option>
-                            <option value="Guam"  %%=IIF(@nationality=='Guam', "selected", "")=%%>غوام</option>
-                            <option value="Guatemala" %%=IIF(@nationality=='Guatemala', "selected", "")=%%>غواتيمالا</option>
-                            <option value="Guernsey" %%=IIF(@nationality=='Guernsey', "selected", "")=%%>غيرنزي</option>
-                            <option value="Guinea" %%=IIF(@nationality=='Guinea', "selected", "")=%%>غينيا</option>
-                            <option value="Guinea-Bissau" %%=IIF(@nationality=='Guinea-Bissau', "selected", "")=%%>غينيا بيساو</option>
-                                <option value="Guyana" %%=IIF(@nationality=='Guyana', "selected", "")=%%>غيانا</option>
-                                <option value="Haiti" %%=IIF(@nationality=='Haiti', "selected", "")=%%>هايتي</option>
-                                <option value="Heard Island and McDonald Islands" %%=IIF(@nationality=='Heard Island and McDonald Islands', "selected", "")=%%>جزيرة هيرد وجزر ماكدونالد</option>
-                                <option value="Holy See (Vatican)" %%=IIF(@nationality=='Holy See (Vatican)', "selected", "")=%%>الفاتيكان</option>
-                            <option value="Honduras" %%=IIF(@nationality=='Honduras', "selected", "")=%%>هندوراس</option>
-                            <option value="Hong Kong Special Administrative Region" %%=IIF(@nationality=='Hong Kong Special Administrative Region', "selected", "")=%%>هونغ كونغ</option>
-                            <option value="Hungary" %%=IIF(@nationality=='Hungary', "selected", "")=%%>المجر</option>
-                            <option value="Iceland" %%=IIF(@nationality=='Iceland', "selected", "")=%%>أيسلندا</option>
-                            <option value="India"  %%=IIF(@nationality=='India', "selected", "")=%%>الهند</option>
-                            <option value="Indonesia" %%=IIF(@nationality=='Indonesia', "selected", "")=%%>إندونيسيا</option>
-                            <option value="Iran (Islamic Republic of)" %%=IIF(@nationality=='Iran (Islamic Republic of)', "selected", "")=%%>إيران</option>
-                            <option value="Iraq" %%=IIF(@nationality=='Iraq', "selected", "")=%%>العراق</option>
-                            <option value="Ireland" %%=IIF(@nationality=='Ireland', "selected", "")=%%>أيرلندا</option>
-                            <option value="Israel" %%=IIF(@nationality=='Israel', "selected", "")=%%>إسرائيل</option>
-                            <option value="Isle of Man" %%=IIF(@nationality=='Isle of Man', "selected", "")=%%>جزيرة مان</option>
-                            <option value="Italy" %%=IIF(@nationality=='Italy', "selected", "")=%%>إيطاليا</option>
-                            <option value="Jamaica" %%=IIF(@nationality=='Jamaica', "selected", "")=%%>جامايكا</option>
-                            <option value="Japan" %%=IIF(@nationality=='Japan', "selected", "")=%%>اليابان</option>
-                            <option value="Jersey" %%=IIF(@nationality=='Jersey', "selected", "")=%%>جيرسي</option>
-                            <option value="Jordan" %%=IIF(@nationality=='Jordan', "selected", "")=%%>الأردن</option>
-                            <option value="Kazakhstan" %%=IIF(@nationality=='Kazakhstan', "selected", "")=%%>كازاخستان</option>
-                            <option value="Kenya" %%=IIF(@nationality=='Kenya', "selected", "")=%%>كينيا</option>
-                            <option value="Kiribati" %%=IIF(@nationality=='Kiribati', "selected", "")=%%>كيريباتي</option>
-                            <option value="Kosovo" %%=IIF(@nationality=='Kosovo', "selected", "")=%%>كوسوفو</option>
-                            <option value="Kuwait" %%=IIF(@nationality=='Kuwait', "selected", "")=%%>الكويت</option>
-                            <option value="Kyrgyzstan" %%=IIF(@nationality=='Kyrgyzstan', "selected", "")=%%>قيرغيزستان</option>
-                            <option value="Laos People's Democratic Republic" %%=IIF(@nationality=='Laos People's Democratic Republic', "selected", "")=%%>لاوس</option>
-                            <option value="Latvia" %%=IIF(@nationality=='Latvia', "selected", "")=%%>لاتفيا</option>
-                            <option value="Latvia Resident" %%=IIF(@nationality=='Latvia Resident', "selected", "")=%%>مقيم في لاتفيا</option>
-                            <option value="Lebanon" %%=IIF(@nationality=='Lebanon', "selected", "")=%%>لبنان</option>
-                            <option value="Lesotho" %%=IIF(@nationality=='Lesotho', "selected", "")=%%>ليسوتو</option>
-                            <option value="Liberia" %%=IIF(@nationality=='Liberia', "selected", "")=%%>ليبيريا</option>
-                            <option value="Libya" %%=IIF(@nationality=='Libya', "selected", "")=%%>ليبيا</option>
-                            <option value="Liechtenstein" %%=IIF(@nationality=='Liechtenstein', "selected", "")=%%>ليختنشتاين</option>
-                            <option value="Lithuania" %%=IIF(@nationality=='Lithuania', "selected", "")=%%>ليتوانيا</option>
-                            <option value="Luxembourg" %%=IIF(@nationality=='Luxembourg', "selected", "")=%%>لوكسمبورغ</option>
-                            <option value="Macao" %%=IIF(@nationality=='Macao', "selected", "")=%%>ماكاو</option>
-                            <option value="Madagascar" %%=IIF(@nationality=='Madagascar', "selected", "")=%%>مدغشقر</option>
-                            <option value="Malawi" %%=IIF(@nationality=='Malawi', "selected", "")=%%>مالاوي</option>
-                            <option value="Malaysia" %%=IIF(@nationality=='Malaysia', "selected", "")=%%>ماليزيا</option>
-                            <option value="Maldives" %%=IIF(@nationality=='Maldives', "selected", "")=%%>المالديف</option>
-                            <option value="Mali" %%=IIF(@nationality=='Mali', "selected", "")=%%>مالي</option>
-                            <option value="Malta" %%=IIF(@nationality=='Malta', "selected", "")=%%>مالطا</option>
-                            <option value="Marshall Islands" %%=IIF(@nationality=='Marshall Islands', "selected", "")=%%>جزر مارشال</option>
-                            <option value="Martinique" %%=IIF(@nationality=='Martinique', "selected", "")=%%>مارتينيك</option>
-                            <option value="Mauritania" %%=IIF(@nationality=='Mauritania', "selected", "")=%%>موريتانيا</option>
-                            <option value="Mauritius" %%=IIF(@nationality=='Mauritius', "selected", "")=%%>موريشيوس</option>
-                            <option value="Mayotte" %%=IIF(@nationality=='Mayotte', "selected", "")=%%>مايوت</option>
-                            <option value="Mexico" %%=IIF(@nationality=='Mexico', "selected", "")=%%>المكسيك</option>
-                            <option value="Micronesia (Federated States of)" %%=IIF(@nationality=='Micronesia (Federated States of)', "selected", "")=%%>ميكرونيزيا</option>
-                            <option value="Monaco" %%=IIF(@nationality=='Monaco', "selected", "")=%%>موناكو</option>
-                            <option value="Mongolia" %%=IIF(@nationality=='Mongolia', "selected", "")=%%>منغوليا</option>
-                            <option value="Montenegro" %%=IIF(@nationality=='Montenegro', "selected", "")=%%>الجبل الأسود</option>
-                            <option value="Montserrat" %%=IIF(@nationality=='Montserrat', "selected", "")=%%>مونتسرات</option>
-                            <option value="Morocco" %%=IIF(@nationality=='Morocco', "selected", "")=%%>المغرب</option>
-                            <option value="Mozambique" %%=IIF(@nationality=='Mozambique', "selected", "")=%%>موزمبيق</option>
-                            <option value="Myanmar" %%=IIF(@nationality=='Myanmar', "selected", "")=%%>ميانمار</option>
-                            <option value="Namibia" %%=IIF(@nationality=='Namibia', "selected", "")=%%>ناميبيا</option>
-                            <option value="Nauru" %%=IIF(@nationality=='Nauru', "selected", "")=%%>ناورو</option>
-                            <option value="Nepal" %%=IIF(@nationality=='Nepal', "selected", "")=%%>نيبال</option>
-                            <option value="Netherlands Antilles" %%=IIF(@nationality=='Netherlands Antilles', "selected", "")=%%>جزر الأنتيل الهولندية</option>
-                            <option value="Netherlands" %%=IIF(@nationality=='Netherlands', "selected", "")=%%>هولندا</option>
-                            <option value="New Caledonia" %%=IIF(@nationality=='New Caledonia', "selected", "")=%%>كاليدونيا الجديدة</option>
-                            <option value="New Zealand" %%=IIF(@nationality=='New Zealand', "selected", "")=%%>نيوزيلندا</option>
-                            <option value="Nicaragua" %%=IIF(@nationality=='Nicaragua', "selected", "")=%%>نيكاراغوا</option>
-                            <option value="Niger" %%=IIF(@nationality=='Niger', "selected", "")=%%>النيجر</option>
-                            <option value="Nigeria" %%=IIF(@nationality=='Nigeria', "selected", "")=%%>نيجيريا</option>
-                            <option value="Niue" %%=IIF(@nationality=='Niue', "selected", "")=%%>نيوي</option>
-                            <option value="Norfolk Island" %%=IIF(@nationality=='Norfolk Island', "selected", "")=%%>جزيرة نورفولك</option>
-                            <option value="North Korea" %%=IIF(@nationality=='North Korea', "selected", "")=%%>كوريا الشمالية</option>
-                            <option value="Northern Mariana Islands" %%=IIF(@nationality=='Northern Mariana Islands', "selected", "")=%%>جزر ماريانا الشمالية</option>
-                            <option value="Norway" %%=IIF(@nationality=='Norway', "selected", "")=%%>النرويج</option>
-                            <option value="Oman" %%=IIF(@nationality=='Oman', "selected", "")=%%>عمان</option>
-                            <option value="Pakistan" %%=IIF(@nationality=='Pakistan', "selected", "")=%%>باكستان</option>
-                            <option value="Palau" %%=IIF(@nationality=='Palau', "selected", "")=%%>بالاو</option>
-                            <option value="Panama" %%=IIF(@nationality=='Panama', "selected", "")=%%>بنما</option>
-                            <option value="Papua new Guinea" %%=IIF(@nationality=='Papua new Guinea', "selected", "")=%%>بابوا غينيا الجديدة</option>
-                            <option value="Paraguay" %%=IIF(@nationality=='Paraguay', "selected", "")=%%>باراغواي</option>
-                            <option value="Peru" %%=IIF(@nationality=='Peru', "selected", "")=%%>بيرو</option>
-                            <option value="Philippines" %%=IIF(@nationality=='Philippines', "selected", "")=%%>الفلبين</option>
-                            <option value="Pitcairn" %%=IIF(@nationality=='Pitcairn', "selected", "")=%%>بيتكيرن</option>
-                            <option value="Poland" %%=IIF(@nationality=='Poland', "selected", "")=%%>بولندا</option>
-                            <option value="Portugal" %%=IIF(@nationality=='Portugal', "selected", "")=%%>البرتغال</option>
-                            <option value="Puerto Rico" %%=IIF(@nationality=='Puerto Rico', "selected", "")=%%>بورتوريكو</option>
-                            <option value="Qatar" %%=IIF(@nationality=='Qatar', "selected", "")=%%>قطر</option>
-                            <option value="Republic of Korea" %%=IIF(@nationality=='Republic of Korea', "selected", "")=%%>جمهورية كوريا</option>
-                            <option value="Republic of Macedonia" %%=IIF(@nationality=='Republic of Macedonia', "selected", "")=%%>جمهورية مقدونيا</option>
-                            <option value="Republic of Moldova" %%=IIF(@nationality=='Republic of Moldova', "selected", "")=%%>جمهورية مولدوفا</option>
-                            <option value="Republic of Somaliland" %%=IIF(@nationality=='Republic of Somaliland', "selected", "")=%%>جمهورية أرض الصومال</option>
-                            <option value="Reunion" %%=IIF(@nationality=='Reunion', "selected", "")=%%>ريونيون</option>
-                            <option value="Romania" %%=IIF(@nationality=='Romania', "selected", "")=%%>رومانيا</option>
-                            <option value="Russian Federation" %%=IIF(@nationality=='Russian Federation', "selected", "")=%%>الاتحاد الروسي</option>
-                            <option value="Rwanda" %%=IIF(@nationality=='Rwanda', "selected", "")=%%>رواندا</option>
-                            <option value="Saint Helena" %%=IIF(@nationality=='Saint Helena', "selected", "")=%%>سانت هيلينا</option>
-                            <option value="Saint Kitts And Nevis" %%=IIF(@nationality=='Saint Kitts And Nevis', "selected", "")=%%>سانت كيتس ونيفيس</option>
-                            <option value="Saint Lucia" %%=IIF(@nationality=='Saint Lucia', "selected", "")=%%>سانت لوسيا</option>
-                            <option value="Saint Pierre and Miquelon" %%=IIF(@nationality=='Saint Pierre and Miquelon', "selected", "")=%%>سانت بيير وميكلون</option>
-                            <option value="Saint Vincent And The Grenadines" %%=IIF(@nationality=='Saint Vincent And The Grenadines', "selected", "")=%%>سانت فنسنت والغرينادين</option>
-                            <option value="Saint Barthelemy" %%=IIF(@nationality=='Saint Barthelemy', "selected", "")=%%>سانت بارتيليمي</option>
-                            <option value="Saint Martin (French part)" %%=IIF(@nationality=='Saint Martin (French part)', "selected", "")=%%>سانت مارتن (الجزء الفرنسي)</option>
-                            <option value="Samoa" %%=IIF(@nationality=='Samoa', "selected", "")=%%>ساموا</option>
-                            <option value="San Marino" %%=IIF(@nationality=='San Marino', "selected", "")=%%>سان مارينو</option>
-                            <option value="Sao Tome and Principe" %%=IIF(@nationality=='Sao Tome and Principe', "selected", "")=%%>ساو تومي وبرينسيبي</option>
-                            <option value="Saudi Arabia" %%=IIF(@nationality=='Saudi Arabia', "selected", "")=%%>المملكة العربية السعودية</option>
-                            <option value="Senegal" %%=IIF(@nationality=='Senegal', "selected", "")=%%>السنغال</option>
-                            <option value="Serbia" %%=IIF(@nationality=='Serbia', "selected", "")=%%>صربيا</option>
-                            <option value="Seychelles" %%=IIF(@nationality=='Seychelles', "selected", "")=%%>سيشل</option>
-                            <option value="Sierra Leone" %%=IIF(@nationality=='Sierra Leone', "selected", "")=%%>سيراليون</option>
-                            <option value="Singapore" %%=IIF(@nationality=='Singapore', "selected", "")=%%>سنغافورة</option>
-                            <option value="Sint Maarten" %%=IIF(@nationality=='Sint Maarten', "selected", "")=%%>سينت مارتن</option>
-                            <option value="Slovakia" %%=IIF(@nationality=='Slovakia', "selected", "")=%%>سلوفاكيا</option>
-                            <option value="Slovenia" %%=IIF(@nationality=='Slovenia', "selected", "")=%%>سلوفينيا</option>
-                            <option value="Solomon Islands" %%=IIF(@nationality=='Solomon Islands', "selected", "")=%%>جزر سليمان</option>
-                            <option value="Somalia" %%=IIF(@nationality=='Somalia', "selected", "")=%%>الصومال</option>
-                            <option value="South Africa" %%=IIF(@nationality=='South Africa', 'selected', "")=%%>جنوب أفريقيا</option>
-                            <option value="South Georgia and the South Sandwich Islands" %%=IIF(@nationality=='South Georgia and the South Sandwich Islands', "selected", "")=%%>جورجيا الجنوبية وجزر ساندويتش الجنوبية</option>
-                            <option value="South Sudan" %%=IIF(@nationality=='South Sudan', "selected", "")=%%>جنوب السودان</option>
-                            <option value="Spain" %%=IIF(@nationality=='Spain', "selected", "")=%%>إسبانيا</option>
-                            <option value="Sri Lanka" %%=IIF(@nationality=='Sri Lanka', "selected", "")=%%>سريلانكا</option>
-                            <option value="State of Palestine" %%=IIF(@nationality=='State of Palestine', "selected", "")=%%>دولة فلسطين</option>
-                            <option value="Sudan" %%=IIF(@nationality=='Sudan', "selected", "")=%%>السودان</option>
-                            <option value="Suriname" %%=IIF(@nationality=='Suriname', "selected", "")=%%>سورينام</option>
-                            <option value="Svalbard And Jan Mayen" %%=IIF(@nationality=='Svalbard And Jan Mayen', "selected", "")=%%>سفالبارد ويان ماين</option>
-                            <option value="Swaziland" %%=IIF(@nationality=='Swaziland', "selected", "")=%%>سوازيلاند</option>
-                            <option value="Sweden" %%=IIF(@nationality=='Sweden', "selected", "")=%%>السويد</option>
-                            <option value="Switzerland" %%=IIF(@nationality=='Switzerland', "selected", "")=%%>سويسرا</option>
-                            <option value="Syrian Arab Republic" %%=IIF(@nationality=='Syrian Arab Republic', "selected", "")=%%>الجمهورية العربية السورية</option>
-                            <option value="Taiwan" %%=IIF(@nationality=='Taiwan', "selected", "")=%%>تايوان</option>
-                            <option value="Tajikistan" %%=IIF(@nationality=='Tajikistan', "selected", "")=%%>طاجيكستان</option>
-                            <option value="Thailand" %%=IIF(@nationality=='Thailand', "selected", "")=%%>تايلاند</option>
-                            <option value="Timor-Leste" %%=IIF(@nationality=='Timor-Leste', "selected", "")=%%>تيمور الشرقية</option>
-                            <option value="Togo" %%=IIF(@nationality=='Togo', "selected", "")=%%>توغو</option>
-                            <option value="Tokelau" %%=IIF(@nationality=='Tokelau', "selected", "")=%%>توكلاو</option>
-                            <option value="Tonga" %%=IIF(@nationality=='Tonga', "selected", "")=%%>تونغا</option>
-                            <option value="Trinidad And Tobago" %%=IIF(@nationality=='Trinidad And Tobago', "selected", "")=%%>ترينيداد وتوباغو</option>
-                            <option value="Tunisia" %%=IIF(@nationality=='Tunisia', "selected", "")=%%>تونس</option>
-                            <option value="Turkey" %%=IIF(@nationality=='Turkey', "selected", "")=%%>تركيا</option>
-                            <option value="Turkmenistan" %%=IIF(@nationality=='Turkmenistan', "selected", "")=%%>تركمانستان</option>
-                            <option value="Turks And Caicos Islands" %%=IIF(@nationality=='Turks And Caicos Islands', "selected", "")=%%>جزر تركس وكايكوس</option>
-                            <option value="Tuvalu" %%=IIF(@nationality=='Tuvalu', "selected", "")=%%>توفالو</option>
-                            <option value="Uganda" %%=IIF(@nationality=='Uganda', "selected", "")=%%>أوغندا</option>
-                            <option value="Ukraine" %%=IIF(@nationality=='Ukraine', "selected", "")=%%>أوكرانيا</option>
-                            <option value="United Arab Emirates" %%=IIF(@nationality=='United Arab Emirates', "selected", "")=%%>الإمارات العربية المتحدة</option>
-                            <option value="United Kingdom (UK)" %%=IIF(@nationality=='United Kingdom (UK)', "selected", "")=%%>المملكة المتحدة (بريطانيا)</option>
-                            <option value="United Republic of Tanzania" %%=IIF(@nationality=='United Republic of Tanzania', "selected", "")=%%>جمهورية تنزانيا المتحدة</option>
-                            <option value="United States of America" %%=IIF(@nationality=='United States of America', "selected", "")=%%>الولايات المتحدة الأمريكية</option>
-                            <option value="United States Minor Outlying Islands" %%=IIF(@nationality=='United States Minor Outlying Islands', "selected", "")=%%>جزر الولايات المتحدة الصغيرة النائية</option>
-                            <option value="Uruguay" %%=IIF(@nationality=='Uruguay', "selected", "")=%%>أوروغواي</option>
-                            <option value="Uzbekistan" %%=IIF(@nationality=='Uzbekistan', "selected", "")=%%>أوزبكستان</option>
-                            <option value="Vanuatu" %%=IIF(@nationality=='Vanuatu', "selected", "")=%%>فانواتو</option>
-                            <option value="Venezuela" %%=IIF(@nationality=='Venezuela', "selected", "")=%%>فنزويلا</option>
-                            <option value="Viet Nam" %%=IIF(@nationality=='Viet Nam', "selected", "")=%%>فيتنام</option>
-                            <option value="Virgin Islands, British" %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands British', "selected", "")=%%>جزر فيرجن البريطانية</option>
-                            <option value="Virgin Islands, U.S." %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands U.S.', "selected", "")=%%>جزر فيرجن الأمريكية</option>
-                            <option value="Wallis And Futuna" %%=IIF(@nationality=='Wallis And Futuna', "selected", "")=%%>واليس وفوتونا</option>
-                            <option value="Western Sahara" %%=IIF(@nationality=='Western Sahara', "selected", "")=%%>الصحراء الغربية</option>
-                            <option value="Yemen" %%=IIF(@nationality=='Yemen', "selected", "")=%%>اليمن</option>
-                            <option value="Zambia" %%=IIF(@nationality=='Zambia', "selected", "")=%%>زامبيا</option>
-                            <option value="Zimbabwe" %%=IIF(@nationality=='Zimbabwe', "selected", "")=%%>زمبابوي</option>
-                            <option value="Others" %%=IIF(@nationality=='Others', "selected", "")=%%>آخرون</option>
-                        </select>
+             <option value="Afghanistan" %%=IIF(@nationality=='Afghanistan', "selected", "")=%% >أفغانستان</option>
+<option value="Aland Islands" %%=IIF(@nationality=='Aland Islands', 'selected', "")=%%>جزر آلاند</option>
+<option value="Albania" %%=IIF(@nationality=='Albania', "selected", "")=%%>ألبانيا</option>
+<option value="Algeria" %%=IIF(@nationality=='Algeria', "selected", "")=%%>الجزائر</option>
+<option value="American Samoa" %%=IIF(@nationality=='American Samoa', "selected", "")=%%>ساموا الأمريكية</option>
+<option value="Andorra" %%=IIF(@nationality=='Andorra', "selected", "")=%%>أندورا</option>
+<option value="Angola" %%=IIF(@nationality=='Angola', "selected", "")=%%>أنغولا</option>
+<option value="Anguilla" %%=IIF(@nationality=='Anguilla', "selected", "")=%%>أنغيلا</option>
+<option value="Antarctica" %%=IIF(@nationality=='Antarctica', "selected", "")=%%>أنتاركتيكا</option>
+<option value="Antigua And Barbuda" %%=IIF(@nationality=='Antigua And Barbuda', "selected", "")=%%>أنتيغوا وباربودا</option>
+<option value="Argentina" %%=IIF(@nationality=='Argentina', "selected", "")=%%>الأرجنتين</option>
+<option value="Armenia" %%=IIF(@nationality=='Armenia', "selected", "")=%%>أرمينيا</option>
+<option value="Aruba" %%=IIF(@nationality=='Aruba', "selected", "")=%%>أروبا</option>
+<option value="Australia" %%=IIF(@nationality=='Australia', "selected", "")=%%>أستراليا</option>
+<option value="Austria" %%=IIF(@nationality=='Austria', "selected", "")=%%>النمسا</option>
+<option value="Azerbaijan" %%=IIF(@nationality=='Azerbaijan', "selected", "")=%%>أذربيجان</option>
+<option value="Bahamas" %%=IIF(@nationality=='Bahamas', "selected", "")=%%>الباهاما</option>
+<option value="Bahrain" %%=IIF(@nationality=='Bahrain', "selected", "")=%%>البحرين</option>
+<option value="Bangladesh" %%=IIF(@nationality=='Bangladesh', "selected", "")=%%>بنغلاديش</option>
+<option value="Barbados" %%=IIF(@nationality=='Barbados', "selected", "")=%%>بربادوس</option>
+<option value="Belarus" %%=IIF(@nationality=='Belarus', "selected", "")=%%>بيلاروسيا</option>
+<option value="Belgium" %%=IIF(@nationality=='Belgium', "selected", "")=%%>بلجيكا</option>
+<option value="Belize" %%=IIF(@nationality=='Belize', "selected", "")=%%>بليز</option>
+<option value="Benin" %%=IIF(@nationality=='Benin', "selected", "")=%%>بنين</option>
+<option value="Bermuda" %%=IIF(@nationality=='Bermuda', "selected", "")=%%>برمودا</option>
+<option value="Bhutan" %%=IIF(@nationality=='Bhutan', "selected", "")=%%>بوتان</option>
+<option value="Bolivia" %%=IIF(@nationality=='Bolivia', "selected", "")=%%>بوليفيا</option>
+<option value="Bosnia and Herzegovina" %%=IIF(@nationality=='Bosnia and Herzegovina', "selected", "")=%%>البوسنة والهرسك</option>
+<option value="Botswana"  %%=IIF(@nationality=='Botswana', "selected", "")=%%>بوتسوانا</option>
+<option value="Bouvet Island" %%=IIF(@nationality=='Bouvet Island', "selected", "")=%%>جزيرة بوفيه</option>
+<option value="Brazil" %%=IIF(@nationality=='Brazil', "selected", "")=%%>البرازيل</option>
+<option value="British Indian Ocean Territory" %%=IIF(@nationality=='British Indian Ocean Territory', "selected", "")=%%>إقليم المحيط الهندي البريطاني</option>
+<option value="Brunei Darussalam" %%=IIF(@nationality=='Brunei Darussalam', "selected", "")=%%>بروناي دار السلام</option>
+<option value="Bulgaria" %%=IIF(@nationality=='Bulgaria', "selected", "")=%%>بلغاريا</option>
+<option value="Burkina Faso" %%=IIF(@nationality=='Burkina Faso', "selected", "")=%%>بوركينا فاسو</option>
+<option value="Burundi" %%=IIF(@nationality=='Burundi', "selected", "")=%%>بوروندي</option>
+<option value="Cambodia" %%=IIF(@nationality=='Cambodia', "selected", "")=%%>كمبوديا</option>
+<option value="Cameroon" %%=IIF(@nationality=='Cameroon', "selected", "")=%%>الكاميرون</option>
+<option value="Canada" %%=IIF(@nationality=='Canada', "selected", "")=%%>كندا</option>
+<option value="Canary Islands" %%=IIF(@nationality=='Canary Islands', "selected", "")=%%>جزر الكناري</option>
+<option value="Cabo Verde" %%=IIF(@nationality=='Cabo Verde', "selected", "")=%%>الرأس الأخضر</option>
+<option value="Caribbean Netherlands" %%=IIF(@nationality=='Caribbean Netherlands', "selected", "")=%%>الكاريبي هولندا</option>
+<option value="Cayman Islands" %%=IIF(@nationality=='Cayman Islands', "selected", "")=%%>جزر كايمان</option>
+<option value="Central African Republic" %%=IIF(@nationality=='Central African Republic', selected, "")=%%>جمهورية أفريقيا الوسطى</option>
+<option value="Ceuta & Melilla" %%=IIF(@nationality=='Ceuta & Melilla', selected, "")=%%>سبتة ومليلية</option>
+<option value="Chad" %%=IIF(@nationality=='Chad', "selected", "")=%%>تشاد</option>
+<option value="Chile" %%=IIF(@nationality=='Chile', "selected", "")=%%>تشيلي</option>
+<option value="China" %%=IIF(@nationality=='China', "selected", "")=%%>الصين</option>
+<option value="Christmas Island" %%=IIF(@nationality=='Christmas Island', "selected", "")=%%>جزيرة كريسماس</option>
+<option value="Clipperton Island" %%=IIF(@nationality=='Clipperton Island', "selected", "")=%%>جزيرة كليبرتون</option>
+<option value="Cocos (Keeling) Islands" %%=IIF(@nationality=='Cocos (Keeling) Islands', "selected", "")=%%>جزر كوكوس (كيلينغ)</option>
+<option value="Colombia" %%=IIF(@nationality=='Colombia', "selected", "")=%%>كولومبيا</option>
+<option value="Commonwealth of Dominica" %%=IIF(@nationality=='Commonwealth of Dominica', "selected", "")=%%>دومينيكا</option>
+<option value="Comoros" %%=IIF(@nationality=='Comoros', "selected", "")=%%>جزر القمر</option>
+<option value="Congo" %%=IIF(@nationality=='Congo', "selected", "")=%%>الكونغو</option>
+<option value="Cook Islands" %%=IIF(@nationality=='Cook Islands', "selected", "")=%%>جزر كوك</option>
+<option value="Costa Rica" %%=IIF(@nationality=='Costa Rica', "selected", "")=%%>كوستاريكا</option>
+<option value="Cote d'Ivoire" %%=IIF(@nationality=="Cote d'Ivoire", "selected", "")=%%>كوت ديفوار</option>
+<option value="Croatia" %%=IIF(@nationality=='Croatia', "selected", "")=%%>كرواتيا</option>
+<option value="Cuba" %%=IIF(@nationality=='Cuba', "selected", "")=%%>كوبا</option>
+<option value="Curaçao" %%=IIF(@nationality=='Curaçao', "selected", "")=%%>كوراساو</option>
+<option value="Cyprus" %%=IIF(@nationality=='Cyprus', "selected", "")=%%>قبرص</option>
+<option value="Czech Republic" %%=IIF(@nationality=='Czech Republic', "selected", "")=%%>جمهورية التشيك</option>
+<option value="Democratic Republic of the Congo" %%=IIF(@nationality=='Democratic Republic of the Congo', "selected", "")=%%>جمهورية الكونغو الديمقراطية</option>
+<option value="Denmark" %%=IIF(@nationality=='Denmark', "selected", "")=%%>الدنمارك</option>
+<option value="Djibouti" %%=IIF(@nationality=='Djibouti', "selected", "")=%%>جيبوتي</option>
+<option value="Dominican Republic" %%=IIF(@nationality=='Dominican Republic', "selected", "")=%%>جمهورية الدومينيكان</option>
+<option value="Ecuador" %%=IIF(@nationality=='Ecuador', "selected", "")=%%>الإكوادور</option>
+<option value="Egypt" %%=IIF(@nationality=='Egypt', "selected", "")=%%>مصر</option>
+<option value="El Salvador" %%=IIF(@nationality=='El Salvador', "selected", "")=%%>السلفادور</option>
+<option value="Equatorial Guinea" %%=IIF(@nationality=='Equatorial Guinea', "selected", "")=%%>غينيا الاستوائية</option>
+<option value="Eritrea" %%=IIF(@nationality=='Eritrea', "selected", "")=%%>إريتريا</option>
+<option value="Estonia"  %%=IIF(@nationality=='Estonia', "selected", "")=%%>إستونيا</option>
+<option value="Eswatini"  %%=IIF(@nationality=='Eswatini', "selected", "")=%%>إسواتيني</option>
+<option value="Ethiopia" %%=IIF(@nationality=='Ethiopia', "selected", "")=%%>إثيوبيا</option>
+<option value="Falkland Islands" %%=IIF(@nationality=='Falkland Islands', "selected", "")=%%>جزر فوكلاند</option>
+<option value="Faroe Islands" %%=IIF(@nationality=='Faroe Islands', "selected", "")=%%>جزر فارو</option>
+<option value="Fiji" %%=IIF(@nationality=='Fiji', "selected", "")=%%>فيجي</option>
+<option value="Finland" %%=IIF(@nationality=='Finland', "selected", "")=%%>فنلندا</option>
+<option value="France" %%=IIF(@nationality=='France', "selected", "")=%%>فرنسا</option>
+<option value="French Guiana" %%=IIF(@nationality=='French Guiana', "selected", "")=%%>غويانا الفرنسية</option>
+<option value="French Polynesia" %%=IIF(@nationality=='French Polynesia', "selected", "")=%%>بولينيزيا الفرنسية</option>
+<option value="French Southern Territories" %%=IIF(@nationality=='French Southern Territories', "selected", "")=%%>الأقاليم الجنوبية الفرنسية</option>
+<option value="Gabon" %%=IIF(@nationality=='Gabon', "selected", "")=%%>الغابون</option>
+<option value="Gambia" %%=IIF(@nationality=='Gambia', "selected", "")=%%>غامبيا</option>
+<option value="Georgia" %%=IIF(@nationality=='Georgia', "selected", "")=%%>جورجيا</option>
+<option value="Germany" %%=IIF(@nationality=='Germany', "selected", "")=%%>ألمانيا</option>
+<option value="Ghana" %%=IIF(@nationality=='Ghana', "selected", "")=%%>غانا</option>
+<option value="Gibraltar" %%=IIF(@nationality=='Gibraltar', "selected", "")=%%>جبل طارق</option>
+<option value="Greece" %%=IIF(@nationality=='Greece', "selected", "")=%%>اليونان</option>
+<option value="Greenland" %%=IIF(@nationality=='Greenland', "selected", "")=%%>جرينلاند</option>
+<option value="Grenada" %%=IIF(@nationality=='Grenada', "selected", "")=%%>غرينادا</option>
+<option value="Guadeloupe" %%=IIF(@nationality=='Guadeloupe', "selected", "")=%%>غوادلوب</option>
+<option value="Guam"  %%=IIF(@nationality=='Guam', "selected", "")=%%>غوام</option>
+<option value="Guatemala" %%=IIF(@nationality=='Guatemala', "selected", "")=%%>غواتيمالا</option>
+<option value="Guernsey" %%=IIF(@nationality=='Guernsey', "selected", "")=%%>غيرنزي</option>
+<option value="Guinea" %%=IIF(@nationality=='Guinea', "selected", "")=%%>غينيا</option>
+<option value="Guinea-Bissau" %%=IIF(@nationality=='Guinea-Bissau', "selected", "")=%%>غينيا بيساو</option>
+    <option value="Guyana" %%=IIF(@nationality=='Guyana', "selected", "")=%%>غيانا</option>
+    <option value="Haiti" %%=IIF(@nationality=='Haiti', "selected", "")=%%>هايتي</option>
+    <option value="Heard Island and McDonald Islands" %%=IIF(@nationality=='Heard Island and McDonald Islands', "selected", "")=%%>جزيرة هيرد وجزر ماكدونالد</option>
+    <option value="Holy See (Vatican)" %%=IIF(@nationality=='Holy See (Vatican)', "selected", "")=%%>الفاتيكان</option>
+<option value="Honduras" %%=IIF(@nationality=='Honduras', "selected", "")=%%>هندوراس</option>
+<option value="Hong Kong Special Administrative Region" %%=IIF(@nationality=='Hong Kong Special Administrative Region', "selected", "")=%%>هونغ كونغ</option>
+<option value="Hungary" %%=IIF(@nationality=='Hungary', "selected", "")=%%>المجر</option>
+<option value="Iceland" %%=IIF(@nationality=='Iceland', "selected", "")=%%>أيسلندا</option>
+<option value="India"  %%=IIF(@nationality=='India', "selected", "")=%%>الهند</option>
+<option value="Indonesia" %%=IIF(@nationality=='Indonesia', "selected", "")=%%>إندونيسيا</option>
+<option value="Iran (Islamic Republic of)" %%=IIF(@nationality=='Iran (Islamic Republic of)', "selected", "")=%%>إيران</option>
+<option value="Iraq" %%=IIF(@nationality=='Iraq', "selected", "")=%%>العراق</option>
+<option value="Ireland" %%=IIF(@nationality=='Ireland', "selected", "")=%%>أيرلندا</option>
+<option value="Israel" %%=IIF(@nationality=='Israel', "selected", "")=%%>إسرائيل</option>
+<option value="Isle of Man" %%=IIF(@nationality=='Isle of Man', "selected", "")=%%>جزيرة مان</option>
+<option value="Italy" %%=IIF(@nationality=='Italy', "selected", "")=%%>إيطاليا</option>
+<option value="Jamaica" %%=IIF(@nationality=='Jamaica', "selected", "")=%%>جامايكا</option>
+<option value="Japan" %%=IIF(@nationality=='Japan', "selected", "")=%%>اليابان</option>
+<option value="Jersey" %%=IIF(@nationality=='Jersey', "selected", "")=%%>جيرسي</option>
+<option value="Jordan" %%=IIF(@nationality=='Jordan', "selected", "")=%%>الأردن</option>
+<option value="Kazakhstan" %%=IIF(@nationality=='Kazakhstan', "selected", "")=%%>كازاخستان</option>
+<option value="Kenya" %%=IIF(@nationality=='Kenya', "selected", "")=%%>كينيا</option>
+<option value="Kiribati" %%=IIF(@nationality=='Kiribati', "selected", "")=%%>كيريباتي</option>
+<option value="Kosovo" %%=IIF(@nationality=='Kosovo', "selected", "")=%%>كوسوفو</option>
+<option value="Kuwait" %%=IIF(@nationality=='Kuwait', "selected", "")=%%>الكويت</option>
+<option value="Kyrgyzstan" %%=IIF(@nationality=='Kyrgyzstan', "selected", "")=%%>قيرغيزستان</option>
+<option value="Laos People's Democratic Republic" %%=IIF(@nationality=='Laos People's Democratic Republic', "selected", "")=%%>لاوس</option>
+<option value="Latvia" %%=IIF(@nationality=='Latvia', "selected", "")=%%>لاتفيا</option>
+<option value="Latvia Resident" %%=IIF(@nationality=='Latvia Resident', "selected", "")=%%>مقيم في لاتفيا</option>
+<option value="Lebanon" %%=IIF(@nationality=='Lebanon', "selected", "")=%%>لبنان</option>
+<option value="Lesotho" %%=IIF(@nationality=='Lesotho', "selected", "")=%%>ليسوتو</option>
+<option value="Liberia" %%=IIF(@nationality=='Liberia', "selected", "")=%%>ليبيريا</option>
+<option value="Libya" %%=IIF(@nationality=='Libya', "selected", "")=%%>ليبيا</option>
+<option value="Liechtenstein" %%=IIF(@nationality=='Liechtenstein', "selected", "")=%%>ليختنشتاين</option>
+<option value="Lithuania" %%=IIF(@nationality=='Lithuania', "selected", "")=%%>ليتوانيا</option>
+<option value="Luxembourg" %%=IIF(@nationality=='Luxembourg', "selected", "")=%%>لوكسمبورغ</option>
+<option value="Macao" %%=IIF(@nationality=='Macao', "selected", "")=%%>ماكاو</option>
+<option value="Madagascar" %%=IIF(@nationality=='Madagascar', "selected", "")=%%>مدغشقر</option>
+<option value="Malawi" %%=IIF(@nationality=='Malawi', "selected", "")=%%>مالاوي</option>
+<option value="Malaysia" %%=IIF(@nationality=='Malaysia', "selected", "")=%%>ماليزيا</option>
+<option value="Maldives" %%=IIF(@nationality=='Maldives', "selected", "")=%%>المالديف</option>
+<option value="Mali" %%=IIF(@nationality=='Mali', "selected", "")=%%>مالي</option>
+<option value="Malta" %%=IIF(@nationality=='Malta', "selected", "")=%%>مالطا</option>
+<option value="Marshall Islands" %%=IIF(@nationality=='Marshall Islands', "selected", "")=%%>جزر مارشال</option>
+<option value="Martinique" %%=IIF(@nationality=='Martinique', "selected", "")=%%>مارتينيك</option>
+<option value="Mauritania" %%=IIF(@nationality=='Mauritania', "selected", "")=%%>موريتانيا</option>
+<option value="Mauritius" %%=IIF(@nationality=='Mauritius', "selected", "")=%%>موريشيوس</option>
+<option value="Mayotte" %%=IIF(@nationality=='Mayotte', "selected", "")=%%>مايوت</option>
+<option value="Mexico" %%=IIF(@nationality=='Mexico', "selected", "")=%%>المكسيك</option>
+<option value="Micronesia (Federated States of)" %%=IIF(@nationality=='Micronesia (Federated States of)', "selected", "")=%%>ميكرونيزيا</option>
+<option value="Monaco" %%=IIF(@nationality=='Monaco', "selected", "")=%%>موناكو</option>
+<option value="Mongolia" %%=IIF(@nationality=='Mongolia', "selected", "")=%%>منغوليا</option>
+<option value="Montenegro" %%=IIF(@nationality=='Montenegro', "selected", "")=%%>الجبل الأسود</option>
+<option value="Montserrat" %%=IIF(@nationality=='Montserrat', "selected", "")=%%>مونتسرات</option>
+<option value="Morocco" %%=IIF(@nationality=='Morocco', "selected", "")=%%>المغرب</option>
+<option value="Mozambique" %%=IIF(@nationality=='Mozambique', "selected", "")=%%>موزمبيق</option>
+<option value="Myanmar" %%=IIF(@nationality=='Myanmar', "selected", "")=%%>ميانمار</option>
+<option value="Namibia" %%=IIF(@nationality=='Namibia', "selected", "")=%%>ناميبيا</option>
+<option value="Nauru" %%=IIF(@nationality=='Nauru', "selected", "")=%%>ناورو</option>
+<option value="Nepal" %%=IIF(@nationality=='Nepal', "selected", "")=%%>نيبال</option>
+<option value="Netherlands Antilles" %%=IIF(@nationality=='Netherlands Antilles', "selected", "")=%%>جزر الأنتيل الهولندية</option>
+<option value="Netherlands" %%=IIF(@nationality=='Netherlands', "selected", "")=%%>هولندا</option>
+<option value="New Caledonia" %%=IIF(@nationality=='New Caledonia', "selected", "")=%%>كاليدونيا الجديدة</option>
+<option value="New Zealand" %%=IIF(@nationality=='New Zealand', "selected", "")=%%>نيوزيلندا</option>
+<option value="Nicaragua" %%=IIF(@nationality=='Nicaragua', "selected", "")=%%>نيكاراغوا</option>
+<option value="Niger" %%=IIF(@nationality=='Niger', "selected", "")=%%>النيجر</option>
+<option value="Nigeria" %%=IIF(@nationality=='Nigeria', "selected", "")=%%>نيجيريا</option>
+<option value="Niue" %%=IIF(@nationality=='Niue', "selected", "")=%%>نيوي</option>
+<option value="Norfolk Island" %%=IIF(@nationality=='Norfolk Island', "selected", "")=%%>جزيرة نورفولك</option>
+<option value="North Korea" %%=IIF(@nationality=='North Korea', "selected", "")=%%>كوريا الشمالية</option>
+<option value="Northern Mariana Islands" %%=IIF(@nationality=='Northern Mariana Islands', "selected", "")=%%>جزر ماريانا الشمالية</option>
+<option value="Norway" %%=IIF(@nationality=='Norway', "selected", "")=%%>النرويج</option>
+<option value="Oman" %%=IIF(@nationality=='Oman', "selected", "")=%%>عمان</option>
+<option value="Pakistan" %%=IIF(@nationality=='Pakistan', "selected", "")=%%>باكستان</option>
+<option value="Palau" %%=IIF(@nationality=='Palau', "selected", "")=%%>بالاو</option>
+<option value="Panama" %%=IIF(@nationality=='Panama', "selected", "")=%%>بنما</option>
+<option value="Papua new Guinea" %%=IIF(@nationality=='Papua new Guinea', "selected", "")=%%>بابوا غينيا الجديدة</option>
+<option value="Paraguay" %%=IIF(@nationality=='Paraguay', "selected", "")=%%>باراغواي</option>
+<option value="Peru" %%=IIF(@nationality=='Peru', "selected", "")=%%>بيرو</option>
+<option value="Philippines" %%=IIF(@nationality=='Philippines', "selected", "")=%%>الفلبين</option>
+<option value="Pitcairn" %%=IIF(@nationality=='Pitcairn', "selected", "")=%%>بيتكيرن</option>
+<option value="Poland" %%=IIF(@nationality=='Poland', "selected", "")=%%>بولندا</option>
+<option value="Portugal" %%=IIF(@nationality=='Portugal', "selected", "")=%%>البرتغال</option>
+<option value="Puerto Rico" %%=IIF(@nationality=='Puerto Rico', "selected", "")=%%>بورتوريكو</option>
+<option value="Qatar" %%=IIF(@nationality=='Qatar', "selected", "")=%%>قطر</option>
+<option value="Republic of Korea" %%=IIF(@nationality=='Republic of Korea', "selected", "")=%%>جمهورية كوريا</option>
+<option value="Republic of Macedonia" %%=IIF(@nationality=='Republic of Macedonia', "selected", "")=%%>جمهورية مقدونيا</option>
+<option value="Republic of Moldova" %%=IIF(@nationality=='Republic of Moldova', "selected", "")=%%>جمهورية مولدوفا</option>
+<option value="Republic of Somaliland" %%=IIF(@nationality=='Republic of Somaliland', "selected", "")=%%>جمهورية أرض الصومال</option>
+<option value="Reunion" %%=IIF(@nationality=='Reunion', "selected", "")=%%>ريونيون</option>
+<option value="Romania" %%=IIF(@nationality=='Romania', "selected", "")=%%>رومانيا</option>
+<option value="Russian Federation" %%=IIF(@nationality=='Russian Federation', "selected", "")=%%>الاتحاد الروسي</option>
+<option value="Rwanda" %%=IIF(@nationality=='Rwanda', "selected", "")=%%>رواندا</option>
+<option value="Saint Helena" %%=IIF(@nationality=='Saint Helena', "selected", "")=%%>سانت هيلينا</option>
+<option value="Saint Kitts And Nevis" %%=IIF(@nationality=='Saint Kitts And Nevis', "selected", "")=%%>سانت كيتس ونيفيس</option>
+<option value="Saint Lucia" %%=IIF(@nationality=='Saint Lucia', "selected", "")=%%>سانت لوسيا</option>
+<option value="Saint Pierre and Miquelon" %%=IIF(@nationality=='Saint Pierre and Miquelon', "selected", "")=%%>سانت بيير وميكلون</option>
+<option value="Saint Vincent And The Grenadines" %%=IIF(@nationality=='Saint Vincent And The Grenadines', "selected", "")=%%>سانت فنسنت والغرينادين</option>
+<option value="Saint Barthelemy" %%=IIF(@nationality=='Saint Barthelemy', "selected", "")=%%>سانت بارتيليمي</option>
+<option value="Saint Martin (French part)" %%=IIF(@nationality=='Saint Martin (French part)', "selected", "")=%%>سانت مارتن (الجزء الفرنسي)</option>
+<option value="Samoa" %%=IIF(@nationality=='Samoa', "selected", "")=%%>ساموا</option>
+<option value="San Marino" %%=IIF(@nationality=='San Marino', "selected", "")=%%>سان مارينو</option>
+<option value="Sao Tome and Principe" %%=IIF(@nationality=='Sao Tome and Principe', "selected", "")=%%>ساو تومي وبرينسيبي</option>
+<option value="Saudi Arabia" %%=IIF(@nationality=='Saudi Arabia', "selected", "")=%%>المملكة العربية السعودية</option>
+<option value="Senegal" %%=IIF(@nationality=='Senegal', "selected", "")=%%>السنغال</option>
+<option value="Serbia" %%=IIF(@nationality=='Serbia', "selected", "")=%%>صربيا</option>
+<option value="Seychelles" %%=IIF(@nationality=='Seychelles', "selected", "")=%%>سيشل</option>
+<option value="Sierra Leone" %%=IIF(@nationality=='Sierra Leone', "selected", "")=%%>سيراليون</option>
+<option value="Singapore" %%=IIF(@nationality=='Singapore', "selected", "")=%%>سنغافورة</option>
+<option value="Sint Maarten" %%=IIF(@nationality=='Sint Maarten', "selected", "")=%%>سينت مارتن</option>
+<option value="Slovakia" %%=IIF(@nationality=='Slovakia', "selected", "")=%%>سلوفاكيا</option>
+<option value="Slovenia" %%=IIF(@nationality=='Slovenia', "selected", "")=%%>سلوفينيا</option>
+<option value="Solomon Islands" %%=IIF(@nationality=='Solomon Islands', "selected", "")=%%>جزر سليمان</option>
+<option value="Somalia" %%=IIF(@nationality=='Somalia', "selected", "")=%%>الصومال</option>
+<option value="South Africa" %%=IIF(@nationality=='South Africa', 'selected', "")=%%>جنوب أفريقيا</option>
+<option value="South Georgia and the South Sandwich Islands" %%=IIF(@nationality=='South Georgia and the South Sandwich Islands', "selected", "")=%%>جورجيا الجنوبية وجزر ساندويتش الجنوبية</option>
+<option value="South Sudan" %%=IIF(@nationality=='South Sudan', "selected", "")=%%>جنوب السودان</option>
+<option value="Spain" %%=IIF(@nationality=='Spain', "selected", "")=%%>إسبانيا</option>
+<option value="Sri Lanka" %%=IIF(@nationality=='Sri Lanka', "selected", "")=%%>سريلانكا</option>
+<option value="State of Palestine" %%=IIF(@nationality=='State of Palestine', "selected", "")=%%>دولة فلسطين</option>
+<option value="Sudan" %%=IIF(@nationality=='Sudan', "selected", "")=%%>السودان</option>
+<option value="Suriname" %%=IIF(@nationality=='Suriname', "selected", "")=%%>سورينام</option>
+<option value="Svalbard And Jan Mayen" %%=IIF(@nationality=='Svalbard And Jan Mayen', "selected", "")=%%>سفالبارد ويان ماين</option>
+<option value="Swaziland" %%=IIF(@nationality=='Swaziland', "selected", "")=%%>سوازيلاند</option>
+<option value="Sweden" %%=IIF(@nationality=='Sweden', "selected", "")=%%>السويد</option>
+<option value="Switzerland" %%=IIF(@nationality=='Switzerland', "selected", "")=%%>سويسرا</option>
+<option value="Syrian Arab Republic" %%=IIF(@nationality=='Syrian Arab Republic', "selected", "")=%%>الجمهورية العربية السورية</option>
+<option value="Taiwan" %%=IIF(@nationality=='Taiwan', "selected", "")=%%>تايوان</option>
+<option value="Tajikistan" %%=IIF(@nationality=='Tajikistan', "selected", "")=%%>طاجيكستان</option>
+<option value="Thailand" %%=IIF(@nationality=='Thailand', "selected", "")=%%>تايلاند</option>
+<option value="Timor-Leste" %%=IIF(@nationality=='Timor-Leste', "selected", "")=%%>تيمور الشرقية</option>
+<option value="Togo" %%=IIF(@nationality=='Togo', "selected", "")=%%>توغو</option>
+<option value="Tokelau" %%=IIF(@nationality=='Tokelau', "selected", "")=%%>توكلاو</option>
+<option value="Tonga" %%=IIF(@nationality=='Tonga', "selected", "")=%%>تونغا</option>
+<option value="Trinidad And Tobago" %%=IIF(@nationality=='Trinidad And Tobago', "selected", "")=%%>ترينيداد وتوباغو</option>
+<option value="Tunisia" %%=IIF(@nationality=='Tunisia', "selected", "")=%%>تونس</option>
+<option value="Turkey" %%=IIF(@nationality=='Turkey', "selected", "")=%%>تركيا</option>
+<option value="Turkmenistan" %%=IIF(@nationality=='Turkmenistan', "selected", "")=%%>تركمانستان</option>
+<option value="Turks And Caicos Islands" %%=IIF(@nationality=='Turks And Caicos Islands', "selected", "")=%%>جزر تركس وكايكوس</option>
+<option value="Tuvalu" %%=IIF(@nationality=='Tuvalu', "selected", "")=%%>توفالو</option>
+<option value="Uganda" %%=IIF(@nationality=='Uganda', "selected", "")=%%>أوغندا</option>
+<option value="Ukraine" %%=IIF(@nationality=='Ukraine', "selected", "")=%%>أوكرانيا</option>
+<option value="United Arab Emirates" %%=IIF(@nationality=='United Arab Emirates', "selected", "")=%%>الإمارات العربية المتحدة</option>
+<option value="United Kingdom (UK)" %%=IIF(@nationality=='United Kingdom (UK)', "selected", "")=%%>المملكة المتحدة (بريطانيا)</option>
+<option value="United Republic of Tanzania" %%=IIF(@nationality=='United Republic of Tanzania', "selected", "")=%%>جمهورية تنزانيا المتحدة</option>
+<option value="United States of America" %%=IIF(@nationality=='United States of America', "selected", "")=%%>الولايات المتحدة الأمريكية</option>
+<option value="United States Minor Outlying Islands" %%=IIF(@nationality=='United States Minor Outlying Islands', "selected", "")=%%>جزر الولايات المتحدة الصغيرة النائية</option>
+<option value="Uruguay" %%=IIF(@nationality=='Uruguay', "selected", "")=%%>أوروغواي</option>
+<option value="Uzbekistan" %%=IIF(@nationality=='Uzbekistan', "selected", "")=%%>أوزبكستان</option>
+<option value="Vanuatu" %%=IIF(@nationality=='Vanuatu', "selected", "")=%%>فانواتو</option>
+<option value="Venezuela" %%=IIF(@nationality=='Venezuela', "selected", "")=%%>فنزويلا</option>
+<option value="Viet Nam" %%=IIF(@nationality=='Viet Nam', "selected", "")=%%>فيتنام</option>
+<option value="Virgin Islands, British" %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands British', "selected", "")=%%>جزر فيرجن البريطانية</option>
+<option value="Virgin Islands, U.S." %%=IIF(Replace(@nationality, ",", "") == 'Virgin Islands U.S.', "selected", "")=%%>جزر فيرجن الأمريكية</option>
+<option value="Wallis And Futuna" %%=IIF(@nationality=='Wallis And Futuna', "selected", "")=%%>واليس وفوتونا</option>
+<option value="Western Sahara" %%=IIF(@nationality=='Western Sahara', "selected", "")=%%>الصحراء الغربية</option>
+<option value="Yemen" %%=IIF(@nationality=='Yemen', "selected", "")=%%>اليمن</option>
+<option value="Zambia" %%=IIF(@nationality=='Zambia', "selected", "")=%%>زامبيا</option>
+<option value="Zimbabwe" %%=IIF(@nationality=='Zimbabwe', "selected", "")=%%>زمبابوي</option>
+<option value="Others" %%=IIF(@nationality=='Others', "selected", "")=%%>آخرون</option>
+
+
+
+
+
+                  </select>
                  
                         </div>
                     </div>
                 </div>
   
-                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
+              
+                
+                 <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                     <div class="form-group">
                         <label for="">الجنس</label>
                         <div class="select-wrapper hide-icon custom-">
 
                           <!-- Priyanka 23 Feb, Added ampscript for gender -->
-                          <select class="form-control" name="gender" id="gender">
+                             <select class="form-control" name="gender" id="gender">
                                <option value=" " selected>اختر</option>
                                <option value="Female" %%=IIF(@gender=='Female', "selected", "")=%%>أنثى</option>
                                 <option value="Male" %%=IIF(@gender=='Male', "selected", "")=%%>ذكر</option> 
@@ -1416,24 +1467,25 @@ ul {
                     </div>
                 </div>
           
-              <div class="col-lg-4 col-md-6 col-sm-12 col-12">
+            <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group">
                         <label class="label">تاريخ الميلاد</label>
-                        <div class="bdate">
-                          <input class="form-control" type="date" name="birthday" max="getToday();" value="%%=v(@birthdate)=%%" id="birthday">
+                        <div class="bdate col-lg-12 col-md-12 col-sm-12 col-12">
+                          <input class="form-control" type="date" name="birthday"  value="%%=v(@birthdate)=%%" id="birthday">
                 
                  <input type="hidden" id="hiddenDate">
                       </div>
                     
                       </div>
                   </div>
+                
                 <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
                           <label for="">اختيار اللغة</label>
                           <div class="select-wrapper hide-icon custom-">
   
-                          <select class="form-control" name="profilelang">
+                               <select class="form-control" name="profilelang">
                                  <option value=" " %%=IIF(@language==' ', "selected", "")=%%>اختر</option>
                                  <option value="English" %%=IIF(@language=='English', "selected", "")=%%>English</option>
                                   <option value="Arabic" %%=IIF(@language=='Arabic', "selected", "")=%%>العربية</option> 
@@ -1441,24 +1493,25 @@ ul {
                            
                           </div>
                       </div>
-                  </div>
+                  </div>      
                  
               </div>
               <!-- Family details section start -->
               <h4 class="pt-4 pb-4">أخبرنا المزيد عن عائلتك</h4>
-              <!-- marital status new -->
+               <!-- marital status new -->
               <div class="col-lg-4 col-md-6 col-sm-12 col-12" style="padding-left:0;">
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
                           <label for="">الحالة الاجتماعية</label>
                           <div class="select-wrapper hide-icon">
-                          <select class="form-control" name="maritalstatus">
-                            <option value="">اختر</option>
-                            <option value="Single" %%=IIF(@marriedStatus=='Single', "selected", "")=%%>أعزب  
-                            </option>
-                            <option value="Married" %%=IIF(@marriedStatus=='Married', "selected", "")=%%>متزوج
-                            </option>
-                            </select>
+                              <select class="form-control" name="maritalstatus">
+                                <option value="">اختر</option>
+                                  <option value="Single" %%=IIF(@marriedStatus=='Single', "selected", "")=%%>أعزب  
+                                  </option>
+                                  <option value="Married" %%=IIF(@marriedStatus=='Married', "selected", "")=%%>متزوج
+                                  </option>
+                                  
+                              </select>
                               
                
                           </div>
@@ -1466,7 +1519,8 @@ ul {
                   </div>
               <!-- Marital status section start 
               <div class="form-group" data-aos="fade-up" data-aos-anchor-placement="bottom-bottom">
-                <label for="">هل لديك أطفال؟</label>
+                <label for="">Marital Status
+                </label>
                 <div class="radio-wrapper">
                   <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" %%=IIF(@marriedStatus=='Single', 'checked', '')=%%>
@@ -1481,7 +1535,7 @@ ul {
     <!-- Marital status section end -->
   
       <!-- Kids section start -->
-      <div class="form-group pt-2 pb-4">
+      <div class="form-group pt-4">
         <label for="">هل لديك أطفال؟</label>
         <div class="radio-wrapper">
             <div class="form-check form-check-inline">
@@ -1501,11 +1555,11 @@ ul {
           <div class="row">
               <div class="col-lg-4 col-md-4 col-sm-12 col-12">
                   <div class="form-group">
-                      <label for="numOfKids">هل لديك أطفال؟</label>
+                      <label for="numOfKids">هل لديك أطفال؟ </label>
                       <div class="select-wrapper">
   
                           <select class="form-control selectpicker" name="state" id="numOfKids" onclick="kidsPrepopulation();">
-                              <option value="0" %%=IIF(@numOfKids==0, "selected", "")=%%>Select</option>
+                              <option value="0" %%=IIF(@numOfKids==0, "selected", "")=%%>اختر</option>
                               <option value="1" %%=IIF(@numOfKids==1, "selected", "")=%%>1</option>
                               <option value="2" %%=IIF(@numOfKids==2, "selected", "")=%%>2</option>
                               <option value="3" %%=IIF(@numOfKids==3, "selected", "")=%%>3</option>
@@ -1531,18 +1585,16 @@ ul {
                 </div>
               </div>
       
-      <p class="disclaimer" style="font-size:12px;"> <i>نطلب تاريخ ميلاد طفلك لكي نتمكن من إرسال تهاني عيد ميلاده، بالإضافة إلى اطلاعك على أحدث الفعاليات والعروض الترويجية.</i></p>
+  <p class="disclaimer" style="font-size:12px;"><i>نطلب تاريخ ميلاد طفلك لكي نتمكن من إرسال تهاني عيد ميلاده، بالإضافة إلى اطلاعك على أحدث الفعاليات والعروض الترويجية.</i></p>
       </div>
   
   </div>
-          %%[
+          
+         
 
-    /*SET @crmIdEn = "0036M00004SEQwKQAX"*/
-   /* SET @crmIdEn = QueryParameter("sfid")
-    SET @crmIdJS = Base64Decode(@crmIdEn) */        /*...........uncommented.................*/
-
-SET @crmId = _subscriberkey
-IF (empty(@crmId)) THEN
+                          %%[
+    SET @crmId = _subscriberkey
+    IF (empty(@crmId)) THEN
     SET @crmIdEn = QueryParameter("sfid")
     SET @crmId = Base64Decode(@crmIdEn)
     IF (empty(@crmId)) THEN
@@ -1552,14 +1604,28 @@ IF (empty(@crmId)) THEN
       ENDIF
      ENDIF
     ENDIF
-
-
-
-    IF NOT EMPTY(@crmId) THEN              /*...........uncommented.................*/
-    /*IF NOT EMPTY(@crmIdEn) THEN */  
-        /* Fetching Children details */
+SET @gfContactRows = RetrieveSalesforceObjects("Contact",
+  "Id,Salutation,FirstName,LastName,Email,Phone,Country_Code__c,Birthdate,Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c,GV_ContactId__c",
+    "Id","=", @crmId )
+SET @bfContactRows =RetrieveSalesforceObjects("Contact",
+  "Id,Salutation,FirstName,LastName,Email,Phone,Country_Code__c,Birthdate,Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c,GV_ContactId__c",
+    "GV_ContactId__c","=", @crmId )
+    
+       IF RowCount(@gfContactRows) == 1 THEN 
+        set @contactRow = Row(@gfContactRows, 1) 
+        /*output(concat("<br>contactRowIf ",@contactRow)) */
+        ELSEIF RowCount(@bfContactRows) == 1 THEN 
+        set @contactRow = Row(@bfContactRows, 1) 
+        /*output(concat("<br>contactRowElse ",@contactRow)) */
+        ENDIF 
         
-       
+    if not empty(@contactRow) then /* there should only be one row */
+    
+    set @crmId = Field(@contactRow, "Id")
+    
+    endif
+    IF NOT EMPTY(@crmId) THEN                /*...........uncommented.................*/
+        /* Fetching Children details */
         var @j
         SET @childDetails = RetrieveSalesforceObjects("Family_Member__c","Gender__c,Date_Of_Birth__c,First_Name__c,ID,Last_Name__c,Deleted_kid__c",
         "Contact__c", "=", @crmId,
@@ -1581,7 +1647,7 @@ IF (empty(@crmId)) THEN
                 set @childLastName = Field(@childDetailsRow, "Last_Name__c")
                 set @childRecID = Field(@childDetailsRow, "ID")
                 
-      
+          
           
             IF NOT EMPTY(@childFirstName) AND NOT EMPTY(@childLastName) THEN
                SET @childFullName = Concat(ProperCase(@childFirstName)," ",ProperCase(@childLastName))
@@ -1610,334 +1676,361 @@ IF (empty(@crmId)) THEN
           
          
     %%[
-    ENDIF
+    endif
            next @j 
           
         ENDIF
     ENDIF   
     ]%%
+          
+          
               <div class="submit-button">
           
-              <button type="submit" class="btn btn-success"id="profile-submit" name="button">حفظ</button>
+              <button type="submit" class="btn"id="profile-submit" name="button">حفظ</button>
  
           </div>
           
           <input name="submittedProfile" type="hidden" value="true">
-          <input name="crmId" id="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
-          <input name="numberOfKids" type="hidden" value="%%=v(@numOfKids)=%%"><br>      
-          <input name="emails" type="hidden" value="%%=v(@email)=%%" />
+                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+            <input name="emails" type="hidden" value="%%=v(@email)=%%">
+            <input name="numberOfKids" type="hidden" value="%%=v(@numOfKids)=%%">
               </form>
         
-          %%[
-          var @sfid
-          IF RequestParameter("submittedProfile")==true then
-                  SET @sfid = RequestParameter("crmId")
-                  SET @emailContact = RequestParameter("emails")
-                  SET @profileSalutation = RequestParameter("profileSalutation")
-                  SET @firstName = RequestParameter("firstName")
-                  SET @lastName = RequestParameter("lastName")
-                  set @gender = RequestParameter("gender")
-                  set @city = RequestParameter("city")
-                  set @numOfKids = RequestParameter("numberOfKids")
-                  SET @email = RequestParameter("email")
-                  SET @phone = RequestParameter("phone")
-                  
-                  if RequestParameter("lang") == '' then
-                    SET @phonecode = '+971'
-                  ENDIF
-                  
-                  if RequestParameter("lang") != '' then
-                    SET @phonecode = RequestParameter("lang")
-                  ENDIF
-                  
-                  SET @birthdate = RequestParameter("birthday")
-                  SET @profileLang = RequestParameter("profileLang")
-                  SET @profileNationality = RequestParameter("profileNationality")
-                  SET @profileCountry = RequestParameter("profileCountry")
-                  
-                  SET @profileMarriedBox = RequestParameter("maritalstatus")
-                  
-                  /*Child Selected values*/
-                  SET @profilekidsValue = RequestParameter("state")
-                  SET @profileKidsBox = RequestParameter("kidsExists")
-                  IF @profileKidsBox == 'kids-yes' THEN
-                      SET @kidsStatus = 'True'
-                      SET @doYouHaveKids = 'True'
-                  ELSE
-                      SET @kidsStatus = 'False'
-                      SET @doYouHaveKids = 'False'
-                  ENDIF
-
-                  IF Empty(@profilekidsValue) THEN
-                      SET @profilekidsValue = 0
-                  ENDIF
-                  
-                  IF NOT Empty(@sfid) THEN
-                    IF Empty(@birthdate) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "BirthDate"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "BirthDate", @birthdate
-                        )
-                    ENDIF
-                  
-                    IF Empty(@profileMarriedBox) THEN
-                          SET @updateRecord = UpdateSingleSalesforceObject(
-                          "Contact", @sfid,
-                          "fieldsToNull", "Marital_Status__c"
-                          )
-                      ELSE
-                          SET @updateRecord = UpdateSingleSalesforceObject(
-                          "Contact", @sfid,
-                          "Marital_Status__c", @profileMarriedBox
-                          )
-                    ENDIF 
-                  
-                    IF Empty(@profileNationality) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "Nationality__c"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "Nationality__c", @profileNationality
-                        )
-                    ENDIF
-
-                    IF Empty(@phone) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "Phone"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "Phone", @phone
-                        )
-                    ENDIF
-                    IF Empty(@phonecode) THEN
-                    SET @phonecode = "+971"
-                    ENDIF
-                    IF Empty(@city) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "MailingCity"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "MailingCity", @city
-                        )
-                    ENDIF
-                  
-                      SET @updateRecord = UpdateSingleSalesforceObject(
-                      "Contact", @sfid,
-                      "Salutation", @profileSalutation,
-                      "FirstName", @firstName,
-                      "LastName", @lastName, 
-                      "Email", @email,
-                      "Country_Code__c", @phonecode,
-                      "Registration_Language__c", @profileLang,
-                      "GenderIdentity", @gender,
-                      "Nationality__c", @profileNationality,
-                      "Residence_Country__c", @profileCountry,
-                      "Do_you_have_kids__c", @doYouHaveKids 
-                      )
-                  
+         %%[
+         var @sfid
+        IF RequestParameter("submittedProfile")==true then
+            SET @sfid = RequestParameter("crmId")
+            SET @emailContact = RequestParameter("emails")  
+            SET @profileSalutation = RequestParameter("profileSalutation")
+            SET @firstName = RequestParameter("firstName")
+            SET @lastName = RequestParameter("lastName")
+            set @gender = RequestParameter("gender")
+            set @city = RequestParameter("city")
+            set @numOfKids = RequestParameter("numberOfKids")
+            SET @email = RequestParameter("email")
+            SET @phone = RequestParameter("phone")
             
-              /*Creating and Updating child records based on value selected above*/
+            if RequestParameter("lang") == '' then
+            SET @phonecode = '+971'
+            endif
+            if RequestParameter("lang") != '' then
+            SET @phonecode = RequestParameter("lang")
+            endif
+            SET @birthdate = RequestParameter("birthday")
+            SET @profileLang = RequestParameter("profileLang")
+            SET @profileNationality = RequestParameter("profileNationality")
+            SET @profileCountry = RequestParameter("profileCountry")
+            
+            
+            
+    
+            SET @profileMarriedBox = RequestParameter("maritalstatus")
+            /*IF @profileMarriedBox == 'option2' THEN
+                SET @marriedStatus = 'Married'
+            Elseif @profileMarriedBox == '' Then
+                set @marriedStatus = ''
+            ELSE
+                SET @marriedStatus = 'Single'
+            ENDIF*/
+            
+            
+            /*Child Selected values*/
+            SET @profilekidsValue = RequestParameter("state")
+            
+            SET @profileKidsBox = RequestParameter("kidsExists")
+            IF @profileKidsBox == 'kids-yes' THEN
+                SET @kidsStatus = 'True'
+                SET @doYouHaveKids = 'True'
+            ELSE
+                SET @kidsStatus = 'False'
+                SET @doYouHaveKids = 'False'
+            ENDIF
 
-                  
-                  IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-yes' THEN
-                  
-                    /*RETRIVAL OF ALL CRM KID ID AND CREATE STRING*/
-                  
-                  var @CRMIdList
-                  SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
-                                      "Contact__c", "=", @sfid,
-                                      "Relationship__c", "=", "Child")
-                                      SET @childIDRowCount = Rowcount(@childIDs)
-                                      
-                                      IF @childIDRowCount > 0 THEN
-                                      
-                                      For @p=1 to @childIDRowCount do
-                                      
-                                      SET @childIDRow = Row(@childIDs, @p)
-                                      set @KidID = Field(@childIDRow, "ID")
-                                      Set @CRMIdList = CONCAT(@CRMIdList, @KidID, ",")
-
-
-                                      next @p
-
-                                      ENDIF
+            IF Empty(@profilekidsValue) THEN
+                SET @profilekidsValue = 0
+            ENDIF
+            
           
-                                      
-                                      
-                                      
-                  
-                      FOR @k=1 to @profilekidsValue do
-                      set @u = Subtract(@k, 1)
-                          SET @kidGender = Concat("gender",@u)
-                          SET @kidGenderVal = RequestParameter(@kidGender)
-                          SET @kidName = Concat("kidsName",@u)
-                          SET @kidNameval = RequestParameter(@kidName)
-                          IF IndexOf(@kidNameval, " ") > 0 THEN
-                                Set @kidFirstName = Substring(@kidNameval,1, Subtract(IndexOf(@kidNameval," "),1))
-                                set @kidLastName = Substring(@kidNameval,Add(indexOf(@kidNameval, " "),1))
-                              else
-                                  SET @kidFirstName = @kidNameval
-                                  SET @kidLastName = ""
-                          ENDIF
-                          SET @kidDOB = Concat("kids-birthday",@u)
-                          SET @kidDOBVal = RequestParameter(@kidDOB)
-                          SET @kidRecId = Concat("kidRecId",@u)
-                          SET @kidRecIdVal = RequestParameter(@kidRecId)
-                          
-                          IF Not Empty(@kidRecIdVal) THEN
-                          
-                          
-                          SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
-                                      "id", "=", @kidRecIdVal,
-                                      "Relationship__c", "=", "Child")
-                                      SET @childIDRowCount = Rowcount(@childIDs)
-                                      
-                                      IF @childIDRowCount > 0 THEN
-                                      
-                                      For @p=1 to @childIDRowCount do
-                        
-                        
-                          
-                              IF EMPTY(@kidDOBVal) THEN
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Name", @kidNameval,
-                                    "fieldsToNull", "Date_Of_Birth__c"
-                                    )
-                              ELSE
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Date_Of_Birth__c", @kidDOBVal,
-                                    "Name", @kidNameval
-                                    )
-                              ENDIF
-                              IF EMPTY(@kidGenderVal) THEN
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Name", @kidNameval,
-                                    "fieldsToNull", "Gender__c"
-                                    )
-                              ELSE
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Name", @kidNameval
-                                    )
-                              ENDIF
-                              next @p
-
-                                      ENDIF
-                          ELSE
-                              IF EMPTY(@kidDOBVal) THEN
-                              
-                              set @numOfKids = Add(@numOfKids, 1)
-                              SET @updateRecord = UpdateSingleSalesforceObject(
-                                                    "Contact", @sfid,
-                                                    "Number_of_kids__c", @numOfKids
-                                                  )
-                              
-                                SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 6,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Relationship__c", "Child",
-                                    "Contact__c", @sfid,
-                                    "Name", @kidNameval,
-                                    "fieldsToNull", "Date_Of_Birth__c")
-                              ELSE
-                              SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 7,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Date_Of_Birth__c", @kidDOBVal, 
-                                    "Relationship__c", "Child",
-                                    "Contact__c", @sfid,
-                                    "Name", @kidNameval)
-                              ENDIF
-                          ENDIF
-                      next @k
-                  ENDIF
-                  
-                  /* made changes for "no" kids selection on 14 feb */
-                  
-                  IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-no' THEN
-                        
-                        
-                        SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","id","Contact__c", "=", @sfid,"Relationship__c", "=", "Child")
-                        /*Output(Concat("childIDs: ", @childIDs, "<br>"))*/
-                        SET @childIDRowCount = Rowcount(@childIDs)
-                        /*Output(Concat("childIDRowCount: ", @childIDRowCount, "<br>"))*/
-                        For @n=1 to @childIDRowCount do
-                            SET @childIDRow = Row(@childIDs, @n)
-                            set @KidID = Field(@childIDRow, "ID")
-                            /*Output(Concat("number of kids v1: ", @numOfKids))*/
-                            SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
-                            "Family_Member__c", @KidID,
-                            "Deleted_kid__c", "True"
-                            )
-                            /*Output(Concat("updatedeletedKidRecord: ", @updatedeletedKidRecord, "<br>"))*/
-                        next @n
-                        SET @childIDRowCount = Rowcount(@childIDs)
-                            SET @updateNoOfKidRecord = UpdateSingleSalesforceObject("Contact", @sfid,"Number_of_kids__c", @childIDRowCount)
-                            /*Output(Concat("updateNoOfKidRecord: ", @updateNoOfKidRecord, "<br>"))*/
-              ENDIF 
-                                                          
-                  
-                  
-              ENDIF
-
-              set @interests = '#interests'
-              if empty(@sfid) OR IsNull(@sfid) then
-                Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
-              ELSE
-                Set @ampError = ''
-              ENDIF
-              Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","ProfilePage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-              if @methodType== 'Old' then
-                Redirect(Concat("https://cloud.explore.legoland.ae/LLQA_CPC_Arabic?sfid=", Base64Encode(@sfid), "#interests"))
-              ELSE
-                Redirect(CONCAT(CloudPagesURL(3379),@interests))
-              ENDIF
-              
-              
-              ENDIF
-
+            
+            IF NOT Empty(@sfid) THEN
+            
+          
+            IF Empty(@birthdate) THEN
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Birthdate"
+                )
+            ELSE
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Birthdate", @birthdate
+                )
+            ENDIF
+            
+            
+            IF Empty(@profileMarriedBox) THEN
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Marital_Status__c"
+                )
+            ELSE
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Marital_Status__c", @profileMarriedBox
+                )
+            ENDIF
+            
+            
+            IF Empty(@profileNationality) THEN
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Nationality__c"
+                )
+            ELSE
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Nationality__c", @profileNationality
+                )
+            ENDIF
+            
+            IF Empty(@city) THEN
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "MailingCity"
+                )
+            ELSE
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "MailingCity", @city
+                )
+            ENDIF
+            
+            
+            IF Empty(@phone) THEN
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Phone"
+                )
+            ELSE
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Phone", @phone
+                )
+            ENDIF
+            
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Salutation", @profileSalutation,
+                "FirstName", @firstName,
+                "LastName", @lastName, 
+                "Email", @email,
+                "MailingCity", @city,
+                "Country_Code__c", @phonecode,
+                "Registration_Language__c", @profileLang,
+                "GenderIdentity", @gender,
+                "Nationality__c", @profileNationality,
+                "Residence_Country__c", @profileCountry,
+                "Do_you_have_kids__c", @doYouHaveKids
+                )
+                                            
+                                       
                                         
-        
+                                     
+                                            
+                                     
+                                 
+                                   /*Creating and Updating child records based on value selected above*/
+       
+                                       
+                                        IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-yes' THEN
+                                        
+                                          /*RETRIVAL OF ALL CRM KID ID AND CREATE STRING*/
+                                       
+                                       var @CRMIdList
+                                       SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
+                                                           "Contact__c", "=", @sfid,
+                                                           "Relationship__c", "=", "Child")
+                                                            SET @childIDRowCount = Rowcount(@childIDs)
+                                                            
+                                                            IF @childIDRowCount > 0 THEN
+                                                            
+                                                            For @p=1 to @childIDRowCount do
+                                                            
+                                                            SET @childIDRow = Row(@childIDs, @p)
+                                                            set @KidID = Field(@childIDRow, "ID")
+                                                            Set @CRMIdList = CONCAT(@CRMIdList, @KidID, ",")
+               
+    
+                                                            next @p
+      
+                                                            ENDIF
+                               
+                                                            
+                                                            
+                                                            
+                                        
+                                            FOR @k=1 to @profilekidsValue do
+                                            set @u = Subtract(@k, 1)
+                                                SET @kidGender = Concat("gender",@u)
+                                                SET @kidGenderVal = RequestParameter(@kidGender)
+                                                SET @kidName = Concat("kidsName",@u)
+                                                SET @kidNameval = RequestParameter(@kidName)
+                                                IF IndexOf(@kidNameval, " ") > 0 THEN
+                                                      Set @kidFirstName = Substring(@kidNameval,1, Subtract(IndexOf(@kidNameval," "),1))
+                                                      set @kidLastName = Substring(@kidNameval,Add(indexOf(@kidNameval, " "),1))
+                                                    else
+                                                       SET @kidFirstName = @kidNameval
+                                                       SET @kidLastName = ""
+                                                ENDIF
+                                                SET @kidDOB = Concat("kids-birthday",@u)
+                                                SET @kidDOBVal = RequestParameter(@kidDOB)
+                                                SET @kidRecId = Concat("kidRecId",@u)
+                                                SET @kidRecIdVal = RequestParameter(@kidRecId)
+                                                
+                                                IF Not Empty(@kidRecIdVal) THEN
+                                                
+                                                
+                                                SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
+                                                           "id", "=", @kidRecIdVal,
+                                                           "Relationship__c", "=", "Child")
+                                                            SET @childIDRowCount = Rowcount(@childIDs)
+                                                            
+                                                            IF @childIDRowCount > 0 THEN
+                                                            
+                                                            For @p=1 to @childIDRowCount do
+                                              
+                                              
+                                                
+                                                   IF EMPTY(@kidDOBVal) THEN
+                                                          SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Name", @kidNameval,
+                                                          "fieldsToNull", "Date_Of_Birth__c"
+                                                          )
+                                                   ELSE
+                                                         SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Date_Of_Birth__c", @kidDOBVal,
+                                                          "Name", @kidNameval
+                                                          )
+                                                   ENDIF
+                                                   IF EMPTY(@kidGenderVal) THEN
+                                                          SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Name", @kidNameval,
+                                                          "fieldsToNull", "Gender__c"
+                                                          )
+                                                   ELSE
+                                                         SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Name", @kidNameval
+                                                          )
+                                                   ENDIF
+                                                   next @p
+      
+                                                            ENDIF
+                                                ELSE
+                                                    IF EMPTY(@kidDOBVal) THEN
+                                                    
+                                                    set @numOfKids = Add(@numOfKids, 1)
+                                                    SET @updateRecord = UpdateSingleSalesforceObject(
+                                                                         "Contact", @sfid,
+                                                                         "Number_of_kids__c", @numOfKids
+                                                                        )
+                                                    
+                                                     SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 6,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Relationship__c", "Child",
+                                                          "Contact__c", @sfid,
+                                                          "Name", @kidNameval,
+                                                          "fieldsToNull", "Date_Of_Birth__c")
+                                                   ELSE
+                                                    SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 7,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                         "Date_Of_Birth__c", @kidDOBVal, 
+                                                          "Relationship__c", "Child",
+                                                          "Contact__c", @sfid,
+                                                          "Name", @kidNameval)
+                                                   ENDIF
+                                                ENDIF
+                                            next @k
+                                        ENDIF
+                                      
+                                        
+                                        /* made changes for "no" kids selection on 14 feb */
+                                        
+                                        IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-no' THEN
+                                              
+                                              
+                                              SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","id","Contact__c", "=", @sfid,"Relationship__c", "=", "Child")
+                                              /*Output(Concat("childIDs: ", @childIDs, "<br>"))*/
+                                              SET @childIDRowCount = Rowcount(@childIDs)
+                                              /*Output(Concat("childIDRowCount: ", @childIDRowCount, "<br>"))*/
+                                              For @n=1 to @childIDRowCount do
+                                                  SET @childIDRow = Row(@childIDs, @n)
+                                                  set @KidID = Field(@childIDRow, "ID")
+                                                  /*Output(Concat("number of kids v1: ", @numOfKids))*/
+                                                  SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
+                                                  "Family_Member__c", @KidID,
+                                                  "Deleted_kid__c", "True"
+                                                  )
+                                                  /*Output(Concat("updatedeletedKidRecord: ", @updatedeletedKidRecord, "<br>"))*/
+                                             next @n
+                                             SET @childIDRowCount = Rowcount(@childIDs)
+                                                  SET @updateNoOfKidRecord = UpdateSingleSalesforceObject("Contact", @sfid,"Number_of_kids__c", @childIDRowCount)
+                                                  /*Output(Concat("updateNoOfKidRecord: ", @updateNoOfKidRecord, "<br>"))*/
+                                    endif 
+                                                                                
+                                        
+                                        
+                                   endif
+            
+                                  
+                                   set @interests = '#interests'
+                                   if empty(@sfid) OR IsNull(@sfid) then
+                                      Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+                                   ELSE
+                                      Set @ampError = ''
+                                   ENDIF
+                                   Set @p= InsertData("PreferencesLog_Arabic_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","ProfilePage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+                                   if @methodType== 'Old' then
+                                      Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/cpc_dpr_ar_qa?sfid=", Base64Encode(@sfid), "#interests"))
+                                   ELSE
+                                      Redirect(CONCAT(CloudPagesURL(3141),@interests))
+                                   ENDIF
+                                   
+                                   endif
+
         ]%%
-        
-         
        
         
         
             </div>
         </div>
-                <!-- 2nd card Interest tab-->
-           %%[
+        <!-- 2nd card Interest tab-->
+                                   
+                                   <!-- Priyanka 23 Feb, multipicklist Change -->
+                                   
+                                   %%[
+                                   
+                                   set @concatedString = Concat("It", "'")
+                                   set @finalConcatedString = Concat(@concatedString,"s on my Dubai bucket list")
+                                   /*Output(concat("string - ", @finalConcatedString))*/
                                    
                                    set @primaryReasonString = BuildRowsetFromString(@primaryReasonForVisit,";")
                                    set @primaryReasonCount = rowCount(@primaryReasonString)
@@ -1948,20 +2041,21 @@ IF (empty(@crmId)) THEN
                                            SET @val = Field(Row(@primaryReasonString,@i),1)
                                            
                                            IF @val == "Fun family activities" THEN
-                                           SET @funFamilyActivities = "checked"
-                                           ELSEIF @val == "It's on my Dubai bucket list" THEN
-                                           SET @dubaiBucketList = "checked"
+                                           SET @Fun_family_activities = "checked"
+                                           ELSEIF @val == @finalConcatedString THEN
+                                           SET @dubaiOption = "checked"
                                            ELSEIF @val == "I love rides and theme parks" THEN
-                                           SET @themePark = "checked"
+                                           SET @I_love_rides_and_theme_park = "checked"
                                            ELSEIF @val == "I want to celebrate my birthday" THEN
-                                           SET @celebrateBirthday = "checked"
+                                           SET @I_want_to_celebrate_birthday = "checked"
                                            ELSEIF @val == "I am a regular (Annual Pass member)" THEN       
-                                           SET @annualPassMember = "checked"
+                                           SET @AnnualPass = "checked"
                                            ENDIF
                                            
                                       next @i
-                                   ENDIF
-   
+                                   endif
+                    
+                    
                                   set @likeMostString = BuildRowsetFromString(@likeMostAbout,";")
                                   set @likeMostCount = rowCount(@likeMostString)
                                   
@@ -1983,10 +2077,14 @@ IF (empty(@crmId)) THEN
                                            ENDIF
                                            
                                       next @i
-                                   ENDIF
+                                   endif
                     
                     
-         ]%% 
+                                   ]%% 
+                                   
+                                   
+                                   
+                                   
         <div class="tab-pane fade interest-tab-content" id="interests" role="tabpanel" aria-labelledby="interests-tab">
           
             <div class="wrapper wrapper--w700">
@@ -1995,28 +2093,30 @@ IF (empty(@crmId)) THEN
               
                
                  
-                   <div class="form-group">
+                  <div class="form-group">
                     <h4 class="pt-4 pb-3">ما هو السبب الرئيسي لزيارتك إلى دبي باركس™  آند ريزورتس؟</h4>
                     <div class="radio-wrapper primary-reason radio-width">
                         <div class="form-check form-check">
+                         
                           <label class="form-check-label" for="reason1">أنشطة عائلية ممتعة</label>
-                            <input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@funFamilyActivities)=%% >                                
+                            <input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@Fun_family_activities)=%% >                            
                         </div>
-                        <div class="form-check form-check">
-                          <label class="form-check-label" for="reason2">انها ضمن قائمة الأشياء التي اريد القيام بها في دبي</label>
-                          <input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@dubaiBucketList)=%% >  
-                        </div>
+                 
+                      <div class="form-check form-check">
+                  <label class="form-check-label" for="reason2">انها ضمن قائمة الأشياء التي اريد القيام بها في دبي </label>
+                  <input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@dubaiOption)=%%>
+                </div>
                         <div class="form-check form-check">
                           <label class="form-check-label" for="reason3">أحب الجولات والمتنزهات</label>
-                          <input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@themePark)=%% >  
+                          <input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@I_love_rides_and_theme_park)=%% >
                         </div>
                         <div class="form-check form-check">
                           <label class="form-check-label" for="reason4">أريد أن أحتفل بعيد ميلادي</label>
-                          <input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@celebrateBirthday)=%% >  
+                          <input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@I_want_to_celebrate_birthday)=%% >
                         </div>
                         <div class="form-check form-check">
-                          <label class="form-check-label" for="reason5">انا زائر منتضم (عضو الاشتراك السنوي</label>
-                          <input class="form-check-input" type="checkbox" name="reason5" id="reason5" %%=v(@annualPassMember)=%% >  
+                          <label class="form-check-label" for="reason5">انا زائر منتضم (عضو الاشتراك السنوي)</label>
+                          <input class="form-check-input" type="checkbox" name="reason5" id="reason5" %%=v(@AnnualPass)=%%>
                         </div>
                     </div>
                     
@@ -2074,104 +2174,122 @@ IF (empty(@crmId)) THEN
           
 
                  </div>
-               <input name="submittedInterests" type="hidden" value="true"><br>
-                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
-                <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br>
+                <input name="submittedInterests" type="hidden" value="true"><br>
+                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
+                <input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+                <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
             
               
-                 <div class="text-end">
-                  <button type="submit" class="btn btn-success"id="interest-submit" name="button">حفظ</button>  
+                 <div class="text-start mt-5">
+                  <button type="submit" class="btn"id="interest-submit" name="button">حفظ</button>  
                  </div> 
                 </form>
-                 </div>  
+                 </div>   
             
-
-               %%[
-        IF RequestParameter("submittedInterests") == "true" then
-          SET @sfid = RequestParameter("crmId")
-          SET @guestId = RequestParameter("guestId")
+              
           
-           SET @primaryReasonToVisitValue = CONCAT(
-          Iif(RequestParameter("reason1") == "on", "Fun family activities;", ""),
-          Iif(RequestParameter("reason2") == "on", "It's on my Dubai bucket list;", ""),
-          Iif(RequestParameter("reason3") == "on", "I love rides and theme parks;", ""),
-          Iif(RequestParameter("reason4") == "on", "I want to celebrate my birthday;", ""),
-          Iif(RequestParameter("reason5") == "on", "I am a regular (Annual Pass member)", ""),
-        )  
-         if not Empty(@primaryReasonToVisitValue) then
-          SET @updateRecord = UpdateSingleSalesforceObject(
-              "Guest_Subscription__c", @guestId,
-              "Primary_reason_for_your_visit_Legoland__c", @primaryReasonToVisitValue)
-          else
-            SET @updateRecord = UpdateSingleSalesforceObject(
-              "Guest_Subscription__c", @guestId,
-              "fieldsToNull", "Primary_reason_for_your_visit_Legoland__c")
-
-         ENDIF
-        
-         SET @oftenVisitValue = RequestParameter("visit")
-         
-         IF @oftenVisitValue == 'every week' THEN
-        SET @OftenVisitUpdation = 'every week'
-        ELSEIF @oftenVisitValue == 'every month' THEN
-        SET @OftenVisitUpdation = 'every month'
-        ELSEIF @oftenVisitValue == 'once a year' THEN
-        SET @OftenVisitUpdation = 'once a year'
-        ELSEIF @oftenVisitValue == 'two times per year' THEN
-        SET @OftenVisitUpdation = 'two times per year'
-        ELSEIF @oftenVisitValue == 'every two years' THEN
-        SET @OftenVisitUpdation = 'every two years'
-        ENDIF
-         
-          SET @likeMostAboutPreferences = CONCAT(
-          Iif(RequestParameter("like1") == "on", "The rides;", ""),
-          Iif(RequestParameter("like2") == "on", "Live entertainment;", ""),
-          Iif(RequestParameter("like3") == "on", "Food and restaurants;", ""),
-          Iif(RequestParameter("like4") == "on", "Events;", ""),
-          Iif(RequestParameter("like5") == "on", "Hotels and resorts", ""),
-        )  
+        %%[
+IF RequestParameter("submittedInterests") == "true" then
+    SET @sfid = RequestParameter("crmId")
+    SET @guestId = RequestParameter("guestId")
+    SET @emailContact = RequestParameter("emails")
+    set @concatedString = Concat("It", "'")
+    set @finalConcatedString = Concat(@concatedString,"s on my Dubai bucket list;")
+    SET @oftenVisitValue = RequestParameter("visit")
     
     
-        if not Empty(@likeMostAboutPreferences) then
-          SET @updateRecord = UpdateSingleSalesforceObject(
-              "Guest_Subscription__c", @guestId,
-              "Like_the_most_about_Legoland__c", @likeMostAboutPreferences)
-          else
-            SET @updateRecord = UpdateSingleSalesforceObject(
-              "Guest_Subscription__c", @guestId,
-              "fieldsToNull", "Like_the_most_about_Legoland__c")
+    /* Priyanka 23 Feb, multipicklist changes */
+    
+    SET @primaryReasonPreferences = CONCAT(
+      Iif(RequestParameter("reason1") == "on", "Fun family activities;", ""),
+      Iif(RequestParameter("reason2") == "on", @finalConcatedString, ""),
+      Iif(RequestParameter("reason3") == "on", "I love rides and theme parks;", ""),
+      Iif(RequestParameter("reason4") == "on", "I want to celebrate my birthday;", ""),
+      Iif(RequestParameter("reason5") == "on", "I am a regular (Annual Pass member)", ""),
+    )  
 
-         ENDIF
-          IF NOT Empty(@sfid) THEN
+ if not Empty(@primaryReasonPreferences) then
+  SET @updateRecord = UpdateSingleSalesforceObject(
+      "Guest_Subscription__c", @guestId,
+      "What_Is_primary_reason_for_your_visit__c", @primaryReasonPreferences)
+  else
+    SET @updateRecord = UpdateSingleSalesforceObject(
+      "Guest_Subscription__c", @guestId,
+      "fieldsToNull", "What_Is_primary_reason_for_your_visit__c")
+
+ endif 
+ 
+ 
+  SET @likeMostAboutPreferences = CONCAT(
+      Iif(RequestParameter("like1") == "on", "The rides;", ""),
+      Iif(RequestParameter("like2") == "on", "Live entertainment;", ""),
+      Iif(RequestParameter("like3") == "on", "Food and restaurants;", ""),
+      Iif(RequestParameter("like4") == "on", "Events;", ""),
+      Iif(RequestParameter("like5") == "on", "Hotels and resorts", ""),
+    )  
+    
+    
+    if not Empty(@likeMostAboutPreferences) then
+  SET @updateRecord = UpdateSingleSalesforceObject(
+      "Guest_Subscription__c", @guestId,
+      "What_do_you_like_the_most_about__c", @likeMostAboutPreferences)
+  else
+    SET @updateRecord = UpdateSingleSalesforceObject(
+      "Guest_Subscription__c", @guestId,
+      "fieldsToNull", "What_do_you_like_the_most_about__c")
+
+ endif 
+    
+
+    IF @oftenVisitValue == 'Every week' THEN
+        SET @OftenVisitUpdation = 'Every week'
+    ELSEIF @oftenVisitValue == 'Every month' THEN
+        SET @OftenVisitUpdation = 'Every month'
+    ELSEIF @oftenVisitValue == 'Once a year' THEN
+        SET @OftenVisitUpdation = 'Once a year'
+    ELSEIF @oftenVisitValue == 'Two times per year' THEN
+        SET @OftenVisitUpdation = 'Two times per year'
+    ELSEIF @oftenVisitValue == 'Every two years' THEN
+        SET @OftenVisitUpdation = 'Every two years'
+    ENDIF
+    
+   
+    
+    IF NOT Empty(@sfid) THEN
    
 
-                SET @updateRecords = UpdateSingleSalesforceObject(
-                "Guest_Subscription__c", @guestId, 
-                "How_often_do_you_visit_Legoland__c", @OftenVisitUpdation
-                )
-
-                
-          ENDIF
-         
+   SET @updateRecords = UpdateSingleSalesforceObject(
+    "Guest_Subscription__c", @guestId, 
+    "How_often_do_you_visit_this_asset__c", @OftenVisitUpdation,
+    )
     
-    set @communications = '#communications'
+   
+                                        
+
+    
+    
+    ENDIF
+    
+    
+  set @communications = '#communications'
+
                                    if empty(@sfid) OR IsNull(@sfid) then
                                       Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
                                    ELSE
                                       Set @ampError = ''
                                    ENDIF
-                                   Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","InterestPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+                                   Set @p= InsertData("PreferencesLog_Arabic_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","InterestPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
                                    
                                    if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.legoland.ae/LLQA_CPC_Arabic?sfid=", Base64Encode(@sfid), "#communications"))
+                                      Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/cpc_dpr_ar_qa?sfid=", Base64Encode(@sfid), "#communications"))
                                    ELSE
-                                      Redirect(CONCAT(CloudPagesURL(3379),@communications))
+                                      Redirect(CONCAT(CloudPagesURL(3141),@communications))
                                    ENDIF
     
-      ENDIF
+     
+            
+ENDIF
 ]%%
-          
-        
 
               
         </div>
@@ -2182,43 +2300,44 @@ IF (empty(@crmId)) THEN
           <div class="wrapper wrapper--w700">
             <form class="preferences-form" action="" method="post">
                <!-- Second -->
-                 <div class="hear-about radio-wrapper radio-width">
-               <h4 class="pt-4 pb-3">ما الذي تريد أن تسمع عنه؟</h4>
+                 <div class="hear-about">
+               <h4 class="pt-4 pb-3">ما الذي تريد أن تسمع عنه؟ </h4>
                <div class="form-check">
-               <label class="form-check-label" for="informCheck11">
-                   العروض والحملات الترويجية
+                   <input class="form-check-input" type="checkbox" value="%%=v(@offersAndPromotions)=%%" id="informCheck11"  name="hearOffers" %%=IIF(@offersAndPromotions =='True' ,'checked', "" )=%%>
+                   <label class="form-check-label" for="informCheck11">
+                    العروض والحملات الترويجية
                    </label>
-                   <input class="form-check-input" type="checkbox" value="%%=v(@promotionaloffersdeals)=%%" id="informCheck11"  name="hearOffers" %%=IIF(@promotionaloffersdeals =='True' ,'checked', "" )=%% >
                </div>
                <div class="form-check">
+                   <input class="form-check-input" type="checkbox" value="%%=v(@upcomingEventsAndFamilies)=%%" id="informCheck12"  name="hearEvents" %%=IIF(@upcomingEventsAndFamilies =='True' ,'checked', "" )=%%>
                    <label class="form-check-label" for="informCheck12">
-                   الفعاليات القادمة للعائلات
+                    الفعاليات القادمة للعائلات
                    </label>
-                   <input class="form-check-input" type="checkbox" value="%%=v(@annualpassvipoffers)=%%" id="informCheck12"  name="hearEvents" %%=IIF(@annualpassvipoffers =='True' ,'checked', "" )=%%>
                </div>
                <div class="form-check">
+                   <input class="form-check-input" type="checkbox" value="%%=v(@newRidesAndEntertainement)=%%" id="informCheck13"  name="newRides" %%=IIF(@newRidesAndEntertainement =='True' ,'checked', "" )=%%>
                    <label class="form-check-label" for="informCheck13">
                     جولات وانشطة ترفيهية جديدة
                    </label>
-                   <input class="form-check-input" type="checkbox" value="%%=v(@weeklyannouncements)=%%" id="informCheck13"  name="hearNews" %%=IIF(@weeklyannouncements =='True' ,'checked', "" )=%%>
                </div>
                <div class="form-check">
+                   <input class="form-check-input" type="checkbox" value="%%=v(@newFoodAndRestaurants)=%%" id="informCheck14"  name="newFood" %%=IIF(@newFoodAndRestaurants =='True' ,'checked', "" )=%%>
                    <label class="form-check-label" for="informCheck14">
-                    مأكواتت و مطاعم جديدة
+                    مأكواتت و مطاعم جديدة 
                    </label>
-                   <input class="form-check-input" type="checkbox" value="%%=v(@newproductoffering)=%%" id="informCheck14"  name="newProduct" %%=IIF(@newproductoffering =='True' ,'checked', "" )=%%>
-                </div>
+               </div>
                <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="%%=v(@hotelsNdResorts)=%%" id="informCheck15"  name="hotelsResorts" %%=IIF(@hotelsNdResorts =='True' ,'checked', "" )=%%>
                 <label class="form-check-label" for="informCheck15">
-                 الفنادق والمنتجعات
+                  الفنادق والمنتجعات
+
                 </label>
-                <input class="form-check-input" type="checkbox" value="%%=v(@latestnews)=%%" id="informCheck15"  name="hearOtherParks" %%=IIF(@latestnews =='True' ,'checked', "" )=%%>
             </div>
                     <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="%%=v(@customerSurvey)=%%" id="informCheck16"  name="cutomerSurvey" %%=IIF(@customerSurvey =='True' ,'checked', "" )=%%>
                 <label class="form-check-label" for="informCheck16">
                  استبيان العملاء
                 </label>
-                <input class="form-check-input" type="checkbox" value="%%=v(@customerSurvey)=%%" id="informCheck16"  name="hearSurvey" %%=IIF(@customerSurvey =='True' ,'checked', "" )=%%>
             </div>
              </div>
  
@@ -2226,122 +2345,107 @@ IF (empty(@crmId)) THEN
               <button type="submit" class="btn btn-orange"id="communications-submit" name="button">حفظ</button>
 
           </div>
-              <input name="submittedCommunications" type="hidden" value="true">
-                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
-              <input name="guestId" id="guestId" type="hidden" value="%%=v(@Id)=%%"><br>
+               <input name="submittedCommunications" type="hidden" value="true">
+                                <input name="crmId" id="crmId" type="hidden" value="%%=v(@crmId)=%%">
+              <input name="guestId" id="guestId" type="hidden" value="%%=v(@Id)=%%">
+              <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
            </form>
             <hr>
-            %%[
+          
+       %%[
                                 IF RequestParameter("submittedCommunications")==true then
-                                
-                                    SET @sfid = RequestParameter("crmId")
+                                     SET @sfid = RequestParameter("crmId")
                                     SET @guestId = RequestParameter("guestId")
-                                    
-                                    set @Updatedpromotionaloffersdeals =  RequestParameter("hearOffers")
-                                    set @Updatedannualpassvipoffers=  RequestParameter("hearEvents")
-                                    set @Updatedweeklyannouncements =  RequestParameter("hearNews")
-                                    set @Updatednewproductoffering =  RequestParameter("newProduct")
-                                    set @Updatedlatestnews =  RequestParameter("hearOtherParks")
-                                    set @UpdatedcustomerSurvey =  RequestParameter("hearSurvey")
-                                    
+                                    SET @emailContact = RequestParameter("emails")
+                                    set @UpdatedOffersAndPromotions =  RequestParameter("hearOffers")
+                                    set @UpdatedUpcomingEventsAndFamilies =  RequestParameter("hearEvents")
+                                    set @UpdatedNewRidesAndEntertainement =  RequestParameter("newRides")
+                                    set @UpdatedNewFoodAndRestaurants =  RequestParameter("newFood")
+                                    set @UpdatedHotelsAndResort =  RequestParameter("hotelsResorts")
+                                    set @UpdatedCustomerSurvey =  RequestParameter("cutomerSurvey")
                                     IF NOT Empty(@sfid) THEN
                                     SET @updateRecord = UpdateSingleSalesforceObject(
                                     "Guest_Subscription__c", @guestId,
-                                    "Offers_and_Promotions__c", IIF(EMPTY(@Updatedpromotionaloffersdeals), 'False', 'True'), 
-                                    "Upcoming_events_for_families__c", IIF(EMPTY(@Updatedannualpassvipoffers), 'False', 'True'),
-                                    "New_rides_and_entertainment__c", IIF(EMPTY(@Updatedweeklyannouncements), 'False', 'True'),
-                                    "New_food_and_restaurants__c", IIF(EMPTY(@Updatednewproductoffering), 'False', 'True'),
-                                    "Hotels_and_resorts__c", IIF(EMPTY(@Updatedlatestnews), 'False', 'True'),
-                                    "Customer_Survey__c",IIF(EMPTY(@UpdatedcustomerSurvey), 'False', 'True')
+                                    "Offers_and_Promotions__c", IIF(EMPTY(@UpdatedOffersAndPromotions), 'False', 'True'), 
+                                    "New_rides_and_entertainment__c", IIF(EMPTY(@UpdatedNewRidesAndEntertainement), 'False', 'True'),
+                                    "New_food_and_restaurants__c", IIF(EMPTY(@UpdatedNewFoodAndRestaurants), 'False', 'True'),
+                                    "Hotels_and_resorts__c", IIF(EMPTY(@UpdatedHotelsAndResort), 'False', 'True'),
+                                    "Customer_Survey__c", IIF(EMPTY(@UpdatedCustomerSurvey), 'False', 'True'),
+                                    "Upcoming_events_for_families__c",IIF(EMPTY(@UpdatedUpcomingEventsAndFamilies), 'False', 'True')
                                 )
-                                
-                                
-                                set @thankYouPage = '#ThankYou'
+                                 set @thankYouPage = '#ThankYou'
                                 if empty(@sfid) OR IsNull(@sfid) then
                                       Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
                                    ELSE
                                       Set @ampError = ''
                                    ENDIF
-                                       Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                               
+                                       Set @p= InsertData("PreferencesLog_Arabic_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
                                if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.legoland.ae/ThankYou_LL_Arabic_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+                                      Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/ThankYou_DPR_AR_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
                                ELSE
-                                      Redirect(CONCAT(CloudPagesURL(3376),@thankYouPage))
+                                      Redirect(CONCAT(CloudPagesURL(3187),@thankYouPage))
                               ENDIF
-                                
-
+                                  
                                 ENDIF
                                 ENDIF
                         ]%%
             
-            
-   <!--channel preference block-->
-
-   <form class="preferences-form" action="" method="post">
-    <!-- Second -->
-        <div class="channel radio-wrapper radio-width">
-        <h4 class="pt-4 pb-3">كيف يمكننا التواصل؟</h4>
-            <div class="form-check">
-                <label class="form-check-label" for="emailPref">
-                البريد الإلكتروني
-                </label>
-                <input class="form-check-input" type="checkbox" id="emailPref" name="EmailPref" %%=IIF(@emailPref =='True' ,'checked', "" )=%% >
-            </div>
-            <div class="form-check">
-            <label class="form-check-label" for="WhatsAppPref">
-                    عن طريق التطبيق واتساب.
-                </label>
-                <input class="form-check-input" type="checkbox" id="WhatsAppPref" name="WhatsAppPref" %%=IIF(@WhatsAppPref =='True' ,'checked', "" )=%%>
-            </div>
-            <div class="form-check">
-                <label class="form-check-label" for="smsPref">
-                    رسالة قصيرة
-                </label>
-                <input class="form-check-input" type="checkbox" id="smsPref" name="smsPref" 
-                        %%=IIF(@smsPref=='True' ,'checked', "" )=%%>
-            </div>
-        </div>
-   
-        <div class="pref-btn mt-5">
-            <button type="button" name="button" class="btn btn-orange channelPreference-btn"
-                onclick="channelPreference()" id="channelPreferencess">حفظ</button>
+               
           
-          <input name="submittedChannelPref" type="hidden" value="true">
-            <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
-             <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br> 
-        </div>
-  </form>
-<!-- thank you pop up -->
-  <div class="box-form mt-5" id="channel-preference" style="display:none;">
-   
-        <span class="close-buttonCM" style="
-            text-align: right;
-            font-size: 30px;
-            position: relative;
-            right: 15px;
-            top: 0;
-            cursor: pointer;                                                           
-            color:#ffd400;">×</span>
-        <div class="container">
-            <div class="unsubscribe-wrapper form group">
-                <div class="thanYou-img mb-2">
-                    <img src="https://image.explore.legoland.ae/lib/fe30117373640479741375/m/1/738f6fca-b293-4bd7-8786-8535af6bde1b.png" alt="" class="banner-bg-img">
-                </div>
-                <div class="thankYou-text">
+              <!--channel preference block-->
+                    <form class="channel-preferences-form" action="" method="post">
+                        <!-- Third -->
+                        <div class="channel">
+                            <h4 class="pt-4 pb-3">كيف يمكننا التواصل؟</h4>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="emailPref" name="emailPref" %%=IIF(@emailPref=='True' ,'checked', "" )=%%>
+                                <label class="form-check-label" for="emailPref">
+                                    البريد الإلكتروني
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="WhatsAppPref" name="WhatsAppPref" %%=IIF(@WhatsAppPref=='True' ,'checked', "" )=%%>
+                                <label class="form-check-label" for="WhatsAppPref">
+                                    عن طريق التطبيق واتساب.
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="smsPref" name="smsPref" 
+                                       %%=IIF(@smsPref=='True' ,'checked', "" )=%%>
+                                <label class="form-check-label" for="smsPref">
+                                    رسالة قصيرة
+                                </label>
+                            </div>
+                        </div>
+                        <div class="pref-btn mt-5">
+                            <button type="button" name="button" class="btn btn-orange channelPreference-btn" id="channel-submit" onclick="channelPreference()">حفظ</button>
+                        </div>
+                        <input name="submittedChannelPref" type="hidden" value="true">
+                        <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+                        <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br>
+                    </form>
+                    <!-- thank you pop up -->
+                    <div class="box-form mt-5" id="channel-preference">
+                        <span class="close-buttonCM" style=" text-align: right; font-size: 30px; position: relative; right: 100%; top: 0; cursor: pointer; color:#ee5f02;">×</span>
+                        <div class="container">
+                            <div class="channelpreference-wrapper">
+                                <div class="thanYou-img mb-2">
+                                    <img src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/50e3c436-f935-4b74-8c1b-2936089ef986.png" alt="" class="banner-bg-img">
+                                </div>
+                                <div class="thankYou-text">
+                                    <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم تحديث تفضيلات اشتراك القناة الخاصة بك بنجاح. </p>
+                                  <p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-top:0rem;">تم تحديث خيارات اشتراكك على قنوات التواصل بنجاح .إذا كنت ترغب في استلام اتصالاتنا مجددا، يرجى الاشتراك عبر<a href="https://www.dubaiparksandresorts.com/ar" style=
+"color:#212529;text-decoration: underline;" target="_blank"> موقعنا الإلكتروني</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- channel preference block end -->
 
-                    <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم تحديث تفضيلات اشتراك القناة الخاصة بك بنجاح.</p>  
-                  <p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold;padding-top: 0;">تم تحديث خيارات اشتراكك على قنوات التواصل بنجاح .إذا كنت ترغب في استلام اتصالاتنا مجددا، يرجى الاشتراك عبر <a href="https://www.dubaiparksandresorts.com/en/legoland-dubai" style=
-"color:#212529;text-decoration: underline;" target="_blank">موقعنا الإلكتروني</a></p>
-                </div>
-            </div>
-        </div>                      
-    </div>
- <!-- channel preference block end -->
             
             
             <div class="mt-5 pl-2" style="font-size: 16px;">
-            <p>إذا كنت ترغب في إلغاء الاشتراك من كافة منصات تواصل دبي باركس آند ريزورتس، يرجى الضغط على "إلغاء الاشتراك".</p>
+              <p>إذا كنت ترغب في إلغاء الاشتراك من كافة منصات تواصل دبي باركس آند ريزورتس، يرجى الضغط على "إلغاء الاشتراك".</p>
             </div>
            <div class="unsrb-btn mt-5">
       <button type="button" name="button" class="btn btn-orange unsubscribe-btn"
@@ -2349,52 +2453,54 @@ IF (empty(@crmId)) THEN
   </div>
    <!-- unsubscribe Reason options -->
            <div class="box-form mt-5" id="unsubscribe-reason">
-               <form class="comment-form radio-wrapper radio-width" action="" method="post">
+               <form class="comment-form" action="" method="post">
                  <span class="close-button" style="
 text-align: right;
 font-size: 30px;
 position: relative;
-left: 100%;
+right: 100%;
 top: 0;
 cursor: pointer;                                                           
-color:#ffd400;">×</span>
+color:#ee5f02;">×</span>
                   <div class="container">
       <div class="unsubscribe-wrapper form group">
         <div class="thanYou-img mb-2">
-            <img src="https://image.explore.legoland.ae/lib/fe30117373640479741375/m/1/738f6fca-b293-4bd7-8786-8535af6bde1b.png" alt="" class="banner-bg-img">
+           <img src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/50e3c436-f935-4b74-8c1b-2936089ef986.png" alt="" class="banner-bg-img">
         </div>
       <div class="thankYou-text">
        
-            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم إلغاء اشتراكك بنجاح</p>  
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم إلغاء اشتراكك بنجاح </p>  
       </div>
     
     </div>
     </div>                      
-           
+               
                    <div class="orange-notice">
-                   من المؤسف أن نراك تذهب
-                    </div>
+                       من المؤسف أن نراك تذهب
+
+                   </div>
                    <p style="font-size: 18px;">أخبارنا عن سبب إلغاء اشتراكك لمساعدتنا على تحسين خدماتنا</p>
                    <div class="form-check mb-2">
-                       <label class="form-check-label" for="chck1">الرسائل الإلكترونية متكررة للغاية</label>
+
                        <input class="form-check-input" type="checkbox" id="chck1" value="False" name="unsubFreq" %%=IIF(@emailsTooFrequent =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="chck1">الرسائل الإلكترونية متكررة للغاية</label>
                    </div>
                    <div class="form-check mb-2">
-                   <label class="form-check-label" for="chck2">المحتوى ليس له صلة</label>
                        <input class="form-check-input" type="checkbox" id="chck2" value="False" name="unsubRelevance" %%=IIF(@contentIsNotRelevant =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="chck2">المحتوى ليس له صلة</label>
                    </div>
                    <div class="form-check mb-2">
-                   <label class="form-check-label" for="chck3">لست مقيماً في دبي</label>
                        <input class="form-check-input" type="checkbox" id="chck3" value="False" name="unsubNoDubai" %%=IIF(@noLongerInDubai =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="chck3">لست مقيماً في دبي</label>
                    </div>
                    <div class="form-check">
-                   <label class="form-check-label" for="chck4">توقف مؤقت لمدة 30 يوما</label>
                     <input class="form-check-input" type="checkbox" id="chck4" value="False" name="unsubTemp" %%=IIF(@tempPause =='True' ,'checked', "" )=%%>
+                    <label class="form-check-label" for="chck4">توقف مؤقت لمدة 30 يوما</label>
                 </div>
                    <div class="form-check mt-2">
-                   <label class="form-check-label" for="myCheck1">أسباب أخرى (يرجى تحديد السبب)</label>
                        <input class="form-check-input" type="checkbox" id="myCheck1" value="False"
                            onclick="addbox1()" name="unsubOther" %%=IIF(@otherSpecify =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="myCheck1">أسباب أخرى (يرجى تحديد السبب)</label>
                    </div>
                    <textarea name="nameReason" rows="6" cols="80" id="area1"
                        class="form-control mt-3" value="%%=v(@reasonForUnsub)=%%" placeholder="Tell us more">%%=v(@reasonForUnsub)=%%</textarea>
@@ -2402,16 +2508,17 @@ color:#ffd400;">×</span>
                    <div class="com-btn mt-5">
                     <button type="submit" class="btn btn-orange"id="communications-submitbtn" name="button">حفظ</button>
       <input name="submittedUnsub" type="hidden" value="true">
-                               <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
-             <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br> 
+                                <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+             <input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+             <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
                 </div>
              </form>
-                   %%[
+             %%[
              
                                 IF RequestParameter("submittedUnsub")==true then
-                                    SET @sfid = RequestParameter("crmId")
+                                  SET @sfid = RequestParameter("crmId")
                                     SET @guestId = RequestParameter("guestId")
-
+                                    SET @emailContact = RequestParameter("emails")
                                     SET @unsubTempBox = RequestParameter("unsubTemp")
                                     SET @unsubFreqBox = RequestParameter("unsubFreq")
                                     SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
@@ -2419,11 +2526,9 @@ color:#ffd400;">×</span>
                                     SET @unsubOtherBox = RequestParameter("unsubOther")
                                     SET @unsubOtherComments = RequestParameter("nameReason")
                                     SET @currentDate = Now()
-
                                     IF NOT Empty(@sfid) THEN
-                                    
                                     IF NOT Empty(@unsubTempBox) THEN
-                                    
+                                    /* made changes on 14 feb - add pub list to resub in CRM */
                                     SET @updateRecord = UpdateSingleSalesforceObject(
                                     "Guest_Subscription__c", @guestId,
                                     "Temporary_Pause_30_Days__c", 'true',
@@ -2435,20 +2540,18 @@ color:#ffd400;">×</span>
                                     "Status__c", "Subscribed",
                                     "Offers_and_Promotions__c","True",
                                     "Upcoming_events_for_families__c","True",
-                                    "New_rides_and_entertainment__c","True",
                                     "New_food_and_restaurants__c","True",
+                                    "New_rides_and_entertainment__c","True",
                                     "Hotels_and_resorts__c","True",
                                     "Customer_Survey__c","True",
                                     "Email__c","True",
                                     "WhatsApp__c","True",
-                                    "SMS__c","True",
+                                    "SMS__c", "True"
                                     )
-                                    
                                     ENDIF
-                                    
                                     IF Empty(@unsubTempBox) THEN
-                                    
-
+                                     /* made changes on 14 feb - add pub list to unsub in CRM */
+                                    /*Removed the code for unchecking the publication list from CRM - 19th Feb24 */
                                     SET @updateRecord = UpdateSingleSalesforceObject(
                                     "Guest_Subscription__c", @guestId,
                                     "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'false', 'true'),
@@ -2460,19 +2563,10 @@ color:#ffd400;">×</span>
                                     "Status__c", "Unsubscribed"
                                     )
                                     ENDIF
-                                   
-                                   SET @contactRows = RetrieveSalesforceObjects("Contact", "Email", "Id", "=", @sfid)
-                                IF RowCount(@contactRows) == 1 then
-                                   SET @contactRow = Row(@contactRows, 1)
-                                   SET @emailContact = Field(@contactRow, "Email")
-                                ENDIF
-                                    
                                      IF NOT Empty(@unsubTempBox) THEN
                                      SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email",
-                                                            @emailContact,"DateAdded",@currentDate,"ContactId",@sfid, "UnsubscribeType","Individual","Asset","LL")
+                                                            @emailContact,"DateAdded",@currentDate,"ContactId",@sfid, "UnsubscribeType","Individual","Asset","DPR")
                                     ENDIF
-                                    
-                                    
                                     IF Empty(@unsubTempBox) THEN
                                     set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
                                     set @count = rowcount(@rowFound)
@@ -2488,23 +2582,22 @@ color:#ffd400;">×</span>
                                     "Reason_of_Unsubscribe__c", @unsubOtherComments
                                     )
                                     /*if a sub. comes back and uncheck temp pause*/
+                                    endif
                                     ENDIF
-                                    ENDIF
-            
-                                  set @thankYouPage = '#ThankYou'
+                                   /*Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/Bhavya_ThankYou_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))*/
+                                    set @thankYouPage = '#ThankYou'
                                     if empty(@sfid) OR IsNull(@sfid) then
                                       Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
                                    ELSE
                                       Set @ampError = ''
                                    ENDIF
-                                       Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                                    /*Redirect(CONCAT(CloudPagesURL(3376),@thankYouPage))*/
+                                       Set @p= InsertData("PreferencesLog_Arabic_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+                                    /*Redirect(CONCAT(CloudPagesURL(2737),@thankYouPage))*/
                                     if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.legoland.ae/ThankYou_LL_Arabic_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+                                      Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/ThankYou_DPR_AR_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
                                      ELSE
-                                            Redirect(CONCAT(CloudPagesURL(3376),@thankYouPage))
+                                            Redirect(CONCAT(CloudPagesURL(3187),@thankYouPage))
                                     ENDIF
-                                    
                                 ENDIF
                                 ENDIF
 
@@ -2513,74 +2606,90 @@ color:#ffd400;">×</span>
            </div>
 
             <div class="mt-5 pl-2" style="font-size: 16px;">
-              <p>إذا كنت ترغب في إلغاء اشتراكك من جميع رسائل التسويق لدبي القابضة للترفيه، التي تشمل جميع <a href="https://eur03.safelinks.protection.outlook.com/?url=https%3A%2F%2Fprivacy.dubaiholding.com%2Fen%2Fdata-controllers-list%2Fdubai-holding-entertainment-llc&data=05%7C02%7CFlorian.Aubat%40dhentertainment.ae%7C7a65fcdf90e541785a7e08dccb397be0%7Ceee3385e742f4e2eb130e496ed7d6a49%7C0%7C0%7C638608694981992397%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&sdata=E6lS0jEueeMxMg2p79r%2FDVLTu9sUuqDypjndDyEIwZU%3D&reserved=0" style="color:#212529;text-decoration: underline;" target="_blank">علامتنا </a> التجارية، يرجى الضغط على "إلغاء الاشتراك في الكل </p></p>
-
+<p> إذا كنت ترغب في إلغاء اشتراكك من جميع رسائل التسويق لدبي القابضة للترفيه، التي تشمل جميع  <a href="https://privacy.dubaiholding.com/ar/data-controllers-list/dubai-holding-entertainment-llc" style="color:#212529;"> علامتنا </a> التجارية، يرجى الضغط على "إلغاء الاشتراك في الكل </p>
             </div>
             <div class="unsrb-all-btn mt-5">
-              <button type="button" name="button" class="btn btn-orange unsubscribe-all-btn" id="unsubscribeAllClick" onclick="unsubscribeAllClick()">إلغاء اشتراك الكل</button>
+              <button type="button" name="button" class="btn btn-orange unsubscribe-all-btn" onclick="unsubscribeAllClick()" id="unsubscribeAllClick">إلغاء اشتراك الكل</button>
           </div>
-          
+               <!-- <input name="submittedCommunications" type="hidden" value="true">
+               <input name="crmId" type="hidden" value=""> -->
 
+
+
+  <!-- <input name="submittedCommunications" type="hidden" value="true">
+  <input name="crmId" type="hidden" value=""> -->
              
                   <!-- Unsubscribe All reason options -->
            <div class="box-form mt-5" id="unsubscribe-all-reason">
              
-            <form class="comment-form radio-wrapper radio-width" action="" method="post">
-              <span class="close-buttonAll" style="text-align: right;font-size: 30px;position: relative;left: 100%;top: 0;cursor: pointer;color:#ffd400;">×</span>
-               <div class="container">
+            <form class="comment-form" action="" method="post">
+              <span class="close-buttonAll" style="
+text-align: right;
+font-size: 30px;
+position: relative;
+right: 100%;
+top: 0;
+cursor: pointer;                                                           
+color:#ee5f02;">×</span>
+              <div class="container">
       <div class="unsubscribe-wrapper form group">
         <div class="thanYou-img mb-2">
-            <img src="https://image.explore.legoland.ae/lib/fe30117373640479741375/m/1/738f6fca-b293-4bd7-8786-8535af6bde1b.png" alt="" class="banner-bg-img">
+           <img src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/50e3c436-f935-4b74-8c1b-2936089ef986.png" alt="" class="banner-bg-img">
         </div>
       <div class="thankYou-text">
        
-            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم إلغاء اشتراكك بنجاح</p>  
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">لقد تم إلغاء اشتراكك بنجاح </p>  
       </div>
     
     </div>
     </div>                      
-         
+               
                 <div class="orange-notice">
-                من المؤسف أن نراك تذهب
+                    من المؤسف أن نراك تذهب
 
                 </div>
-                <p style="font-size: 18px;">أخبارنا عن سبب إلغاء اشتراكك لمساعدتنا على تحسين خدماتنا</p>
-             <div class="form-check mb-2">
-                       <label class="form-check-label" for="chck_1">الرسائل الإلكترونية متكررة للغاية</label>
+               <p style="font-size: 18px;">أخبارنا عن سبب إلغاء اشتراكك لمساعدتنا على تحسين خدماتنا</p>
+               <div class="form-check mb-2">
+
                        <input class="form-check-input" type="checkbox" id="chck_1" value="False" name="unsubFreq" %%=IIF(@emailsTooFrequent =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="chck_1">الرسائل الإلكترونية متكررة للغاية</label>
                    </div>
                    <div class="form-check mb-2">
-                        <label class="form-check-label" for="chck_2">المحتوى ليس له صلة</label>
                        <input class="form-check-input" type="checkbox" id="chck_2" value="False" name="unsubRelevance" %%=IIF(@contentIsNotRelevant =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="chck_2">المحتوى ليس له صلة</label>
                    </div>
                    <div class="form-check mb-2">
-                        <label class="form-check-label" for="chck_3">لست مقيماً في دبي</label>
                        <input class="form-check-input" type="checkbox" id="chck_3" value="False" name="unsubNoDubai" %%=IIF(@noLongerInDubai =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="chck_3">لست مقيماً في دبي</label>
                    </div>
                    <div class="form-check">
-                   <label class="form-check-label" for="chck_4">توقف مؤقت لمدة 30 يوما</label>
                     <input class="form-check-input" type="checkbox" id="chck_4" value="False" name="unsubAllTemp" %%=IIF(@tempPause =='True' ,'checked', "" )=%%>
+                    <label class="form-check-label" for="chck_4">توقف مؤقت لمدة 30 يوما</label>
                 </div>
                    <div class="form-check mt-2">
-                   <label class="form-check-label" for="myCheck_1">أسباب أخرى (يرجى تحديد السبب)</label>
                        <input class="form-check-input" type="checkbox" id="myCheck_1" value="False"
                            onclick="addbox_1()" name="unsubOther" %%=IIF(@otherSpecify =='True' ,'checked', "" )=%%>
+                       <label class="form-check-label" for="myCheck_1">أسباب أخرى (يرجى تحديد السبب)</label>
                    </div>
                    <textarea name="nameReason" rows="6" cols="80" id="area_1"
                        class="form-control mt-3" value="%%=v(@reasonForUnsub)=%%" placeholder="Tell us more">%%=v(@reasonForUnsub)=%%</textarea>
+                    
+                 
+          
+            
                 <div class="com-btn mt-5">
                  <button type="submit" class="btn btn-orange"id="communications-submitbtn1" name="button">حفظ</button>
-<input name="unsubAll" type="hidden" value="true">
+   <input name="unsubAll" type="hidden" value="true">
                                 <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
-             <input name="guestId" type="hidden" value="%%=v(@Id)=%%"><br>
+             <input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+             <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
              </div>
                </form>
-             
-           %%[
+             %%[
                                 IF RequestParameter("unsubAll") == true then
                                 SET @sfid = RequestParameter("crmId")
                                 SET @guestId = RequestParameter("guestId")
-
+                                SET @emailContact = RequestParameter("emails")
                                 SET @unsubTempBox = RequestParameter("unsubAllTemp")
                                 SET @unsubFreqBox = RequestParameter("unsubFreq")
                                 SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
@@ -2588,22 +2697,14 @@ color:#ffd400;">×</span>
                                 SET @unsubOtherBox = RequestParameter("unsubOther")
                                 SET @unsubOtherComments = RequestParameter("nameReason")
                                 SET @currentDate = Now()
-                                SET @contactRows = RetrieveSalesforceObjects("Contact", "Email", "Id", "=", @sfid)
-                                IF RowCount(@contactRows) == 1 then
-                                   SET @contactRow = Row(@contactRows, 1)
-                                   SET @emailContact = Field(@contactRow, "Email")
-                                ENDIF
-                                
                                 IF NOT Empty(@unsubTempBox) THEN
                                    /* Subscribe from all guest subscriptions */
                                     SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
                                     SET @GDRowCount = RowCount(@GD)
-
                                     IF @GDRowCount > 0 THEN
                                         FOR @i = 1 TO @GDRowCount DO
                                             SET @GDRow = Row(@GD, @i)
                                             SET @GDID = Field(@GDRow, "Id")
-
                                             /* Update Status__c to "Unsubscribed" */
                                             SET @updateRecord = UpdateSingleSalesforceObject(
                                                 "Guest_Subscription__c", @GDID,
@@ -2616,32 +2717,24 @@ color:#ffd400;">×</span>
                                                 "Status__c", "Subscribed",
                                                 "Email__c","True",
                                                 "WhatsApp__c","True",
-                                                "SMS__c","True",
+                                                "SMS__c", "True"
                                             )
                                         NEXT @i
                                     ENDIF
-                                    
                                     /*Upsert data in Temp pause*/
-                                    SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email", @emailContact,"DateAdded",@currentDate,"ContactId",@sfid,"UnsubscribeType","All","Asset","LL")
-                                    
+                                    SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email", @emailContact,"DateAdded",@currentDate,"ContactId",@sfid,"UnsubscribeType","All","Asset","DPR")
                                     /*Upsert data in resub DE to resubscriber contact on enterprise level*/
-                                    
-                                    SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "SubsciberStatus", "Active", "Temp_30_Days", "True","Frequency","False","Relevance","False","Not_In_Dubai","False","Other","False")
-                                    /*output(concat("<br>resub: ",@resub))*/
-                                    
-                                      
+                                   SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "SubsciberStatus", "Active", "Temp_30_Days", "True","Frequency","False","Relevance","False","Not_In_Dubai","False","Other","False")
                                  ELSE
-                                 
                                     /* Unsubscribe from all guest subscriptions */
                                         SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
                                         SET @GDRowCount = RowCount(@GD)
-
                                         IF @GDRowCount > 0 THEN
                                             FOR @i = 1 TO @GDRowCount DO
                                                 SET @GDRow = Row(@GD, @i)
                                                 SET @GDID = Field(@GDRow, "Id")
-
                                                 /* Update Status__c to "Unsubscribed" */
+                                                /* made changes - add pub list to unsub in CRM */
                                                 SET @updateRecord = UpdateSingleSalesforceObject(
                                                     "Guest_Subscription__c", @GDID,
                                                     "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
@@ -2654,38 +2747,31 @@ color:#ffd400;">×</span>
                                                 )
                                             NEXT @i
                                         ENDIF
+                                        /* change made on 14 feb for storing unsub reason in DE */
                                         SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "Frequency", IIF(Empty(@unsubFreqBox), 'False', 'True'),"Relevance", IIF(Empty(@unsubRelevanceBox), 'False', 'True'),"Not_In_Dubai", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),"Other", IIF(Empty(@unsubOtherBox), 'False', 'True'),"Temp_30_Days","False")
                                         set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @sfid)
                                         set @count = rowcount(@rowFound)
                                         if @count > 0 then
                                            set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
                                         ENDIF
-                                    
                                 ENDIF
-                              
+                              /* Redirect to the thank you page */
+                              set @thankYouPage = '#ThankYou'
                               if empty(@sfid) OR IsNull(@sfid) then
                                       Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
                                    ELSE
                                       Set @ampError = ''
                                    ENDIF
-                                       Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                              
+                                       Set @p= InsertData("PreferencesLog_Arabic_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
                               if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.legoland.ae/ThankYou_LL_Arabic_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+                                      Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/ThankYou_DPR_AR_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
                                      ELSE
-                                            Redirect(CONCAT(CloudPagesURL(3376),@thankYouPage))
+                                            Redirect(CONCAT(CloudPagesURL(3187),@thankYouPage))
                                     ENDIF
-                              
-                              
                               ENDIF
 
                         ]%%
-             
-        </div>
-          
-           
-          
-                  
+        </div>   
           </div>
         </div>
       </div>
@@ -2697,46 +2783,46 @@ color:#ffd400;">×</span>
         <!-- laoder end -->     
 
 <!-- footer start -->
-  <footer>
+    <footer>
                 <div class="container">
                     <div class="row">
                         <div class="col-lg-3 col-md-3 col-sm-12 col-12">
-                             <a alias="DPR_link" class="logo-footer"href="https://www.dubaiparksandresorts.com/en" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/4e7abcfd-4466-4353-b1fe-03e7b1ea36ee.png"></a>
+                             <a alias="DPR_link" class="logo-footer"href="https://www.dubaiparksandresorts.com/ar" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/44a1fdfe-9986-4157-9713-d11214211a54.png"></a>
                         </div>
                         <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
                             <h4>معلومات</h4>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                                <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">شراء التذاكر</a></p>
+                                <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/ar/bookings?date=05/09/2024&park=All" target="_blank">شراء التذاكر</a></p>
                             </div>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                                <p><a alias="AnnualPass" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">تذكرة سنوية</a></p>
+                                <p><a alias="AnnualPass" href="https://www.dubaiparksandresorts.com/ar/annual-pass#594" target="_blank">تذكرة سنوية</a></p>
                             </div>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                              <p><a alias="Offers" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">العروض</a></p>
+                              <p><a alias="Offers" href="https://www.dubaiparksandresorts.com/ar/booking/tickets/" target="_blank">العروض</a></p>
                           </div>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p><a alias="Experience" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">الخبرات</a></p>
+                            <p><a alias="Experience" href="https://www.dubaiparksandresorts.com/ar/annual-pass#594" target="_blank">الخبرات</a></p>
                         </div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                          <p><a alias="ContactUs" href="https://www.dubaiparksandresorts.com/en/contact-us" target="_blank">اتصل بنا</a></p>
+                          <p><a alias="ContactUs" href="https://www.dubaiparksandresorts.com/ar/contact-us" target="_blank">اتصل بنا</a></p>
                       </div>
                         </div>
                         <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
                           <h4>قانوني</h4>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                              <p><a alias="Disclaimer" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">إخلاء المسؤولية</a></p>
+                              <p><a alias="Disclaimer" href="https://www.dubaiparksandresorts.com/ar/terms-and-conditions" target="_blank">إخلاء المسؤولية</a></p>
                           </div>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
                               <p><a alias="PrivacyPloicy" href="https://privacy.dubaiholding.com/privacy-notice/customers---dubai-holding-entertainment-llc" target="_blank">سياسة الخصوصية</a></p>
                           </div>
                           <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p><a alias="TermsAndCondition" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">الشروط والأحكام</a></p>
+                            <p><a alias="TermsAndCondition" href="https://www.dubaiparksandresorts.com/ar/terms-and-conditions" target="_blank">الشروط والأحكام</a></p>
                         </div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                          <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/en/cookie-policy" target="_blank">إشعار ملفات تعريف الارتباط</a></p>
+                          <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/ar/cookie-policy" target="_blank">إشعار ملفات تعريف الارتباط</a></p>
                       </div>
                       <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                        <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/en/copyright-trademark" target="_blank">حقوق الطبع والنشر والعلامة التجارية</a></p>
+                        <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/ar/copyright-trademark" target="_blank">حقوق الطبع والنشر والعلامة التجارية</a></p>
                     </div>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
@@ -2752,15 +2838,15 @@ color:#ffd400;">×</span>
                         <div class="col-lg-3 col-md-3 col-sm-12 col-12">
                             
                             <ul class="social-media-ul">
-                               <li><a alias="fb" conversion="false" data-linkto="https://" href="https://www.facebook.com/LEGOLANDDubai" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/90185405-937c-4d2f-b4ce-2fb03eea25af.png"></a>
+                                <li><a alias="fb" conversion="false" data-linkto="https://" href="https://www.facebook.com/DubaiParksandResorts" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/90185405-937c-4d2f-b4ce-2fb03eea25af.png"></a>
                                 </li>
-                                <li> <a alias="Insta" conversion="false" data-linkto="https://" href="https://www.instagram.com/legolanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/63c4ca71-5917-4a09-a0b5-b19cddb9a796.png"></a>
+                                <li> <a alias="Insta" conversion="false" data-linkto="https://" href="https://www.instagram.com/dubaiparksresorts/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/63c4ca71-5917-4a09-a0b5-b19cddb9a796.png"></a>
 
                                 </li>
-                                <li> <a alias="Tiktok" conversion="false" data-linkto="https://" href="https://www.tiktok.com/@legolanddubai?_t=8mAnKyaBuLq&_r=1" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/68336ff0-6304-4b6b-ab54-4191ce055806.png"></a>
+                                <li> <a alias="Tiktok" conversion="false" data-linkto="https://" href="https://www.tiktok.com/@dubaiparksandresorts" target="_blank" title=""><img alt="" data-assetid="92835" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/68336ff0-6304-4b6b-ab54-4191ce055806.png"></a>
 
                                 </li>
-                                <li class="youtube"> <a alias="Youtube" conversion="false" data-linkto="https://" href="https://www.youtube.com/c/legolanddubai" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/834b098b-afd8-41eb-bfe1-2e6faadc1fdf.png" ></a>
+                                <li class="youtube"> <a alias="Youtube" conversion="false" data-linkto="https://" href="https://www.youtube.com/user/dubaiparksandresorts" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/834b098b-afd8-41eb-bfe1-2e6faadc1fdf.png" ></a>
                                 </li>
                                
                             </ul>
@@ -2768,9 +2854,13 @@ color:#ffd400;">×</span>
                     </div>
                     <div class="row footer-row-2">
                       <div class="col-lg-8 col-md-8 col-sm-12 col-12 ">
-                        <p style="color: rgb(238, 238, 238); font-size: 10px; font-family: Arial, Helvetica, sans-serif; font-weight: normal;  text-align: left;line-height:12px">
-                        ©2024 مجموعة LEGO. جميع الحقوق محفوظة. ©2024 DWA LLC. جميع الحقوق محفوظة. ©2024 CPII. جميع الحقوق محفوظة.©2024 SPAI. جميع الحقوق محفوظة. ©2024 GHI. الفيلم © 2024 Lions Gate Ent. Inc. جميع الحقوق محفوظة.© متنزهات ومنتجعات دبي 2024. جميع الحقوق محفوظة.</p>
+                        <p style="color: rgb(238, 238, 238); font-size: 10px; font-family: Arial, Helvetica, sans-serif; font-weight: normal;  text-align: right;line-height:12px">
+                           ©2024 مجموعة LEGO. جميع الحقوق محفوظة. ©2024 DWA LLC. جميع الحقوق محفوظة. ©2024 CPII. جميع الحقوق محفوظة.
+<br> ©2024 SPAI. جميع الحقوق محفوظة.  ©2024 GHI. الفيلم © 2024 Lions Gate Ent. Inc. جميع الحقوق محفوظة.
+<br> © متنزهات ومنتجعات دبي 2024. جميع الحقوق محفوظة.</p>
                       </div>
+                     
+                     
                     <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
                       <h4>شركاء فخورون</h4>
                       <ul class="proud-partners">
@@ -2802,40 +2892,37 @@ color:#ffd400;">×</span>
                     <hr style="border-top: 1px solid #fff;">
                     <div class="row business-units">
                       <div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
-                        <a alias="Motiongate" href="https://www.dubaiparksandresorts.com/en/discover/motiongate/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/80e21d4a-8015-4a88-8e53-9b6a8a2589f6.png"></a>
+                        <a alias="Motiongate" href="https://www.dubaiparksandresorts.com/ar/motiongatetm-dubai" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/80e21d4a-8015-4a88-8e53-9b6a8a2589f6.png"></a>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
-                        <a alias="realmadrid" href="https://www.dubaiparksandresorts.com/en/realmadridworld" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/3ddd3b78-7e49-43f9-9977-680b228951d4.png" ></a>
+                        <a alias="realmadrid" href="https://www.dubaiparksandresorts.com/ar/realmadridworld" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/3ddd3b78-7e49-43f9-9977-680b228951d4.png" ></a>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
-                        <a alias="Legoland" href="https://www.dubaiparksandresorts.com/en/discover/legoland/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/a3fb0c99-87d8-4e23-ba20-31b4fb4350a3.png" ></a>
+                        <a alias="Legoland" href="https://www.dubaiparksandresorts.com/ar/zones?park=Legoland" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/a3fb0c99-87d8-4e23-ba20-31b4fb4350a3.png" ></a>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
-                        <a alias="RiverLand" href="https://www.dubaiparksandresorts.com/en/discover/riverland/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/127b8eec-1fde-4ccb-8930-2944082d420e.png" ></a>
+                        <a alias="RiverLand" href="https://www.dubaiparksandresorts.com/ar/riverland" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/127b8eec-1fde-4ccb-8930-2944082d420e.png" ></a>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
-                        <a alias="NeonGalaxy" href="https://www.dubaiparksandresorts.com/en/discover/neongalaxy/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/4032e27f-d4fe-48f8-8b0d-1832651bba8b.png" ></a>
+                        <a alias="NeonGalaxy" href="https://www.dubaiparksandresorts.com/ar/neon-galaxy-indoor-playworld" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/4032e27f-d4fe-48f8-8b0d-1832651bba8b.png" ></a>
                       </div>
                       <div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
-                        <a alias="Jumpx" href="https://www.dubaiparksandresorts.com/en/jumpx" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/37fbc2d9-e6f9-462b-adad-c6f7aa7f6703.png" ></a>
+                        <a alias="Jumpx" href="https://www.dubaiparksandresorts.com/ar/jumpx" target="_blank"><img alt="" data-assetid="" src="https://image.explore.dubaiparksandresorts.com/lib/fe3a117373640479751473/m/1/37fbc2d9-e6f9-462b-adad-c6f7aa7f6703.png" ></a>
                       </div>
                     </div>
                 </div>
             </footer>
       <!-- footer End -->                     
     <!-- Vendor JS-->
-     <script src="https://cloud.explore.legoland.ae/LL_bootstrap_Arabic_QA.min.js"></script>
-    <script src="https://cloud.explore.legoland.ae/LL_select2_Arabic_QA.min.js"></script>
-    <script src="https://cloud.explore.legoland.ae/LL_moment_Arabic_QA.min.js"></script>
-  
+     <script src="https://cloud.explore.dubaiparksandresorts.com/bootstrap.bundle.min_dpr_ar_qa"></script>
+    <script src="https://cloud.explore.dubaiparksandresorts.com/select2.min_ar.js"></script>
+    <script src="https://cloud.explore.dubaiparksandresorts.com/moment.min_arabic_QA"></script>
+    <script src="https://cloud.explore.dubaiparksandresorts.com/daterangepicker.js_DPR_Prod"></script>
 
     <!-- Main JS-->
-    <script src="https://cloud.explore.legoland.ae/LL_custom_Arabic_QA.js"></script>
-   
-  <script>
-  $("#profileCountry").select2();
-                          </script>
-                           <script>
+    <script src="https://cloud.explore.dubaiparksandresorts.com/custom_dpr_arabic_QA"></script>
+    <script src="https://cloud.explore.dubaiparksandresorts.com/global_dpr_arabic_QA"></script>
+    <script>
       $( document ).ready(function() {
     $('#customRange3').on('input', function(){
          v = $('#customRange3').val();
@@ -2950,9 +3037,12 @@ function handleNumOfKidsChange(numOfKids) {
                           <script>
         
       function kidsPrepopulation(){
-        console.log('inside fun08')
+        
+        console.log('inside fun22')
+   
         var rowCount = document.getElementById('numOfKids').value; 
-        console.log('row count - ' , rowCount)
+        console.log('rowCount-------  ',rowCount)
+       
         for(var i=0;i<=rowCount; i++){
           if(document.getElementById('kidName'+i) && document.getElementById('kidsName'+i)){
             document.getElementById('kidsName'+i).value = document.getElementById('kidName'+i).value;
@@ -2963,12 +3053,46 @@ function handleNumOfKidsChange(numOfKids) {
           if(document.getElementById('kidGen'+i) && document.getElementById('gender'+i)){
             document.getElementById('gender'+i).value = document.getElementById('kidGen'+i).value;
           }
-          if(document.getElementById('del'+i) && document.getElementById(i)){
-            document.getElementById(i).value = document.getElementById('del'+i).value;
+          if(document.getElementById('deletedKid'+i) && document.getElementById(i)){
+            document.getElementById(i).value = document.getElementById('deletedKid'+i).value;
           }
 
 
         }
+       /* console.log('deleted kids Id-----------',document.getElementById('DeletedKidsId').value)
+        var delIdBs=document.getElementById('DeletedKidsId').value;
+        //var rowCount = document.getElementById('numOfKids').value; 
+        var delId=delIdBs.split(",");
+        console.log('delId spliteeed-----------  ',delId)
+        var delIdLength= delId.length;
+        console.log('delIdLength-----------',delIdLength)
+        document.getElementById('DeletedKidsId').value  ="";
+        var check
+        for (var i=0;i<=delIdLength; i++){
+          check = 0;
+          console.log('Initial check value-----------  ',check)
+          console.log('del Id-----------  ',delId[i])
+          for (var j=0;j<=rowCount; j++){
+          if(delId[i]= j){
+            console.log('del Id innermost if-----------  ',delId[i])
+            check =1;
+            break;
+            }  
+          }
+          console.log('Before check If-----------  ',check)
+          if(check == 0){
+            console.log('after check If del id-----------  ',delId[i])
+          if(document.getElementById('DeletedKidsId').value  == ""){
+                                 document.getElementById('DeletedKidsId').value=delId[i];
+                               }
+                               else{
+                                 document.getElementById('DeletedKidsId').value= document.getElementById('DeletedKidsId').value + ','+delId[i];
+              }
+        }
+          console.log('Updated deleted kids Id-----------',document.getElementById('DeletedKidsId').value)
+        }
+        console.log('row count - ' , rowCount)*/
+
       }
 // Get today's date in the format YYYY-MM-DD
 function getToday() {
@@ -3013,7 +3137,13 @@ $(document).on("click", ".del", function() {
 });
     </script>
                           
-                                <script>
+                          
+                          
+                          
+                          
+                          
+                          <script>
+
                           
                             var deletedKidsListArr = '';
                              function kidsDeletion(param){
@@ -3022,10 +3152,16 @@ $(document).on("click", ".del", function() {
                                   console.log("numOfKids:------- ",numOfKids)
                                var id = param.id;
                                console.log("Deleted Kid Id:------- ",id)
+                              
+                               
+                               
+            
                                var idFromHidden = document.getElementById('deletedKid'+ id).value;
                                document.getElementById(id).value = idFromHidden;
-                               deletedKidsListArr = idFromHidden 
-                            var counter=1
+                               deletedKidsListArr = idFromHidden  
+                               
+                               
+                               var counter=1
                                for(i=0; i<numOfKids; i++){
                                  console.log("loops -----------: ",i)
                                  if(i>=id){
@@ -3096,6 +3232,7 @@ $(document).on("click", ".del", function() {
                                  }
                                  counter++;
                                }
+                           
                 var dataToSend = {
                     arr: deletedKidsListArr,
                     subskey: subsKey,
@@ -3103,12 +3240,22 @@ $(document).on("click", ".del", function() {
                 };
 
                 $.ajax({
-                    url: 'https://cloud.explore.legoland.ae/LL_KidsDelete_Arabic_QA', // Replace with your CloudPage URL
+                    url: 'https://cloud.explore.dubaiparksandresorts.com/DPR_KidsDelete_Arabic_QA', // Replace with your CloudPage URL
                     method: 'POST',
                     data: dataToSend,
                     success: function(response) {
                         console.log('SFMC Code Resource called successfully.');
                         console.log('Response:', response);
+                      //var myElement = document.getElementById('kidsTable')
+                      /*var myElement = document.querySelector('#kidsTable');
+                      var child = myElement.childNodes;
+                      console.log('child: ', child);
+                      
+                      for (var chil of child) {
+                          console.log('After Deletion: ', chil.id);
+                        }*/
+                       
+
                         // Handle success response here
                     },
                     error: function(xhr, status, error) {
@@ -3120,7 +3267,14 @@ $(document).on("click", ".del", function() {
                 });
                             }
                           </script>
-                          <script>
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+    <script>
       function updateUrlHash(hash) {
         if (history.pushState) {
           history.pushState(null, null, hash);
@@ -3130,8 +3284,8 @@ $(document).on("click", ".del", function() {
       }
         
       var hashvalue = window.location.hash;
-         console.log("hash==",hash);
-         var value= hash.split("&");
+         console.log("hash==",hashvalue);
+         var value= hashvalue.split("&");
          var hash=value[0];
          console.log("hash=====",hash);
       hash && $('ul.nav a[href="' + hash + '"]').tab('show');
@@ -3142,76 +3296,43 @@ $(document).on("click", ".del", function() {
         window.location.hash = this.hash;
         $('html,body').scrollTop(scrollmem);
       });
-                            
-                            
-                            
-                            //To call channel management code from BU resource
-      $("#channelPreferencess").click(function(e) {
+      //To call channel management code from BU resource
+    $("#channel-submit").click(function(e) {
         console.log('Inside channel management()')
         var guestId = document.getElementById('guestId').value;
         var subsKey = document.getElementById('crmId').value;
-         var emailPref = document.getElementById('emailPref');
+        var emailPref = document.getElementById('emailPref');
         var whatsAppPref = document.getElementById('WhatsAppPref');
-        var smsPref = document.getElementById('smsPref');
-        var fName = document.getElementById('firstName').value;
-        var lName = document.getElementById('lastName').value;
-        var gEmail = document.getElementById('email').value;
-        console.log('emailPref: ',emailPref.checked);
-        console.log('whatsAppPref: ',whatsAppPref.checked);
-    /* if( emailPref.checked !='undefined'){
-         var emailPref = 'False';
-         console.log('emailPref----===----: ');
-        }
-        else{
-           var emailPref = 'True';
-        }
-        if( whatsAppPref.checked!='undefined'){
-          var whatsAppPref = 'False';
-          
-        }
-        else{
-           var whatsAppPref = 'True';
-        }*/
-         console.log('emailPref---------: ',emailPref.checked);
-        console.log('whatsAppPref---------: ',whatsAppPref.checked);
-        console.log('guestId: ',guestId);
-        console.log('subsKey: ',subsKey);
-        console.log('emailPref: ',emailPref);
-        console.log('whatsAppPref: ',whatsAppPref);
-                var dataToSend = {
-                    guestId: guestId,
-                    subsKey: subsKey,
-                    firstName: fName,
-                    lastName: lName,
-                    email: gEmail,
-                    emailPref: emailPref.checked,
-                    whatsAppPref: whatsAppPref.checked,
-                     smsPref : smsPref.checked
-                };
+       var smsPref = document.getElementById('smsPref');
+        
+        var dataToSend = {
+            guestId: guestId,
+            subsKey: subsKey,
+            emailPref: emailPref.checked,
+            whatsAppPref: whatsAppPref.checked,
+            smsPref : smsPref.checked
+        };
 
-                $.ajax({
-                    url: 'https://cloud.explore.legoland.ae/LL_Arabic_QA_ChannelPreference', // Replace with your CloudPage URL
-                    method: 'POST',
-                    data: dataToSend,
-                    success: function(response) {
-                        console.log('SFMC channel management Code Resource called successfully.');
-                        console.log('Response:', response);
-                        // Handle success response here
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error calling SFMC channel management Code Resource.');
-                        console.error('Status:', status);
-                        console.error('Error=========:', error);
-                        // Handle error here
-                    }
-                });
-            });
-                
-                            
-                            
-                            
+        $.ajax({
+            url: 'https://cloud.explore.dubaiparksandresorts.com/ChannelPreference_Arabic_QA', // Replace with your CloudPage URL
+            method: 'POST',
+            data: dataToSend,
+            success: function(response) {
+                console.log('SFMC channel management Code Resource called successfully.');
+                console.log('Response:', response);
+                // Handle success response here
+            },
+            error: function(xhr, status, error) {
+                console.error('Error calling SFMC channel management Code Resource.');
+                console.error('Status:', status);
+                console.error('Error=========:', error);
+                // Handle error here
+            }
+        });
+    });
       
-      //To call unsub code from BU resource by Bhavya
+      
+      //To call unsub code from BU resource
       $("#unsubscribeClick").click(function(e) {
         console.log('Inside unsubscribeClick()')
         var guestId = document.getElementById('guestId').value;
@@ -3223,7 +3344,7 @@ $(document).on("click", ".del", function() {
                 };
 
                 $.ajax({
-                    url: 'https://cloud.explore.legoland.ae/LL_UnsubscribeFromBU_Arabic_QA', // Replace with your CloudPage URL
+                    url: 'https://cloud.explore.dubaiparksandresorts.com/UnsubscribeFromBU_Arabic_QA', // Replace with your CloudPage URL
                     method: 'POST',
                     data: dataToSend,
                     success: function(response) {
@@ -3240,6 +3361,8 @@ $(document).on("click", ".del", function() {
                 });
             });
       
+      
+      //To call unsub code from all BU resource
       $("#unsubscribeAllClick").click(function(e) {
         console.log('Inside unsubscribeAllClick()')
         var subsKey = document.getElementById('crmId').value;
@@ -3251,7 +3374,7 @@ $(document).on("click", ".del", function() {
                 };
 
                 $.ajax({
-                    url: 'https://cloud.explore.legoland.ae/LL_UnsubscribeFromAllBU_Arabic_QA', // Replace with your CloudPage URL
+                    url: 'https://cloud.explore.dubaiparksandresorts.com/UnsubscribeFromAllBU_Arabic_QA', // Replace with your CloudPage URL
                     method: 'POST',
                     data: dataToSend,
                     success: function(response) {
@@ -3269,7 +3392,42 @@ $(document).on("click", ".del", function() {
             });
     
       </script>
+   <script>
+function dynamicLangSwitcher() {
+    console.log('INSIDE');
+
+    var currentUrl = window.location.href;
+    var qsIndex = currentUrl.indexOf('?');
+    var hashIndex = currentUrl.indexOf('#');
     
+    var queryString = qsIndex !== -1 ? currentUrl.substring(qsIndex, hashIndex !== -1 ? hashIndex : currentUrl.length) : '';
+    var hashFragment = hashIndex !== -1 ? currentUrl.substring(hashIndex) : '';
+
+    console.log('Current Query String (qs):', queryString);
+    console.log('Current Hash Fragment:', hashFragment);
+
+    var newLangUrl = document.getElementById('langSwitcher').href;
+
+    if (queryString) {
+        if (newLangUrl.indexOf('?') !== -1) {
+            newLangUrl += '&' + queryString.substring(1);
+        } else {
+            newLangUrl += queryString;
+        }
+    }
+
+    if (hashFragment) {
+        newLangUrl += hashFragment;
+    }
+
+    console.log('Updated URL:', newLangUrl);
+
+    document.getElementById('langSwitcher').href = newLangUrl;
+}
+
+
+</script>
+                          
                          
                                 </body>
                             </html>

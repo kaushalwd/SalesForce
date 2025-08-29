@@ -1,0 +1,243 @@
+<custom name="opencounter" type="tracking"/>
+<!doctype html>
+<html>
+<head>
+ <style type="text/css">
+   body {background-color: #f5f5f5;}
+   p {margin:1em 0;}
+    </style>
+<title>AL-BAHAR Emailer 2024</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width">
+</head>
+<body bgcolor="#f5f5f5" style="margin:0px; padding:0px; -webkit-text-size-adjust:none;">
+<center style="width: 100%; background-color: #f5f5f5;">
+<!--[if gtemso 9]><xml>
+<o:OfficeDocumentSettings>
+<o:AllowPNG/>
+<o:PixelsPerInch>96</o:PixelsPerInch>
+</o:OfficeDocumentSettings>
+</xml><![endif]-->
+  <p style="margin:5px 0; font-family: sans-serif; font-size: 12px; color: #000000; text-align: center;">
+    Not displaying correctly? <a href="%%view_email_url%%" style="text-decoration:none; font-family: sans-serif; font-size: 12px; color: #000000; text-align: center;" >View Online</a>
+  </p>
+ <table width="600" border="0" cellspacing="0" cellpadding="0" align="center">
+   <tbody>
+  <tr bgcolor="#ffffff">
+    <td align="center">
+     <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="min-width: 100%; " class="stylingblock-content-wrapper"><tr><td class="stylingblock-content-wrapper camarker-inner">%%[
+
+   SET @OppId = AttributeValue("Opportunity:Id")
+   SET @OppType = AttributeValue("Opportunity:Type")
+   SET @OppDate = AttributeValue("OppProduct:SRC_Date__c")
+   SET @AccName = Uppercase(AttributeValue("Account:Name"))
+   SET @AccAddress = Uppercase(AttributeValue("Account:BillingAddress"))
+   SET @OppCountry = AttributeValue("Contact:Country")
+   SET @AccFName = AttributeValue("Contact:FirstName")
+   SET @AccLName = AttributeValue("Contact:LastName")
+   SET @AccCustName = "Customer"
+   SET @CustomerStore = AttributeValue("Opportunity:Customer_Store__c")
+   SET @OppCountry = UpperCase(Lookup("StoreLocationMapping", "Country", "StoreNumber", @CustomerStore))
+   
+   SET @regEx = "^[A-Za-z\s]+$"
+    SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+    SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+
+    IF (@AccFName == "" And @AccLName == "") Or (@AccFName == "NA" And @AccLName == "NA") Or (IsEmailAddress(@AccFName) == 'True' And IsEmailAddress(@AccLName) == 'True') Or (@regExMatchFName  == '' And @regExMatchLName  == '') Then
+       SET @AccCustName = "Customer"
+    ELSEIF (ProperCase(@AccFName) == ProperCase(@AccLName)) Then
+       SET @AccCustName = ProperCase(@AccFName)   
+    ELSE
+         IF @AccFName != "" Or @AccLName != "" Then
+           IF (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '') And (IsEmailAddress(@AccLName) == 'False' And @regExMatchLName != '') And (Uppercase(@AccFName) != "NA" And Uppercase(@AccLName) != "NA") And @AccFName != "" Then
+              SET @AccCustName = Concat(ProperCase(@AccFName), " ", ProperCase(@AccLName))
+           ELSEIF @AccFName != "" And (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '' And Uppercase(@AccFName) != "NA") Then
+              SET @AccCustName = ProperCase(@AccFName)
+           ENDIF
+        ENDIF  
+    ENDIF  
+ 
+   IF @OppCountry == "OMAN" Then
+    SET @companyName = "OASIS TRADING & EQUIPMENT CO. L.L.C"
+    SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/32dbd4ba-24fd-4c97-a9b4-de5d5cbd8303.jpg"
+   ELSE
+    SET @companyName = "MOHAMED ABDULRAHMAN AL-BAHAR L.L.C"
+    SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b027d73b-0882-4aef-814b-a2bc4737a3b9.jpg"
+   ENDIF   
+   
+   SET @ItemModels = AttributeValue("OppProduct:Model")
+   SET @ItemModelsRows = BuildRowsetFromString(@ItemModels, ",")
+   
+   SET @ItemQty = AttributeValue("OppProduct:Quantity")
+   SET @ItemQtyRows = BuildRowsetFromString(@ItemQty, ",")
+   
+   SET @ItemRowCount = RowCount(@ItemModelsRows)
+   
+   /*FOR @i=1 to @ItemRowCount Do
+       SET @ItemModelRow = Row(@ItemModelsRows, @i)
+       SET @ItemQtyRow = Row(@ItemQtyRows, @i)
+       SET @ItemModel = Field(@ItemModelRow, 1)
+       SET @ItemQty = Field(@ItemQtyRow, 1)
+   Next @i
+   */
+   
+   
+   
+   SET @OwnerId = AttributeValue("Opportunity:OwnerId")
+   SET @OwnerEmail = AttributeValue("Opportunity:Owner_Email__c")
+   
+   
+   SET @SalesEngrName = ProperCase(Lookup("Test_Master_Users", "Name", "Id", @OwnerId, "IsActive", "True"))
+   SET @SalesEngrPhone = Lookup("Test_Master_Users", "MobilePhone", "Id", @OwnerId, "IsActive", "True")
+   
+   IF Length(@SalesEngrPhone) == 0 Then
+    SET @SalesEngrPhone = "..."
+   ENDIF 
+   
+   SET @SalesMngrName = ProperCase(AttributeValue("Opportunity:Sales_Manager_Name__c"))
+   SET @SalesMngrEmail =  ProperCase(AttributeValue("Opportunity:Sales_Manager_E_mail__c"))
+   SET @SalesMngrPhone = Lookup("Test_Master_Users", "MobilePhone", "Email", @SalesMngrEmail, "IsActive", "True")
+   
+   IF (@SalesMngrPhone == "" OR Length(@SalesMngrPhone) == 0) Then
+    SET @SalesMngrPhone = "..."
+   ENDIF 
+   
+   IF (@SalesMngrName == "") Then
+     SET @SalesMngrName = ProperCase(Lookup("Test_Master_Users", "Name", "IsActive", "True", "UserType2__c", "Sales Manager", "Opportunity_Type__c", @OppType))
+   ENDIF  
+   
+   SET @ProductMngrName = ProperCase(Lookup("Test_Master_Users", "Name", "Customer_Store_Number__c", @CustomerStore, "IsActive", "True", "Title", "Product Support Marketing Manager"))
+   
+   SET @ProductMngrPhone = Lookup("Test_Master_Users", "MobilePhone", "Customer_Store_Number__c", @CustomerStore, "IsActive", "True", "Title", "Product Support Marketing Manager")
+   
+   IF @ProductMngrName == "" Then
+     SET @ProductMngrName = ProperCase(Lookup("Test_Master_Users", "Name", "Customer_Store_Number__c", @CustomerStore, "IsActive", "True", "UserType2__c", "Product Support Manager"))
+   ENDIF  
+   
+   IF Length(@ProductMngrPhone) == 0 Then
+     SET @ProductMngrPhone = Lookup("Test_Master_Users", "MobilePhone", "Customer_Store_Number__c", @CustomerStore, "IsActive", "True", "UserType2__c", "Product Support Manager")
+   ENDIF  
+   
+   IF Length(@ProductMngrPhone) == 0 Then
+    SET @ProductMngrPhone = "..."
+   ENDIF
+   
+   SET @PartsMngrName = ProperCase(Lookup("Test_Master_Users", "Name", "Customer_Store_Number__c", @CustomerStore, "Title", "Parts Manager", "IsActive", "True"))
+   SET @PartsMngrPhone = Lookup("Test_Master_Users", "MobilePhone", "Customer_Store_Number__c", @CustomerStore, "Title", "Parts Manager", "IsActive", "True")
+   
+   IF @PartsMngrName == "" Then
+     SET @PartsMngrName = ProperCase(Lookup("Test_Master_Users", "Name", "Customer_Store_Number__c", @CustomerStore, "IsActive", "True", "UserType2__c", "Parts Manager"))
+   ENDIF
+   
+   IF @PartsMngrPhone == "" Then
+     SET @PartsMngrPhone = ProperCase(Lookup("Test_Master_Users", "MobilePhone", "Customer_Store_Number__c", @CustomerStore, "IsActive", "True", "UserType2__c", "Parts Manager"))
+   ENDIF
+   
+   If Length(@PartsMngrPhone) == 0 Then
+    SET @PartsMngrPhone = "..."
+   ENDIF 
+   ]%%</td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: #F5F5F5; min-width: 100%; " class="stylingblock-content-wrapper"><tr><td style="padding: 0px; " class="stylingblock-content-wrapper camarker-inner">%%[ IF UpperCase(@OppCountry) == "OMAN" Then ]%% <img alt=" OASIS Trading" height="auto" src="https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/ecb2e6d0-52d2-4d98-9b32-4e08988fb56d.jpg" style="display: block" width="600"> %%[ ELSE ]%% <img alt="AlBahar" height="auto" src="https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/40d68f29-2c64-4152-abf5-dfce17aa62f3.jpg" style="display: block" width="600"> %%[ ENDIF ]%%</td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: transparent; min-width: 100%; " class="stylingblock-content-wrapper"><tr><td style="padding: 10px 50px; " class="stylingblock-content-wrapper camarker-inner"><span style="font-size:12px;"><span style="font-family: sans-serif;"><b>%%=v(@AccName)=%%</b>,<br>
+%%=v(@AccAddress)=%%<br>
+<br>
+Dear <b>%%=v(@AccCustName)=%%</b>,<br>
+Thank you for placing your confidence in Al-Bahar for your equipment requirements and choosing us for your recent purchase of: </span></span></td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="min-width: 100%; " class="stylingblock-content-wrapper"><tr><td class="stylingblock-content-wrapper camarker-inner"><table align="center" border="0" cellpadding="0" cellspacing="0" width="600">
+ 
+  <tr>
+   <td bgcolor="#ffffff" style="text-align: left; padding: 20px; font-family: sans-serif; font-size: 12px; color:#000000" valign="middle" width="300">
+    <table align="center" border="1" cellpadding="5" cellspacing="0" width="300">
+     <thead>
+      <tr>
+       <td align="center" bgcolor="#ffffff" width="50%">
+        <strong>Model</strong></td><td align="center" bgcolor="#ffffff" width="50%">
+        <strong>Quantity</strong></td></tr></thead><!--%%[
+             IF @ItemRowCount > 0 Then
+               FOR @i=1 to @ItemRowCount Do
+                SET @ItemModelRow = Row(@ItemModelsRows, @i)
+                SET @ItemQtyRow = Row(@ItemQtyRows, @i)
+                SET @ItemModel = Propercase(Field(@ItemModelRow, 1))
+                SET @ItemQty = Field(@ItemQtyRow, 1)
+             ]%%-->
+      <tr>
+       <td align="center" bgcolor="#ffffff" width="50%">
+        %%=v(@ItemModel)=%%</td><td align="center" bgcolor="#ffffff" width="50%">
+        %%=v(@ItemQty)=%%</td></tr><!--%%[
+              Next @i
+             
+             ELSE
+              SET @ItemModel = Propercase(AttributeValue("OppProduct:Model"))
+              SET @ItemQty = AttributeValue("OppProduct:Quantity")
+            ]%%--><tr>
+       <td align="center" bgcolor="#ffffff" width="50%">
+        %%=v(@ItemModel)=%%</td><td align="center" bgcolor="#ffffff" width="50%">
+        %%=v(@ItemQty)=%%</td></tr><!--%%[                 
+             ENDIF
+            ]%%--></table></td></tr></table></td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: transparent; min-width: 100%; " class="stylingblock-content-wrapper"><tr><td style="padding: 10px 50px 20px; " class="stylingblock-content-wrapper camarker-inner"><span style="font-size:12px;"><span style="font-family: sans-serif;">We hope our sales team was able to assist you throughout your purchase journey across all aspects and make your purchase experience memorable.<br>
+<br>
+To know more about the products &amp; services of Al-Bahar, please visit our website <a href="https://www.albahar.com/" target="_blank">www.albahar.com</a> Or email us at <a href="mailto:info@albahar.com" target="_blank">info@albahar.com</a>. </span></span></td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: #E5E5E5; min-width: 100%; " class="stylingblock-content-wrapper"><tr><td style="padding: 20px 50px 20px 30px; " class="stylingblock-content-wrapper camarker-inner"><span style="font-size:12px;"><span style="font-family: sans-serif;"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please be informed:</b></span></span><ul>
+ <li>
+  <span style="font-size:12px;"><span style="font-family: sans-serif;">Your equipment's first complimentary service is due after 500 Hrs of use.</span></span></li><li>
+  <span style="font-size:12px;"><span style="font-family: sans-serif;">Talk to our Sales Engineer to understand more about the <a alias="thankyouemail_epp" href="https://www.albahar.com/company/epp/" target="_blank">Equipment Protection Plan</a>, <a alias="thankyouemail_pcc" href="https://www.albahar.com/aftermarket/pcc/" target="_blank">Online Parts Purchase Options</a> and Equipment Management options through <a alias="thankyouemail_visionlink" href="https://www.albahar.com/online-tools/vision-link/" target="_blank">VisionLink</a>.</span></span></li></ul><span style="font-size:12px;"><span style="font-family: sans-serif;"> </span></span></td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="min-width: 100%; " class="stylingblock-content-wrapper"><tr><td class="stylingblock-content-wrapper camarker-inner"><!--%%[
+  IF (@SalesMngrName != "" OR @SalesEngrName != "" OR @ProductMngrName != "" OR @PartsMngrName != "") Then  
+]%%--><table align="center" border="0" cellpadding="0" cellspacing="0" width="600">
+ 
+  <tr>
+   <td bgcolor="#ffffff" style="text-align: left; padding: 20px; font-family: sans-serif; font-size: 10px; color:#000000" valign="middle" width="500">
+    <p>
+     <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please note the contact details of our team waiting to support you.</b></p><table align="center" border="1" cellpadding="5" cellspacing="0" width="500">
+     <!--%%[
+            IF (@SalesMngrName == @SalesEngrName And @SalesMngrName != "") Then  
+        ]%%-->
+      <tr>
+       <td bgcolor="#f5f5f5" width="40%">
+        Sales Manager</td><td bgcolor="#f5f5f5" width="40%">
+        %%=v(@SalesMngrName)=%%</td><td bgcolor="#f5f5f5" width="20%">
+        %%=v(@SalesMngrPhone)=%%</td></tr><!--%%[
+            ELSE
+
+                IF @SalesEngrName != "" Then
+        ]%%--><tr>
+       <td bgcolor="#e5e5e5" width="35%">
+        Sales Engineer</td><td bgcolor="#e5e5e5" width="35%">
+        %%=v(@SalesEngrName)=%%</td><td bgcolor="#e5e5e5" width="25%">
+        %%=v(@SalesEngrPhone)=%%</td></tr><!--%%[
+                ENDIF
+
+                IF @SalesMngrName != "" Then
+                ]%%--><tr>
+       <td bgcolor="#f5f5f5" width="40%">
+        Sales Manager</td><td bgcolor="#f5f5f5" width="40%">
+        %%=v(@SalesMngrName)=%%</td><td bgcolor="#f5f5f5" width="20%">
+        %%=v(@SalesMngrPhone)=%%</td></tr><!--%%[
+                    ENDIF
+            ENDIF
+
+            IF @ProductMngrName != "" Then
+        ]%%--><tr>
+       <td bgcolor="#e5e5e5" width="40%">
+        Product Support Manager</td><td bgcolor="#e5e5e5" width="40%">
+        %%=v(@ProductMngrName)=%%</td><td bgcolor="#e5e5e5" width="20%">
+        %%=v(@ProductMngrPhone)=%%</td></tr><!--%%[
+             ENDIF
+             
+             IF @PartsMngrName != "" Then
+         ]%%--><tr>
+       <td bgcolor="#f5f5f5" width="40%">
+        Parts Manager</td><td bgcolor="#f5f5f5" width="40%">
+        %%=v(@PartsMngrName)=%%</td><td bgcolor="#f5f5f5" width="20%">
+        %%=v(@PartsMngrPhone)=%%</td></tr><!--%%[
+             ENDIF
+         ]%%--></table></td></tr></table><p style="font-size:12px; padding-left:50px; margin-top:0">
+ <span style="font-family: sans-serif;">Should you require any further assistance, feel free to contact us.</span></p><!--%%[
+  ENDIF
+]%%--></td></tr></table><table cellpadding="0" cellspacing="0" width="100%" role="presentation" class="stylingblock-content-wrapper" style="min-width: 100%; "><tr><td class="stylingblock-content-margin-cell" style="padding: 0px 0px 20px; "><table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: transparent; min-width: 100%; " class="stylingblock-content-wrapper"><tr><td style="padding: 0px 50px; " class="stylingblock-content-wrapper camarker-inner"><span style="font-size:12px;"><span style="font-family: sans-serif;">Thank you for partnering with Al-Bahar!<br>
+<br>
+Sincerely,<br>
+<br>
+%%[ IF @SalesMngrName != "" THEN ]%% <b>%%=v(@SalesMngrName)=%%</b><br>
+%%[ ENDIF ]%% Sales Manager </span></span></td></tr></table></td></tr></table>%%=ContentBlockbyID("6596")=%%%%=ContentBlockbyID("5639")=%%
+  </td>
+       </tr>
+ </tbody>
+ </table>
+</center>
+</body>
+</html>

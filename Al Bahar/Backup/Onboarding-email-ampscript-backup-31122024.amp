@@ -1,0 +1,61 @@
+%%[
+
+SET @AccName = Uppercase(AttributeValue("Account:Name"))
+SET @AccAddress = Uppercase(AttributeValue("Account:BilllingAddress"))
+SET @CustomerStore = AttributeValue("Opportunity:Customer_Store__c")
+SET @OppCountry = UpperCase(Lookup("StoreLocationMapping", "Country", "StoreNumber", @CustomerStore))
+SET @AccFName = AttributeValue("Contact:FirstName")
+SET @AccLName = AttributeValue("Contact:LastName")
+SET @AccCustName = "Customer"
+/*
+SET @regEx = "([0-9]+)"
+SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+*/
+SET @regEx = "^[A-Za-z\s]+$"
+SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+
+IF (@AccFName == "" And @AccLName == "") Or (@AccFName == "NA" And @AccLName == "NA") Or (IsEmailAddress(@AccFName) == 'True' And IsEmailAddress(@AccLName) == 'True') Or (@regExMatchFName  == '' And @regExMatchLName  == '') Then
+   SET @AccCustName = "Customer"
+ELSEIF (ProperCase(@AccFName) == ProperCase(@AccLName)) Then
+   SET @AccCustName = ProperCase(@AccFName)   
+ELSE
+     IF @AccFName != "" Or @AccLName != "" Then
+       IF (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '') And (IsEmailAddress(@AccLName) == 'False' And @regExMatchLName != '') And (Uppercase(@AccFName) != "NA" And Uppercase(@AccLName) != "NA") And @AccFName != "" Then
+          SET @AccCustName = Concat(ProperCase(@AccFName), " ", ProperCase(@AccLName))
+       ELSEIF @AccFName != "" And (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '' And Uppercase(@AccFName) != "NA") Then
+          SET @AccCustName = ProperCase(@AccFName)
+       ENDIF
+    ENDIF  
+ENDIF  
+
+IF @OppCountry == "OMAN" Then
+ SET @companyName = "OASIS TRADING & EQUIPMENT CO. L.L.C"
+ SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/32dbd4ba-24fd-4c97-a9b4-de5d5cbd8303.jpg"
+ELSE
+ SET @companyName = "MOHAMED ABDULRAHMAN AL-BAHAR L.L.C"
+ SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b027d73b-0882-4aef-814b-a2bc4737a3b9.jpg"
+ENDIF 
+
+SET @ItemModel = AttributeValue("OppProduct:Model")
+SET @MachineNames = AttributeValue("OppProduct:Model")
+SET @MachineNamesRows = BuildRowsetFromString(@MachineNames, ",")
+SET @MachineName = ""
+SET @MachineRowCount = RowCount(@MachineNamesRows)
+IF @MachineRowCount > 1 Then
+  FOR @i=1 to @MachineRowCount Do
+      SET @MachineRow = Row(@MachineNamesRows, @i)
+      IF @i == @MachineRowCount Then
+        SET @MachineName = Concat(@MachineName, " and ", Field(@MachineRow, 1))
+      ELSEIF @i == 1 Then
+        SET @MachineName = Field(@MachineRow, 1)
+      ELSE
+        SET @MachineName = Concat(@MachineName, ", ", Field(@MachineRow, 1))
+      ENDIF
+  Next @i
+ELSE
+ SET @MachineName = @MachineNames
+ENDIF
+
+]%%

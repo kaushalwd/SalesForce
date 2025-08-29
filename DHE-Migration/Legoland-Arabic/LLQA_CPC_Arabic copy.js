@@ -116,7 +116,7 @@
         /*Output(concat("<br>LL: ",@assetType))*/
         
     ENDIF
-    ENDIF
+    Endif
     ENDIF
     
 ]%%
@@ -536,14 +536,14 @@ ul {
                       <div class="form-group" data-aos="fade-up"
                           data-aos-anchor-placement="bottom-bottom">
                           <label for="">الاسم الأول<sup class="text-danger">*</sup></label>
-                          <input type="text" id="firstName" name="firstName" value="%%=v(ProperCase(@firstName))=%%"
+                          <input type="text" id="firstName" name="firstName" id="fname" value="%%=v(ProperCase(@firstName))=%%"
                               class="form-control" required aria-required="true" />
                       </div>
                   </div>
                   <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                       <div class="form-group">
                           <label for="">اسم العائلة<sup class="text-danger">*</sup></label>
-                          <input type="text" id="lastName" name="lastName" value="%%=v(ProperCase(@lastName))=%%"
+                          <input type="text" id="lname" name="lastName" value="%%=v(ProperCase(@lastName))=%%"
                               class="form-control" required aria-required="true" />
                       </div>
                   </div>
@@ -1610,7 +1610,7 @@ IF (empty(@crmId)) THEN
           
          
     %%[
-    ENDIF
+    endif
            next @j 
           
         ENDIF
@@ -1623,308 +1623,312 @@ IF (empty(@crmId)) THEN
           </div>
           
           <input name="submittedProfile" type="hidden" value="true">
-          <input name="crmId" id="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
-          <input name="numberOfKids" type="hidden" value="%%=v(@numOfKids)=%%"><br>      
-          <input name="emails" type="hidden" value="%%=v(@email)=%%" />
+                         <input name="crmId" id="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
+            <input name="numberOfKids" type="hidden" value="%%=v(@numOfKids)=%%"><br>      
               </form>
         
           %%[
-          var @sfid
-          IF RequestParameter("submittedProfile")==true then
-                  SET @sfid = RequestParameter("crmId")
-                  SET @emailContact = RequestParameter("emails")
-                  SET @profileSalutation = RequestParameter("profileSalutation")
-                  SET @firstName = RequestParameter("firstName")
-                  SET @lastName = RequestParameter("lastName")
-                  set @gender = RequestParameter("gender")
-                  set @city = RequestParameter("city")
-                  set @numOfKids = RequestParameter("numberOfKids")
-                  SET @email = RequestParameter("email")
-                  SET @phone = RequestParameter("phone")
-                  
-                  if RequestParameter("lang") == '' then
-                    SET @phonecode = '+971'
-                  ENDIF
-                  
-                  if RequestParameter("lang") != '' then
-                    SET @phonecode = RequestParameter("lang")
-                  ENDIF
-                  
-                  SET @birthdate = RequestParameter("birthday")
-                  SET @profileLang = RequestParameter("profileLang")
-                  SET @profileNationality = RequestParameter("profileNationality")
-                  SET @profileCountry = RequestParameter("profileCountry")
-                  
-                  SET @profileMarriedBox = RequestParameter("maritalstatus")
-                  
-                  /*Child Selected values*/
-                  SET @profilekidsValue = RequestParameter("state")
-                  SET @profileKidsBox = RequestParameter("kidsExists")
-                  IF @profileKidsBox == 'kids-yes' THEN
-                      SET @kidsStatus = 'True'
-                      SET @doYouHaveKids = 'True'
-                  ELSE
-                      SET @kidsStatus = 'False'
-                      SET @doYouHaveKids = 'False'
-                  ENDIF
+                                IF RequestParameter("submittedProfile")==true then
+                                        SET @sfid = RequestParameter("crmId")
 
-                  IF Empty(@profilekidsValue) THEN
-                      SET @profilekidsValue = 0
-                  ENDIF
-                  
-                  IF NOT Empty(@sfid) THEN
-                    IF Empty(@birthdate) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "BirthDate"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "BirthDate", @birthdate
-                        )
-                    ENDIF
-                  
-                    IF Empty(@profileMarriedBox) THEN
-                          SET @updateRecord = UpdateSingleSalesforceObject(
-                          "Contact", @sfid,
-                          "fieldsToNull", "Marital_Status__c"
-                          )
-                      ELSE
-                          SET @updateRecord = UpdateSingleSalesforceObject(
-                          "Contact", @sfid,
-                          "Marital_Status__c", @profileMarriedBox
-                          )
-                    ENDIF 
-                  
-                    IF Empty(@profileNationality) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "Nationality__c"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "Nationality__c", @profileNationality
-                        )
-                    ENDIF
+                                        SET @profileSalutation = RequestParameter("profileSalutation")
+                                        SET @firstName = RequestParameter("firstName")
+                                        set @numOfKids = RequestParameter("numberOfKids")
+                                        SET @lastName = RequestParameter("lastName")
+                                        set @gender = RequestParameter("gender")
+                                        set @city = RequestParameter("city")
+                                        SET @email = RequestParameter("email")
+                                        SET @phone = RequestParameter("phone")
+                                        if RequestParameter("lang") == '' then
+                                         SET @phonecode = '+971'
+                                        endif
+                                        if RequestParameter("lang") != '' then
+                                         SET @phonecode = RequestParameter("lang")
+                                        endif
+                                        SET @birthdate = RequestParameter("birthday")
+                                        SET @profileLang = RequestParameter("profileLang")
+                                        SET @profileNationality = RequestParameter("profileNationality")
+                                        SET @profileCountry = RequestParameter("profileCountry")
+                                        
+                                        SET @profileMarriedBox = RequestParameter("maritalstatus")
+                                       
+                                        /*Child Selected values*/
+                                        SET @profilekidsValue = RequestParameter("state")
+                                        SET @profileKidsBox = RequestParameter("kidsExists")
+                                        IF @profileKidsBox == 'kids-yes' THEN
+                                            SET @kidsStatus = 'True'
+                                            SET @doYouHaveKids = 'True'
+                                        ELSE
+                                            SET @kidsStatus = 'False'
+                                            SET @doYouHaveKids = 'False'
+                                        ENDIF
 
-                    IF Empty(@phone) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "Phone"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "Phone", @phone
-                        )
-                    ENDIF
-                    IF Empty(@phonecode) THEN
-                    SET @phonecode = "+971"
-                    ENDIF
-                    IF Empty(@city) THEN
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "fieldsToNull", "MailingCity"
-                        )
-                    ELSE
-                        SET @updateRecord = UpdateSingleSalesforceObject(
-                        "Contact", @sfid,
-                        "MailingCity", @city
-                        )
-                    ENDIF
-                  
-                      SET @updateRecord = UpdateSingleSalesforceObject(
-                      "Contact", @sfid,
-                      "Salutation", @profileSalutation,
-                      "FirstName", @firstName,
-                      "LastName", @lastName, 
-                      "Email", @email,
-                      "Country_Code__c", @phonecode,
-                      "Registration_Language__c", @profileLang,
-                      "GenderIdentity", @gender,
-                      "Nationality__c", @profileNationality,
-                      "Residence_Country__c", @profileCountry,
-                      "Do_you_have_kids__c", @doYouHaveKids 
-                      )
-                  
-            
-              /*Creating and Updating child records based on value selected above*/
+                                        IF Empty(@profilekidsValue) THEN
+                                           SET @profilekidsValue = 0
+                                        ENDIF
+                                        
+                                        /*Output(Concat("Birthdate after: ", @birthdate))
+                                        set @bdate = FormatDate(@birthdate,"s")
+                                        Output(Concat("Birthdate v1: ", @bdate))
+                                        set @format = Format(@bdate, "d", "Date")
+                                        Output(Concat("Birthdate v2: ", @format))*/
+                                        
+                                        IF NOT Empty(@sfid) THEN
+                                        
+                                     
+                                        IF Empty(@birthdate) THEN
+                                            SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "fieldsToNull", "BirthDate"
+                                            )
+                                       ELSE
+                                           SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "BirthDate", @birthdate
+                                            )
+                                        ENDIF
+                                        
+                                      IF Empty(@profileMarriedBox) THEN
+                                            SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "fieldsToNull", "Marital_Status__c"
+                                            )
+                                       ELSE
+                                           SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "Marital_Status__c", @profileMarriedBox
+                                            )
+                                      ENDIF 
+                                        
+                                      IF Empty(@profileNationality) THEN
+                                            SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "fieldsToNull", "Nationality__c"
+                                            )
+                                       ELSE
+                                           SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "Nationality__c", @profileNationality
+                                            )
+                                        ENDIF
 
-                  
-                  IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-yes' THEN
-                  
-                    /*RETRIVAL OF ALL CRM KID ID AND CREATE STRING*/
-                  
-                  var @CRMIdList
-                  SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
-                                      "Contact__c", "=", @sfid,
-                                      "Relationship__c", "=", "Child")
-                                      SET @childIDRowCount = Rowcount(@childIDs)
-                                      
-                                      IF @childIDRowCount > 0 THEN
-                                      
-                                      For @p=1 to @childIDRowCount do
-                                      
-                                      SET @childIDRow = Row(@childIDs, @p)
-                                      set @KidID = Field(@childIDRow, "ID")
-                                      Set @CRMIdList = CONCAT(@CRMIdList, @KidID, ",")
-
-
-                                      next @p
-
-                                      ENDIF
-          
-                                      
-                                      
-                                      
-                  
-                      FOR @k=1 to @profilekidsValue do
-                      set @u = Subtract(@k, 1)
-                          SET @kidGender = Concat("gender",@u)
-                          SET @kidGenderVal = RequestParameter(@kidGender)
-                          SET @kidName = Concat("kidsName",@u)
-                          SET @kidNameval = RequestParameter(@kidName)
-                          IF IndexOf(@kidNameval, " ") > 0 THEN
-                                Set @kidFirstName = Substring(@kidNameval,1, Subtract(IndexOf(@kidNameval," "),1))
-                                set @kidLastName = Substring(@kidNameval,Add(indexOf(@kidNameval, " "),1))
-                              else
-                                  SET @kidFirstName = @kidNameval
-                                  SET @kidLastName = ""
-                          ENDIF
-                          SET @kidDOB = Concat("kids-birthday",@u)
-                          SET @kidDOBVal = RequestParameter(@kidDOB)
-                          SET @kidRecId = Concat("kidRecId",@u)
-                          SET @kidRecIdVal = RequestParameter(@kidRecId)
-                          
-                          IF Not Empty(@kidRecIdVal) THEN
-                          
-                          
-                          SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
-                                      "id", "=", @kidRecIdVal,
-                                      "Relationship__c", "=", "Child")
-                                      SET @childIDRowCount = Rowcount(@childIDs)
-                                      
-                                      IF @childIDRowCount > 0 THEN
-                                      
-                                      For @p=1 to @childIDRowCount do
-                        
-                        
-                          
-                              IF EMPTY(@kidDOBVal) THEN
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Name", @kidNameval,
-                                    "fieldsToNull", "Date_Of_Birth__c"
-                                    )
-                              ELSE
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Date_Of_Birth__c", @kidDOBVal,
-                                    "Name", @kidNameval
-                                    )
-                              ENDIF
-                              IF EMPTY(@kidGenderVal) THEN
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Name", @kidNameval,
-                                    "fieldsToNull", "Gender__c"
-                                    )
-                              ELSE
-                                    SET @updateKidRecord = UpdateSingleSalesforceObject(
-                                    "Family_Member__c", @kidRecIdVal,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Name", @kidNameval
-                                    )
-                              ENDIF
-                              next @p
-
-                                      ENDIF
-                          ELSE
-                              IF EMPTY(@kidDOBVal) THEN
-                              
-                              set @numOfKids = Add(@numOfKids, 1)
-                              SET @updateRecord = UpdateSingleSalesforceObject(
-                                                    "Contact", @sfid,
-                                                    "Number_of_kids__c", @numOfKids
+                                        
+                                        IF Empty(@phone) THEN
+                                            SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "fieldsToNull", "Phone"
+                                            )
+                                        ELSE
+                                           SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "Phone", @phone
+                                            )
+                                        ENDIF
+                                        IF Empty(@phonecode) THEN
+                                        SET @phonecode = "+971"
+                                        ENDIF
+                                        IF Empty(@city) THEN
+                                            SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "fieldsToNull", "MailingCity"
+                                            )
+                                       ELSE
+                                           SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "MailingCity", @city
+                                            )
+                                        ENDIF
+                                        
+                                            SET @updateRecord = UpdateSingleSalesforceObject(
+                                            "Contact", @sfid,
+                                            "Salutation", @profileSalutation,
+                                            "FirstName", @firstName,
+                                            "LastName", @lastName, 
+                                            "Email", @email,
+                                            "Country_Code__c", @phonecode,
+                                            "Registration_Language__c", @profileLang,
+                                            "GenderIdentity", @gender,
+                                            "Nationality__c", @profileNationality,
+                                            "Residence_Country__c", @profileCountry,
+                                            "Do_you_have_kids__c", @doYouHaveKids 
+                                            )
+                                       
+                                 
+                                    /*Creating and Updating child records based on value selected above*/
+       
+                                       
+                                        IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-yes' THEN
+                                        
+                                          /*RETRIVAL OF ALL CRM KID ID AND CREATE STRING*/
+                                       
+                                       var @CRMIdList
+                                       SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
+                                                           "Contact__c", "=", @sfid,
+                                                           "Relationship__c", "=", "Child")
+                                                            SET @childIDRowCount = Rowcount(@childIDs)
+                                                            
+                                                            IF @childIDRowCount > 0 THEN
+                                                            
+                                                            For @p=1 to @childIDRowCount do
+                                                            
+                                                            SET @childIDRow = Row(@childIDs, @p)
+                                                            set @KidID = Field(@childIDRow, "ID")
+                                                            Set @CRMIdList = CONCAT(@CRMIdList, @KidID, ",")
+               
+    
+                                                            next @p
+      
+                                                            ENDIF
+                               
+                                                            
+                                                            
+                                                            
+                                        
+                                            FOR @k=1 to @profilekidsValue do
+                                            set @u = Subtract(@k, 1)
+                                                SET @kidGender = Concat("gender",@u)
+                                                SET @kidGenderVal = RequestParameter(@kidGender)
+                                                SET @kidName = Concat("kidsName",@u)
+                                                SET @kidNameval = RequestParameter(@kidName)
+                                                IF IndexOf(@kidNameval, " ") > 0 THEN
+                                                      Set @kidFirstName = Substring(@kidNameval,1, Subtract(IndexOf(@kidNameval," "),1))
+                                                      set @kidLastName = Substring(@kidNameval,Add(indexOf(@kidNameval, " "),1))
+                                                    else
+                                                       SET @kidFirstName = @kidNameval
+                                                       SET @kidLastName = ""
+                                                ENDIF
+                                                SET @kidDOB = Concat("kids-birthday",@u)
+                                                SET @kidDOBVal = RequestParameter(@kidDOB)
+                                                SET @kidRecId = Concat("kidRecId",@u)
+                                                SET @kidRecIdVal = RequestParameter(@kidRecId)
+                                                
+                                                IF Not Empty(@kidRecIdVal) THEN
+                                                
+                                                
+                                                SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
+                                                           "id", "=", @kidRecIdVal,
+                                                           "Relationship__c", "=", "Child")
+                                                            SET @childIDRowCount = Rowcount(@childIDs)
+                                                            
+                                                            IF @childIDRowCount > 0 THEN
+                                                            
+                                                            For @p=1 to @childIDRowCount do
+                                              
+                                              
+                                                
+                                                   IF EMPTY(@kidDOBVal) THEN
+                                                          SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Name", @kidNameval,
+                                                          "fieldsToNull", "Date_Of_Birth__c"
+                                                          )
+                                                   ELSE
+                                                         SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Date_Of_Birth__c", @kidDOBVal,
+                                                          "Name", @kidNameval
+                                                          )
+                                                   ENDIF
+                                                   IF EMPTY(@kidGenderVal) THEN
+                                                          SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Name", @kidNameval,
+                                                          "fieldsToNull", "Gender__c"
+                                                          )
+                                                   ELSE
+                                                         SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                                          "Family_Member__c", @kidRecIdVal,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Name", @kidNameval
+                                                          )
+                                                   ENDIF
+                                                   next @p
+      
+                                                            ENDIF
+                                                ELSE
+                                                    IF EMPTY(@kidDOBVal) THEN
+                                                    
+                                                    set @numOfKids = Add(@numOfKids, 1)
+                                                    SET @updateRecord = UpdateSingleSalesforceObject(
+                                                                         "Contact", @sfid,
+                                                                         "Number_of_kids__c", @numOfKids
+                                                                        )
+                                                    
+                                                     SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 6,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                          "Relationship__c", "Child",
+                                                          "Contact__c", @sfid,
+                                                          "Name", @kidNameval,
+                                                          "fieldsToNull", "Date_Of_Birth__c")
+                                                   ELSE
+                                                    SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 7,
+                                                          "First_Name__c", @kidFirstName,
+                                                          "Last_Name__c" , @kidLastName,
+                                                          "Gender__c", @kidGenderVal,
+                                                         "Date_Of_Birth__c", @kidDOBVal, 
+                                                          "Relationship__c", "Child",
+                                                          "Contact__c", @sfid,
+                                                          "Name", @kidNameval)
+                                                   ENDIF
+                                                ENDIF
+                                            next @k
+                                        ENDIF
+                                        
+                                        /* made changes for "no" kids selection on 14 feb */
+                                        
+                                        IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-no' THEN
+                                              
+                                              
+                                              SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","id","Contact__c", "=", @sfid,"Relationship__c", "=", "Child")
+                                              /*Output(Concat("childIDs: ", @childIDs, "<br>"))*/
+                                              SET @childIDRowCount = Rowcount(@childIDs)
+                                              /*Output(Concat("childIDRowCount: ", @childIDRowCount, "<br>"))*/
+                                              For @n=1 to @childIDRowCount do
+                                                  SET @childIDRow = Row(@childIDs, @n)
+                                                  set @KidID = Field(@childIDRow, "ID")
+                                                  /*Output(Concat("number of kids v1: ", @numOfKids))*/
+                                                  SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
+                                                  "Family_Member__c", @KidID,
+                                                  "Deleted_kid__c", "True"
                                                   )
-                              
-                                SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 6,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Relationship__c", "Child",
-                                    "Contact__c", @sfid,
-                                    "Name", @kidNameval,
-                                    "fieldsToNull", "Date_Of_Birth__c")
-                              ELSE
-                              SET @newKidRecord = CreateSalesforceObject("Family_Member__c", 7,
-                                    "First_Name__c", @kidFirstName,
-                                    "Last_Name__c" , @kidLastName,
-                                    "Gender__c", @kidGenderVal,
-                                    "Date_Of_Birth__c", @kidDOBVal, 
-                                    "Relationship__c", "Child",
-                                    "Contact__c", @sfid,
-                                    "Name", @kidNameval)
-                              ENDIF
-                          ENDIF
-                      next @k
-                  ENDIF
-                  
-                  /* made changes for "no" kids selection on 14 feb */
-                  
-                  IF @profilekidsValue > 0 AND  @profileKidsBox == 'kids-no' THEN
-                        
-                        
-                        SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","id","Contact__c", "=", @sfid,"Relationship__c", "=", "Child")
-                        /*Output(Concat("childIDs: ", @childIDs, "<br>"))*/
-                        SET @childIDRowCount = Rowcount(@childIDs)
-                        /*Output(Concat("childIDRowCount: ", @childIDRowCount, "<br>"))*/
-                        For @n=1 to @childIDRowCount do
-                            SET @childIDRow = Row(@childIDs, @n)
-                            set @KidID = Field(@childIDRow, "ID")
-                            /*Output(Concat("number of kids v1: ", @numOfKids))*/
-                            SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
-                            "Family_Member__c", @KidID,
-                            "Deleted_kid__c", "True"
-                            )
-                            /*Output(Concat("updatedeletedKidRecord: ", @updatedeletedKidRecord, "<br>"))*/
-                        next @n
-                        SET @childIDRowCount = Rowcount(@childIDs)
-                            SET @updateNoOfKidRecord = UpdateSingleSalesforceObject("Contact", @sfid,"Number_of_kids__c", @childIDRowCount)
-                            /*Output(Concat("updateNoOfKidRecord: ", @updateNoOfKidRecord, "<br>"))*/
-              ENDIF 
-                                                          
-                  
-                  
-              ENDIF
-
-              set @interests = '#interests'
-              if empty(@sfid) OR IsNull(@sfid) then
-                Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
-              ELSE
-                Set @ampError = ''
-              ENDIF
-              Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","ProfilePage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-              if @methodType== 'Old' then
-                Redirect(Concat("https://cloud.explore.legoland.ae/LLQA_CPC_Arabic?sfid=", Base64Encode(@sfid), "#interests"))
-              ELSE
-                Redirect(CONCAT(CloudPagesURL(3379),@interests))
-              ENDIF
-              
-              
-              ENDIF
+                                                  /*Output(Concat("updatedeletedKidRecord: ", @updatedeletedKidRecord, "<br>"))*/
+                                             next @n
+                                             SET @childIDRowCount = Rowcount(@childIDs)
+                                                  SET @updateNoOfKidRecord = UpdateSingleSalesforceObject("Contact", @sfid,"Number_of_kids__c", @childIDRowCount)
+                                                  /*Output(Concat("updateNoOfKidRecord: ", @updateNoOfKidRecord, "<br>"))*/
+                                    endif 
+                                                                                
+                                        
+                                        
+                                   endif
+            
+                                   set @interests = '#interests'
+                                   if empty(@sfid) OR IsNull(@sfid) then
+                                      Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+                                   ELSE
+                                      Set @ampError = ''
+                                   ENDIF
+                                   Set @p= InsertData("PreferencesLog_Test","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","ProfilePage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+                                   if @methodType== 'Old' then
+                                      Redirect(Concat("https://cloud.explore.legoland.ae/LLQA_CPC_Arabic?sfid=", Base64Encode(@sfid), "#interests"))
+                                   ELSE
+                                      Redirect(CONCAT(CloudPagesURL(3379),@interests))
+                                   ENDIF
+                                   
+                                   
+                                   endif
 
                                         
         
@@ -1960,7 +1964,7 @@ IF (empty(@crmId)) THEN
                                            ENDIF
                                            
                                       next @i
-                                   ENDIF
+                                   endif
    
                                   set @likeMostString = BuildRowsetFromString(@likeMostAbout,";")
                                   set @likeMostCount = rowCount(@likeMostString)
@@ -1983,7 +1987,7 @@ IF (empty(@crmId)) THEN
                                            ENDIF
                                            
                                       next @i
-                                   ENDIF
+                                   endif
                     
                     
          ]%% 
@@ -2107,7 +2111,7 @@ IF (empty(@crmId)) THEN
               "Guest_Subscription__c", @guestId,
               "fieldsToNull", "Primary_reason_for_your_visit_Legoland__c")
 
-         ENDIF
+         endif
         
          SET @oftenVisitValue = RequestParameter("visit")
          
@@ -2141,7 +2145,7 @@ IF (empty(@crmId)) THEN
               "Guest_Subscription__c", @guestId,
               "fieldsToNull", "Like_the_most_about_Legoland__c")
 
-         ENDIF
+         endif
           IF NOT Empty(@sfid) THEN
    
 
@@ -2488,7 +2492,7 @@ color:#ffd400;">×</span>
                                     "Reason_of_Unsubscribe__c", @unsubOtherComments
                                     )
                                     /*if a sub. comes back and uncheck temp pause*/
-                                    ENDIF
+                                    endif
                                     ENDIF
             
                                   set @thankYouPage = '#ThankYou'
@@ -3154,7 +3158,7 @@ $(document).on("click", ".del", function() {
         var whatsAppPref = document.getElementById('WhatsAppPref');
         var smsPref = document.getElementById('smsPref');
         var fName = document.getElementById('firstName').value;
-        var lName = document.getElementById('lastName').value;
+        var lName = document.getElementById('lname').value;
         var gEmail = document.getElementById('email').value;
         console.log('emailPref: ',emailPref.checked);
         console.log('whatsAppPref: ',whatsAppPref.checked);

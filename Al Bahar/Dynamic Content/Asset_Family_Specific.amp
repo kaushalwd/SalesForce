@@ -1,0 +1,67 @@
+%%[
+   SET @AccFName = AttributeValue("Contact:FirstName")
+    SET @AccLName = AttributeValue("Contact:LastName")
+    SET @AccCustName = "Customer"
+    SET @CustomerStore = AttributeValue("Asset:StoreName")
+    SET @OppCountry = UpperCase(Lookup("StoreLocationMapping", "Country", "StoreNumber", @CustomerStore))
+   
+   SET @regEx = "^[A-Za-z\s]+$"
+    SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+    SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+
+    IF (@AccFName == "" And @AccLName == "") Or (@AccFName == "NA" And @AccLName == "NA") Or (IsEmailAddress(@AccFName) == 'True' And IsEmailAddress(@AccLName) == 'True') Or (@regExMatchFName  == '' And @regExMatchLName  == '') Then
+       SET @AccCustName = "Customer"
+    ELSEIF (ProperCase(@AccFName) == ProperCase(@AccLName)) Then
+       SET @AccCustName = ProperCase(@AccFName)   
+    ELSE
+         IF @AccFName != "" Or @AccLName != "" Then
+           IF (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '') And (IsEmailAddress(@AccLName) == 'False' And @regExMatchLName != '') And (Uppercase(@AccFName) != "NA" And Uppercase(@AccLName) != "NA") And @AccFName != "" Then
+              SET @AccCustName = Concat(ProperCase(@AccFName), " ", ProperCase(@AccLName))
+           ELSEIF @AccFName != "" And (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '' And Uppercase(@AccFName) != "NA") Then
+              SET @AccCustName = ProperCase(@AccFName)
+           ENDIF
+        ENDIF  
+    ENDIF  
+ 
+      
+   
+   SET @ItemModels = AttributeValue("Asset:Model")
+   SET @ItemModelsRows = BuildRowsetFromString(@ItemModels, ",")
+   SET @ItemRowCount = RowCount(@ItemModelsRows)
+   
+   IF @ItemRowCount > 0 THEN
+    FOR @i=1 to @ItemRowCount Do
+        SET @ItemModelRow = Row(@ItemModelsRows, @i)
+        SET @ItemModel = Field(@ItemModelRow, 1)
+    Next @i
+   ELSE
+     SET @ItemModel = @ItemModels
+   ENDIF
+    
+    Output(Concat(" Model = ", @ItemModel))
+    
+    SET @ModelFamilyGroup = Lookup("Machine Family", "Group", "Model", @ItemModel)
+    
+    Output(Concat(" Group = ", @ModelFamilyGroup))
+    
+    SET @FamilyName = Lookup("Machine Family", "Family Name", "Model", @ItemModel)
+    SET @SubjectLine = Lookup("AssetOwnership_FamilySpecific", "Subject Line", "Group", @ModelFamilyGroup)
+    SET @BodySubtitle = Lookup("AssetOwnership_FamilySpecific", "Body Subtitle", "Group", @ModelFamilyGroup)
+    SET @BodyCopy1 = Lookup("AssetOwnership_FamilySpecific", "Body Copy 1", "Group", @ModelFamilyGroup)
+    SET @BodyCopy2 = Lookup("AssetOwnership_FamilySpecific", "Body Copy 2", "Group", @ModelFamilyGroup)
+    SET @CtaLink = Lookup("AssetOwnership_FamilySpecific", "CTA Link", "Group", @ModelFamilyGroup)
+    SET @TextOnImage = Lookup("AssetOwnership_FamilySpecific", "Text on Image", "Group", @ModelFamilyGroup)
+    SET @BImage = Lookup("AssetOwnership_FamilySpecific", "Banner Image", "Group", @ModelFamilyGroup)
+    SET @BImageOman = Lookup("AssetOwnership_FamilySpecific", "Banner Image - Oman", "Group", @ModelFamilyGroup)
+    
+    IF @OppCountry == "OMAN" Then
+        SET @companyName = "OASIS TRADING & EQUIPMENT CO. L.L.C"
+        SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/32dbd4ba-24fd-4c97-a9b4-de5d5cbd8303.jpg"
+        SET @BannerImage = @BImageOman
+    ELSE
+        SET @companyName = "MOHAMED ABDULRAHMAN AL-BAHAR"
+        SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b027d73b-0882-4aef-814b-a2bc4737a3b9.jpg"
+        SET @BannerImage = @BImage
+   ENDIF  
+
+   ]%%

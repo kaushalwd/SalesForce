@@ -1,0 +1,60 @@
+%%[
+
+SET @CustomerStore = AttributeValue("Opportunity:Customer_Store__c")
+
+SET @OppCountry = UpperCase(Lookup("StoreLocationMapping", "Country", "StoreNumber", @CustomerStore))
+SET @AccFName = AttributeValue("Contact:FirstName")
+SET @AccLName = AttributeValue("Contact:LastName")
+
+
+SET @AccCustName = "Customer"
+SET @regEx = "^[A-Za-z\s]+$"
+SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+
+IF (@AccFName == "" And @AccLName == "") Or (@AccFName == "NA" And @AccLName == "NA") Or (IsEmailAddress(@AccFName) == 'True' And IsEmailAddress(@AccLName) == 'True') Or (@regExMatchFName  == '' And @regExMatchLName  == '') Then
+   SET @AccCustName = "Customer"
+ELSEIF (ProperCase(@AccFName) == ProperCase(@AccLName)) Then
+   SET @AccCustName = ProperCase(@AccFName)   
+ELSE
+     IF @AccFName != "" Or @AccLName != "" Then
+       IF (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '') And (IsEmailAddress(@AccLName) == 'False' And @regExMatchLName != '') And (Uppercase(@AccFName) != "NA" And Uppercase(@AccLName) != "NA") And @AccFName != "" Then
+          SET @AccCustName = Concat(ProperCase(@AccFName), " ", ProperCase(@AccLName))
+       ELSEIF @AccFName != "" And (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '' And Uppercase(@AccFName) != "NA") Then
+          SET @AccCustName = ProperCase(@AccFName)
+       ENDIF
+    ENDIF  
+ENDIF    
+
+IF @OppCountry == "OMAN" Then
+ SET @companyName = "OASIS TRADING & EQUIPMENT CO. L.L.C"
+ SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/32dbd4ba-24fd-4c97-a9b4-de5d5cbd8303.jpg"
+ELSE
+ SET @companyName = "MOHAMED ABDULRAHMAN AL-BAHAR"
+ SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b027d73b-0882-4aef-814b-a2bc4737a3b9.jpg"
+ENDIF 
+
+SET @ItemModel = AttributeValue("OppProduct:Model")
+set @Subject_Line = Lookup("E9_Selection_Email_Personalized_Asset", "Subject_Line", "Model", @ItemModel)
+set @TOP_BODY = Lookup("E9_Selection_Email_Personalized_Asset", "TOP_BODY", "Model", @ItemModel)
+set @BODY_SUBTITLE = Lookup("E9_Selection_Email_Personalized_Asset", "BODY_SUBTITLE", "Model", @ItemModel)
+set @PM_kit_Subtitle = Lookup("E9_Selection_Email_Personalized_Asset", "PM_kit_Subtitle", "Model", @ItemModel)
+set @PM_kit_Body = Lookup("E9_Selection_Email_Personalized_Asset", "PM_kit_Body", "Model", @ItemModel)
+set @EPP_Subtitle = Lookup("E9_Selection_Email_Personalized_Asset", "EPP_Subtitle", "Model", @ItemModel)
+set @EPP_Body = Lookup("E9_Selection_Email_Personalized_Asset", "EPP_Body", "Model", @ItemModel)
+set @EPP_Subtitle = Lookup("E9_Selection_Email_Personalized_Asset", "EPP_Subtitle", "Model", @ItemModel)
+set @Fuel_Promise_Subtitle = Lookup("E9_Selection_Email_Personalized_Asset", "Fuel_Promise_Subtitle", "Model", @ItemModel)
+set @Fuel_Promise_Body = Lookup("E9_Selection_Email_Personalized_Asset", "Fuel_Promise_Body", "Model", @ItemModel)
+set @VisionLink_Cat_Subtitle = Lookup("E9_Selection_Email_Personalized_Asset", "VisionLink_Cat_Subtitle", "Model", @ItemModel)
+set @VisionLink_Cat_Body = Lookup("E9_Selection_Email_Personalized_Asset", "VisionLink_Cat_Body", "Model", @ItemModel)
+set @CTA_Link = Lookup("E9_Selection_Email_Personalized_Asset", "CTA_Link", "Model", @ItemModel)
+set @Banner_Image = Lookup("E9_Selection_Email_Personalized_Asset", "Banner_Image", "Model", @ItemModel)
+set @PM_Kit_Image = Lookup("E9_Selection_Email_Personalized_Asset", "PM_Kit_Image", "Model", @ItemModel)
+set @EPP_Image = Lookup("E9_Selection_Email_Personalized_Asset", "EPP_Image", "Model", @ItemModel)
+set @Fuel_Promise_Image = Lookup("E9_Selection_Email_Personalized_Asset", "Fuel_Promise_Image", "Model", @ItemModel)
+set @Vision_Link_Image = Lookup("E9_Selection_Email_Personalized_Asset", "Vision_Link_Image", "Model", @ItemModel)
+
+]%%
+%%[ SET @en=Base64Encode(Concat('source=EM&CT=AM&SK=',_subscriberkey)) 
+SET @unsubLink=CONCAT('https://cloud.mkt.albahar.com/preferencecenter?key=',@en,'&ln=',listid)]%%
+

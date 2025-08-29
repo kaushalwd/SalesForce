@@ -1,0 +1,7 @@
+<div style="text-align:center"><p>
+  <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://www.albahar.com/company/promotions" style="height:40px;v-text-anchor:middle;width:200px;" arcsize="50%" strokecolor="#ffffff" fillcolor="none">
+          <w:anchorlock/>
+          <center style="color:#ffffff;font-family:sans-serif;font-size:16px; line-height:16px; font-weight:bold;">Explore</center>
+        </v:roundrect>
+      <![endif]--><!--[if !mso]><!-- --><a href="https://www.albahar.com/company/promotions" style="display:inline-block;width:120px;background:#ffffff;color:#ffffff;font-family:Inter,Arial,sans-serif;font-size:16px;font-weight:normal;line-height:100%;margin:0;text-decoration:none;text-transform:none;padding:7px 0px 7px 0px;mso-padding-alt:0;border-radius:60px 60px 60px 60px; border:1px solid #000" target="_blank"><span style="font-size:16px;font-family:Inter,Arial,sans-serif;font-weight:700;color:#000000;line-height:100%;">Contact Us</span></a> <!--<![endif]--></p></div>

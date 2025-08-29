@@ -1,0 +1,228 @@
+%%[
+
+SET @AccName = Uppercase(AttributeValue("Account:Name"))
+SET @AccAddress = Uppercase(AttributeValue("Account:BilllingAddress"))
+SET @CustomerStore = AttributeValue("Opportunity:Customer_Store__c")
+SET @OppCountry = UpperCase(Lookup("StoreLocationMapping", "Country", "StoreNumber", @CustomerStore))
+SET @AccFName = AttributeValue("Contact:FirstName")
+SET @AccLName = AttributeValue("Contact:LastName")
+SET @AccCustName = "Customer"
+/*
+SET @regEx = "([0-9]+)"
+SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+*/
+SET @regEx = "^[A-Za-z\s]+$"
+SET @regExMatchFName = RegExMatch(@AccFName, @regEx, 0, "IgnoreCase")
+SET @regExMatchLName = RegExMatch(@AccLName, @regEx, 0, "IgnoreCase")
+
+IF (@AccFName == "" And @AccLName == "") Or (@AccFName == "NA" And @AccLName == "NA") Or (IsEmailAddress(@AccFName) == 'True' And IsEmailAddress(@AccLName) == 'True') Or (@regExMatchFName  == '' And @regExMatchLName  == '') Then
+   SET @AccCustName = "Customer"
+ELSEIF (ProperCase(@AccFName) == ProperCase(@AccLName)) Then
+   SET @AccCustName = ProperCase(@AccFName)   
+ELSE
+     IF @AccFName != "" Or @AccLName != "" Then
+       IF (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '') And (IsEmailAddress(@AccLName) == 'False' And @regExMatchLName != '') And (Uppercase(@AccFName) != "NA" And Uppercase(@AccLName) != "NA") And @AccFName != "" Then
+          SET @AccCustName = Concat(ProperCase(@AccFName), " ", ProperCase(@AccLName))
+       ELSEIF @AccFName != "" And (IsEmailAddress(@AccFName) == 'False' And @regExMatchFName != '' And Uppercase(@AccFName) != "NA") Then
+          SET @AccCustName = ProperCase(@AccFName)
+       ENDIF
+    ENDIF  
+ENDIF  
+
+IF @OppCountry == "OMAN" Then
+ SET @companyName = "OASIS TRADING & EQUIPMENT CO. L.L.C"
+ SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/32dbd4ba-24fd-4c97-a9b4-de5d5cbd8303.jpg"
+ELSE
+ SET @companyName = "MOHAMED ABDULRAHMAN AL-BAHAR L.L.C"
+ SET @companyLogo = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b027d73b-0882-4aef-814b-a2bc4737a3b9.jpg"
+ENDIF 
+
+SET @ItemModel = AttributeValue("OppProduct:Model")
+SET @MachineNames = AttributeValue("OppProduct:Model")
+SET @MachineNamesRows = BuildRowsetFromString(@MachineNames, ",")
+SET @MachineName = ""
+SET @MachineRowCount = RowCount(@MachineNamesRows)
+IF @MachineRowCount > 1 Then
+  FOR @i=1 to @MachineRowCount Do
+      SET @MachineRow = Row(@MachineNamesRows, @i)
+      IF @i == @MachineRowCount Then
+        SET @MachineName = Concat(@MachineName, " and ", Field(@MachineRow, 1))
+      ELSEIF @i == 1 Then
+        SET @MachineName = Field(@MachineRow, 1)
+      ELSE
+        SET @MachineName = Concat(@MachineName, ", ", Field(@MachineRow, 1))
+      ENDIF
+  Next @i
+ELSE
+ SET @MachineName = @MachineNames
+ENDIF
+
+
+SET @ModelGroup3 = "725C2,740GC,745,745-04LRC,745C,773E,773GQ,777,785D,770GLRC,772GLRC"
+SET @ModelGroup4 = "420,426,426F2,426F2LRC,428-07LRC,428F2,428F2 LRC,432-07LRC,434F,434F2,434F2 LRC"
+SET @ModelGroup7 = "239D LRC,255-05LRC,259D LRC,279D3LRC,289D LRC,239D,239D LRC,257D,259D,259D LRC,216B3,216B3LRC,216B3WKLR,226B3,226B3LRC,226B3WKLR,236D3,246D LRC,262D LRC"
+SET @ModelGroup10 = "300.9D,301.4C,301.5,301.5-05,301.7,302,302.7D,302-05CR,303.5-07CR,303.5E,303.5E CR,303E CR,304E2CR,306.5,306.5-07,30600,307.5,300.9,301.4,301.7DCR,303-07CR,303E,305.5-07,30550,305E,306E,30600,M306"
+SET @ModelGroup11 = "824K,986K,988-11,988K,988K,992K,950-14,950GC,950GC,950L,950L,962L,962L,966,966GC,966H,966H,966L,966L,980,980L,980L"
+SET @ModelGroup12 = "140GC,140K,140K,140K-SZ,14-15A,14L,14L AWD,14M,14M3,919"
+SET @ModelGroup13 = "655D,SEM618B,SEM636D,SEM655D,SEM660D,SEM676D,SEM676F,SEM665F"
+SET @ModelGroup15 = "CS11GC,CS11GCLRC,CS-533E,CS-533E,CS533EQNN,CS54B,CS54B XP,CS54BLRC,CS74,CS74B,CS78B"
+SET @ModelGroup16 = "SEM919,SEM921"
+SET @ModelGroup17 = "SEM512,SEM518"
+SET @ModelGroup21 = "D3-12,D5K,D5K2XL,D11-07,D11-07LRC,D9-03GC,D9R,D9R,D9TQ,D6R,D6R2,D6R2LGP,D7R II,D8-19,D8GC,D8R,D8T,D8T,D8T-LGP,D8T-RY"
+SET @ModelGroup22 = "CB1.7,CB14B,CB2.5,CB2.5,CB2.5GC,CB2.5LRC,CB2.7,CB22B"
+
+
+SET @ModelItemNames = AttributeValue("OppProduct:Model")
+SET @ModelItemNameRows = BuildRowsetFromString(@ModelItemNames, ",")
+SET @ModelItemName = ""
+
+/*SET @ModelItemPrices = AttributeValue("OppProduct:AdjustablePrices")*/
+SET @ModelItemPrices = AttributeValue("OppProduct:UnitPrice")
+SET @ModelItemPriceRows = BuildRowsetFromString(@ModelItemPrices, ",")
+SET @ModelItemPrice = ""
+
+SET @ModelItemRowCount = RowCount(@ModelItemNameRows)
+
+IF @ModelItemRowCount > 1 Then
+  FOR @i=1 to @ModelItemRowCount Do
+    SET @ModelItemRow = Row(@ModelItemNameRows, @i)
+    SET @ModelItemPriceRow = Row(@ModelItemPriceRows, @i)
+    SET @ModelItemName = Field(@ModelItemRow, 1)
+    SET @ModelItemPrice = Field(@ModelItemPriceRow, 1)
+    
+    SET @currentValue = @ModelItemPrice
+    /*Trim(Field(Row(@ModelItemPriceRows, @i), 1))*/
+    
+    SET @currentModel = @ModelItemName
+    /*Trim(Field(Row(@ModelItemRow, @i), 1))*/
+    
+    /* Multiply by 1 to convert to a number */
+    SET @currentValueNum = @currentValue * 1
+    
+    /* Update max value if current value is greater */
+    IF @currentValueNum > @maxValue THEN
+        SET @maxValue = @currentValueNum
+        SET @maxValuedModel = @currentModel
+    ENDIF
+  Next @i
+  SET @ModelItemName = @maxValuedModel
+    IF IndexOf(@ModelGroup3, @ModelItemName) != 0 Then SET @ModelGroup = 3
+    ELSEIF IndexOf(@ModelGroup4, @ModelItemName) != 0 Then SET @ModelGroup = 4
+    ELSEIF IndexOf(@ModelGroup7, @ModelItemName) != 0 Then SET @ModelGroup = 7
+    ELSEIF IndexOf(@ModelGroup10, @ModelItemName) != 0 Then SET @ModelGroup = 10
+    ELSEIF IndexOf(@ModelGroup11, @ModelItemName) != 0 Then SET @ModelGroup = 11
+    ELSEIF IndexOf(@ModelGroup12, @ModelItemName) != 0 Then SET @ModelGroup = 12
+    ELSEIF IndexOf(@ModelGroup13, @ModelItemName) != 0 Then SET @ModelGroup = 13
+    ELSEIF IndexOf(@ModelGroup15, @ModelItemName) != 0 Then SET @ModelGroup = 15
+    ELSEIF IndexOf(@ModelGroup16, @ModelItemName) != 0 Then SET @ModelGroup = 16
+    ELSEIF IndexOf(@ModelGroup17, @ModelItemName) != 0 Then SET @ModelGroup = 17
+    ELSEIF IndexOf(@ModelGroup21, @ModelItemName) != 0 Then SET @ModelGroup = 21
+    ELSEIF IndexOf(@ModelGroup22, @ModelItemName) != 0 Then SET @ModelGroup = 22
+    ELSE
+        SET @ModelGroup = 4 
+    ENDIF
+    /*
+    Output(Concat(" Price => ",@maxValue))
+    */
+ELSE
+    SET @ModelItemName = @ModelItemNames
+    IF IndexOf(@ModelGroup3, @ModelItemName) != 0 Then SET @ModelGroup = 3
+    ELSEIF IndexOf(@ModelGroup4, @ModelItemName) != 0 Then SET @ModelGroup = 4
+    ELSEIF IndexOf(@ModelGroup7, @ModelItemName) != 0 Then SET @ModelGroup = 7
+    ELSEIF IndexOf(@ModelGroup10, @ModelItemName) != 0 Then SET @ModelGroup = 10
+    ELSEIF IndexOf(@ModelGroup11, @ModelItemName) != 0 Then SET @ModelGroup = 11
+    ELSEIF IndexOf(@ModelGroup12, @ModelItemName) != 0 Then SET @ModelGroup = 12
+    ELSEIF IndexOf(@ModelGroup13, @ModelItemName) != 0 Then SET @ModelGroup = 13
+    ELSEIF IndexOf(@ModelGroup15, @ModelItemName) != 0 Then SET @ModelGroup = 15
+    ELSEIF IndexOf(@ModelGroup16, @ModelItemName) != 0 Then SET @ModelGroup = 16
+    ELSEIF IndexOf(@ModelGroup17, @ModelItemName) != 0 Then SET @ModelGroup = 17
+    ELSEIF IndexOf(@ModelGroup21, @ModelItemName) != 0 Then SET @ModelGroup = 21
+    ELSEIF IndexOf(@ModelGroup22, @ModelItemName) != 0 Then SET @ModelGroup = 22
+    ELSE
+        SET @ModelGroup = 3 
+    ENDIF
+ENDIF
+
+IF @ModelGroup == "" Then
+   SET @ModelGroup = 3
+ENDIF    
+
+/*Output(Concat(" Model => ",@ModelGroup))*/
+
+
+IF @ModelGroup == 3 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/01b27bbb-5631-4b1a-80c2-bfdc228b015f.jpg" 
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/937a330c-746e-402d-9079-e2cceb35236e.jpg"
+  ENDIF  
+ELSEIF @ModelGroup == 4 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/9ec94c92-c822-4f87-9e98-4431f76ac5c9.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/aa2114ee-385d-4065-9ca5-7f0bb14940f2.jpg"
+  ENDIF
+ELSEIF @ModelGroup == 7 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/9d800d43-2c62-432e-bf14-fe6c380b4635.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/f920ec4a-1388-4c37-83ee-c809d6f76f22.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 10 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/60635e65-5041-47f5-9bda-f822cc8edf02.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/655e88cc-1d7c-4518-b07e-a7aefa8854ee.jpg"
+  ENDIF
+ELSEIF @ModelGroup == 11 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/989fe935-eb49-48a4-8a78-7109985851da.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/1a9b21c6-580c-4f8d-9e06-990273dcaeea.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 12 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/1c718cfa-36b6-4a05-a9b0-d9a145140d64.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/98b80669-b304-411d-91f6-c54bba1857f3.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 13 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/13836d0c-7efc-499f-afee-9453cdfd2184.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/183f720c-1a79-4222-ae66-6af418d434f3.jpg"    
+  ENDIF
+ELSEIF @ModelGroup == 15 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/1ce631ab-c324-46ea-9902-f63971d0f8cf.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/d16300ad-f5e2-448c-8d9d-4711632d0c1e.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 16 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/c71944de-d865-4d65-981b-77540cfda7c3.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/c71944de-d865-4d65-981b-77540cfda7c3.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 17 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/97f82522-41fe-437f-851c-8d65009e2e5b.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/97f82522-41fe-437f-851c-8d65009e2e5b.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 21 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/8d33af9b-8f81-49db-b697-fdb10a3b37b5.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/b7db9aa2-f635-4e7b-bf1f-9f7778eced57.jpg"  
+  ENDIF
+ELSEIF @ModelGroup == 22 Then
+  IF @OppCountry == "OMAN" Then
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/03b3f076-8e33-4401-9f36-9101cdfdfd57.jpg"
+  ELSE
+    SET @bannerImage = "https://image.mkt.albahar.com/lib/fe2f11737364047b7c1770/m/1/04e32e16-7256-44ad-8480-cd9548eee93d.jpg"  
+  ENDIF
+ENDIF 
+
+]%%
