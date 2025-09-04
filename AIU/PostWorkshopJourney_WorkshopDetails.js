@@ -1,0 +1,167 @@
+%%[
+    /*set @CM_ID = "00vNM000004U4wjYAC"*/
+    set @CM_ID = RequestParameter("id")
+    set @firstname = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "FirstName", "CampaignMemberId", @CM_ID)
+    set @lastname = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "LastName", "CampaignMemberId", @CM_ID)
+    set @contactID = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "ContactId", "CampaignMemberId", @CM_ID)
+    set @AccountId = Lookup("Contact", "AccountId", "Id", @contactID)
+    set @organization = Lookup("Account", "Name", "Id", @AccountId)
+    set @title = Lookup("Contact", "Title", "Id", @contactID)
+    set @eventname = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "EventName", "CampaignMemberId", @CM_ID)
+    set @campaignID = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "CampaignId", "CampaignMemberId", @CM_ID)
+    set @qrCodeText = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "QR_Code_Id__c", "CampaignMemberId", @CM_ID)
+    set @eventvenue = Lookup("Campaign", "Venue__c", "Id", @campaignID)
+    set @eventStartdate = Lookup("Campaign", "StartDate", "Id", @campaignID)
+    set @eventStartdate = FormatDate(@eventStartdate,"M")
+    set @eventEnddate = Lookup("Campaign", "EndDate", "Id", @campaignID)
+    set @eventEnddate = FormatDate(@eventEnddate,"M")
+    set @email = Lookup("QA_PostWorkshopRegistrationJourneyEntryDE", "EmailAddress", "CampaignMemberId", @CM_ID)
+    set @eventDetailURL = Lookup("Campaign", "Event_Detail_Url__c", "Id", @campaignID)
+    
+    if empty(@firstname) then
+    set @firstname = "Guest"
+    else
+    set @firstname = concat(@firstname," ",@lastname)
+    endif
+    
+    
+    ]%%
+    
+    
+        <meta charset="UTF-8">
+        <title>AI &amp; Cybersecurity GCC Forum - October 8 - Four Seasons Event</title>
+        <link href="https://cloud.email.aiu.edu.kw/style" rel="stylesheet">
+        <link href="https://cloud.email.aiu.edu.kw/bootstrap.min" rel="stylesheet">
+        <link href="https://cloud.email.aiu.edu.kw/select2.min" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.12.1/date-1.1.2/datatables.min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            /* Add any necessary inline styles here or keep in style.css */
+      h5{color: black;
+        text-align: left;
+        font-size: 17px;}
+     
+        </style>
+    
+    
+        <div class="titlediv">
+            <div class="screen userBG" style="background-image:url('https://image.email.aiu.edu.kw/lib/fe2a117373640479731079/m/1/ed26d110-4d7e-49e4-b146-bd71bba35872.jpg')">
+                <div class="container AIcont">
+                    <div class="row page_frame">
+                        <div class="col-md-6">
+                            <a href="https://www.aiu.edu.kw/ai-cybersecurity-forum">
+                                <img src="https://image.email.aiu.edu.kw/lib/fe2a117373640479731079/m/1/111d0209-2621-4603-a4b8-44710da2c9c2.png" style="width:500px; max-width:100%" alt="AI Cybersecurity Forum Title">
+                            </a>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <img src="https://image.email.aiu.edu.kw/lib/fe2a117373640479731079/m/1/edf615e8-b554-41bf-b971-d4e21e58ec8a.png" style="max-width:200px;" alt="Day 1">
+                        </div>
+                    </div>
+    
+                    <!-- Static Content Start -->
+    
+                    <div class="row">
+                        <div class="col-md-12 form" style="text-align:center; color:#6953a2;">
+                            <h4>%%=v(@eventname)=%% - %%=v(@eventStartdate)=%% to %%=v(@eventEnddate)=%% - %%=v(@eventvenue)=%%</h4><br>
+
+                            <div class="row">
+                                <div class="col-md-6 col-xs-12">
+                                <h5>Name : %%=v(@firstname)=%%</h5>
+                            <h5>Email : %%=v(@email)=%%</h5>
+                          %%[if not empty(@title) then]%%
+                            <h5>Title : %%=v(@title)=%%</h5>
+                          %%[endif]%%
+                          %%[if not empty(@organization) then]%%
+                            <h5>Company : %%=v(@organization)=%%</h5>
+                          %%[endif]%%
+                            <br>
+                            <h5 style="color:#6953a2;">Workshop Selected</h5>
+                            <ul style="text-align:left; max-width:600px; color:black;">
+                              %%[
+                              
+                              set @rows = LookupRows("Campaign","ParentId", @campaignID)
+    set @rowCount = rowcount(@rows)
+    if @rowCount > 0 then
+      for @i = 1 to @rowCount do
+        set @row = row(@rows, @i)
+        set @WorkshopId = field(@row,"Id")
+        SET @status=Lookup('Campaign Member','status',"ContactId",@ContactId,"CampaignId",@WorkshopId)
+        IF @status=='Registration Approved' THEN
+        SET @WorkshopName=LookUp("Campaign",'Name','id',@WorkshopId)
+        SET @WorkshopVenue=LookUp("Campaign",'Venue__c','id',@WorkshopId) 
+        
+        SET @sessionStartTime=LookUp("Campaign",'Session_Start_Time__c','id',@WorkshopId)
+        SET @sessionStartTimeFormat=FormatDate(@sessionStartTime,"","s")
+        
+        SET @sessionEndTime=LookUp("Campaign",'Session_End_Time__c','id',@WorkshopId)
+        SET @sessionEndTimeFormat=FormatDate(@sessionEndTime,"","s")
+        
+        SET @startDate=LookUp("Campaign",'StartDate','id',@WorkshopId)
+        SET @startDateFormat=FormatDate(@startDate,"l")
+     SET @WorkshopDateTime=Concat(@startDateFormat,', ',@sessionStartTimeFormat,' - ',@sessionEndTimeFormat)
+        
+    ]%%
+                              
+                              
+                              
+                              
+                              ]%%
+                              
+                              
+                                <li>
+                                    %%=v(@WorkshopName)=%%<br>
+                                    <strong>Date & Time: </strong>%%=v(@WorkshopDateTime)=%%<br>
+                                    <strong>Location: </strong>%%=v(@WorkshopVenue)=%%<br><br>
+                                </li>
+                              
+                                %%[
+                                ENDIF
+                                next @i 
+                                endif
+                                ]%%
+                                
+                            </ul>
+                                </div>
+                                <div class="col-md-6 col-xs-12 pt-3">
+                                %%[ 
+                                    /* Replace with your CloudPage URL or any other link which needs to be added behind QR code */ 
+
+                                    SET @baseURL = Concat("https://api.qr-code-generator.com/v1/create?access-token=FwY0Z5OWlvmtR9jK7B-UftXghn8sA9zAH-2aRraRFI02I5CU0OXc-jjBLXWiGV-5&qr_code_text=", @qrCodeText) ]%%
+
+                                    <div id="qrcode" class="pb-3"> <img src="%%=v(@baseURL)=%%" alt="Scan QR Code" width="200" height="200" data-sc="%%=v(@baseURL)=%%" /> </div>
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation"><tr><td align="center"><table border="0" cellspacing="0" cellpadding="0" role="presentation"><tr><td class="innertd buttonblock" bgcolor="#6852A3" style=" border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; background-color: #6852A3;"><a target="_blank" class="buttonstyles" style=" font-size: 16px; font-family: Arial, Helvetica, sans-serif; color: #FFFFFF; text-align: center; text-decoration: none; display: block; background-color: #6852A3; border: 1px solid #6852A3; padding: 10px 50px; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;" href="%%=RedirectTo(@eventDetailURL)=%%" title="" alias="" conversion="false" data-linkto="http://">For More Event Details</a></td></tr></table></td></tr></table>
+                                </div>
+                            </div>
+                            
+                          
+                        </div>
+                    </div>
+    
+                  
+                </div>
+            </div>
+        </div>
+    
+        <div id="top_foot">
+            <div class="center group" style="text-align:center">
+                <a href="https://www.aiu.edu.kw/" class="logo"><img src="https://image.email.aiu.edu.kw/lib/fe2a117373640479731079/m/1/695eb69d-3194-461f-8004-a83fed605b2b.png" alt="AIU Logo"></a>
+            </div>
+        </div>
+        <div id="footer">
+            <div class="page_frame" style="text-align:center; color:white;">
+                &copy; 2024 AIU
+            </div>
+        </div>
+    
+        <script src="https://cloud.email.aiu.edu.kw/jquery.min"></script>
+        <script src="https://cloud.email.aiu.edu.kw/bootstrap.bundle.min"></script>
+        <script src="https://cloud.email.aiu.edu.kw/select2.min.full"></script>
+        <script src="https://cloud.email.aiu.edu.kw/jquery.multifile.min"></script>
+        <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
+        <script src="https://cdn.datatables.net/datetime/1.1.2/js/dataTables.dateTime.min.js"></script>
+        <script src="https://cloud.email.aiu.edu.kw/jquery.table2excel.js"></script>
+    
+    
+    
