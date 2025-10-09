@@ -1,0 +1,72 @@
+<div style="color:#fff;padding:0px 20px;">
+  <p>
+ %%[set @firstName = [FirstName] set @firstName1 = Iif(not Empty(@firstName), @firstName, "Guest") ]%% Dear %%=v(@firstName1)=%%,</p>
+<p>Thank you for registering for the workshops at the %%=AttributeValue('EventName')=%%, hosted by the American International University, Kuwait. We are pleased to confirm your participation in the following session: </p>
+
+%%[
+set @EventId = AttributeValue("CampaignId")
+set @ContactId=AttributeValue("ContactId")
+set @rows = LookupRows("Campaign","ParentId", @EventId)
+set @rowCount = rowcount(@rows)
+set @charValue=65
+if @rowCount > 0 then
+  for @i = 1 to @rowCount do
+    set @row = row(@rows, @i)
+    set @WorkshopId = field(@row,"Id")
+    SET @status=Lookup('Campaign Member','status',"ContactId",@ContactId,"CampaignId",@WorkshopId)
+    IF @status=='Registration Approved' THEN
+    SET @WorkshopName=LookUp("Campaign",'Name','id',@WorkshopId)
+    SET @WorkshopVenue=LookUp("Campaign",'Venue__c','id',@WorkshopId) 
+    
+    SET @sessionStartTime=LookUp("Campaign",'Session_Start_Time__c','id',@WorkshopId) 
+    SET @addedsessionStartTime=DateAdd(@sessionStartTime, 540, "MI") 
+    SET @sessionStartTimeFormat=FormatDate(@addedsessionStartTime,"","s") 
+    SET @sessionStartDateFormat=FormatDate(@addedsessionStartTime,"l") 
+    
+    SET @sessionEndTime=LookUp("Campaign",'Session_End_Time__c','id',@WorkshopId) 
+    SET @addedsessionEndTime=DateAdd(@sessionEndTime, 540, "MI") 
+    SET @sessionEndTimeFormat=FormatDate(@addedsessionEndTime,"","s") 
+    
+    
+ SET @WorkshopDateTime=Concat(@sessionStartDateFormat,', ',@sessionStartTimeFormat,' - ',@sessionEndTimeFormat)
+    
+]%%
+  <ul style="margin-bottom:0px;padding-bottom:0px;">
+   <li>Workshop %%=Char(@charValue)=%% : %%=v(@WorkshopName)=%%</li>
+</ul>
+    <ul style="list-style-type:none;margin-top:0px;padding-top:0px;">
+       <li>Date & time : %%=v(@WorkshopVenue)=%%</li>
+   <li>Venue : %%=v(@WorkshopDateTime)=%%</li>
+  </ul>
+%%[
+ set @charValue = Add(@charValue,1)
+ ENDIF
+next @i 
+endif ]%%
+<p>
+%%[ SET @eventUrl=LookUp("Campaign",'Event_Detail_Url__c','id',AttributeValue("campaignId")) ]%%
+You can review the full event agenda and further details <a href="%%=RedirectTo(@eventUrl)=%%" style="color:#ffffff">here</a>.
+</p>
+<p>
+To ensure a smooth check-in, please present your personalized QR code at the registration desk:
+ </p>
+  %%[ 
+SET @qrCodeText = AttributeValue("QR_Code_Id__c")
+SET @baseURL = Concat("https://api.qr-code-generator.com/v1/create?access-token=",
+"FwY0Z5OWlvmtR9jK7B-UftXghn8sA9zAH-2aRraRFI02I5CU0OXc-jjBLXWiGV-5", "&qr_code_text=", @qrCodeText ) ]%%
+
+  <div id="qrcode" style="text-align:center;"><br> <img src="%%=v(@baseURL)=%%" alt="Scan QR Code" width="200" height="200"><br></div>
+<p style="text-align:center"><strong>QR Code: %%=v(@qrCodeText)=%%</strong></p>
+<p>
+For any inquiries, feel free to contact us at <a href="mailto:EventAl@aiu.edu.kw" style="color:#ffffff">EventAl@aiu.edu.kw</a>
+</p>
+  <p>
+   We look forward to welcoming you to an engaging and insightful experience. 
+  </p>
+<p><br>
+  Best regards,  
+</p>
+<p>
+  The AI & Cybersecurity GCC Forum Organizing Committee <br>American International University - Kuwait
+</p>
+</div>
