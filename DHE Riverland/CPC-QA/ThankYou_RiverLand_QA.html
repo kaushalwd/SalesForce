@@ -1,0 +1,371 @@
+%%[
+
+  SET @id = _subscriberkey
+
+  IF (empty(@id)) THEN
+    SET @idEn = QueryParameter("sfid")
+    SET @id = Base64Decode(@idEn)
+    /*output(concat("decodeSFID:- ",@decodeSFID))*/
+    IF (empty(@id)) THEN
+      SET @id = RequestParameter("sfid")
+      /*output(concat("Id:-- ",@Id))*/
+      IF (empty(@id)) THEN
+       SET @id = QueryParameter("sfid")
+       /*output(concat("Id:--- ",@Id))*/
+      ENDIF
+     ENDIF
+    ENDIF
+    /*set @id = Base64Encode(@decodeSFID)*/
+    if empty(@idEn) or IsNull(@idEn) then
+      set @link= "%%=RedirectTo(CloudPagesURL(4563))=%%"
+    else
+      Set @link = Concat("https://cloud.explore.riverlanddubai.com/RIVERLAND_CPC_QA?sfid=",@idEn)
+    endif
+
+
+
+SET @gfContactRows = RetrieveSalesforceObjects("Contact",
+  "Id,FirstName",
+    "Id","=", @id )
+SET @bfContactRows =RetrieveSalesforceObjects("Contact",
+  "Id,FirstName",
+    "GV_ContactId__c","=", @id )
+    
+       IF RowCount(@gfContactRows) == 1 THEN 
+        set @contactRow = Row(@gfContactRows, 1) 
+        /*output(concat("<br>contactRowIf ",@contactRow)) */
+        ELSEIF RowCount(@bfContactRows) == 1 THEN 
+        set @contactRow = Row(@bfContactRows, 1) 
+        /*output(concat("<br>contactRowElse ",@contactRow)) */
+        ENDIF 
+        
+    if not empty(@contactRow) then /* there should only be one row */
+    
+    set @id = Field(@contactRow, "Id")
+    set @firstName = Field(@contactRow, "FirstName")
+    endif
+    SET @contactRows = RetrieveSalesforceObjects("Guest_Subscription__c","Status__c",
+"Contact__c", "=", @id,"Asset__c","=","Dubai Parks and Resorts","Sub_Asset__c","=","T-REX GLAMPING")
+
+/* Check if there are any rows returned */
+IF RowCount(@contactRows) > 0 THEN
+/* Get the first row */
+SET @contactRow = Row(@contactRows, 1)
+
+/* Get values from the fields */
+SET @status = Field(@contactRow, "Status__c")
+ENDIF
+
+/*Output(concat("<br>status: ",@status))*/
+SET @hideDiv = false
+IF @status == "Unsubscribed" Then
+SET @hideDiv = true
+ENDIF
+]%%
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>T-REX GLAMPING</title>
+<link rel="icon" type="image/x-icon" href="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/32a63e32-fc8e-46c1-b6c4-a6bff8eeff1b.png">
+<link href='https://cloud.explore.riverlanddubai.com/bootstrap.min_RIVERLAND_QA' rel='stylesheet'>
+                                
+                                <script type='text/javascript' src='https://cloud.explore.riverlanddubai.com/jqueryV2.min_RIVERLAND_QA'></script>
+                                <link href="https://cloud.explore.riverlanddubai.com/material-design-iconic-font.min_RIVERLAND_QA" rel="stylesheet" media="all">
+                                <link href="https://cloud.explore.riverlanddubai.com/font-awesome.min_RIVERLAND_QA" rel="stylesheet" media="all">
+<!-- Font special for pages-->
+<link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+<link href="https://cloud.explore.riverlanddubai.com/style_RIVERLAND_QA" rel="stylesheet">
+<link href="https://cloud.explore.riverlanddubai.com/font_RIVERLAND_QA">
+ <!-- Vendor CSS-->
+<link href="https://cloud.explore.riverlanddubai.com/select2.min_RIVERLAND_QA" rel="stylesheet" media="all">
+<link href="https://cloud.explore.riverlanddubai.com/daterangepicker_RIVERLAND_QA" rel="stylesheet" media="all">
+    <link href="https://fonts.cdnfonts.com/css/charlie-kingdom" rel="stylesheet">
+    <style>
+      /* thank you page css */
+      .thanYou-img img{
+        max-width: 10%;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .thanks-wrapper{
+        margin: 50px 0 50px 0;
+      }
+      .thankYou-text h2, .thankYou-text p{
+        text-align: center;
+      }
+      .back-to-profile a{
+        font-size: 16px;
+        text-decoration: none;
+        padding: 12px 25px;
+      }
+      .back-btn{
+        background: #567F2E;
+        color: #e7eec4;
+        font-size: 16px;
+        text-align: right;
+        font-weight: bold;
+      }
+      .back-to-profile a:hover{
+        background: #e7eec4;
+        color: #567F2E;
+        border: 2px solid #567F2E ;
+      }
+      .back-to-profile {
+        max-width: 800px;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="row align-items-center" style="margin: 0 auto;">
+          <div class="col-lg-8 col-md-8 col-sm-8 col-8">
+            <a href="https://www.dubaiparksandresorts.com/en/t-rex_glamping" class="logo-link" target="_blank">
+              <img src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/3806a628-4e1a-4dd9-bb99-f4b4af906274.png"
+                   alt="logo">
+            </a>
+          </div>
+          <div class="col-lg-4 col-md-4 col-sm-4 col-4">
+            <a href="https://dubaiholding.com/en/who-we-are/our-companies/dubai-holding-entertainment/" class="logo-link" target="_blank">
+              <img src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/d5a58588-5b6d-4999-8622-3122c4f86c77.png"
+                   alt="logo-dhe" class="pull-right dhe-logo">
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      
+       <div class="lang-switcher-text">
+            <a href="https://cloud.explore.riverlanddubai.com/ThankYou_AR_QA" class="language-toggle-link" id="langSwitcher" onclick="dynamicLangSwitcher();">العربية</a>
+                                  
+                                  </div>
+      
+      
+    </header>
+    <!-- Header End -->
+    <section class="banner">
+      <div class="main-banner">
+        <img src= "https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/6da4d6f8-9548-4162-970c-06d525b78ea2.jpg" alt="banner-img" class="responsive">
+      </div>
+      <div class="container">
+        <h1 class="username" style="font-family: 'Charlie Kingdom', sans-serif;">Hi %%=v(ProperCase(@firstName))=%% 
+        </h1>
+      </div>
+    </section>
+    <!-- content section -->
+    <form class="comment-form">
+      <div class="container">
+        <div style="display: %%=IIF(NOT @hideDiv, 'block', 'none')=%%;" class="thanks-wrapper form group">
+          <div class="thanYou-img mb-2">
+            <img src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/15cb4c87-66e0-4f1a-8090-1b610da970c1.png" alt="" class="banner-bg-img">
+          </div>
+          <div class="thankYou-text">
+            <h2>
+              <strong>Thank You!</strong>
+            </h2>
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">We have saved your preferences and look forward to serving you better.
+            </p>  
+          </div>
+          <div class="mt-5 back-to-profile">
+            <a href="%%=RedirectTo(@link)=%%" name="button" class="btn orange-btn back-btn">Back to your profile</a>
+          </div>
+        </div>
+      </div>
+    </form>
+    <div class="container" style="padding:30px 0">
+      <div style="display: %%=IIF(@hideDiv, 'block', 'none')=%%;" class="unsubscribe-wrapper form group">
+        <div class="thanYou-img mb-2">
+          <img src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/15cb4c87-66e0-4f1a-8090-1b610da970c1.png" alt="" class="banner-bg-img">
+        </div>
+        <div class="thankYou-text">
+          <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-top:20px">Thank you for your feedback; it helps us enhance our services.
+          </p>  
+        </div>
+      </div>
+    </div>                      
+    <!-- content section end -->
+    <!-- footer start -->
+    <footer>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-3 col-sm-12 col-12">
+                             <a alias="DPR_link" class="logo-footer"href="https://www.dubaiparksandresorts.com/en" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/4ff60be6-4715-49f8-9ed0-581048a1784c.png"></a>
+                        </div>
+                        <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+                            <h4>Information</h4>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                                <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">Buy Tickets</a></p>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                                <p><a alias="AnnualPass" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">Annual Pass</a></p>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                              <p><a alias="Offers" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">Offers</a></p>
+                          </div>
+                          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                            <p><a alias="Experience" href="https://www.dubaiparksandresorts.com/en/booking/annual-pass#594" target="_blank">Experiences</a></p>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                          <p><a alias="ContactUs" href="https://www.dubaiparksandresorts.com/en/contact-us" target="_blank">Contact Us</a></p>
+                      </div>
+                        </div>
+                        <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+                          <h4>Legal</h4>
+                          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                              <p><a alias="Disclaimer" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">Disclaimer</a></p>
+                          </div>
+                          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                              <p><a alias="PrivacyPloicy" href="https://privacy.dubaiholding.com/privacy-notice/customers---dubai-holding-entertainment-llc" target="_blank">Privacy Policy</a></p>
+                          </div>
+                          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                            <p><a alias="TermsAndCondition" href="https://www.dubaiparksandresorts.com/en/terms-conditions" target="_blank">Terms &amp; Conditions</a></p>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                          <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/en/cookie-policy" target="_blank">Cookies Notice</a></p>
+                      </div>
+                      <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                        <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/en/copyright-trademark" target="_blank">Copyright &amp; Trademark</a></p>
+                    </div>
+                      </div>
+                      <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+                        <h4>Tickit Rewards</h4>
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                            <p><a alias="Tickit_iOS" href="https://apps.apple.com/us/app/tickit-rewards/id1597908032?_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4jP9gwHIgL%2FmLQAAAA%3D%3D" target="_blank">Download Tickit
+                              for iOS</a></p>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                            <p> <a alias="Tickit_Android" href="https://play.google.com/store/apps/details?id=ae.tickit.primary&_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4h3zUoryM1MAFKNCBjEAAAA%3D&pli=1" target="_blank">Download Tickit
+                              for Android</a></p>
+                        </div>
+                      
+                    </div>
+                        <div class="col-lg-3 col-md-3 col-sm-12 col-12">
+                            
+                            <ul class="social-media-ul">
+                                <li><a alias="fb" conversion="false" data-linkto="https://" href="https://www.facebook.com/profile.php?id=61576855525907" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/85174c45-a541-4ca9-948a-e3437b3f80bf.png"></a>
+                                </li>
+                                <li> <a alias="Insta" conversion="false" data-linkto="https://" href="https://www.instagram.com/riverlanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/d5e1e09e-b621-4e66-aeea-9c5e6ee1924b.png"></a>
+
+                                </li>
+                                <li> <a alias="Tiktok" conversion="false" data-linkto="https://" href="https://www.tiktok.com/@riverlanddubai" target="_blank" title=""><img alt="" data-assetid="92835" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/2bdbbb78-943f-47a7-8e5e-df9d5fa749ec.png"></a>
+
+                                </li>
+                                <li class="youtube"> <a alias="Youtube" conversion="false" data-linkto="https://" href="https://www.youtube.com/@riverland" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/ec2006c5-f1e5-4e9b-8a7a-ecfa66e56319.png" ></a>
+                                </li>
+                               
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row footer-row-2">
+                      <div class="col-lg-8 col-md-8 col-sm-12 col-12 ">
+                        <p style="color: rgb(238, 238, 238); font-size: 10px; font-family: Arial, Helvetica, sans-serif; font-weight: normal;  text-align: left;line-height:12px">
+                          A&copy;2025 The LEGO Group. &copy;2025 DWA LLC. All Rights Reserved  &copy;2025 CPll. All Rights reserved.<br> &copy;2025 SPAI. All Rights Reserved. &copy;2025 GHI. Movie &copy; 2025 Lions Gate Ent. Inc.<br> &copy; Dubai Parks&trade; and Resorts 2025. All Rights Reserved.</p>
+                      </div>
+                     
+                     
+                    <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+                      <h4>Proud partners</h4>
+                      <ul class="proud-partners">
+                      <li class="pp">
+                        <img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/8a370b60-e19b-4ae3-ab67-3a61d7960089.png" style="width: 35px;" width="35">
+                      </li>
+                      <li class="pp">
+                        <img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/42c39a98-7595-47d7-8de1-9d0dbd4bbe88.png" style="width: 35px;" width="35">
+                      </li>
+                     
+                    </ul>
+                  </div>
+               
+                  <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+                   
+                    <ul class="tripadvisor">
+                    <li>
+                      <a alias="TripadvisorMG" conversion="false" data-linkto="https://" target="_blank"> <img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/fc30a217-bccc-4956-b9b7-0bb7c30755e7.png"></a>
+                    </li>
+                    <li>
+                      <a alias="TripadvisorLL" conversion="false" data-linkto="https://"  target="_blank"> <img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/330a416c-38f8-4c91-ac61-7417bb9c3b81.png"></a>
+                    </li>
+                   
+                  </ul>
+                </div>
+                    </div>
+                    <hr style="border-top: 1px solid #fff;">
+                    <div class="row business-units">
+                      <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+                        <a alias="Motiongate" href="https://www.dubaiparksandresorts.com/en/discover/motiongate/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/f53318c1-5f32-4883-84b9-22592756241f.png"></a>
+                      </div>
+                      <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+                        <a alias="realmadrid" href="https://www.dubaiparksandresorts.com/en/realmadridworld" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/ed7861c9-8fbe-4d68-b75f-d72c0c1b2b74.png" ></a>
+                      </div>
+                      <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+                        <a alias="Legoland" href="https://www.dubaiparksandresorts.com/en/discover/legoland/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/96e618bb-28a4-4a02-8080-3838e2082cd7.png" ></a>
+                      </div>
+                      <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+                        <a alias="RiverLand" href="https://www.dubaiparksandresorts.com/en/discover/riverland/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/15b8d18d-7026-427a-b017-cc437612f3c6.png" ></a>
+                      </div>
+                      <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+                        <a alias="NeonGalaxy" href="https://www.dubaiparksandresorts.com/en/discover/neongalaxy/zones" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/c255fd1c-5038-4f0a-81f7-6ea6ea312c11.png" ></a>
+                      </div>
+                      <!--div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
+                        <a alias="Jumpx" href="https://www.dubaiparksandresorts.com/en/jumpx" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/96ed9f4a-8d31-4354-a9e3-9e0186395562.png" ></a>
+                      </div-->
+                    </div>
+                </div>
+            </footer>
+    <!-- footer End -->                     
+    <!-- Vendor JS-->
+    <script src="https://cloud.explore.riverlanddubai.com/bootstrap.bundle.min_RIVERLAND_QA"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/select2.min.js_RIVERLAND_QA"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/moment.min_RIVERLAND_QA"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/daterangepicker.js_RIVERLAND_QA"></script>
+
+    <!-- Main JS-->
+    <script src="https://cloud.explore.riverlanddubai.com/custom_RIVERLAND_QA"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/global_RIVERLAND_QA"></script>
+    <script>
+    </script>
+    
+    
+     <script>
+function dynamicLangSwitcher() {
+    console.log('INSIDE');
+
+    var currentUrl = window.location.href;
+    var qsIndex = currentUrl.indexOf('?');
+    var hashIndex = currentUrl.indexOf('#');
+    
+    var queryString = qsIndex !== -1 ? currentUrl.substring(qsIndex, hashIndex !== -1 ? hashIndex : currentUrl.length) : '';
+    var hashFragment = hashIndex !== -1 ? currentUrl.substring(hashIndex) : '';
+
+    console.log('Current Query String (qs):', queryString);
+    console.log('Current Hash Fragment:', hashFragment);
+
+    var newLangUrl = document.getElementById('langSwitcher').href;
+
+    if (queryString) {
+        if (newLangUrl.indexOf('?') !== -1) {
+            newLangUrl += '&' + queryString.substring(1);
+        } else {
+            newLangUrl += queryString;
+        }
+    }
+
+    if (hashFragment) {
+        newLangUrl += hashFragment;
+    }
+
+    console.log('Updated URL:', newLangUrl);
+
+    document.getElementById('langSwitcher').href = newLangUrl;
+}
+
+
+</script>
+    
+    
+  </body>
+</html>

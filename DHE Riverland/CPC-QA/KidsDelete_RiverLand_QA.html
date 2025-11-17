@@ -1,0 +1,53 @@
+<script runat="server">
+    Platform.Load("core","1.1");
+    try {
+  
+  </script>
+  %%[
+  SET @deletedKidsArr = RequestParameter('arr')
+  set @numOfKids = RequestParameter('numOfKids')
+  set @sfid = RequestParameter('subskey')
+  
+  
+  var @CRMIdList
+                                         SET @childIDs = RetrieveSalesforceObjects("Family_Member__c","ID",
+                                                             "id", "=", @deletedKidsArr,
+                                                             "Relationship__c", "=", "Child")
+                                                              SET @childIDRowCount = Rowcount(@childIDs)
+                                                              IF NOT Empty(@sfid) THEN
+  SET @updateRecord = UpdateSingleSalesforceObject(
+                                              "Contact", @sfid,
+                                              "Latest_Channel_Source__c", "CPC - T-Rex Glamping"
+                                              ) 
+  ENDIF  
+                                                              IF @childIDRowCount > 0 THEN
+                                                              
+                                                              For @p=1 to @childIDRowCount do
+                                                             
+                                                             
+                                                             set @numOfKids = Subtract(@numOfKids, 1)
+     
+      SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
+      "Family_Member__c", @deletedKidsArr,
+      "Deleted_kid__c", "True"
+      )
+      SET @updateNoOfKidRecord = UpdateSingleSalesforceObject(
+      "Contact", @sfid,
+      "Number_of_kids__c", @numOfKids
+      )
+     
+                 
+      
+                                                              next @p
+        
+                                                              ENDIF
+  
+  
+  ]%%
+  <script runat="server">
+       var arr = Variable.GetValue('deletedKidsArr')
+     }
+     catch (err) {
+         Write("Error Message: " + Stringify(err.message) + Stringify(err.description));
+     }
+  </script>
