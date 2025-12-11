@@ -2,7 +2,7 @@
 /*  12,24,465  */
 
 SELECT a.SubscriberKey
-FROM [AllContacts] a
+FROM ENT.AllContacts a
 LEFT JOIN Contact_Salesforce c ON a.SubscriberKey = c._ContactKey
 LEFT JOIN Contact_Salesforce_GVB2B g ON a.SubscriberKey = g.ContactKey
 WHERE c._ContactKey IS NULL AND g.ContactKey IS NULL AND a.SubscriberKey like '003%'
@@ -11,16 +11,35 @@ WHERE c._ContactKey IS NULL AND g.ContactKey IS NULL AND a.SubscriberKey like '0
 /**** Contacts not in GF and BF CRM, but exist All Contacts | DE: Extra_User_All_Contacts ****/
 /*   305   */
 SELECT a.SubscriberKey
-FROM [AllContacts] a
+FROM ENT.AllContacts a
 LEFT JOIN User_Salesforce_GVB2B g ON a.SubscriberKey = g.ContactKey
 WHERE g.ContactKey IS NULL AND a.SubscriberKey like '005%'
+
+
+/**** Contacts present in both Extra_User_All_Contacts and Contact_Salesforce (with CreatedById) | DE: Extra_Users_Present_in_GF ****/
+/* 244 */
+
+SELECT e.ContactKey
+FROM Extra_User_All_Contacts e
+LEFT JOIN Contact_Salesforce c 
+    ON e.ContactKey = c.CreatedById
+WHERE c.CreatedById IS NULL
+
+/**** Contacts not present in Extra_User_All_Contacts, but exist in Contact_Salesforce (with CreatedById) | DE: Users_In_GF ****/
+/* 61 */
+SELECT DISTINCT e.ContactKey
+FROM Extra_User_All_Contacts e
+WHERE e.ContactKey IN (
+    SELECT DISTINCT c.CreatedById
+    FROM Contact_Salesforce c
+)
 
 
 /* Contacts exist in 'AllContacts' and 'TotalRecords_In_AllContacts_Not_migrated' | DE: Not_Migrated_AllContacts */
 /*   7,62,002   */
 
 SELECT a.SubscriberKey
-FROM [AllContacts] a
+FROM ENT.AllContacts a
 INNER JOIN TotalRecords_In_AllContacts_Not_migrated c 
 ON a.SubscriberKey = c.SubscriberKey
 WHERE a.SubscriberKey like '003%'

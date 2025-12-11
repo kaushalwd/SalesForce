@@ -7,7 +7,7 @@ select id as ContactKey, Company__c as Company from Ent.Contact_Salesforce_1
 SELECT COUNT(*) as MissingCount
 FROM (
     SELECT a.SubscriberKey
-    FROM [AllContacts] a
+    FROM ENT.AllContacts a
     LEFT JOIN Contact_Salesforce c ON a.SubscriberKey = c._ContactKey
     LEFT JOIN Contact_Salesforce_GVB2B g ON a.SubscriberKey = g.ContactKey
     WHERE c._ContactKey IS NULL AND g.ContactKey IS NULL AND a.SubscriberKey like '003%'
@@ -23,7 +23,7 @@ select ContactKey, name from Ent.User_Salesforce_1
 SELECT COUNT(*) as MissingCount
 FROM (
     SELECT a.SubscriberKey
-    FROM [AllContacts] a
+    FROM ENT.AllContacts a
     LEFT JOIN User_Salesforce_GVB2B g ON a.SubscriberKey = g.ContactKey
     WHERE g.ContactKey IS NULL AND a.SubscriberKey like '005%'
 ) t
@@ -146,7 +146,7 @@ WHERE q.contactKey IS NULL
 /* 7,62,002 contacts exist in 'AllContacts' and 'TotalRecords_In_AllContacts_Not_migrated' */
 
 SELECT a.SubscriberKey
-FROM [AllContacts] a
+FROM ENT.AllContacts a
 INNER JOIN TotalRecords_In_AllContacts_Not_migrated c 
 ON a.SubscriberKey = c.SubscriberKey
 WHERE a.SubscriberKey like '003%'
@@ -319,3 +319,141 @@ SELECT DISTINCT e.contactKey
 FROM Extra_User_All_Contacts e
 Inner JOIN Contact_Salesforce s
 ON e.ContactKey = s.createdById
+
+--------------
+
+
+SELECT a.SubscriberKey
+FROM ENT.AllContacts a
+LEFT JOIN ENT.User_Salesforce_GVB2B g ON a.SubscriberKey = g.ContactKey
+LEFT JOIN ENT.User_Salesforce_1 g ON a.ContactKey = g.Id
+WHERE g.ContactKey IS NULL AND a.SubscriberKey like '005%'
+
+
+SELECT u.Id
+FROM ENT.User_Salesforce_1 u
+WHERE u.Id NOT IN (
+    SELECT a.SubscriberKey
+    FROM ENT.AllContacts a
+    LEFT JOIN ENT.User_Salesforce_GVB2B g 
+        ON a.SubscriberKey = g.ContactKey
+    WHERE g.ContactKey IS NULL 
+      AND a.SubscriberKey LIKE '005%'
+)
+
+
+
+
+/* 244 Users */
+SELECT e.ContactKey
+FROM Extra_User_All_Contacts e
+LEFT JOIN Contact_Salesforce c 
+    ON e.ContactKey = c.CreatedById
+WHERE c.CreatedById IS NULL
+
+
+/* Extra 61 users Users */
+SELECT DISTINCT e.ContactKey
+FROM Extra_User_All_Contacts e
+WHERE e.ContactKey IN (
+    SELECT DISTINCT c.CreatedById
+    FROM Contact_Salesforce c
+)
+
+
+
+SELECT DISTINCT ContactKey
+FROM Extra_Contact_All_Contacts
+
+UNION
+
+SELECT DISTINCT ContactKey
+FROM Extra_Users_Present_in_GF
+
+UNION
+
+SELECT DISTINCT SubscriberKey
+FROM DA_SubscriberKeyWithSpecialChar
+
+UNION
+
+SELECT DISTINCT SubscriberKey
+FROM DA_ContactsWithoutDeviceIDInBothBU
+
+
+
+/* --------- Conclusion : Comparing with AllDEContacts ---------  */
+
+/*  Not in _Sent   */
+/* But available 20,024 records */
+
+select 
+s.subscriberkey, s.EventDate 
+from _sent s
+Inner join 
+AllDEContacts a on a.contactKey = s.subscriberkey
+
+
+/*  Not in _Journey   */
+/* 0 records */
+
+SELECT DISTINCT
+    a.ContactKey,
+    j.JourneyName,
+    ja.ActivityName,
+    ja.ActivityType,
+    s.EventDate AS SendDate
+FROM
+    AllDEContacts a
+INNER JOIN _Sent s
+    ON a.ContactKey = s.SubscriberKey
+INNER JOIN _JourneyActivity ja
+    ON ja.JourneyActivityObjectID = s.TriggererSendDefinitionObjectID
+INNER JOIN _Journey j
+    ON ja.VersionID = j.VersionID
+WHERE
+    ja.ActivityType = 'Email'
+
+
+/*  Not in Contact_Salesforce */
+/* 1 record found: 003Qs00000FWoM2IAL */
+
+select 
+s.Id
+from Contact_Salesforce s
+Inner join 
+AllDEContacts a on a.contactKey = s.Id
+
+/*  Not in Contact_Salesforce_1 */
+/* 0 record */
+select 
+s.Id
+from Ent.Contact_Salesforce_1 s
+Inner join 
+Ent.AllDEContacts a on a.contactKey = s.Id
+
+
+/*  Not in User_Salesforce_1 */
+/* 0 record */
+
+select 
+s.Id
+from Ent.User_Salesforce_1 s
+Inner join 
+Ent.AllDEContacts a on a.contactKey = s.Id
+
+/*  Not in Guest_Subscription__c_Salesforce */
+/* 1 record found: 003Qs00000FWoM2IAL */
+
+select g.Contact__c
+from Guest_Subscription__c_Salesforce g
+Inner join 
+AllDEContacts a on a.contactKey = g.Contact__c
+
+/*  Not in Engagement_Event__c_Salesforce */
+/* 1 record found: 003Qs00000FWoM2IAL */
+
+select distinct g.Contact__c
+from Engagement_Event__c_Salesforce g
+Inner join 
+AllDEContacts a on a.contactKey = g.Contact__c
