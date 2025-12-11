@@ -1,0 +1,496 @@
+<script>
+    $( document ).ready(function() {
+  $('#customRange3').on('input', function(){
+       v = $('#customRange3').val();
+       console.log(v);
+       $('div.price').text(v);
+  });
+});
+function ShowHideDivkids() {
+  var chkYes = document.getElementById("kids");
+  var dvKids = document.getElementById("dvKids");
+  dvKids.style.display = chkYes.checked ? "block" : "none";
+
+}
+  </script>
+  <script>
+  $(".birthkid").daterangepicker();
+$("#numOfKids").change(function() {
+  var numOfKids = parseInt($(this).val());
+  handleNumOfKidsChange(numOfKids);
+  if(numOfKids=='0'){
+    $(".disclaimer").css("display","none")
+  }
+});
+
+function handleNumOfKidsChange(numOfKids) {
+  var existingRows = $("#kidsTable .row").length;
+  if (numOfKids > existingRows) {
+     $(".disclaimer").css("display", "block");
+    for (var i = existingRows; i < numOfKids; i++) {
+      $("#kidsTable").append(`
+      <div class="row"><div class="col-lg-4 col-md-4 col-sm-12 col-12">
+                         <div class="form-group">
+                      <label for="">Child's Name</label>
+                      <input type="text" id="kidsName${i}" name="kidsName${i}" value=""
+                          class="form-control nameKids" />
+                  </div>
+                        </div>
+                          <div class="col-lg-3 col-md-3 col-sm-12 col-12">
+                    <div class="form-group">
+                      <label class="label">Child's Birthday</label>
+                      <div class="bdate">
+                        <input class="form-control" type="date"  name="kids-birthday${i}" id="kids-birthday${i}"  value="" class="kbday">
+              
+              
+                    </div>
+                  
+                    </div>
+                </div>
+              
+
+                        <div class="col-lg-3 col-md-3 col-sm-12 col-12">
+                          <div class="form-group">
+                            <label for="">Child's Gender </label>
+                            <div class="select-wrapper">
+                              <select class="form-control" name="gender${i}" id="gender${i}">
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                         
+                              </select>
+                              
+                            </div>
+                          </div>
+                          
+                        </div><div class="col-lg-2 col-md-2 col-sm-12 col-12"><button class="btn btn-primary del" id="${i}" value="" onclick="kidsDeletion(this);">Delete</button></div></div>
+      `);
+      //Future date restricting Validation
+
+
+  var today = new Date().toJSON().slice(0, 10);
+  var date = $('input[type=date]');
+  date.attr('max', today);
+  
+    }
+    $(".birthkid").each(function() {
+    var daterangepicker = $(this).data("daterangepicker");
+    if (daterangepicker) {
+      daterangepicker.remove();
+    }
+      
+     
+
+    $(this).daterangepicker({
+      opens: "top",
+      maxDate: moment(),
+          "singleDatePicker": true,
+          "showDropdowns": true,
+          "autoUpdateInput": false,
+          locale: {
+              format: 'DD/MM/YYYY'
+          },
+      }); // Reinitialize daterangepicker for all fields with 'daterange' class
+  });
+  } else if (numOfKids < existingRows) {
+    for (var i = existingRows; i > numOfKids; i--) {
+      $("#kidsTable .row:last-child").remove();
+   
+    }
+  }
+  //if(numOfKids > 0){
+  //$(".nameKids").attr("required",true);
+//}
+}
+
+
+  </script>
+                        
+                    
+                        
+                        
+                        
+                        <script>
+      
+    function kidsPrepopulation(){
+      
+      console.log('inside fun5')
+ 
+      var rowCount = document.getElementById('numOfKids').value; 
+      
+     
+      for(var i=0;i<=rowCount; i++){
+        if(document.getElementById('kidName'+i) && document.getElementById('kidsName'+i)){
+          document.getElementById('kidsName'+i).value = document.getElementById('kidName'+i).value;
+        }
+        if(document.getElementById('kids-birthday'+i) && document.getElementById('kidDOB'+i)){
+          document.getElementById('kids-birthday'+i).value = document.getElementById('kidDOB'+i).value;
+        }
+        if(document.getElementById('kidGen'+i) && document.getElementById('gender'+i)){
+          document.getElementById('gender'+i).value = document.getElementById('kidGen'+i).value;
+        }
+        if(document.getElementById('deletedKid'+i) && document.getElementById(i)){
+          document.getElementById(i).value = document.getElementById('deletedKid'+i).value;
+        }
+
+
+      }
+     /* console.log('deleted kids Id-----------',document.getElementById('DeletedKidsId').value)
+      var delIdBs=document.getElementById('DeletedKidsId').value;
+      //var rowCount = document.getElementById('numOfKids').value; 
+      var delId=delIdBs.split(",");
+      console.log('delId spliteeed-----------  ',delId)
+      var delIdLength= delId.length;
+      console.log('delIdLength-----------',delIdLength)
+      document.getElementById('DeletedKidsId').value  ="";
+      var check
+      for (var i=0;i<=delIdLength; i++){
+        check = 0;
+        console.log('Initial check value-----------  ',check)
+        console.log('del Id-----------  ',delId[i])
+        for (var j=0;j<=rowCount; j++){
+        if(delId[i]= j){
+          console.log('del Id innermost if-----------  ',delId[i])
+          check =1;
+          break;
+          }  
+        }
+        console.log('Before check If-----------  ',check)
+        if(check == 0){
+          console.log('after check If del id-----------  ',delId[i])
+        if(document.getElementById('DeletedKidsId').value  == ""){
+                               document.getElementById('DeletedKidsId').value=delId[i];
+                             }
+                             else{
+                               document.getElementById('DeletedKidsId').value= document.getElementById('DeletedKidsId').value + ','+delId[i];
+            }
+      }
+        console.log('Updated deleted kids Id-----------',document.getElementById('DeletedKidsId').value)
+      }
+      console.log('row count - ' , rowCount)*/
+
+    }
+// Get today's date in the format YYYY-MM-DD
+function getToday() {
+const today = new Date();
+const year = today.getFullYear();
+let month = today.getMonth() + 1;
+let day = today.getDate();
+
+// Add leading zero if month or day is less than 10
+if (month < 10) {
+  month = `0${month}`;
+}
+if (day < 10) {
+  day = `0${day}`;
+}
+
+return `${year}-${month}-${day}`;
+}
+
+// Set the max attribute of the date input to today's date
+document.getElementById('birthday').setAttribute('max', getToday());
+$('.kbday').attr('max', getToday());
+
+// Delete row functionality
+$(document).on("click", ".del", function() {
+var rowIndex = $(this).data("rowindex");
+
+/*var attrName = $(this).attr('name').substr(-1);
+console.log(attrName);
+  $("#kidName".concat(attrName)).remove();
+  $("#kidDOB".concat(attrName)).remove();
+  $("#kidGen".concat(attrName)).remove();
+  $("#kidRecId".concat(attrName)).remove();*/
+
+
+$(this).closest(".row").remove();
+
+// Update the numOfKids dropdown value after changes
+$("#numOfKids").val($("#kidsTable .row").length).trigger('change');
+
+
+});
+  </script>
+                        
+                        
+                        
+                        
+                        
+                        
+                        <script>
+
+                        
+                          var deletedKidsListArr = '';
+                           function kidsDeletion(param){
+                             var subsKey = document.getElementById('crmId').value;
+                             var numOfKids = document.getElementById('numOfKids').value;
+                             
+                             var id = param.id;
+                            
+                        
+                             var idFromHidden = document.getElementById('deletedKid'+ id).value;
+                             document.getElementById(id).value = idFromHidden;
+                             deletedKidsListArr = idFromHidden  
+                             
+                             
+                             var counter=1
+                             for(i=0; i<numOfKids; i++){
+                            
+                               if(i>=id){
+                                 
+                                 if(i ==  (numOfKids-1) && id==i){
+                                  
+                                   document.getElementById('kidName'+ id).remove();
+                                   document.getElementById('kidDOB'+ id).remove();
+                                   document.getElementById('kidGen'+ id).remove();
+                                   document.getElementById('kidRecId'+ id).remove();
+                                   document.getElementById('deletedKid'+ id).remove();
+                                 }
+                                 else{
+                                 if(i<(numOfKids-1)){
+                                 //For HTML Elements
+                                         var nextElementName = document.getElementById('kidsName'+ counter); 
+                                         nextElementName.id = 'kidsName' + i;
+                                         nextElementName.name = 'kidsName' + i;
+
+                                         var nextElementBirthday = document.getElementById('kids-birthday'+ counter); 
+                                         nextElementBirthday.id = 'kids-birthday' + i;
+                                         nextElementBirthday.name = 'kids-birthday' + i;
+
+                                         var nextElementGender = document.getElementById('gender'+ counter); 
+                                         nextElementGender.id = 'gender' + i;
+                                         nextElementGender.name = 'gender' + i;
+
+                                         var nextElementDelButton = document.getElementById(counter); 
+                                         nextElementDelButton.id = i;
+                                 }
+                                 //For hidden pre-population elements
+                                 
+                                 
+                                 //This should only work once when var i and deleted id are equal
+                                 if(i==id){
+                                  
+                                   document.getElementById('kidName'+ id).remove();
+                                   document.getElementById('kidDOB'+ id).remove();
+                                   document.getElementById('kidGen'+ id).remove();
+                                   document.getElementById('kidRecId'+ id).remove();
+                                   document.getElementById('deletedKid'+ id).remove();
+                                 }
+                                 
+                                 //Update ids of hidden elements
+                                   if(i<(numOfKids-1)){
+                                       var hiddenElementName = document.getElementById('kidName'+ counter); 
+                                       hiddenElementName.id = 'kidName' + i;
+                                       hiddenElementName.name = 'kidName' + i;
+
+                                       var hiddenElementBirthday = document.getElementById('kidDOB'+ counter); 
+                                       hiddenElementBirthday.id = 'kidDOB' + i;
+                                       hiddenElementBirthday.name = 'kidDOB' + i;
+
+                                       var hiddenElementGender = document.getElementById('kidGen'+ counter); 
+                                       hiddenElementGender.id = 'kidGen' + i;
+                                       hiddenElementGender.name = 'kidGen' + i;
+
+                                       var hiddenElementKidRecId = document.getElementById('kidRecId' + counter); 
+                                       hiddenElementKidRecId.id = 'kidRecId' + i;
+                                       hiddenElementKidRecId.name = 'kidRecId' + i;
+
+                                       var hiddenElementDeletedKid = document.getElementById('deletedKid' + counter); 
+                                       hiddenElementDeletedKid.id = 'deletedKid' + i;
+                                       hiddenElementDeletedKid.name = 'deletedKid' + i;
+                                   }
+                                 }
+                               }
+                               counter++;
+                             }
+                         
+              var dataToSend = {
+                  arr: deletedKidsListArr,
+                  subskey: subsKey,
+                  numOfKids: numOfKids
+              };
+
+              $.ajax({
+                  url: 'https://cloud.explore.riverlanddubai.com/KidsDelete_RiverLand_QA', // Replace with your CloudPage URL
+                  method: 'POST',
+                  data: dataToSend,
+                  success: function(response) {
+                   
+                    //var myElement = document.getElementById('kidsTable')
+                    /*var myElement = document.querySelector('#kidsTable');
+                    var child = myElement.childNodes;
+                    console.log('child: ', child);
+                    
+                    for (var chil of child) {
+                        console.log('After Deletion: ', chil.id);
+                      }*/
+                     
+
+                      // Handle success response here
+                  },
+                  error: function(xhr, status, error) {
+                      
+                      // Handle error here
+                  }
+              });
+                          }
+                        </script>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+  <script>
+    function updateUrlHash(hash) {
+      console.log("updateUrlHash=====",hash);
+      if (history.pushState) {
+        console.log("IFupdateUrlHash=====",history.pushState);
+        history.pushState(null, null, hash);
+      } else {
+        console.log("ElseupdateUrlHash=====",location.hash);
+        location.hash = hash;
+      }
+    }
+      
+    var hashvalue = window.location.hash;
+       console.log("hash==",hashvalue);
+       var value= hashvalue.split("&");
+       var hash=value[0];
+       console.log("hash=====",hash);
+    hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+
+    $('.nav-tabs a').click(function (e) {
+      $(this).tab('show');
+      var scrollmem = $('body').scrollTop();
+      window.location.hash = this.hash;
+      $('html,body').scrollTop(scrollmem);
+    });
+          //To call channel management code from BU resource
+  $("#channel-submit").click(function(e) {
+      console.log('Inside channel management()')
+      var guestId = document.getElementById('guestId').value;
+      var subsKey = document.getElementById('crmId').value;
+      var emailPref = document.getElementById('emailPref');
+      var whatsAppPref = document.getElementById('WhatsAppPref');
+      var smsPref = document.getElementById('smsPref');
+     
+      
+      var dataToSend = {
+          guestId: guestId,
+          subsKey: subsKey,
+          emailPref: emailPref.checked,
+          whatsAppPref: whatsAppPref.checked,
+          smsPref : smsPref.checked
+      };
+
+      $.ajax({
+          url: 'https://cloud.explore.riverlanddubai.com/ChannelPreference_RiverLand_QA', // Replace with your CloudPage URL
+          method: 'POST',
+          data: dataToSend,
+          success: function(response) {
+              console.log('SFMC channel management Code Resource called successfully.');
+              console.log('Response:', response);
+              // Handle success response here
+          },
+          error: function(xhr, status, error) {
+              console.error('Error calling SFMC channel management Code Resource.');
+              console.error('Status:', status);
+              console.error('Error=========:', error);
+              // Handle error here
+          }
+      });
+  });
+    
+    //To call unsub code from BU resource
+    $("#unsubscribeClick").click(function(e) {
+ 
+      var guestId = document.getElementById('guestId').value;
+      var subsKey = document.getElementById('crmId').value;
+
+              var dataToSend = {
+                  guestId: guestId,
+                  subsKey: subsKey
+              };
+
+              $.ajax({
+                  url: 'https://cloud.explore.riverlanddubai.com/UnsubscribeFromBU_RiverLand_QA', // Replace with your CloudPage URL
+                  method: 'POST',
+                  data: dataToSend,
+                  success: function(response) {
+                     
+                      // Handle success response here
+                  },
+                  error: function(xhr, status, error) {
+                      
+                      // Handle error here
+                  }
+              });
+          });
+    
+    
+    //To call unsub code from all BU resource
+    $("#unsubscribeAllClick").click(function(e) {
+ 
+      var subsKey = document.getElementById('crmId').value;
+      var guestId = document.getElementById('guestId').value;
+
+              var dataToSend = {
+                  guestId: guestId,
+                  subsKey: subsKey
+              };
+
+              $.ajax({
+                  url: 'https://cloud.explore.riverlanddubai.com/UnsubscribeFromAllBU_RiverLand_QA', // Replace with your CloudPage URL
+                  method: 'POST',
+                  data: dataToSend,
+                  success: function(response) {
+                      
+                      // Handle success response here
+                  },
+                  error: function(xhr, status, error) {
+                      
+                      // Handle error here
+                  }
+              });
+          });
+    
+    
+     function dynamicLangSwitcher() {
+  console.log('INSIDE');
+
+  var currentUrl = window.location.href;
+  var qsIndex = currentUrl.indexOf('?');
+  var hashIndex = currentUrl.indexOf('#');
+  
+  var queryString = qsIndex !== -1 ? currentUrl.substring(qsIndex, hashIndex !== -1 ? hashIndex : currentUrl.length) : '';
+  var hashFragment = hashIndex !== -1 ? currentUrl.substring(hashIndex) : '';
+
+  console.log('Current Query String (qs):', queryString);
+  console.log('Current Hash Fragment:', hashFragment);
+
+  var newLangUrl = document.getElementById('langSwitcher').href;
+
+  if (queryString) {
+      if (newLangUrl.indexOf('?') !== -1) {
+          newLangUrl += '&' + queryString.substring(1);
+      } else {
+          newLangUrl += queryString;
+      }
+  }
+
+  if (hashFragment) {
+      newLangUrl += hashFragment;
+  }
+
+  console.log('Updated URL:', newLangUrl);
+
+  document.getElementById('langSwitcher').href = newLangUrl;
+}
+  
+    
+    
+  
+    </script>

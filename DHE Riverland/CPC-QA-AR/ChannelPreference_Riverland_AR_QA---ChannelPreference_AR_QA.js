@@ -1,0 +1,125 @@
+<script runat="server">
+Platform.Load("core","1.1");
+Write("inside222")
+try {
+</script>
+%%[
+SET @guestId = RequestParameter('guestId')
+SET @subsKey = RequestParameter('subsKey')
+SET @emailPref = RequestParameter('emailPref')
+SET @whatsAppPref = RequestParameter('whatsAppPref')
+SET @smsPref = RequestParameter('smsPref')
+/*if (@emailPref == 'true') then*/
+
+SET @contactRows = RetrieveSalesforceObjects("Guest_Subscription__c","Status__c",
+"Contact__c", "=", @subsKey,"Asset__c","=","Dubai Parks and Resorts","Sub_Asset__c","=","Riverland")
+
+IF RowCount(@contactRows) > 0 THEN
+SET @contactRow = Row(@contactRows, 1)
+SET @status = Field(@contactRow, "Status__c")
+ENDIF
+
+set @value= UpdateSingleSalesforceObject(
+ 'Guest_Subscription__c', @guestId,
+ "Email__c", @emailPref,
+ "WhatsApp__c", @whatsAppPref,
+ "SMS__c",@smsPref
+)
+SET @updateContactRecord = UpdateSingleSalesforceObject(
+                               "Contact", @subsKey,
+                               "Latest_Channel_Source__c", "CPC - Riverland"
+                         )
+if empty(@subsKey) OR IsNull(@subsKey) then
+ Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+ELSE
+ Set @ampError = ''
+ENDIF
+Set @p= InsertData("PreferencesLog_AR_QA","SubscriberKey",@subsKey,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+]%%
+<script runat="server">
+  var subsKey = Variable.GetValue("@subsKey");
+   var emailPref = Variable.GetValue("@emailPref");
+   var value = Variable.GetValue("@value");
+var status = Variable.GetValue("@status");
+   var subObj = Subscriber.Init(subscriberKey);
+  if(status=='Subscribed'){
+if (emailPref == 'true') {
+             
+                var resub = {              
+                   "SubscriberKey": subsKey,
+                   "Lists": {
+                     "ID": '63', 
+                     "Action": "Update"
+                   },
+                   "Status": "Active"
+                }; 
+               var subObj = Subscriber.Init(subsKey);
+               var status = subObj.Update(resub); 
+  var lst = List.Init("Mock_AllSubscribersList_Riverland");
+  var filter = {
+          Property: "SubscriberKey",
+          SimpleOperator: "equals",
+          Value: subsKey
+      };
+
+      var result = lst.Subscribers.Retrieve(filter);
+
+      Write("<br> result:"+Stringify(result));
+      Write("<br> length:"+result.length);
+    if (result.length != 0){
+      var resub = {
+                                   "SubscriberKey": subsKey,
+                                   "Lists": [{
+                                  ID: 2320,
+                                  Status: 'Active'
+                              }]
+                                };
+                        Write("resub = "+Stringify(resub)+"<br>");
+                          var subObj = Subscriber.Init(subsKey);
+                          var updateStatus = subObj.Update(resub);
+                         Write("updateStatus = "+Stringify(updateStatus)+"<br>");
+    }
+             }
+else{
+   Write("---HI ELSE----");
+  var resub = {              
+                   "SubscriberKey": subsKey,
+                   "Lists": {
+                     "ID": '63', 
+                     "Action": "Update"
+                   },
+                   "Status": "unsubscribed"
+                }; 
+               var subObj = Subscriber.Init(subsKey);
+               var status = subObj.Update(resub); 
+  var lst = List.Init("Mock_AllSubscribersList_DPR");
+  var filter = {
+          Property: "SubscriberKey",
+          SimpleOperator: "equals",
+          Value: subsKey
+      };
+
+      var result = lst.Subscribers.Retrieve(filter);
+
+      Write("<br> result:"+Stringify(result));
+      Write("<br> length:"+result.length);
+    if (result.length != 0){
+      var resub = {
+                                   "SubscriberKey": subsKey,
+                                   "Lists": [{
+                                  ID: 2005,
+                                  Status: 'Unsubscribed'
+                              }]
+                                };
+                        Write("resub = "+Stringify(resub)+"<br>");
+                          var subObj = Subscriber.Init(subsKey);
+                          var updateStatus = subObj.Update(resub);
+                         Write("updateStatus = "+Stringify(updateStatus)+"<br>");
+    }
+}
+  }
+ }
+ catch (err) {
+     Write("Error Message-------------------: " + Stringify(err.message) + Stringify(err.description));
+ }
+</script>

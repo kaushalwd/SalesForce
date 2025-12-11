@@ -19,9 +19,7 @@ VAR @emailPref, @WhatsAppPref, @smsPref
 /* CRM ID Detection */
 /* -------------------------------------------------------------------------- */
 
-/* SET @crmId = "003Qs00000WKkYyIAL" */
-
-SET @crmId = _subscriberkey
+SET @crmId = "003Qs00000WKkYyIAL"
 
 IF EMPTY(@crmId) THEN
     SET @crmIdEn = QueryParameter("sfid")
@@ -137,7 +135,11 @@ IF NOT EMPTY(@crmId) THEN
             "Guest_Subscription__c",
             "Asset__c,Id,Primary_reason_for_visit_to_RiverLand__c,
              What_do_you_like_most_about_RiverLand__c,
-             How_often_do_you_visit_Riverland__c, Dining_offers_and_new_restaurants__c, Upcoming_events_for_families__c, Family_friendly_activities__c, Weekend_entertainment__c, New_attractions_and_experiences__c, Riverland_news_and_updates__c,
+             Dining_offers_and_new_restaurants__c,
+             Upcoming_events_and_festivals__c,
+             Most_likely_time_to_visit_RiverLand__c,
+             New_attractions_and_experiences__c,
+             Weekend_entertainment__c,Customer_Survey__c,
              Emails_are_too_frequent__c,Content_isn_t_relevant__c,
              I_m_no_longer_in_Dubai__c,Temporary_Pause_30_Days__c,
              Other_Please_specify__c,Reason_of_Unsubscribe__c,
@@ -156,14 +158,16 @@ IF NOT EMPTY(@crmId) THEN
             SET @assetType            = Field(@guestDetailsRow, "Asset__c")
             SET @Id                   = Field(@guestDetailsRow, "Id")
             SET @primaryReasonForVisit = ProperCase(Field(@guestDetailsRow, "Primary_reason_for_visit_to_RiverLand__c"))
-            SET @howOftenVisit        = ProperCase(Field(@guestDetailsRow, "How_often_do_you_visit_Riverland__c"))
+            SET @news_updates         = Field(@guestDetailsRow, "Customer_Survey__c")
+            SET @howOftenVisit        = ProperCase(Field(@guestDetailsRow, "Most_likely_time_to_visit_RiverLand__c"))
+          /*SET @howOftenVisit        = ""*/
             SET @likeMostAbout        = ProperCase(Field(@guestDetailsRow, "What_do_you_like_most_about_RiverLand__c"))
             SET @Dining_offers        = Field(@guestDetailsRow, "Dining_offers_and_new_restaurants__c")
-            SET @upcomingEvents       = Field(@guestDetailsRow, "Upcoming_events_for_families__c")
+            SET @upcomingEvents       = Field(@guestDetailsRow, "Upcoming_events_and_festivals__c")
             SET @Family_activities    = Field(@guestDetailsRow, "Family_friendly_activities__c")
             SET @New_attractions      = Field(@guestDetailsRow, "New_attractions_and_experiences__c")
             SET @Weekend_entertainment = Field(@guestDetailsRow, "Weekend_entertainment__c")
-            SET @news_updates = Field(@guestDetailsRow, "Riverland_news_and_updates__c")
+
             SET @emailsTooFrequent    = Field(@guestDetailsRow, "Emails_are_too_frequent__c")
             SET @contentIsNotRelevant = Field(@guestDetailsRow, "Content_isn_t_relevant__c")
             SET @noLongerInDubai      = Field(@guestDetailsRow, "I_m_no_longer_in_Dubai__c")
@@ -176,8 +180,15 @@ IF NOT EMPTY(@crmId) THEN
             SET @smsPref              = Field(@guestDetailsRow, "SMS__c")
 
         ENDIF
-     
-    
+        /*SET @test = RetrieveSalesforceObjects(
+            "Guest_Subscription__c",
+            "Id,Asset__c",
+            "Contact__c","=", @crmId,
+            "Asset__c","=", "Dubai Parks and Resorts",
+            "Sub_Asset__c","=", "RiverLand"
+        )*/
+    /*T-REX GLAMPING*/
+        Output(Concat("<br>TEST RowCount = ", RowCount(@test)))
 
     ENDIF
 ENDIF
@@ -190,22 +201,21 @@ ENDIF
   var subscriberKey = Platform.Request.GetFormField('crmId') || "";
   var email = Platform.Request.GetFormField('email') || "";
 
-  var listDiningOffers = Platform.Request.GetFormField('DiningOffers') || false;
-  var listUpcomingEvents = Platform.Request.GetFormField('upcomingEvents') || false;
-  var listFamilyActivities = Platform.Request.GetFormField('familyActivities') || false;
-  var listWeekendEntertainment = Platform.Request.GetFormField('weekendEntertainment') || false;
-  var listAttractionsEvents = Platform.Request.GetFormField('newAttractions') || false;
-  var listNewsUpdates = Platform.Request.GetFormField('newsUpdates') || false;
-  
+
+
+  var listOffers = Platform.Request.GetFormField('DiningOffers') || False;
+  var listEvents = Platform.Request.GetFormField('upcomingEvents') || false;
+  var listShows = Platform.Request.GetFormField('familyActivities') || false;
+  var listUpgrades = Platform.Request.GetFormField('newAttractions') || false;
+  var listCustomer = Platform.Request.GetFormField('weekendEntertainment') || false;
 
   var listOfInput = [];
-  listOfInput.push({Name : 'RiverLand - Dining offers and new restaurants', Status: listDiningOffers})
-  listOfInput.push({Name : 'RiverLand - Upcoming events and festivals', Status: listUpcomingEvents})
-  listOfInput.push({Name : 'RiverLand - Family-friendly activities', Status: listFamilyActivities})
-  listOfInput.push({Name : 'RiverLand - Weekend entertainment', Status: listWeekendEntertainment})
-  listOfInput.push({Name : 'RiverLand - New attractions and experiences', Status: listAttractionsEvents})
-  listOfInput.push({Name : 'RiverLand - News and updates', Status: listNewsUpdates})
-
+  listOfInput.push({Name : 'RiverLand - Dining by the river', Status: listOffers})
+  listOfInput.push({Name : 'RiverLand - Visiting the different attractions and experiences', Status: listUpgrades})
+  listOfInput.push({Name : 'RiverLand - Family day out', Status: listShows})
+  listOfInput.push({Name : 'RiverLand - Attending an event or festival', Status: listEvents})
+  listOfInput.push({Name : 'RiverLand - Taking photos / sightseeing', Status: listCustomer})
+  listOfInput.push({Name : 'RiverLand - Visiting Dubai Parks TM and Resorts', Status: listCustomer})
 
 
 
@@ -426,7 +436,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
         <div class="row align-items-center" style="margin: 0 auto;">
             <div class="col-lg-8 col-md-8 col-sm-8 col-8">
                 <a href="https://www.dubaiparksandresorts.com/en/riverland" class="logo-link" target="_blank">
-                    <img src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/4fec293b-3bbe-4ef8-ba38-8d8de1cd5439.png"
+                    <img src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/13213b14-f9ce-4168-bd11-e93df190b40a.png"
                         alt="logo">
                 </a>
             </div>
@@ -454,8 +464,8 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
                                   </div>
                                   <div class="container">
                                     <div class="banner-overlay-content">
-                                    <!--h1 class="username" style="font-family: Poppins, sans-serif;">Hi %%=v(ProperCase(@firstName))=%% </h1-->
-                                    <img class="banner-logo" src= "https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/4fec293b-3bbe-4ef8-ba38-8d8de1cd5439.png" width="450" alt="RiverLand" class="responsive">
+                                    <h1 class="username" style="font-family: Poppins, sans-serif;">Hi %%=v(ProperCase(@firstName))=%% </h1>
+                                    <img class="banner-logo" src= "https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/6f4347b0-52d4-4094-b95d-4f569e66dfc4.png" width="450" alt="RiverLand" class="responsive" style="margin-top:20px" >
                                   </div>
                                 </div>
                                 </section>
@@ -506,14 +516,14 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
                     data-aos-anchor-placement="bottom-bottom">
                     <label for="">First Name<sup class="text-danger">*</sup></label>
                     <input type="text" id="firstName" name="firstName" id="fname" value="%%=v(ProperCase(@firstName))=%%"
-                        class="form-control" required aria-required="true" maxlength="50" />
+                        class="form-control" required aria-required="true" />
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 col-sm-12 col-12">
                 <div class="form-group">
                     <label for="">Last Name<sup class="text-danger">*</sup></label>
                     <input type="text" id="lname" name="lastName" value="%%=v(ProperCase(@lastName))=%%"
-                        class="form-control" required aria-required="true" maxlength="50" />
+                        class="form-control" required aria-required="true" />
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 col-sm-12 col-12">
@@ -1520,7 +1530,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
           </div>
         </div>
 
-<p class="disclaimer" style="font-size:14px;"><i>We request your child’s date of birth to send them birthday greetings and keep you informed about relevant events and promotions.</i></p>
+<p class="disclaimer" style="font-size:12px;"><b>We request your child’s date of birth to send them birthday greetings and keep you informed about relevant events and promotions.</b></p>
 </div>
 
 </div>
@@ -1528,14 +1538,13 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
    
 %%[
 
-/*SET @crmId = "003Qs00000WKkYyIAL"*/
-
-SET @crmId = _subscriberkey
+/* SET @crmId = _subscriberkey */
 
 /*
 SET @crmIdEn = QueryParameter("sfid")
 SET @crmIdJS = Base64Decode(@crmIdEn)
 */
+SET @crmId = "003Qs00000WKkYyIAL"
 
 
 IF EMPTY(@crmId) THEN
@@ -1996,7 +2005,7 @@ ENDIF /* submittedProfile */
           ELSEIF @val == "Taking photos / sightseeing" THEN
               SET @Photos_sightseeing = "checked"
 
-          ELSEIF @val == "Visiting Dubai Parks™ and Resorts" THEN
+          ELSEIF @val == "Visiting Dubai Parks TM and Resorts" THEN
               SET @Visit_park = "checked"
           ENDIF
 
@@ -2031,8 +2040,40 @@ ENDIF /* submittedProfile */
       NEXT @i
   ENDIF
 
+
+  /* -------------------------
+     How Often Visit
+     ------------------------- */
+  SET @howOftenVisitString = BuildRowsetFromString(@howOftenVisit, ";")
+  SET @howOftenVisitCount  = RowCount(@howOftenVisitString)
+
+  IF @howOftenVisitCount > 0 THEN
+      FOR @i = 1 TO @howOftenVisitCount DO
+
+          SET @val = Field(Row(@howOftenVisitString, @i), 1)
+
+          IF @val == "Every week" THEN
+              SET @Every_week = "checked"
+
+          ELSEIF @val == "Every month" THEN
+              SET @Every_month = "checked"
+
+          ELSEIF @val == "Once a year" THEN
+              SET @Once_a_year = "checked"
+
+          ELSEIF @val == "Two times per year" THEN
+              SET @Two_times_per_year = "checked"
+
+          ELSEIF @val == "Every two years" THEN
+              SET @Every_two_years = "checked"
+          ENDIF
+
+      NEXT @i
+  ENDIF
+
 ]%%
                            
+                             
   <div class="tab-pane fade interest-tab-content" id="interests" role="tabpanel" aria-labelledby="interests-tab">
     
       <div class="wrapper wrapper--w700">
@@ -2042,7 +2083,7 @@ ENDIF /* submittedProfile */
          
            
             <div class="form-group">
-              <h4 class="pt-4 pb-3">What is the primary reason for your visit to The World of Riverland<sup style="font-weight: normal; font-size: 15px; top: -12px; position: relative;">TM</sup> Dubai?</h4>
+              <h4 class="pt-4 pb-3">What is the primary reason for your visit to The World of Riverland<sup>TM</sup>?</h4>
               <div class="radio-wrapper primary-reason radio-width">
                   <div class="form-check form-check">
                     <label class="form-check-label" for="reason1">Dining by the river</label>
@@ -2070,31 +2111,31 @@ ENDIF /* submittedProfile */
                     <input class="form-check-input" type="checkbox" name="reason6" id="reason6" %%=v(@Visit_park)=%%>
                   </div>
               </div> 
-              <h4 class="pt-4 pb-3">How often do you visit The World of Riverland<sup style="font-weight: normal; font-size: 15px; top: -12px; position: relative;">TM</sup> Dubai? </h4>
+              <h4 class="pt-4 pb-3">How often do you visit The World of Riverland<sup>TM</sup>?</h4>
               <div class="radio-wrapper primary-reason radio-width">
                 <div class="form-check form-check">
                   <label class="form-check-label" for="visit1">Every week</label>
-                    <input class="form-check-input" type="radio" name="visit" id="visit1" value="Every week" %%=IIF(@howOftenVisit=='Every week', 'checked', '')=%%>
+                    <input class="form-check-input" type="checkbox" name="visit1" id="visit1" %%=v(@Every_week)=%%>
                 </div>
                 <div class="form-check form-check">
                   <label class="form-check-label" for="visit2">Every month</label>
-                  <input class="form-check-input" type="radio" name="visit" id="visit2" value="Every month" %%=IIF(@howOftenVisit=='Every month', 'checked', '')=%% >
+                  <input class="form-check-input" type="checkbox" name="visit2" id="visit2" %%=v(@Every_month)=%%>
                 </div>
                 <div class="form-check form-check">
                   <label class="form-check-label" for="visit3">Once a year</label>
-                  <input class="form-check-input" type="radio" name="visit" id="visit3" %%=v(@Once_a_year)=%% value="Once a year" %%=IIF(@howOftenVisit=='Once a year', 'checked', '')=%% >
+                  <input class="form-check-input" type="checkbox" name="visit3" id="visit3" %%=v(@Once_a_year)=%%>
                 </div>
                 <div class="form-check form-check">
                   <label class="form-check-label" for="visit4">Two times per year</label>
-                  <input class="form-check-input" type="radio" name="visit" id="visit4" %%=v(@Two_times_per_year)=%% value="Two times per year" %%=IIF(@howOftenVisit=='Two times per year', 'checked', '')=%% >
+                  <input class="form-check-input" type="checkbox" name="visit4" id="visit4" %%=v(@Two_times_per_year)=%%>
                 </div>
                 <div class="form-check form-check">
                   <label class="form-check-label" for="visit5">Every two years</label>
-                  <input class="form-check-input" type="radio" name="visit" id="visit5" %%=v(@Every_two_years)=%% value="Every two years" %%=IIF(@howOftenVisit=='Every two years', 'checked', '')=%%>
+                  <input class="form-check-input" type="checkbox" name="visit5" id="visit5" %%=v(@Every_two_years)=%%>
                 </div>
             </div>
 
-            <h4 class="pt-4 pb-3">What do you like the most about The World of Riverland<sup style="font-weight: normal; font-size: 15px; top: -12px; position: relative;">TM</sup> Dubai?</h4>
+            <h4 class="pt-4 pb-3">What do you like the most about The World of Riverland<sup>TM</sup>?</h4>
             <div class="radio-wrapper like-most radio-width">
               <div class="form-check form-check">
                 <label class="form-check-label" for="like1">The experiences and activities</label>
@@ -2128,6 +2169,8 @@ ENDIF /* submittedProfile */
       
            %%[
            IF RequestParameter("submittedInterests") == "true" THEN
+           
+               /* Request Parameters */
                SET @sfid        = RequestParameter("crmId")
                SET @guestId     = RequestParameter("guestId")
                SET @emailContact = RequestParameter("emails")
@@ -2139,8 +2182,8 @@ ENDIF /* submittedProfile */
                    Iif(RequestParameter("reason2") == "on", "Visiting the different attractions and experiences;", ""),
                    Iif(RequestParameter("reason3") == "on", "Family day out;", ""),
                    Iif(RequestParameter("reason4") == "on", "Attending an event or festival;", ""),
-                   Iif(RequestParameter("reason5") == "on", "Taking photos / sightseeing;", ""),  
-                   Iif(RequestParameter("reason6") == "on", "Visiting Dubai Parks™ and Resorts", "")
+                   Iif(RequestParameter("reason5") == "on", "Taking photos / sightseeing;", ""),
+                   Iif(RequestParameter("reason6") == "on", "Visiting Dubai Parks TM and Resorts;", "")
                )
            
                IF NOT Empty(@primaryReasonPreferences) THEN
@@ -2159,9 +2202,9 @@ ENDIF /* submittedProfile */
                /* ------------ WHAT THEY LIKE MOST ABOUT RIVERLAND ------------ */
                SET @likeMostAboutPreferences = CONCAT(
                    Iif(RequestParameter("like1") == "on", "The experiences and activities;", ""),
-                   Iif(RequestParameter("like2") == "on", "The dining options;", ""),
-                   Iif(RequestParameter("like3") == "on", "The river and scenery;", ""),
-                   Iif(RequestParameter("like4") == "on", "Events and live entertainment", "")
+                   Iif(RequestParameter("like3") == "on", "The dining options;", ""),
+                   Iif(RequestParameter("like4") == "on", "The river and scenery;", ""),
+                   Iif(RequestParameter("like2") == "on", "Events and live entertainment;", "")
                )
            
                IF NOT Empty(@likeMostAboutPreferences) THEN
@@ -2177,40 +2220,35 @@ ENDIF /* submittedProfile */
                ENDIF
            
            
-               IF @oftenVisitValue == 'Every week' THEN
-                  SET @OftenVisitUpdation = 'Every week'
-              ELSEIF @oftenVisitValue == 'Every month' THEN
-                  SET @OftenVisitUpdation = 'Every month'
-              ELSEIF @oftenVisitValue == 'Once a year' THEN
-                  SET @OftenVisitUpdation = 'Once a year'
-              ELSEIF @oftenVisitValue == 'Two times per year' THEN
-                  SET @OftenVisitUpdation = 'Two times per year'
-              ELSEIF @oftenVisitValue == 'Every two years' THEN
-                  SET @OftenVisitUpdation = 'Every two years'
-              ENDIF
-
-
-
-              IF NOT Empty(@sfid) THEN
-
-
-                SET @updateRecords = UpdateSingleSalesforceObject(
-                    "Guest_Subscription__c", @guestId, 
-                    "How_often_do_you_visit_Riverland__c", @OftenVisitUpdation
-
-                    )
-
+               /* ------------ MOST LIKELY TIME TO VISIT ------------ */
+               SET @mostLikelyVisit = CONCAT(
+                   Iif(RequestParameter("visit1") == "on", "Every week;", ""),
+                   Iif(RequestParameter("visit2") == "on", "Every month;", ""),
+                   Iif(RequestParameter("visit3") == "on", "Once a year;", ""),
+                   Iif(RequestParameter("visit4") == "on", "Two times per year;", ""),
+                   Iif(RequestParameter("visit5") == "on", "Every two years;", "")
+               )
+           
+               IF NOT Empty(@mostLikelyVisit) THEN
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "Most_likely_time_to_visit_RiverLand__c", @mostLikelyVisit
+                   )
+               ELSE
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "fieldsToNull", "Most_likely_time_to_visit_RiverLand__c"
+                   )
+               ENDIF
+           
+           
+               /* ------------ UPDATE CONTACT ------------ */
+               IF NOT Empty(@sfid) THEN
                    SET @updateContactRecord = UpdateSingleSalesforceObject(
-                   "Contact", @sfid,
-                   "Latest_Channel_Source__c", "CPC - RiverLand"
-                    )
-
-
-
-
-              ENDIF
-           
-           
+                       "Contact", @sfid,
+                       "Latest_Channel_Source__c", "CPC - RiverLand"
+                   )
+               ENDIF
            
            
                /* ------------ LOG INSERT (single-line to avoid AMPscript error) ------------ */
@@ -2231,7 +2269,7 @@ ENDIF /* submittedProfile */
                ELSE
                    Redirect(CONCAT(CloudPagesURL(4954), @communications))
                ENDIF
-              
+           
            ENDIF
            ]%%
               
@@ -2298,47 +2336,73 @@ ENDIF /* submittedProfile */
     
       %%[
       IF RequestParameter("submittedCommunications") == true THEN
-                                    SET @sfid = RequestParameter("crmId")
-                                    SET @guestId = RequestParameter("guestId")
-                                    SET @emailContact = RequestParameter("emails")
-                                    set @UpdatedDiningOffers =  RequestParameter("DiningOffers")
-                                    set @UpdatedUpcomingEvents =  RequestParameter("upcomingEvents")
-                                    set @UpdatedFamilyActivities =  RequestParameter("familyActivities")
-                                    set @UpdatedWeekendEntertainment =  RequestParameter("weekendEntertainment")
-                                    set @UpdatedNewAttractions =  RequestParameter("newAttractions")
-                                    set @UpdatedNewsUpdates =  RequestParameter("newsUpdates")
-
-                                    IF NOT Empty(@sfid) THEN
-                                    SET @updateRecord = UpdateSingleSalesforceObject(
-                                    "Guest_Subscription__c", @guestId,
-                                    "Dining_offers_and_new_restaurants__c", IIF(EMPTY(@UpdatedDiningOffers), 'False', 'True'), 
-                                    "Upcoming_events_for_families__c", IIF(EMPTY(@UpdatedUpcomingEvents), 'False', 'True'),
-                                    "Family_friendly_activities__c", IIF(EMPTY(@UpdatedFamilyActivities), 'False', 'True'),
-                                    "Weekend_entertainment__c", IIF(EMPTY(@UpdatedWeekendEntertainment), 'False', 'True'),
-                                    "New_attractions_and_experiences__c", IIF(EMPTY(@UpdatedNewAttractions), 'False', 'True'),
-                                    "Riverland_news_and_updates__c", IIF(EMPTY(@UpdatedNewsUpdates), 'False', 'True'))
-                                
-                                SET @updateContactRecord = UpdateSingleSalesforceObject(
-                                 "Contact", @sfid,
-                                 "Latest_Channel_Source__c", "CPC - RiverLand"
-                                  )
-                               
-                               
-                                 set @thankYouPage = '#ThankYou'
-                                if empty(@sfid) OR IsNull(@sfid) then
-                                      Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
-                                   ELSE
-                                      Set @ampError = ''
-                                   ENDIF
-                                       Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                               
-                            if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.riverlanddubai.com/ThankYou_RiverLand_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
-                               ELSE
-                                      Redirect(CONCAT(CloudPagesURL(4953),@thankYouPage))
-                              ENDIF
-
-                                ENDIF
+      
+          SET @sfid                  = RequestParameter("crmId")
+          SET @guestId               = RequestParameter("guestId")
+          SET @emailContact          = RequestParameter("emails")
+          SET @UpdatedDiningOffers   = RequestParameter("DiningOffers")
+          SET @UpdatedUpcomingEvents = RequestParameter("upcomingEvents")
+          SET @UpdatedfamilyActivities = RequestParameter("familyActivities")
+          SET @UpdatednewAttractions   = RequestParameter("newAttractions")
+          SET @UpdatedweekendEntertainment = RequestParameter("weekendEntertainment")
+      
+          /* Update Guest Subscription Flags */
+          IF NOT EMPTY(@sfid) THEN
+      
+              SET @updateRecord = UpdateSingleSalesforceObject(
+                  "Guest_Subscription__c", @guestId,
+                  "Dining_offers_and_new_restaurants__c",   IIF(EMPTY(@UpdatedDiningOffers), 'False', 'True'),
+                  "Upcoming_events_and_festivals__c",       IIF(EMPTY(@UpdatedUpcomingEvents), 'False', 'True'),
+                  "Family_friendly_activities__c",          IIF(EMPTY(@UpdatedfamilyActivities), 'False', 'True'),
+                  "New_attractions_and_experiences__c",     IIF(EMPTY(@UpdatednewAttractions), 'False', 'True'),
+                  "Weekend_entertainment__c",               IIF(EMPTY(@UpdatedweekendEntertainment), 'False', 'True')
+              )
+      
+              /* Update Contact Last Channel Source */
+              SET @updateContactRecord = UpdateSingleSalesforceObject(
+                  "Contact", @sfid,
+                  "Latest_Channel_Source__c", "CPC - RiverLand"
+              )
+      
+              /* For logging */
+              SET @thankYouPage = "#ThankYou"
+      
+              IF EMPTY(@sfid) OR IsNull(@sfid) THEN
+                  SET @ampError = "00 - NO SUBSCRIBER KEY FOUND"
+              ELSE
+                  SET @ampError = ""
+              ENDIF
+      
+              /* Insert Log */
+              SET @p = InsertData(
+                  "PreferencesLog_QA",
+                  "SubscriberKey", @sfid,
+                  "EmailAddress", @emailContact,
+                  "Submission", "CommunicationPage",
+                  "AMPError", @ampError,
+                  "FirstName", @firstName,
+                  "LastName", @lastName
+              )
+      
+              /* Redirect */
+              IF @methodType == "Old" THEN
+                  Redirect(
+                      Concat(
+                          "https://cloud.explore.riverlanddubai.com/ThankYou_RiverLand_QA?sfid=",
+                          Base64Encode(@sfid),
+                          "#ThankYou"
+                      )
+                  )
+              ELSE
+                  Redirect(
+                      Concat(
+                          CloudPagesURL(4954),
+                          @thankYouPage
+                      )
+                  )
+              ENDIF
+      
+          ENDIF
       
       ENDIF
       ]%%
@@ -2470,104 +2534,146 @@ color:#56499E;">×</span>
        </form>
        %%[
        IF RequestParameter("submittedUnsub") == true THEN
-              SET @sfid = RequestParameter("crmId")
-                                    SET @guestId = RequestParameter("guestId")
-                                    SET @emailContact = RequestParameter("emails")
-                                    SET @unsubTempBox = RequestParameter("unsubTemp")
-                                    SET @unsubFreqBox = RequestParameter("unsubFreq")
-                                    SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
-                                    SET @unsubNoDubaiBox = RequestParameter("unsubNoDubai")
-                                    SET @unsubOtherBox = RequestParameter("unsubOther")
-                                    SET @unsubOtherComments = RequestParameter("nameReason")
-                                    SET @currentDate = Now()
-
-                                    IF NOT Empty(@sfid) THEN
-                                     SET @updateContactRecord = UpdateSingleSalesforceObject(
-                                 "Contact", @sfid,
-                                 "Latest_Channel_Source__c", "CPC - RiverLand"
-                                  )
-                                    IF NOT Empty(@unsubTempBox) THEN
-                                    
-                                    /* made changes on 14 feb - add pub list to resub in CRM */
-                                    
-                                    SET @updateRecord = UpdateSingleSalesforceObject(
-                                    "Guest_Subscription__c", @guestId,
-                                    "Temporary_Pause_30_Days__c", 'True',
-                                    "Emails_are_too_frequent__c",'false',
-                                    "Content_isn_t_relevant__c",'false',
-                                    "I_m_no_longer_in_Dubai__c",'false',
-                                    "Other_Please_specify__c",'false',
-                                    "fieldsToNull","Reason_of_Unsubscribe__c",
-                                    "Status__c", "Unsubscribed"
-                                    )
-                                    
-                                    ENDIF
-                                    
-                                    IF Empty(@unsubTempBox) THEN
-                                     /* made changes on 14 feb - add pub list to unsub in CRM */
-                                    /*Removed the code for unchecking the publication list from CRM - 19th Feb24 */
-                                    SET @updateRecord = UpdateSingleSalesforceObject(
-                                    "Guest_Subscription__c", @guestId,
-                                    "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'false', 'true'),
-                                    "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'false', 'true'),
-                                    "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'false', 'true'),
-                                    "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'false', 'true'),
-                                    "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'false', 'true'),
-                                    "Reason_of_Unsubscribe__c", @unsubOtherComments,
-                                    "Status__c", "Unsubscribed"
-                                   
-                                    )
-                                    ENDIF
-                                   
-                                 
-                                  
-                             
-                                    
-                                    /*Redirect(Concat("https://cloud.explore.globalvillage.ae/EN-Thank-You?sfid=", Base64Encode(@sfid)))*/
-                                    
-                                    
-                                    
-                                     IF NOT Empty(@unsubTempBox) THEN
-                                     SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email",
-                                                            @emailContact,"DateAdded",@currentDate,"ContactId",@sfid, "UnsubscribeType","Individual","Asset","Riverland")
-                                    ENDIF
-                                    
-                                    
-                                    IF Empty(@unsubTempBox) THEN
-                                    set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
-                                    set @count = rowcount(@rowFound)
-                                    if @count > 0 then
-                                    set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
-                                    SET @updateRecord = UpdateSingleSalesforceObject(
-                                    "Guest_Subscription__c", @guestId,
-                                    "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
-                                    "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'False', 'True'),
-                                    "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'False', 'True'),
-                                    "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),
-                                    "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'False', 'True'),
-                                    "Reason_of_Unsubscribe__c", @unsubOtherComments
-                                    )
-                                    /*if a sub. comes back and uncheck temp pause*/
-                                    endif
-                                    ENDIF
-            
-                                   set @thankYouPage = '#ThankYou'
-                                    if empty(@sfid) OR IsNull(@sfid) then
-                                      Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
-                                   ELSE
-                                      Set @ampError = ''
-                                   ENDIF
-                                       Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                                    /*Redirect(CONCAT(CloudPagesURL(2737),@thankYouPage))*/
-                                    if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.riverlanddubai.com/ThankYou_RiverLand_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
-                                     ELSE
-                                            Redirect(CONCAT(CloudPagesURL(4953),@thankYouPage))
-                                    ENDIF
-                                    
-                                ENDIF
-
-     
+       
+           SET @sfid               = RequestParameter("crmId")
+           SET @guestId            = RequestParameter("guestId")
+           SET @emailContact       = RequestParameter("emails")
+           SET @unsubTempBox       = RequestParameter("unsubTemp")
+           SET @unsubFreqBox       = RequestParameter("unsubFreq")
+           SET @unsubRelevanceBox  = RequestParameter("unsubRelevance")
+           SET @unsubNoDubaiBox    = RequestParameter("unsubNoDubai")
+           SET @unsubOtherBox      = RequestParameter("unsubOther")
+           SET @unsubOtherComments = RequestParameter("nameReason")
+           SET @currentDate        = Now()
+       
+           IF NOT EMPTY(@sfid) THEN
+       
+               /* Update Contact Source */
+               SET @updateContactRecord = UpdateSingleSalesforceObject(
+                   "Contact", @sfid,
+                   "Latest_Channel_Source__c", "CPC - RiverLand"
+               )
+       
+               /* ========== TEMP PAUSE SELECTED ========== */
+               IF NOT EMPTY(@unsubTempBox) THEN
+       
+                   /* Apply temporary pause */
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "Temporary_Pause_30_Days__c", "True",
+                       "Emails_are_too_frequent__c", "false",
+                       "Content_isn_t_relevant__c", "false",
+                       "I_m_no_longer_in_Dubai__c", "false",
+                       "Other_Please_specify__c", "false",
+                       "fieldsToNull", "Reason_of_Unsubscribe__c",
+                       "Status__c", "Unsubscribed"
+                   )
+       
+               ENDIF
+       
+               /* ========== FULL UNSUBSCRIBE ========== */
+               IF EMPTY(@unsubTempBox) THEN
+       
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "Temporary_Pause_30_Days__c", IIF(EMPTY(@unsubTempBox), "false", "true"),
+                       "Emails_are_too_frequent__c", IIF(EMPTY(@unsubFreqBox), "false", "true"),
+                       "Content_isn_t_relevant__c", IIF(EMPTY(@unsubRelevanceBox), "false", "true"),
+                       "I_m_no_longer_in_Dubai__c", IIF(EMPTY(@unsubNoDubaiBox), "false", "true"),
+                       "Other_Please_specify__c", IIF(EMPTY(@unsubOtherBox), "false", "true"),
+                       "Reason_of_Unsubscribe__c", @unsubOtherComments,
+                       "Status__c", "Unsubscribed"
+                   )
+       
+               ENDIF
+       
+       
+               /* ========== Update ENT.TempPauseHandle_QA ========== */
+       
+               /* When Temp Pause Selected */
+               IF NOT EMPTY(@unsubTempBox) THEN
+       
+                   SET @s = UpsertData(
+                       "ENT.TempPauseHandle_QA",
+                       1,
+                       "SubscriberKey",   @guestId,
+                       "Email",           @emailContact,
+                       "DateAdded",       @currentDate,
+                       "ContactId",       @sfid,
+                       "UnsubscribeType", "Individual",
+                       "Asset",           "RiverLand"
+                   )
+       
+               ENDIF
+       
+               /* When Temp Pause is unchecked later */
+               IF EMPTY(@unsubTempBox) THEN
+       
+                   SET @rowFound = LookupRows("ENT.TempPauseHandle_QA", "SubscriberKey", @guestId)
+                   SET @count    = RowCount(@rowFound)
+       
+                   IF @count > 0 THEN
+       
+                       SET @deleteCount = DeleteData("ENT.TempPauseHandle_QA", "Email", @emailContact)
+       
+                       SET @updateRecord = UpdateSingleSalesforceObject(
+                           "Guest_Subscription__c", @guestId,
+                           "Temporary_Pause_30_Days__c", IIF(EMPTY(@unsubTempBox), "False", "True"),
+                           "Emails_are_too_frequent__c", IIF(EMPTY(@unsubFreqBox), "False", "True"),
+                           "Content_isn_t_relevant__c", IIF(EMPTY(@unsubRelevanceBox), "False", "True"),
+                           "I_m_no_longer_in_Dubai__c", IIF(EMPTY(@unsubNoDubaiBox), "False", "True"),
+                           "Other_Please_specify__c", IIF(EMPTY(@unsubOtherBox), "False", "True"),
+                           "Reason_of_Unsubscribe__c", @unsubOtherComments
+                       )
+       
+                   ENDIF
+       
+               ENDIF
+       
+       
+               /* ========== Logging ========== */
+               SET @thankYouPage = "#ThankYou"
+       
+               IF EMPTY(@sfid) OR IsNull(@sfid) THEN
+                   SET @ampError = "00 - NO SUBSCRIBER KEY FOUND"
+               ELSE
+                   SET @ampError = ""
+               ENDIF
+       
+               SET @p = InsertData(
+                   "PreferencesLog_QA",
+                   "SubscriberKey", @sfid,
+                   "EmailAddress", @emailContact,
+                   "Submission", "CommunicationPage",
+                   "AMPError", @ampError,
+                   "FirstName", @firstName,
+                   "LastName", @lastName
+               )
+       
+       
+               /* ========== Redirect ========== */
+               IF @methodType == "Old" THEN
+       
+                   Redirect(
+                       Concat(
+                           "https://cloud.explore.riverlanddubai.com/ThankYou_RiverLand_QA?sfid=",
+                           Base64Encode(@sfid),
+                           "#ThankYou"
+                       )
+                   )
+       
+               ELSE
+       
+                   Redirect(
+                       Concat(
+                           CloudPagesURL(4954),
+                           @thankYouPage
+                       )
+                   )
+       
+               ENDIF
+       
+           ENDIF
        ENDIF
        ]%%
        
@@ -2667,118 +2773,7 @@ color:#56499E;">×</span>
             <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
        </div>
          </form>
-      %%[
-                                IF RequestParameter("unsubAll") == true then
-                                SET @sfid = RequestParameter("crmId")
-                                SET @guestId = RequestParameter("guestId")
-                                SET @emailContact = RequestParameter("emails")
-                                SET @unsubTempBox = RequestParameter("unsubAllTemp")
-                                SET @unsubFreqBox = RequestParameter("unsubFreq")
-                                SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
-                                SET @unsubNoDubaiBox = RequestParameter("unsubNoDubai")
-                                SET @unsubOtherBox = RequestParameter("unsubOther")
-                                SET @unsubOtherComments = RequestParameter("nameReason")
-                                SET @currentDate = Now()
-                                SET @updateContactRecord = UpdateSingleSalesforceObject(
-                                 "Contact", @sfid,
-                                 "Latest_Channel_Source__c", "CPC - RiverLand"
-                                  )
-                                IF NOT Empty(@unsubTempBox) THEN
-                                   /* Subscribe from all guest subscriptions */
-                                    SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
-                                    SET @GDRowCount = RowCount(@GD)
-
-                                    IF @GDRowCount > 0 THEN
-                                        FOR @i = 1 TO @GDRowCount DO
-                                            SET @GDRow = Row(@GD, @i)
-                                            SET @GDID = Field(@GDRow, "Id")
-
-                                            /* Update Status__c to "Unsubscribed" */
-                                             
-                                            SET @updateRecord = UpdateSingleSalesforceObject(
-                                                "Guest_Subscription__c", @GDID,
-                                                "Temporary_Pause_30_Days__c", 'True',
-                                                "Emails_are_too_frequent__c",'false',
-                                                "Content_isn_t_relevant__c",'false',
-                                                "I_m_no_longer_in_Dubai__c",'false',
-                                                "Other_Please_specify__c",'false',
-                                                "fieldsToNull","Reason_of_Unsubscribe__c",
-                                                "Status__c", "Unsubscribed"
-                                            )
-                                        NEXT @i
-                                    ENDIF
-                                    
-                                    /*Upsert data in Temp pause*/
-                                    SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email", @emailContact,"DateAdded",@currentDate,"ContactId",@sfid,"UnsubscribeType","All","Asset","Riverland")
-                                    
-                                    /*Upsert data in resub DE to resubscriber contact on enterprise level*/
-                                    
-                                   SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "SubsciberStatus", "Unsubscribed", "Temp_30_Days", "True","Frequency","False","Relevance","False","Not_In_Dubai","False","Other","False","DateAdded",@currentDate)
-                             
-                                    
-                                    
-                                 ELSE
-                                 
-                                    /* Unsubscribe from all guest subscriptions */
-                                        SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
-                                        SET @GDRowCount = RowCount(@GD)
-
-                                        IF @GDRowCount > 0 THEN
-                                            FOR @i = 1 TO @GDRowCount DO
-                                                SET @GDRow = Row(@GD, @i)
-                                                SET @GDID = Field(@GDRow, "Id")
-
-                                                /* Update Status__c to "Unsubscribed" */
-                                                /* made changes - add pub list to unsub in CRM */
-                                                SET @updateRecord = UpdateSingleSalesforceObject(
-                                                    "Guest_Subscription__c", @GDID,
-                                                    "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
-                                                    "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'False', 'True'),
-                                                    "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'False', 'True'),
-                                                    "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),
-                                                    "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'False', 'True'),
-                                                    "Reason_of_Unsubscribe__c", @unsubOtherComments,
-                                                    "Status__c", "Unsubscribed"
-                                                )
-                                            NEXT @i
-                                        ENDIF
-                                        
-                                        /* change made on 14 feb for storing unsub reason in DE */
-                                        
-                                        SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "Frequency", IIF(Empty(@unsubFreqBox), 'False', 'True'),"Relevance", IIF(Empty(@unsubRelevanceBox), 'False', 'True'),"Not_In_Dubai", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),"Other", IIF(Empty(@unsubOtherBox), 'False', 'True'),"Temp_30_Days","False","DateAdded",@currentDate)
-                                        
-                                        set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @sfid)
-                                        set @count = rowcount(@rowFound)
-                                        if @count > 0 then
-                                           set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
-                                        ENDIF
-                                    
-                                ENDIF
-                                
-                                
-                                
-                                 
-
-                              /* Redirect to the thank you page */
-                             
-                               set @thankYouPage = '#ThankYou'
-                              if empty(@sfid) OR IsNull(@sfid) then
-                                      Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
-                                   ELSE
-                                      Set @ampError = ''
-                                   ENDIF
-                                       Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
-                              
-                              if @methodType== 'Old' then
-                                      Redirect(Concat("https://cloud.explore.riverlanddubai.com/ThankYou_RiverLand_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
-                                     ELSE
-                                            Redirect(CONCAT(CloudPagesURL(4953),@thankYouPage))
-                                    ENDIF
-                              ENDIF
-                              ENDIF
-
-                        ]%%
-
+      
     
   </div>
     
@@ -2801,9 +2796,9 @@ color:#56499E;">×</span>
               <div class="row">
                   <div class="col-lg-3 col-md-3 col-sm-12 col-12 logo-footer-wrapper" style="text-align:center">
                        <a alias="DPR_link" class="logo-footer"href="https://www.dubaiparksandresorts.com/en" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/2bda83f3-8dca-41d6-85b8-ea9a0e110298.png" width="150"></a>
-                       <span class="copyright-text">&copy; Dubai Parks<sup stle="font-size:9px">TM</sup> and Resorts 2026 All Rights Reserved.</span>
+                       <span class="copyright-text">&copy; Dubai ParksTM and Resorts 2025 All Rights Reserved.</span>
                   </div>
-                  <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height" style="max-width:13%">
+                  <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
                       <h4>Information</h4>
                       <div class="col-lg-12 col-md-12 col-sm-12 col-12">
                           <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/en/booking/tickets" target="_blank">Buy Tickets</a></p>
@@ -2836,7 +2831,7 @@ color:#56499E;">×</span>
                     <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/en/cookie-policy" target="_blank">Cookies Notice</a></p>
                 </div>
                 <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                  <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/en/copyright-trademark" target="_blank" style="white-space:nowrap">Copyright &amp; Trademark</a></p>
+                  <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/en/copyright-trademark" target="_blank">Copyright &amp; Trademark</a></p>
               </div>
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
@@ -2846,15 +2841,15 @@ color:#56499E;">×</span>
                         for iOS</a></p>
                   </div>
                   <div class="col-lg-12 col-md-12 col-sm-12 col-12">
-                      <p> <a alias="Tickit_Android" href="https://play.google.com/store/apps/details?id=ae.tickit.primary&_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4h3zUoryM1MAFKNCBjEAAAA%3D&pli=1" target="_blank" style="white-space:nowrap">Download Tickit
+                      <p> <a alias="Tickit_Android" href="https://play.google.com/store/apps/details?id=ae.tickit.primary&_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4h3zUoryM1MAFKNCBjEAAAA%3D&pli=1" target="_blank">Download Tickit
                         for Android</a></p>
                   </div>
                 
               </div>
-                  <div class="col-lg-3 col-md-3 col-sm-12 col-12 social-media" style="max-width:28%">
+                  <div class="col-lg-3 col-md-3 col-sm-12 col-12">
                       
                       <ul class="social-media-ul">
-                          <li style="margin-left:0"><a alias="fb" conversion="false" data-linkto="https://" href="https://www.facebook.com/riverlanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/85174c45-a541-4ca9-948a-e3437b3f80bf.png"></a>
+                          <li><a alias="fb" conversion="false" data-linkto="https://" href="https://www.facebook.com/riverlanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/85174c45-a541-4ca9-948a-e3437b3f80bf.png"></a>
                           </li>
                           <li> <a alias="Insta" conversion="false" data-linkto="https://" href="https://www.instagram.com/riverlanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/d5e1e09e-b621-4e66-aeea-9c5e6ee1924b.png"></a>
 
@@ -2877,7 +2872,7 @@ color:#56499E;">×</span>
                   <a alias="Perplexcity" href="https://www.dubaiparksandresorts.com/en/perplex-city" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/dfb5fda0-f756-4725-898e-468cd7771df9.png" width="100"></a>
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
-                  <a alias="RiverLand" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/4fec293b-3bbe-4ef8-ba38-8d8de1cd5439.png"  width="179"></a>
+                  <a alias="RiverLand" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/13213b14-f9ce-4168-bd11-e93df190b40a.png"  width="179"></a>
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
                   <a alias="TheHiddenChamber" href="https://www.dubaiparksandresorts.com/en/special-events/hidden-chamber" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/bb8e20c8-6f59-42ef-a0d1-fee39dc52436.png"  width="130"></a>
@@ -2938,7 +2933,7 @@ for (var i = existingRows; i < numOfKids; i++) {
                      <div class="form-group">
                   <label for="">Child's Name</label>
                   <input type="text" id="kidsName${i}" name="kidsName${i}" value=""
-                      class="form-control nameKids" maxlength="50" />
+                      class="form-control nameKids" />
               </div>
                     </div>
                       <div class="col-lg-3 col-md-3 col-sm-12 col-12">
@@ -2975,16 +2970,7 @@ for (var i = existingRows; i < numOfKids; i++) {
 
 var today = new Date().toJSON().slice(0, 10);
 var date = $('input[type=date]');
-var kidsDate = $('#kidsTable input[type=date]'); 
-
-var d = new Date(today);   // convert string → Date
-d.setFullYear(d.getFullYear() - 100);
-
-var result = d.toISOString().slice(0, 10);
-console.log(result);
-
 date.attr('max', today);
-kidsDate.attr('min', result);
 
 }
 $(".birthkid").each(function() {

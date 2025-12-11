@@ -1,0 +1,418 @@
+%%[
+    /*----------------------------------------------------
+       Get Subscriber / CRM Id
+    ----------------------------------------------------*/
+    <!-- SET @id = _subscriberkey -->
+    SET @id = "003Qs00000WKkYyIAL"
+    IF empty(@id) THEN
+        SET @idEn = QueryParameter("sfid") 
+        SET @id   = Base64Decode(@idEn)
+        /* output(CONCAT("decodeSFID: ", @id)) */
+
+        IF empty(@id) THEN
+            SET @id = RequestParameter("sfid")
+            /* output(CONCAT("Id: ", @id)) */
+
+            IF empty(@id) THEN
+                SET @id = QueryParameter("sfid")
+                /* output(CONCAT("Id (final fallback): ", @id)) */
+            ENDIF
+        ENDIF
+    ENDIF
+
+    /*----------------------------------------------------
+       Build link based on sfid
+    ----------------------------------------------------*/
+    IF empty(@idEn) OR IsNull(@idEn) THEN
+        SET @link = "%%=RedirectTo(CloudPagesURL(4954))=%%"
+    ELSE
+        SET @link = Concat(
+            "https://cloud.explore.riverlanddubai.com/RIVERLAND_AR_CPC_QA?sfid=",
+            @idEn
+        )
+    ENDIF
+
+    /*----------------------------------------------------
+       Retrieve Contact (GF Contact or BF Contact)
+    ----------------------------------------------------*/
+    SET @gfContactRows = RetrieveSalesforceObjects(
+        "Contact",
+        "Id,FirstName",
+        "Id", "=", @id
+    )
+
+    SET @bfContactRows = RetrieveSalesforceObjects(
+        "Contact",
+        "Id,FirstName",
+        "GV_ContactId__c", "=", @id
+    )
+
+    IF RowCount(@gfContactRows) == 1 THEN
+        SET @contactRow = Row(@gfContactRows, 1)
+    ELSEIF RowCount(@bfContactRows) == 1 THEN
+        SET @contactRow = Row(@bfContactRows, 1)
+    ENDIF
+
+    /*----------------------------------------------------
+       Extract Contact data
+    ----------------------------------------------------*/
+    IF NOT empty(@contactRow) THEN
+        SET @id        = Field(@contactRow, "Id")
+        SET @firstName = Field(@contactRow, "FirstName")
+    ENDIF
+
+    /*----------------------------------------------------
+       Fetch Guest_Subscription to check Status
+    ----------------------------------------------------*/
+    SET @contactRows = RetrieveSalesforceObjects(
+        "Guest_Subscription__c",
+        "Status__c",
+        "Contact__c", "=", @id,
+        "Asset__c", "=", "Dubai Parks and Resorts",
+        "Sub_Asset__c", "=", "RiverLand"
+    )
+
+    IF RowCount(@contactRows) > 0 THEN
+        SET @contactRow = Row(@contactRows, 1)
+        SET @status     = Field(@contactRow, "Status__c")
+    ENDIF
+
+    /*----------------------------------------------------
+       Set visibility condition
+    ----------------------------------------------------*/
+    SET @hideDiv = false
+
+    IF @status == "Unsubscribed" THEN
+        SET @hideDiv = true
+    ENDIF
+]%%
+
+
+<!DOCTYPE html>
+                        <html lang="ar" dir="ltr">
+                            <head>
+                               <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+                                <title>ريفرلاند دبي</title>
+ <link rel="icon" type="image/x-icon" href="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/14c06813-ec93-45c1-9788-cb867d741c1c.png">
+                                <link href='https://cloud.explore.riverlanddubai.com/ARbootstrap_qa' rel='stylesheet'>
+                                
+                                <script type='text/javascript' src='https://cloud.explore.riverlanddubai.com/jqueryv2.min_ar_qa'></script>
+                                <link href="https://cloud.explore.riverlanddubai.com/material-design-iconic-font.min_ar_qa" rel="stylesheet" media="all">
+                                <link href="https://cloud.explore.riverlanddubai.com/font-awesome_ar_qa" rel="stylesheet" media="all">
+                                <!-- Font special for pages-->
+                                <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+                                <link href="https://cloud.explore.riverlanddubai.com/style_ar_qa" rel="stylesheet">
+                                
+                              
+                                <link href="https://cloud.explore.riverlanddubai.com/font_ar_qa">
+                                <!-- Vendor CSS-->
+                                <link href="https://cloud.explore.riverlanddubai.com/select2.min_ar_qa" rel="stylesheet" media="all">
+                                <link href="https://cloud.explore.riverlanddubai.com/daterangepicker_ar_qa" rel="stylesheet" media="all">
+                                                         <link href="https://cloud.explore.riverlanddubai.com/ar_master_qa" rel="stylesheet" media="all">
+                              <link href="https://fonts.cdnfonts.com/css/charlie-kingdom" rel="stylesheet">
+             <style>
+                /* thank you page css */
+.thanYou-img img{
+  max-width: 10%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.thanks-wrapper{
+  margin: 50px 0 50px 0;
+}
+.thankYou-text h2, .thankYou-text p{
+  text-align: center;
+}
+.back-to-profile a{
+  font-size: 16px;
+  text-decoration: none;
+  padding: 12px 25px;
+}
+.back-btn{
+  background: #56499E;
+  color: #fff;
+  font-size: 16px;
+  text-align: right;
+  font-weight: bold;
+}
+.back-to-profile a:hover{
+  background: #fff;
+  color: #56499E;
+  border: 2px solid #56499E ;
+}
+.back-to-profile {
+  max-width: 870px;
+  text-align: left;
+}
+.lang-switcher-text{
+    text-align: left;
+    padding-left: 40px;
+    margin-top: -30px;
+}
+
+.language-toggle-link{
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    position: relative;
+}
+a:hover{
+ color: #fff;
+}
+
+a#langSwitcher {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px){
+.lang-switcher-text{
+   padding-left: 15px;
+   margin-top: -14px;
+}
+.language-toggle-link{
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 9px !important;
+    bottom: -2px;
+}
+}
+
+@media (min-width: 768px) and (max-width: 1400px){
+.lang-switcher-text{
+   padding-left: 20px;
+   padding-top: 15px;
+   margin-bottom:-8px;
+}
+.language-toggle-link{
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px !important;
+    position: static;
+}
+}
+             </style>
+                              <script runat=server>
+    Platform.Response.SetResponseHeader("Strict-Transport-Security","max-age=200");
+    Platform.Response.SetResponseHeader("X-XSS-Protection","1; mode=block");
+    Platform.Response.SetResponseHeader("X-Frame-Options","Deny");
+    Platform.Response.SetResponseHeader("X-Content-Type-Options","nosniff");
+    Platform.Response.SetResponseHeader("Referrer-Policy","strict-origin-when-cross-origin");
+  Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.explore.riverlanddubai.com https://cloud.explore.globalvillage.ae; frame-ancestors 'none'");
+    
+
+</script>
+                            </head>
+                            <body>
+                              <header>
+                                <div class="container">
+                                    <div class="row align-items-center" style="margin: 0 auto;padding-top: 20px;">
+                                        <div class="col-lg-8 col-md-8 col-sm-8 col-8">
+                                            <a href="https://www.dubaiparksandresorts.com/ar/riverland" class="logo-link" target="_blank">
+                                              <img src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/4fec293b-3bbe-4ef8-ba38-8d8de1cd5439.png"
+                                              alt="logo">
+                                            </a>
+                                        </div>
+                                        <div class="col-lg-4 col-md-4 col-sm-4 col-4">
+                      
+                                        <a href="https://dubaiholding.com/ar/who-we-are/our-companies/dubai-holding-entertainment/" class="logo-link" target="_blank">
+                                            <img src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/9e71590f-6466-464d-96fa-ca8ff829390c.png"
+                                                alt="logo-dhe" class="pull-left dhe-logo">
+                                        </a>
+                      
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lang-switcher-text">
+                                  <a href="https://cloud.explore.riverlanddubai.com/Riverland_CPC_QA" class="language-toggle-link" id="langSwitcher" onclick="dynamicLangSwitcher();">ENGLISH</a>
+                                </div>
+                            </header>
+                                 <!-- Header End --><section class="banner">
+        <div class="main-banner">
+          <img src= "https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/948f443b-7ae4-4434-b723-c1d3cc7c0092.jpg" alt="banner-img" class="responsive" id="desktop-img">
+           <img src= "https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/948f443b-7ae4-4434-b723-c1d3cc7c0092.jpg" alt="banner-img" class="responsive" id="mob-img">
+          </div>
+              <div class="container">
+                <div class="banner-overlay-content">
+                <!-- <h1 class="username" style="font-family: Poppins, sans-serif;">Hi %%=v(ProperCase(@firstName))=%% </h1> -->
+                <img class="banner-logo" src= "https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/4fec293b-3bbe-4ef8-ba38-8d8de1cd5439.png" width="450" alt="RiverLand" class="responsive" >
+              </div>
+            </div>
+            </section>
+<!-- content section -->
+<form class="comment-form">
+    <div class="container">
+      <div style="display: %%=IIF(NOT @hideDiv, 'block', 'none')=%%;" class="thanks-wrapper form group">
+        <div class="thanYou-img mb-2">
+            <img src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/b5531acc-7206-470b-aeb9-9bb2ac8812ba.png" alt="" class="banner-bg-img">
+        </div>
+      <div class="thankYou-text">
+        <h2><strong>شكرا لك</strong></h2>
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;padding-top: 20px;">لقد قمنا بحفظ تفضيلاتك ونتطلع إلى خدمتك بشكل أفضل.</p>  
+      </div>
+      <div class="mt-5 back-to-profile">
+        <a href="%%=RedirectTo(@link)=%%" name="button" class="btn orange-btn back-btn">العودة إلى صفحتك الشخصية </a>
+      </div>
+    </div>
+    </div>
+    </form>
+                              
+       <div class="container" style="padding:30px 0">
+      <div style="display: %%=IIF(@hideDiv, 'block', 'none')=%%;" class="unsubscribe-wrapper form group">
+        <div class="thanYou-img mb-2">
+            <img src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/b5531acc-7206-470b-aeb9-9bb2ac8812ba.png" alt="" class="banner-bg-img">
+        </div>
+      <div class="thankYou-text">
+       
+            <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-top:20px">شكراً على تعليقاتك لمساعدتنا على تحسين خدماتنا.
+ </p>  
+      </div>
+    
+    </div>
+    </div>                      
+                              
+                              
+<!-- content section end -->
+                                          
+<!-- footer start -->
+<footer>
+  <div class="container">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-12 col-12 logo-footer-wrapper" style="text-align:center">
+          <a alias="DPR_link" class="logo-footer"href="https://www.dubaiparksandresorts.com/en" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/2bda83f3-8dca-41d6-85b8-ea9a0e110298.png" width="150"></a>
+          <span class="copyright-text">&copy; Dubai Parks<sup stle="font-size:9px">TM</sup> and Resorts 2026 All Rights Reserved.</span>
+     </div>
+          <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height" style="max-width:13%">
+              <h4>معلومات</h4>
+              <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                  <p><a alias="BuyTickets" href="https://www.dubaiparksandresorts.com/ar/bookings?date=05/09/2024&park=All" target="_blank">شراء التذاكر</a></p>
+              </div>
+              <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                  <p><a alias="AnnualPass" href="https://www.dubaiparksandresorts.com/ar/annual-pass#594" target="_blank">التذكرة السنوية</a></p>
+              </div>
+              <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                <p><a alias="Offers" href="https://www.dubaiparksandresorts.com/ar/booking/tickets/" target="_blank">العروض الترويجية</a></p>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+              <p><a alias="Experience" href="https://www.dubaiparksandresorts.com/ar/annual-pass#594" target="_blank">التجارب الترفيهية</a></p>
+          </div>
+          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+            <p><a alias="ContactUs" href="https://www.dubaiparksandresorts.com/ar/contact-us" target="_blank">تواصل معنا</a></p>
+        </div>
+          </div>
+          <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+            <h4>قانوني</h4>
+            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                <p><a alias="Disclaimer" href="https://www.dubaiparksandresorts.com/ar/terms-and-conditions" target="_blank">إخلاء المسؤولية</a></p>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                <p><a alias="PrivacyPloicy" href="https://privacy.dubaiholding.com/ar/privacy-notice/customers---dubai-holding-entertainment-llc" target="_blank">سياسة الخصوصية</a></p>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+              <p><a alias="TermsAndCondition" href="https://www.dubaiparksandresorts.com/ar/terms-and-conditions" target="_blank">الشروط والأحكام</a></p>
+          </div>
+          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+            <p><a alias="CookiePolicy" href="https://www.dubaiparksandresorts.com/ar/cookie-policy" target="_blank">إشعار ملفات تعريف الارتباط</a></p>
+        </div>
+        <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+          <p><a alias="CopyrightAndTrademark" href="https://www.dubaiparksandresorts.com/ar/copyright-trademark" target="_blank">حقوق الطبع والنشر والعلامة التجارية</a></p>
+      </div>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-12 col-12 custom-height">
+          <h4>مكافآت تيكيت</h4>
+          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+              <p><a alias="Tickit_iOS" href="https://apps.apple.com/us/app/tickit-rewards/id1597908032?_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4jP9gwHIgL%2FmLQAAAA%3D%3D" target="_blank">تحميل تيكيت لنظام iOS</a></p>
+          </div>
+          <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+              <p> <a alias="Tickit_Android" href="https://play.google.com/store/apps/details?id=ae.tickit.primary&_branch_match_id=1053619853588783593&utm_source=Tickit&utm_medium=Website&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXL8lMzs4s0UssKNDLyczL1g8B8%2BPDU5OKM0tS412c4h3zUoryM1MAFKNCBjEAAAA%3D&pli=1" target="_blank">تحميل تيكيت لنظام أندرويد</a></p>
+          </div>
+        
+      </div>
+          <div class="col-lg-3 col-md-3 col-sm-12 col-12 social-media" style="max-width:28%">
+              
+            <ul class="social-media-ul">
+              <li><a alias="fb" conversion="false" data-linkto="https://" href="https://www.facebook.com/riverlanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/85174c45-a541-4ca9-948a-e3437b3f80bf.png"></a>
+              </li>
+              <li> <a alias="Insta" conversion="false" data-linkto="https://" href="https://www.instagram.com/riverlanddubai/" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/d5e1e09e-b621-4e66-aeea-9c5e6ee1924b.png"></a>
+
+              </li>
+              <li> <a alias="Tiktok" conversion="false" data-linkto="https://" href="https://www.tiktok.com/@riverlanddubai" target="_blank" title=""><img alt="" data-assetid="92835" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/2bdbbb78-943f-47a7-8e5e-df9d5fa749ec.png"></a>
+
+              </li>
+              <li class="youtube" style="margin-left: 0;"> <a alias="Youtube" conversion="false" data-linkto="https://" href="https://www.youtube.com/@riverlanddubai" target="_blank" title=""><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/ec2006c5-f1e5-4e9b-8a7a-ecfa66e56319.png" ></a>
+              </li>
+             
+          </ul>
+          </div>
+      </div>
+      <hr style="border-top: 1px solid #090628; margin-bottom:0.2em; opacity:1">
+      <div class="row business-units">
+        <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+          <a alias="ArcheyAxe" href="https://www.dubaiparksandresorts.com/en/special-events/archery-axe" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/13a5dfeb-6ea4-44e0-96c3-125c1840dc5a.png"  width="63"></a>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+          <a alias="TheHiddenChamber" href="https://www.dubaiparksandresorts.com/en/special-events/hidden-chamber" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/bb8e20c8-6f59-42ef-a0d1-fee39dc52436.png"  width="130"></a>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+          <a alias="RiverLand" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/4fec293b-3bbe-4ef8-ba38-8d8de1cd5439.png"  width="179"></a>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+          <a alias="Perplexcity" href="https://www.dubaiparksandresorts.com/en/perplex-city" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/dfb5fda0-f756-4725-898e-468cd7771df9.png" width="100"></a>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-4 col-4 business-unit-col">
+          <a alias="NeonGalaxy" href="https://www.dubaiparksandresorts.com/en/neon-galaxy-indoor-playworld" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe23117373640474701c78/m/1/8a74694c-6c6f-4ad1-821a-c4019fb1454a.png" width="133"></a>
+        </div>
+        <!--div class="col-lg-2 col-md-2 col-sm-4 col-4 ">
+          <a alias="Jumpx" href="https://www.dubaiparksandresorts.com/ar/jumpx" target="_blank"><img alt="" data-assetid="" src="https://image.explore.riverlanddubai.com/lib/fe2e117373640474741677/m/1/96ed9f4a-8d31-4354-a9e3-9e0186395562.png" ></a>
+        </div-->
+      </div>
+  </div>
+</footer>
+      <!-- footer End -->                     
+    <!-- Vendor JS-->
+    <script src="https://cloud.explore.riverlanddubai.com/bootstrap.bundle.min_ar_qa"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/select2.min.js_ar_qa"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/moment.min_ar_qa"></script>
+    <script src="https://cloud.explore.riverlanddubai.com/daterangepicker.js_ar_qa"></script>                              
+                              <script>
+                              console.log("i0");
+                              </script>
+                                 <script>
+function dynamicLangSwitcher() {
+    console.log('INSIDE');
+
+    var currentUrl = window.location.href;
+    var qsIndex = currentUrl.indexOf('?');
+    var hashIndex = currentUrl.indexOf('#');
+    
+    var queryString = qsIndex !== -1 ? currentUrl.substring(qsIndex, hashIndex !== -1 ? hashIndex : currentUrl.length) : '';
+    var hashFragment = hashIndex !== -1 ? currentUrl.substring(hashIndex) : '';
+
+    console.log('Current Query String (qs):', queryString);
+    console.log('Current Hash Fragment:', hashFragment);
+
+    var newLangUrl = document.getElementById('langSwitcher').href;
+
+    if (queryString) {
+        if (newLangUrl.indexOf('?') !== -1) {
+            newLangUrl += '&' + queryString.substring(1);
+        } else {
+            newLangUrl += queryString;
+        }
+    }
+
+    if (hashFragment) {
+        newLangUrl += hashFragment;
+    }
+
+    console.log('Updated URL:', newLangUrl);
+
+    document.getElementById('langSwitcher').href = newLangUrl;
+}
+
+
+</script>
+</body>
+</html>
