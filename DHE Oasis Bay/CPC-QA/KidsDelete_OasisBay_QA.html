@@ -1,0 +1,62 @@
+<script runat="server">
+  Platform.Load("core", "1.1");
+
+  try {
+</script>
+
+%%[
+  /* Retrieve request parameters */
+  SET @deletedKidsArr = RequestParameter("arr")
+  SET @numOfKids      = RequestParameter("numOfKids")
+  SET @sfid           = RequestParameter("subskey")
+
+  /* Retrieve the child record */
+  SET @childIDs = RetrieveSalesforceObjects(
+                      "Family_Member__c",
+                      "ID",
+                      "Id", "=", @deletedKidsArr,
+                      "Relationship__c", "=", "Child"
+                  )
+
+  SET @childIDRowCount = Rowcount(@childIDs)
+
+  /* Update Contact: Latest Channel Source */
+  IF NOT EMPTY(@sfid) THEN
+      SET @updateRecord = UpdateSingleSalesforceObject(
+                              "Contact", @sfid,
+                              "Latest_Channel_Source__c", "CPC - OasisBay"
+                           )
+  ENDIF
+
+  /* If deleted child found, process deletion */
+  IF @childIDRowCount > 0 THEN
+
+      FOR @p = 1 TO @childIDRowCount DO
+
+          /* Reduce number of kids */
+          SET @numOfKids = Subtract(@numOfKids, 1)
+
+          /* Mark child as deleted */
+          SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
+                                          "Family_Member__c", @deletedKidsArr,
+                                          "Deleted_kid__c", "True"
+                                       )
+
+          /* Update Contact’s number of kids */
+          SET @updateNoOfKidRecord = UpdateSingleSalesforceObject(
+                                      "Contact", @sfid,
+                                      "Number_of_kids__c", @numOfKids
+                                    )
+
+      NEXT @p
+
+  ENDIF
+]%%
+
+<script runat="server">
+      var arr = Variable.GetValue("deletedKidsArr");
+  }
+  catch (err) {
+      Write("Error Message: " + Stringify(err.message) + Stringify(err.description));
+  }
+</script>

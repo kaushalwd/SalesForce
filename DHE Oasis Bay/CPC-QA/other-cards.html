@@ -1,0 +1,830 @@
+<!-- 2nd card Interest tab-->
+                                   
+%%[
+                                   
+/*set @concatedString = Concat("it", "'")
+set @finalConcatedString = Concat(@concatedString,"s On My Dubai Bucket List")*/
+/*Output(concat("string - ", @finalConcatedString))*/
+
+set @primaryReasonString = BuildRowsetFromString(@primaryReasonForVisit,";")
+set @primaryReasonCount = rowCount(@primaryReasonString)
+
+if @primaryReasonCount > 0 then
+   for @i = 1 to @primaryReasonCount do
+        
+        SET @val = Field(Row(@primaryReasonString,@i),1)
+        /*Output(concat("<br>val - ", @val))*/
+        IF @val == "Dining by the river" THEN
+         SET @Dining_by_the_river = "checked"
+        ELSEIF @val == "Visiting the different attractions and experiences" THEN
+         SET @attractions_experiences = "checked"
+        ELSEIF @val == "Family day out" THEN
+         SET @Family_day_out = "checked"
+        ELSEIF @val == "Attending an event or festival" THEN
+         SET @event_festival = "checked"
+        ELSEIF @val == "Taking photos / sightseeing" THEN
+         SET @Photos_sightseeing = "checked"
+       ELSEIF @val == "Visiting Dubai Parks TM and Resorts" THEN
+         SET @Visit_park = "checked"  
+        ENDIF
+        
+   next @i
+endif
+
+
+set @likeMostString = BuildRowsetFromString(@likeMostAbout,";")
+set @likeMostCount = rowCount(@likeMostString)
+
+if @likeMostCount > 0 then
+   for @i = 1 to @likeMostCount do
+        
+        SET @val = Field(Row(@likeMostString,@i),1)
+        IF @val == "The experiences and activities" THEN
+         SET @experiences_activities = "checked"
+        ELSEIF @val == "Events and live entertainment" THEN
+         SET @live_entertainment = "checked"
+        ELSEIF @val == "The dining options" THEN
+         SET @dining_options = "checked"
+        ELSEIF @val == "The river and scenery" THEN
+         SET @river_scenery = "checked"
+        ENDIF
+        
+   next @i
+endif
+
+set @howOftenVisitString = BuildRowsetFromString(@howOftenVisit,";")
+set @howOftenVisitCount = rowCount(@howOftenVisitString)
+
+if @howOftenVisitCount > 0 then
+   for @i = 1 to @howOftenVisitCount do
+        
+        SET @val = Field(Row(@howOftenVisitString,@i),1)
+        
+        IF @val == "Every week" THEN
+         SET @Every_week = "checked"
+        ELSEIF @val == "Every month" THEN
+         SET @Every_month = "checked"
+        ELSEIF @val == "Once a year" THEN
+         SET @Once_a_year = "checked"
+        ELSEIF @val == "Two times per year" THEN       
+         SET @Two_times_per_year = "checked"
+        ELSEIF @val == "Every two years" THEN       
+         SET @Every_two_years = "checked"
+        ENDIF
+        
+   next @i
+endif
+]%% 
+
+
+
+
+<div class="tab-pane fade interest-tab-content" id="interests" role="tabpanel" aria-labelledby="interests-tab">
+
+<div class="wrapper wrapper--w700">
+
+<form class="interest-form" action="" method="post" name="myForm" id="interest-form" autocomplete="off" >
+
+
+
+<div class="form-group">
+<h4 class="pt-4 pb-3">What is the primary reason for your visit to The World of OasisBay<sup>TM</sup>?</h4>
+<div class="radio-wrapper primary-reason radio-width">
+<div class="form-check form-check">
+<label class="form-check-label" for="reason1">Dining by the river</label>
+<input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@Dining_by_the_river)=%% >                            
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="reason2">Visiting the different attractions and experiences</label>
+<input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@attractions_experiences)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="reason3">Family day out</label>
+<input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@Family_day_out)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="reason4">Attending an event or festival</label>
+<input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@event_festival)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="reason5">Taking photos / sightseeing</label>
+<input class="form-check-input" type="checkbox" name="reason5" id="reason5" %%=v(@Photos_sightseeing)=%%>
+</div>
+
+<div class="form-check form-check">
+<label class="form-check-label" for="reason6">Visiting Dubai Parks<sup>TM</sup> and Resorts</label>
+<input class="form-check-input" type="checkbox" name="reason6" id="reason6" %%=v(@Visit_park)=%%>
+</div>
+</div> 
+<h4 class="pt-4 pb-3">How often do you visit The World of OasisBay<sup>TM</sup>?</h4>
+<div class="radio-wrapper primary-reason radio-width">
+<div class="form-check form-check">
+<label class="form-check-label" for="visit1">Every week</label>
+<input class="form-check-input" type="checkbox" name="visit1" id="visit1" %%=v(@Every_week)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="visit2">Every month</label>
+<input class="form-check-input" type="checkbox" name="visit2" id="visit2" %%=v(@Every_month)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="visit3">Once a year</label>
+<input class="form-check-input" type="checkbox" name="visit3" id="visit3" %%=v(@Once_a_year)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="visit4">Two times per year</label>
+<input class="form-check-input" type="checkbox" name="visit4" id="visit4" %%=v(@Two_times_per_year)=%%>
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="visit5">Every two years</label>
+<input class="form-check-input" type="checkbox" name="visit5" id="visit5" %%=v(@Every_two_years)=%%>
+</div>
+</div>
+
+<h4 class="pt-4 pb-3">What do you like the most about The World of OasisBay<sup>TM</sup>?</h4>
+<div class="radio-wrapper like-most radio-width">
+<div class="form-check form-check">
+<label class="form-check-label" for="like1">The experiences and activities</label>
+<input class="form-check-input" type="checkbox" name="like1" id="like1" %%=v(@experiences_activities)=%% >                            
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="like2">The dining options</label>
+<input class="form-check-input" type="checkbox" name="like2" id="like2" %%=v(@dining_options)=%%  >
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="like3">The river and scenery</label>
+<input class="form-check-input" type="checkbox" name="like3" id="like3" %%=v(@river_scenery)=%% >
+</div>
+<div class="form-check form-check">
+<label class="form-check-label" for="like4">Events and live entertainment</label>
+<input class="form-check-input" type="checkbox" name="like4" id="like4" %%=v(@live_entertainment)=%% >
+</div>
+</div>
+</div>
+<input name="submittedInterests" type="hidden" value="true"><br>
+<input name="crmId" type="hidden" value="%%=v(@crmId)=%%"><br>
+<input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+<input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
+
+
+<div class="text-end">
+<button type="submit" class="btn btn-success"id="interest-submit" name="button">Save</button>  
+</div> 
+</form>
+</div>   
+
+
+
+%%[
+IF RequestParameter("submittedInterests") == "true" then
+SET @sfid = RequestParameter("crmId")
+SET @guestId = RequestParameter("guestId")
+SET @emailContact = RequestParameter("emails")
+/*set @concatedString = Concat("it", "’")
+set @finalConcatedString = Concat(@concatedString,"s on my Dubai bucket list;")*/
+SET @oftenVisitValue = RequestParameter("visit")
+
+
+
+SET @primaryReasonPreferences = CONCAT(
+Iif(RequestParameter("reason1") == "on", "Dining by the river;", ""),
+Iif(RequestParameter("reason2") == "on", "Visiting the different attractions and experiences;", ""),
+Iif(RequestParameter("reason3") == "on", "Family day out;", ""),
+Iif(RequestParameter("reason4") == "on", "Attending an event or festival;", ""),
+Iif(RequestParameter("reason5") == "on", "Taking photos / sightseeing;", ""),
+Iif(RequestParameter("reason6") == "on", "Visiting Dubai Parks TM and Resorts;", ""),
+) 
+/*Output(concat("<br> primaryReasonPreferences: ",@primaryReasonPreferences))*/
+
+if not Empty(@primaryReasonPreferences) then
+SET @updateRecord = UpdateSingleSalesforceObject(
+"Guest_Subscription__c", @guestId,
+"Primary_reason_for_visit_to_OasisBay__c", @primaryReasonPreferences)
+else
+SET @updateRecord = UpdateSingleSalesforceObject(
+"Guest_Subscription__c", @guestId,
+"fieldsToNull", "Primary_reason_for_visit_to_OasisBay__c")
+
+endif 
+
+
+SET @likeMostAboutPreferences = CONCAT(
+Iif(RequestParameter("like1") == "on", "The experiences and activities;", ""),
+Iif(RequestParameter("like3") == "on", "The dining options;", ""),
+Iif(RequestParameter("like4") == "on", "The river and scenery;", ""),
+Iif(RequestParameter("like2") == "on", "Events and live entertainment;", ""),
+)  
+
+
+if not Empty(@likeMostAboutPreferences) then
+SET @updateRecord = UpdateSingleSalesforceObject(
+"Guest_Subscription__c", @guestId,
+"What_do_you_like_most_about_OasisBay__c", @likeMostAboutPreferences)
+else
+SET @updateRecord = UpdateSingleSalesforceObject(
+"Guest_Subscription__c", @guestId,
+"fieldsToNull", "What_do_you_like_most_about_OasisBay__c")
+
+endif 
+/*Output(concat("<br> likeMostAboutPreferences: ",@likeMostAboutPreferences))*/
+
+
+SET @mostLikelyVisit = CONCAT(
+Iif(RequestParameter("visit1") == "on", "Every week;", ""),
+Iif(RequestParameter("visit2") == "on", "Every month;", ""),
+Iif(RequestParameter("visit3") == "on", "Once a year;", ""),
+Iif(RequestParameter("visit4") == "on", "Two times per year;", ""),
+Iif(RequestParameter("visit4") == "on", "Every two years;", ""),
+)  
+
+
+if not Empty(@mostLikelyVisit) then
+SET @updateRecord = UpdateSingleSalesforceObject(
+"Guest_Subscription__c", @guestId,
+"Most_likely_time_to_visit_OasisBay__c", @mostLikelyVisit)
+else
+SET @updateRecord = UpdateSingleSalesforceObject(
+"Guest_Subscription__c", @guestId,
+"fieldsToNull", "Most_likely_time_to_visit_OasisBay__c")
+
+endif 
+/*Output(concat("<br> mostLikelyVisit: ",@mostLikelyVisit))*/
+
+
+IF NOT Empty(@sfid) THEN
+SET @updateContactRecord = UpdateSingleSalesforceObject(
+"Contact", @sfid,
+"Latest_Channel_Source__c", "CPC - OasisBay"
+) 
+ENDIF
+
+/* Redirect(Concat("https://cloud.explore.dubaiparksandresorts.com/CPC_DPR?sfid=", Base64Encode(@sfid), "#communications"))*/ 
+set @communications = '#communications'
+
+if empty(@sfid) OR IsNull(@sfid) then
+   Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+ELSE
+   Set @ampError = ''
+ENDIF
+Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","InterestPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+
+if @methodType== 'Old' then
+   Redirect(Concat("https://cloud.explore.OasisBaydubai.com/OasisBay_CPC_QA?sfid=", Base64Encode(@sfid), "#communications"))
+ELSE
+   Redirect(CONCAT(CloudPagesURL(4563),@communications))
+
+ENDIF
+
+ENDIF
+]%%
+
+
+</div>
+<!-- Interest Tab End -->
+
+<!-- 3rd card Communication tab start-->
+
+<div class="tab-pane fade preferences-tab-content" id="communications" role="tabpanel" aria-labelledby="communications-tab">
+<div class="wrapper wrapper--w700">
+<form class="preferences-form" action="" method="post">
+<!-- Second -->
+<div class="hear-about">
+<h4 class="pt-4 pb-3">What would you like to hear about? </h4>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" value="%%=v(@Dining_offers)=%%" id="informCheck11"  name="DiningOffers" %%=IIF(@Dining_offers =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="informCheck11">
+Dining offers and new restaurants
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" value="%%=v(@upcomingEvents)=%%" id="informCheck12"  name="upcomingEvents" %%=IIF(@upcomingEvents =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="informCheck12">
+Upcoming events and festivals
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" value="%%=v(@Family_activities)=%%" id="informCheck13"  name="familyActivities" %%=IIF(@Family_activities =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="informCheck13">
+Family-friendly activities
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" value="%%=v(@Weekend_entertainment)=%%" id="informCheck14"  name="weekendEntertainment" %%=IIF(@Weekend_entertainment =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="informCheck14">
+Weekend entertainment
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" value="%%=v(@New_attractions)=%%" id="informCheck15"  name="newAttractions" %%=IIF(@New_attractions =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="informCheck15">
+New attractions and experiences
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" value="%%=v(@news_updates)=%%" id="informCheck16"  name="newsUpdates" %%=IIF(@news_updates =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="informCheck16">
+OasisBay<sup>TM</sup> news and updates
+</label>
+</div>
+</div>
+
+<div class="com-btn mt-5">
+<button type="submit" class="btn btn-orange"id="communications-submit" name="button">Save</button>
+
+</div>
+<input name="submittedCommunications" type="hidden" value="true">
+<input name="crmId" id="crmId" type="hidden" value="%%=v(@crmId)=%%">
+<input name="guestId" id="guestId" type="hidden" value="%%=v(@Id)=%%">
+<input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
+</form>
+<hr>
+
+
+
+%%[
+IF RequestParameter("submittedCommunications")==true then
+
+ SET @sfid = RequestParameter("crmId")
+ SET @guestId = RequestParameter("guestId")
+ SET @emailContact = RequestParameter("emails")
+ set @UpdatedDiningOffers =  RequestParameter("DiningOffers")
+ set @UpdatedUpcomingEvents =  RequestParameter("upcomingEvents")
+ set @UpdatedfamilyActivities =  RequestParameter("familyActivities")
+ set @UpdatednewAttractions =  RequestParameter("newAttractions")
+ set @UpdatedweekendEntertainment =  RequestParameter("weekendEntertainment")
+
+ 
+
+ IF NOT Empty(@sfid) THEN
+ SET @updateRecord = UpdateSingleSalesforceObject(
+ "Guest_Subscription__c", @guestId,
+ "Dining_offers_and_new_restaurants__c", IIF(EMPTY(@UpdatedDiningOffers), 'False', 'True'), 
+ "Upcoming_events_and_festivals__c", IIF(EMPTY(@UpdatedUpcomingEvents), 'False', 'True'),
+ "Family_friendly_activities__c", IIF(EMPTY(@UpdatedfamilyActivities), 'False', 'True'),
+ "New_attractions_and_experiences__c", IIF(EMPTY(@UpdatednewAttractions), 'False', 'True'),
+ "Weekend_entertainment__c", IIF(EMPTY(@UpdatedweekendEntertainment), 'False', 'True'))
+
+SET @updateContactRecord = UpdateSingleSalesforceObject(
+"Contact", @sfid,
+"Latest_Channel_Source__c", "CPC - OasisBay"
+)
+
+
+set @thankYouPage = '#ThankYou'
+if empty(@sfid) OR IsNull(@sfid) then
+   Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+ELSE
+   Set @ampError = ''
+ENDIF
+    Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+
+if @methodType== 'Old' then
+   Redirect(Concat("https://cloud.explore.OasisBaydubai.com/ThankYou_OasisBay_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+ELSE
+   Redirect(CONCAT(CloudPagesURL(4555),@thankYouPage))
+ENDIF
+
+ENDIF
+ENDIF
+]%%
+
+<!--channel preference block-->
+<form class="channel-preferences-form" action="" method="post">
+<!-- Third -->
+<div class="channel">
+<h4 class="pt-4 pb-3">How should we get in touch?</h4>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" id="emailPref" name="emailPref" %%=IIF(@emailPref=='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="emailPref">
+ Email
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" id="WhatsAppPref" name="WhatsAppPref" %%=IIF(@WhatsAppPref=='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="WhatsAppPref">
+ WhatsApp
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" id="smsPref" name="smsPref" 
+    %%=IIF(@smsPref=='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="smsPref">
+ SMS
+</label>
+</div>
+
+</div>
+<div class="pref-btn mt-5">
+<input name="submittedChannelPref" type="hidden" value="true">
+<input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+<input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+<button type="button" name="button" class="btn btn-orange channelPreference-btn" id="channel-submit" onclick="channelPreference()">Save</button>
+</div>
+<br>
+</form>
+<!-- thank you pop up -->
+
+<div class="box-form mt-5" id="channel-preference">
+<span class="close-buttonCM" style="text-align: right; font-size: 30px; position: relative; left: 94%; top: 0; cursor: pointer; color:#56499E;">×</span>
+<div class="container">
+<div class="channelpreference-wrapper">
+<div class="thanYou-img mb-2">
+<img src="https://image.explore.OasisBaydubai.com/lib/fe23117373640474701c78/m/1/b5531acc-7206-470b-aeb9-9bb2ac8812ba.png" alt="" class="banner-bg-img">
+</div>
+<div class="thankYou-text">
+<p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">Your channel subscription preferences have been successfully updated.</p>
+<p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-top:0rem;">Should you wish to receive our communications again, please subscribe through our <a href="https://www.dubaiparksandresorts.com/en/OasisBay" style=
+"color:#212529;text-decoration: underline;" target="_blank">website</a>!</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- channel preference block end -->
+
+
+<div class="mt-5 pl-2" style="font-size: 16px;">
+<p>If you wish to unsubscribe from all The World of OasisBay<sup>TM</sup> communications please 
+click on ‘Unsubscribe’.</p>
+</div>
+<div class="unsrb-btn mt-5">
+<button type="button" name="button" class="btn btn-orange unsubscribe-btn"
+onclick="unsubscribeClick()" id="unsubscribeClick">Unsubscribe</button>
+</div>
+<!-- unsubscribe Reason options -->
+<div class="box-form mt-5" id="unsubscribe-reason">
+<form class="comment-form" action="" method="post">
+<span class="close-button" style="
+text-align: right;
+font-size: 30px;
+position: relative;
+left: 100%;
+top: 0;
+cursor: pointer;                                                           
+color:#56499E;">×</span>
+<div class="container">
+<div class="unsubscribe-wrapper form group">
+<div class="thanYou-img mb-2">
+<img src="https://image.explore.OasisBaydubai.com/lib/fe23117373640474701c78/m/1/b5531acc-7206-470b-aeb9-9bb2ac8812ba.png" alt="" class="banner-bg-img">
+</div>
+<div class="thankYou-text">
+
+<p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">You’ve been successfully unsubscribed. </p>  
+</div>
+
+</div>
+</div>                      
+
+<div class="orange-notice">
+Sorry to see you go!
+</div>
+<p style="font-size: 18px;">Please help us get better by telling us why you're unsubscribing:</p>
+<div class="form-check mb-2">
+
+<input class="form-check-input" type="checkbox" id="chck1" value="False" name="unsubFreq" %%=IIF(@emailsTooFrequent =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck1">Emails are too frequent</label>
+</div>
+<div class="form-check mb-2">
+<input class="form-check-input" type="checkbox" id="chck2" value="False" name="unsubRelevance" %%=IIF(@contentIsNotRelevant =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck2">Content isn't relevant</label>
+</div>
+<div class="form-check mb-2">
+<input class="form-check-input" type="checkbox" id="chck3" value="False" name="unsubNoDubai" %%=IIF(@noLongerInDubai =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck3">I'm no longer in Dubai</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" id="chck4" value="False" name="unsubTemp" %%=IIF(@tempPause =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck4">Temporary Pause (30 Days)</label>
+</div>
+<div class="form-check mt-2">
+<input class="form-check-input" type="checkbox" id="myCheck1" value="False"
+onclick="addbox1()" name="unsubOther" %%=IIF(@otherSpecify =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="myCheck1">Other (Please specify)</label>
+</div>
+<textarea name="nameReason" rows="6" cols="80" id="area1"
+class="form-control mt-3" value="%%=v(@reasonForUnsub)=%%" placeholder="Tell us more">%%=v(@reasonForUnsub)=%%</textarea>
+
+<div class="com-btn mt-5">
+<button type="submit" class="btn btn-orange"id="communications-submitbtn" name="button">Save</button>
+<input name="submittedUnsub" type="hidden" value="true">
+<input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+<input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+<input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
+</div>
+</form>
+%%[
+
+IF RequestParameter("submittedUnsub")==true then
+ SET @sfid = RequestParameter("crmId")
+ SET @guestId = RequestParameter("guestId")
+ SET @emailContact = RequestParameter("emails")
+ SET @unsubTempBox = RequestParameter("unsubTemp")
+ SET @unsubFreqBox = RequestParameter("unsubFreq")
+ SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
+ SET @unsubNoDubaiBox = RequestParameter("unsubNoDubai")
+ SET @unsubOtherBox = RequestParameter("unsubOther")
+ SET @unsubOtherComments = RequestParameter("nameReason")
+ SET @currentDate = Now()
+
+ IF NOT Empty(@sfid) THEN
+  SET @updateContactRecord = UpdateSingleSalesforceObject(
+"Contact", @sfid,
+"Latest_Channel_Source__c", "CPC - OasisBay"
+)
+ IF NOT Empty(@unsubTempBox) THEN
+ 
+ /* made changes on 14 feb - add pub list to resub in CRM */
+ 
+ SET @updateRecord = UpdateSingleSalesforceObject(
+ "Guest_Subscription__c", @guestId,
+ "Temporary_Pause_30_Days__c", 'True',
+ "Emails_are_too_frequent__c",'false',
+ "Content_isn_t_relevant__c",'false',
+ "I_m_no_longer_in_Dubai__c",'false',
+ "Other_Please_specify__c",'false',
+ "fieldsToNull","Reason_of_Unsubscribe__c",
+ "Status__c", "Unsubscribed"
+ )
+ 
+ ENDIF
+ 
+ IF Empty(@unsubTempBox) THEN
+  /* made changes on 14 feb - add pub list to unsub in CRM */
+ /*Removed the code for unchecking the publication list from CRM - 19th Feb24 */
+ SET @updateRecord = UpdateSingleSalesforceObject(
+ "Guest_Subscription__c", @guestId,
+ "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'false', 'true'),
+ "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'false', 'true'),
+ "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'false', 'true'),
+ "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'false', 'true'),
+ "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'false', 'true'),
+ "Reason_of_Unsubscribe__c", @unsubOtherComments,
+ "Status__c", "Unsubscribed"
+
+ )
+ ENDIF
+
+
+
+
+ 
+ /*Redirect(Concat("https://cloud.explore.globalvillage.ae/EN-Thank-You?sfid=", Base64Encode(@sfid)))*/
+ 
+ 
+ 
+  IF NOT Empty(@unsubTempBox) THEN
+  SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email",
+                         @emailContact,"DateAdded",@currentDate,"ContactId",@sfid, "UnsubscribeType","Individual","Asset","OasisBay")
+ ENDIF
+ 
+ 
+ IF Empty(@unsubTempBox) THEN
+ set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
+ set @count = rowcount(@rowFound)
+ if @count > 0 then
+ set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
+ SET @updateRecord = UpdateSingleSalesforceObject(
+ "Guest_Subscription__c", @guestId,
+ "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
+ "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'False', 'True'),
+ "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'False', 'True'),
+ "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),
+ "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'False', 'True'),
+ "Reason_of_Unsubscribe__c", @unsubOtherComments
+ )
+ /*if a sub. comes back and uncheck temp pause*/
+ endif
+ ENDIF
+
+set @thankYouPage = '#ThankYou'
+ if empty(@sfid) OR IsNull(@sfid) then
+   Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+ELSE
+   Set @ampError = ''
+ENDIF
+    Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+ /*Redirect(CONCAT(CloudPagesURL(2737),@thankYouPage))*/
+ if @methodType== 'Old' then
+   Redirect(Concat("https://cloud.explore.OasisBaydubai.com/ThankYou_OasisBay_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+  ELSE
+         Redirect(CONCAT(CloudPagesURL(4555),@thankYouPage))
+ ENDIF
+ 
+ENDIF
+ENDIF
+
+]%%
+
+</div>
+
+<div class="mt-5 pl-2" style="font-size: 16px;">
+<p>If you wish to unsubscribe from all Dubai Holding Entertainment communications, which include all our <a href="https://privacy.dubaiholding.com/en/data-controllers-list/dubai-holding-entertainment-llc"style="color:#7773b6; " target="_blank">brands</a> , please click on 'Unsubscribe All'.</p>
+</div>
+<div class="unsrb-all-btn mt-5">
+<button type="button" name="button" class="btn btn-orange unsubscribe-all-btn" onclick="unsubscribeAllClick()" id="unsubscribeAllClick">Unsubscribe All</button>
+</div>
+<!-- <input name="submittedCommunications" type="hidden" value="true">
+<input name="crmId" type="hidden" value=""> -->
+
+
+
+<!-- <input name="submittedCommunications" type="hidden" value="true">
+<input name="crmId" type="hidden" value=""> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Unsubscribe All reason options -->
+<div class="box-form mt-5" id="unsubscribe-all-reason">
+
+<form class="comment-form" action="" method="post">
+<span class="close-buttonAll" style="
+text-align: right;
+font-size: 30px;
+position: relative;
+left: 100%;
+top: 0;
+cursor: pointer;                                                           
+color:#56499E;">×</span>
+<div class="container">
+<div class="unsubscribe-wrapper form group">
+<div class="thanYou-img mb-2">
+<img src="https://image.explore.OasisBaydubai.com/lib/fe23117373640474701c78/m/1/b5531acc-7206-470b-aeb9-9bb2ac8812ba.png" alt="" class="banner-bg-img">
+</div>
+<div class="thankYou-text">
+
+<p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">You’ve been successfully unsubscribed. </p>  
+</div>
+
+</div>
+</div>                      
+
+<div class="orange-notice">
+Sorry to see you go!
+
+</div>
+<p style="font-size: 18px;">Please help us get better by telling us why you're unsubscribing:</p>
+<div class="form-check mb-2">
+
+<input class="form-check-input" type="checkbox" id="chck_1" value="False" name="unsubFreq" %%=IIF(@emailsTooFrequent =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck_1">Emails are too frequent</label>
+</div>
+<div class="form-check mb-2">
+<input class="form-check-input" type="checkbox" id="chck_2" value="False" name="unsubRelevance" %%=IIF(@contentIsNotRelevant =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck_2">Content isn't relevant</label>
+</div>
+<div class="form-check mb-2">
+<input class="form-check-input" type="checkbox" id="chck_3" value="False" name="unsubNoDubai" %%=IIF(@noLongerInDubai =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck_3">I'm no longer in Dubai</label>
+</div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" id="chck_4" value="False" name="unsubAllTemp" %%=IIF(@tempPause =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="chck_4">Temporary Pause (30 Days)</label>
+</div>
+<div class="form-check mt-2">
+<input class="form-check-input" type="checkbox" id="myCheck_1" value="False"
+onclick="addbox_1()" name="unsubOther" %%=IIF(@otherSpecify =='True' ,'checked', "" )=%%>
+<label class="form-check-label" for="myCheck_1">Other (Please specify)</label>
+</div>
+<textarea name="nameReason" rows="6" cols="80" id="area_1"
+class="form-control mt-3" value="%%=v(@reasonForUnsub)=%%" placeholder="Tell us more">%%=v(@reasonForUnsub)=%%</textarea>
+
+
+
+
+<div class="com-btn mt-5">
+<button type="submit" class="btn btn-orange"id="communications-submitbtn1" name="button">Save</button>
+<input name="unsubAll" type="hidden" value="true">
+<input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+<input name="guestId" type="hidden" value="%%=v(@Id)=%%">
+<input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
+</div>
+</form>
+%%[
+IF RequestParameter("unsubAll") == true then
+SET @sfid = RequestParameter("crmId")
+SET @guestId = RequestParameter("guestId")
+SET @emailContact = RequestParameter("emails")
+SET @unsubTempBox = RequestParameter("unsubAllTemp")
+SET @unsubFreqBox = RequestParameter("unsubFreq")
+SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
+SET @unsubNoDubaiBox = RequestParameter("unsubNoDubai")
+SET @unsubOtherBox = RequestParameter("unsubOther")
+SET @unsubOtherComments = RequestParameter("nameReason")
+SET @currentDate = Now()
+SET @updateContactRecord = UpdateSingleSalesforceObject(
+"Contact", @sfid,
+"Latest_Channel_Source__c", "CPC - OasisBay"
+)
+IF NOT Empty(@unsubTempBox) THEN
+/* Subscribe from all guest subscriptions */
+ SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
+ SET @GDRowCount = RowCount(@GD)
+
+ IF @GDRowCount > 0 THEN
+     FOR @i = 1 TO @GDRowCount DO
+         SET @GDRow = Row(@GD, @i)
+         SET @GDID = Field(@GDRow, "Id")
+
+         /* Update Status__c to "Unsubscribed" */
+          
+         SET @updateRecord = UpdateSingleSalesforceObject(
+             "Guest_Subscription__c", @GDID,
+             "Temporary_Pause_30_Days__c", 'True',
+             "Emails_are_too_frequent__c",'false',
+             "Content_isn_t_relevant__c",'false',
+             "I_m_no_longer_in_Dubai__c",'false',
+             "Other_Please_specify__c",'false',
+             "fieldsToNull","Reason_of_Unsubscribe__c",
+             "Status__c", "Unsubscribed"
+         )
+     NEXT @i
+ ENDIF
+ 
+ /*Upsert data in Temp pause*/
+ SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email", @emailContact,"DateAdded",@currentDate,"ContactId",@sfid,"UnsubscribeType","All","Asset","OasisBay")
+ 
+ /*Upsert data in resub DE to resubscriber contact on enterprise level*/
+ 
+SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "SubsciberStatus", "Unsubscribed", "Temp_30_Days", "True","Frequency","False","Relevance","False","Not_In_Dubai","False","Other","False","DateAdded",@currentDate)
+
+ 
+ 
+ELSE
+
+ /* Unsubscribe from all guest subscriptions */
+     SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
+     SET @GDRowCount = RowCount(@GD)
+
+     IF @GDRowCount > 0 THEN
+         FOR @i = 1 TO @GDRowCount DO
+             SET @GDRow = Row(@GD, @i)
+             SET @GDID = Field(@GDRow, "Id")
+
+             /* Update Status__c to "Unsubscribed" */
+             /* made changes - add pub list to unsub in CRM */
+             SET @updateRecord = UpdateSingleSalesforceObject(
+                 "Guest_Subscription__c", @GDID,
+                 "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
+                 "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'False', 'True'),
+                 "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'False', 'True'),
+                 "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),
+                 "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'False', 'True'),
+                 "Reason_of_Unsubscribe__c", @unsubOtherComments,
+                 "Status__c", "Unsubscribed"
+             )
+         NEXT @i
+     ENDIF
+     
+     /* change made on 14 feb for storing unsub reason in DE */
+     
+     SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "Frequency", IIF(Empty(@unsubFreqBox), 'False', 'True'),"Relevance", IIF(Empty(@unsubRelevanceBox), 'False', 'True'),"Not_In_Dubai", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),"Other", IIF(Empty(@unsubOtherBox), 'False', 'True'),"Temp_30_Days","False","DateAdded",@currentDate)
+     
+     set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @sfid)
+     set @count = rowcount(@rowFound)
+     if @count > 0 then
+        set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
+     ENDIF
+ 
+ENDIF
+
+
+
+
+
+/* Redirect to the thank you page */
+
+set @thankYouPage = '#ThankYou'
+if empty(@sfid) OR IsNull(@sfid) then
+   Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+ELSE
+   Set @ampError = ''
+ENDIF
+    Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+
+if @methodType== 'Old' then
+   Redirect(Concat("https://cloud.explore.OasisBaydubai.com/ThankYou_OasisBay_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+  ELSE
+         Redirect(CONCAT(CloudPagesURL(4555),@thankYouPage))
+ ENDIF
+ENDIF
+ENDIF
+
+]%%
+
+</div>
+
+
+
+
+</div>
+</div>
