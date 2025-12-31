@@ -12,7 +12,7 @@
   /*if (@emailPref == 'true') then*/
   
   SET @contactRows = RetrieveSalesforceObjects("Guest_Subscription__c","Status__c",
-  "Contact__c", "=", @subsKey,"Asset__c","=","Dubai Parks and Resorts","Sub_Asset__c","=","Oasis Bay")
+  "Contact__c", "=", @subsKey,"Asset__c","=","Dubai Parks and Resorts","Sub_Asset__c","=","Riverland")
   
   IF RowCount(@contactRows) > 0 THEN
   SET @contactRow = Row(@contactRows, 1)
@@ -27,14 +27,14 @@
   )
   SET @updateContactRecord = UpdateSingleSalesforceObject(
                                  "Contact", @subsKey,
-                                 "Latest_Channel_Source__c", "CPC - Oasis Bay"
+                                 "Latest_Channel_Source__c", "CPC - Riverland"
                            )
   if empty(@subsKey) OR IsNull(@subsKey) then
    Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
   ELSE
    Set @ampError = ''
   ENDIF
-  Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@subsKey,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+  Set @p= InsertData("PreferencesLog_AR_Prod","SubscriberKey",@subsKey,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
   ]%%
   <script runat="server">
     var subsKey = Variable.GetValue("@subsKey");
@@ -55,7 +55,7 @@
                   }; 
                  var subObj = Subscriber.Init(subsKey);
                  var status = subObj.Update(resub); 
-    var lst = List.Init("Mock_AllSubscribersList_OasisBay");
+    var lst = List.Init("Mock_AllSubscribersList_Riverland");
     var filter = {
             Property: "SubscriberKey",
             SimpleOperator: "equals",
@@ -70,7 +70,7 @@
         var resub = {
                                      "SubscriberKey": subsKey,
                                      "Lists": [{
-                                    ID: 2396,
+                                    ID: 2320,
                                     Status: 'Active'
                                 }]
                                   };

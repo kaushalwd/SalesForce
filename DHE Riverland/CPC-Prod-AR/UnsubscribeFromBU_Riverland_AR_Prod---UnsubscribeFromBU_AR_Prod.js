@@ -17,27 +17,27 @@ UpdateSingleSalesforceObject(
     "New_Upgrades_add_ons__c","False",
     "Customer_Survey__c","False",
     "Consent_Collection_Asset__c","Dubai Parks and Resorts",
-    "Consent_Collection_Sub_Asset__c","Oasis Bay",
+    "Consent_Collection_Sub_Asset__c","Riverland",
     "Consent_Latest_Source__c","CPC",
     "Subscription_Date__c",@currentConsetDate
 )
 SET @updateContactRecord = UpdateSingleSalesforceObject(
                                  "Contact", @subsKey,
-                                 "Latest_Channel_Source__c", "CPC - Oasis Bay"
+                                 "Latest_Channel_Source__c", "CPC - Riverland"
                                   )
 
 
-SET @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
+SET @rowFound = LookupRows("ENT.TempPauseHandle_prod","SubscriberKey", @guestId)
 SET @count = rowcount(@rowFound)
 IF @count > 0 then
-set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
+set @deleteCount = DeleteData("ENT.TempPauseHandle_prod","SubscriberKey", @guestId)
 ENDIF
 ]%%
 <script runat="server">
      var subscriberKey = Variable.GetValue('subsKey')
      var subObj = Subscriber.Init(subscriberKey);
      var unsubscribeSatus = subObj.Unsubscribe();
-  var lst = List.Init("Mock_AllSubscribersList_OasisBay");
+  var lst = List.Init("Mock_AllSubscribersList_Riverland");
 var filter = {
             Property: "SubscriberKey",
             SimpleOperator: "equals",
@@ -52,7 +52,7 @@ var filter = {
         var resub = {
                                      "SubscriberKey": subscriberKey,
                                      "Lists": [{
-                                    ID: 2396,
+                                    ID: 2320,
                                     Status: 'Unsubscribed'
                                 }]
                                   };

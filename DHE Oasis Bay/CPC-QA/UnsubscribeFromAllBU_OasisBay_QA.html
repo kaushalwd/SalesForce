@@ -1,80 +1,80 @@
 <script runat="server">
-    Platform.Load("core","1.1");
-    Write("inside2")
-    try {
-  </script>
-  %%[
-  SET @subsKey = RequestParameter('subsKey')
-  SET @guestId = RequestParameter('guestId')
-  SET @currentDate = Now()
-  SET @now=Now()
-  SET @currentConsetDate = FormatDate(@now,"ISO")
-  /*Retrieve email from Contact*/
-  SET @con = RetrieveSalesforceObjects("Contact", "Email", "Id", "=", @subsKey)
-  SET @conRowCount = RowCount(@con)
-  
-  IF @conRowCount > 0 THEN
-     FOR @i = 1 TO @conRowCount DO
-         SET @conRow = Row(@con, @i)
-         SET @conEmail = Field(@conRow, "Email")
-         SET @updateContactRecord = UpdateSingleSalesforceObject(
-                                         "Contact", @subsKey,
-                                         "Latest_Channel_Source__c", "CPC - OasisBay",
-                                         "Receive_Updates__c",'False'
-                                          )
-     NEXT @i
-  ENDIF
-  
-  
-  /* Unsubscribe from all guest subscriptions */
-  SET @GS = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @subsKey)
-  SET @GSRowCount = RowCount(@GS)
-  
-  IF @GSRowCount > 0 THEN
-     FOR @i = 1 TO @GSRowCount DO
-         SET @GSRow = Row(@GS, @i)
-         SET @GSID = Field(@GSRow, "Id")
-  
-         /* Update Status__c to "Unsubscribed" */
-         SET @updateRecord = UpdateSingleSalesforceObject(
-          "Guest_Subscription__c", @GSID,
-           "Status__c", "Unsubscribed",
-           "Offers_and_Promotions__c","False",
-           "Upcoming_events_for_families__c","False",
-           "New_food_and_restaurants__c","False",
-           "Promotional_Offers_and_Deal__c","False",
-            "Annual_Pass_VIP_Offers_News_and_Info__c","False",
-           "Weekly_Announcements_and_News__c","False",
-           "New_rides_and_entertainment__c","False",
-           "Hotels_and_resorts__c","False",
-           "New_Product_Offering_Announcements__c","False",
-           "Latest_news_about_other_DHE_parks__c","False",
-           "Customer_Survey__c","False",
-           "New_shows__c","False",
-           "New_Upgrades_add_ons__c","False",
-            "Consent_Collection_Asset__c","Dubai Parks and Resorts",
-            "Consent_Collection_Sub_Asset__c","OasisBay",
-            "Consent_Latest_Source__c","CPC",
-            "Subscription_Date__c",@currentConsetDate
-               )
-           NEXT @i
-        ENDIF
-        
-        /* Upsert data to ent.UnsubscribeHandle */
-  
-  
-        SET @upsertData = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @subsKey, "EmailAddress", @conEmail, "SubsciberStatus", "Unsubscribed","Asset","OasisBay","DateAdded",@currentDate)
-  
-        /*Remove fro temp pause if guest id exists*/
-        SET @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
-        SET @count = rowcount(@rowFound)
-        IF @count > 0 then
-        set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
-        ENDIF
-  ]%%
-  <script runat="server">
-     }
-     catch (err) {
-         Write("Error Message: " + Stringify(err.message) + Stringify(err.description));
-     }
-  </script>
+   Platform.Load("core","1.1");
+   Write("inside2")
+   try {
+ </script>
+ %%[
+ SET @subsKey = RequestParameter('subsKey')
+ SET @guestId = RequestParameter('guestId')
+ SET @currentDate = Now()
+ SET @now=Now()
+ SET @currentConsetDate = FormatDate(@now,"ISO")
+ /*Retrieve email from Contact*/
+ SET @con = RetrieveSalesforceObjects("Contact", "Email", "Id", "=", @subsKey)
+ SET @conRowCount = RowCount(@con)
+ 
+ IF @conRowCount > 0 THEN
+    FOR @i = 1 TO @conRowCount DO
+        SET @conRow = Row(@con, @i)
+        SET @conEmail = Field(@conRow, "Email")
+        SET @updateContactRecord = UpdateSingleSalesforceObject(
+                                        "Contact", @subsKey,
+                                        "Latest_Channel_Source__c", "CPC - Oasis Bay",
+                                        "Receive_Updates__c",'False'
+                                         )
+    NEXT @i
+ ENDIF
+ 
+ 
+ /* Unsubscribe from all guest subscriptions */
+ SET @GS = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @subsKey)
+ SET @GSRowCount = RowCount(@GS)
+ 
+ IF @GSRowCount > 0 THEN
+    FOR @i = 1 TO @GSRowCount DO
+        SET @GSRow = Row(@GS, @i)
+        SET @GSID = Field(@GSRow, "Id")
+ 
+        /* Update Status__c to "Unsubscribed" */
+        SET @updateRecord = UpdateSingleSalesforceObject(
+         "Guest_Subscription__c", @GSID,
+          "Status__c", "Unsubscribed",
+          "Offers_and_Promotions__c","False",
+          "Upcoming_events_for_families__c","False",
+          "New_food_and_restaurants__c","False",
+          "Promotional_Offers_and_Deal__c","False",
+           "Annual_Pass_VIP_Offers_News_and_Info__c","False",
+          "Weekly_Announcements_and_News__c","False",
+          "New_rides_and_entertainment__c","False",
+          "Hotels_and_resorts__c","False",
+          "New_Product_Offering_Announcements__c","False",
+          "Latest_news_about_other_DHE_parks__c","False",
+          "Customer_Survey__c","False",
+          "New_shows__c","False",
+          "New_Upgrades_add_ons__c","False",
+           "Consent_Collection_Asset__c","Dubai Parks and Resorts",
+           "Consent_Collection_Sub_Asset__c","Oasis Bay",
+           "Consent_Latest_Source__c","CPC",
+           "Subscription_Date__c",@currentConsetDate
+              )
+          NEXT @i
+       ENDIF
+       
+       /* Upsert data to ent.UnsubscribeHandle */
+ 
+ 
+       SET @upsertData = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @subsKey, "EmailAddress", @conEmail, "SubsciberStatus", "Unsubscribed","Asset","Oasis Bay","DateAdded",@currentDate)
+ 
+       /*Remove fro temp pause if guest id exists*/
+       SET @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
+       SET @count = rowcount(@rowFound)
+       IF @count > 0 then
+       set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
+       ENDIF
+ ]%%
+ <script runat="server">
+    }
+    catch (err) {
+        Write("Error Message: " + Stringify(err.message) + Stringify(err.description));
+    }
+ </script>

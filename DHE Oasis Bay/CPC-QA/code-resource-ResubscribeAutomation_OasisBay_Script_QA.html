@@ -1,0 +1,118 @@
+<script runat="server">
+  Platform.Load("core","1.1.5");
+try {
+   var sfUpdateString;
+   var deKey = "QA_AllSubs_UpdateDE_OasisBay",  // replace with the external key of the DE holding the query results
+       prox = new Script.Util.WSProxy(),
+       objectType = "DataExtensionObject[" + deKey + "]",
+       cols = ["SubscriberKey", "UpdatedAllsubSstatus"],
+       moreData = true,
+       reqID = null;
+   while (moreData) {
+       moreData = false;
+       var data = reqID == null ?
+           prox.retrieve(objectType, cols) :
+           prox.getNextBatch(objectType, reqID);
+           if (data != null) {
+                   moreData = data.HasMoreRows;
+                   reqID = data.RequestID;
+                   if (data && data.Results) {
+                     Write("<br>data.Results = "+Stringify(data));
+                      Write("<br>data.Results.length = "+data.Results.length);
+                       for (var i = 0; i < data.Results.length; i++) {
+                         Write("<br>i = "+i);
+                           var subkey = data.Results[i].Properties[0].Value;
+                           var Status = data.Results[i].Properties[1].Value;
+                         //var emailPreference = data.Results[i].Properties[2].Value;
+                         //var email = data.Results[i].Properties[2].Value;
+                           Write("subskey = "+subkey+"<br>");
+                           Write("email id = "+Status+"<br>");
+                          var options = {SaveOptions: [{'PropertyName': '*', SaveAction: 'UpdateAdd'}]};
+                    
+                           var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": {
+                                      "ID": '63',
+                                      "Action": "Update"
+                                    },
+                                    "Status": Status
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>");
+                         var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": [{
+                                      ID: 2412, //Offers and Promotions 
+                                   Status: 'Active'
+                               }]
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>");
+                          var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": [{
+                                   ID: 2413, // OasisBay - Upcoming events for families
+                                   Status: 'Active'
+                               }]
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>"); 
+                         var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": [{
+                                    ID: 2414, // New Shows
+                                   Status: 'Active'
+                               }]
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>");
+                          var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": [{
+                                   ID: 2415, // New Upgrades & add-ons
+                                   Status: 'Active'
+                               }]
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>"); 
+                         var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": [{
+                                   ID: 2416, //OasisBay - Customer survey
+                                   Status: 'Active'
+                               }]
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>"); 
+                          var resub = {
+                                    "SubscriberKey": subkey,
+                                    "Lists": [{
+                                   ID: 2396, //Mock_AllSubscribersList_OasisBay
+                                   Status: 'Active'
+                               }]
+                                 };
+                         Write("resub = "+Stringify(resub)+"<br>");
+                           var subObj = Subscriber.Init(subkey);
+                           var updateStatus = subObj.Update(resub);
+                          Write("updateStatus = "+Stringify(updateStatus)+"<br>"); 
+        
+                       }
+                   }
+   }
+}
+} catch (e) {
+       Write(Stringify(e));
+       }
+       </script>

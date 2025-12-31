@@ -1,3 +1,93 @@
+%%[
+    /*----------------------------------------------------
+       Get Subscriber / CRM Id
+    ----------------------------------------------------*/
+    SET @id = _subscriberkey
+    /*
+    SET @id = "003Qs00000WKkYyIAL"
+    */
+    IF empty(@id) THEN
+        SET @idEn = QueryParameter("sfid")
+        SET @id   = Base64Decode(@idEn)
+        /* output(CONCAT("decodeSFID: ", @id)) */
+
+        IF empty(@id) THEN
+            SET @id = RequestParameter("sfid")
+            /* output(CONCAT("Id: ", @id)) */
+
+            IF empty(@id) THEN
+                SET @id = QueryParameter("sfid")
+                /* output(CONCAT("Id (final fallback): ", @id)) */
+            ENDIF
+        ENDIF
+    ENDIF
+
+    /*----------------------------------------------------
+       Build link based on sfid
+    ----------------------------------------------------*/
+    IF empty(@idEn) OR IsNull(@idEn) THEN
+        SET @link = "%%=RedirectTo(CloudPagesURL(5164))=%%"
+    ELSE
+        SET @link = Concat(
+            "https://cloud.explore.OasisBaydubai.com/OasisBay_AR_CPC_QA?sfid=",
+            @idEn
+        )
+    ENDIF
+
+    /*----------------------------------------------------
+       Retrieve Contact (GF Contact or BF Contact)
+    ----------------------------------------------------*/
+    SET @gfContactRows = RetrieveSalesforceObjects(
+        "Contact",
+        "Id,FirstName",
+        "Id", "=", @id
+    )
+
+    SET @bfContactRows = RetrieveSalesforceObjects(
+        "Contact",
+        "Id,FirstName",
+        "GV_ContactId__c", "=", @id
+    )
+
+    IF RowCount(@gfContactRows) == 1 THEN
+        SET @contactRow = Row(@gfContactRows, 1)
+    ELSEIF RowCount(@bfContactRows) == 1 THEN
+        SET @contactRow = Row(@bfContactRows, 1)
+    ENDIF
+
+    /*----------------------------------------------------
+       Extract Contact data
+    ----------------------------------------------------*/
+    IF NOT empty(@contactRow) THEN
+        SET @id        = Field(@contactRow, "Id")
+        SET @firstName = Field(@contactRow, "FirstName")
+    ENDIF
+
+    /*----------------------------------------------------
+       Fetch Guest_Subscription to check Status
+    ----------------------------------------------------*/
+    SET @contactRows = RetrieveSalesforceObjects(
+        "Guest_Subscription__c",
+        "Status__c",
+        "Contact__c", "=", @id,
+        "Asset__c", "=", "Dubai Parks and Resorts",
+        "Sub_Asset__c", "=", "Oasis Bay"
+    )
+
+    IF RowCount(@contactRows) > 0 THEN
+        SET @contactRow = Row(@contactRows, 1)
+        SET @status     = Field(@contactRow, "Status__c")
+    ENDIF
+
+    /*----------------------------------------------------
+       Set visibility condition
+    ----------------------------------------------------*/
+    SET @hideDiv = false
+
+    IF @status == "Unsubscribed" THEN
+        SET @hideDiv = true
+    ENDIF
+]%%
 <!DOCTYPE html>
 <html>
   <head>
@@ -204,7 +294,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
        <img src= "https://image.explore.oasisbaydubai.com/lib/fe2c117373640474721071/m/1/bce612d8-621f-40bb-8d59-35eafd87d921.png" alt="banner-img" class="responsive" id="mob-img">
           </div>
           <div class="container">
-            <h1 class="username" >Hi Stoya </h1>
+            <h1 class="username" >Hi %%=v(@firstName)=%% </h1>
             <!-- %%=v(ProperCase(@firstName))=%% -->
         </div>
         </section>
@@ -365,7 +455,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
               </a>
           </div>
           <div class="col-lg-2 col-md-2 col-sm-2 col-4 business-unit-col" style="padding: 0 5px">
-            <a alias="OasisBay" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank">
+            <a alias="Riverland" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank">
                 <img alt="Riverland" data-assetid="" src="https://image.explore.oasisbaydubai.com/lib/fe2c117373640474721071/m/1/64e4c1e3-38a9-4d65-9551-6e28bb6f4e49.png" width="150">
             </a>
         </div>
