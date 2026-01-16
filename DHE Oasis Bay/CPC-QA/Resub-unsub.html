@@ -1,0 +1,106 @@
+<script runat="server">
+  Platform.Load("core","1.1");
+  //Write("22: <br>");
+  var prox = new Script.Util.WSProxy(); //creates proxy for SOAP call
+
+  var deCustKey = '044C6175-811C-4ECE-983C-A24FF03CC595'; //your DE's CustomerKey / External Key
+  
+  var cols = ["SubscriberKey","EmailAddress","SubsciberStatus"];
+  var moreData = true,
+      reqID = desc = null;
+    try {
+while (moreData) {
+moreData = false;
+
+        if (reqID == null) {
+            //data = prox.retrieve("DataExtensionObject[" + config.name + "]", config.cols, config.filter);
+          var desc = prox.retrieve("DataExtensionObject[" + deCustKey + "]", cols); //executes the proxy call
+        } else {
+            //data = prox.getNextBatch("DataExtensionObject[" + config.name + "]", reqID);
+           var desc = prox.getNextBatch("DataExtensionObject[" + deCustKey + "]", reqID); //executes the proxy call
+        }
+  
+  
+  Write("<br>" + "desc: " + Stringify(desc)+ "<br>");
+  //Write("<br>" + "desc: " + Stringify(desc.Results[0].Properties[0].Value)+ "<br>");
+  //Write("<br>" + "desc: " + Stringify(desc.Results[0].Properties[1].Value)+ "<br>");
+  
+  
+
+
+    /* Set ClientID */
+    prox.setClientId({ "ID": "536001568"}); //Impersonates the BU
+    //Write("<br>desc.length: " + desc.Results.length + "<br>");
+    if (desc != null) {
+moreData = desc.HasMoreRows;
+            reqID = desc.RequestID;
+    for(var i=0; i<desc.Results.length; i++){
+      var subscriberKey  = desc.Results[i].Properties[0].Value;
+      var email = desc.Results[i].Properties[1].Value;
+      var status = desc.Results[i].Properties[2].Value;
+      //Write("<br>" + "subscriberKey: " + subscriberKey+ "<br>");
+      //Write("<br>" + "email: " +email+ "<br>");
+      //Write("<br>" + "status: " +status+ "<br>");
+      
+      
+      //retrieve status of subs using WSProxy
+      var api = new Script.Util.WSProxy();
+      var cols = [
+          "SubscriberKey",
+          "EmailAddress",
+          "Status",
+          "EmailTypePreference"
+      ];
+      var filter = {
+          Property: "SubscriberKey",
+          SimpleOperator: "equals",
+          Value: subscriberKey
+      };
+      var result = api.retrieve("Subscriber", cols, filter);
+      //Write("<br>" + "result: " +Platform.Function.Stringify(result)+ "<br>");
+      //Write("<br>" + "status: " +Platform.Function.Stringify(result.Results[0].Status)+ "<br>");
+      var AllSubstatus = result.Results[0].Status;
+      
+      
+      
+      var subObj = Subscriber.Init(subscriberKey);
+      
+      Write("<br>" + "AllSubstatus: " +Platform.Function.Stringify(AllSubstatus)+ "<br>");
+      
+      if(AllSubstatus != status){
+        //Write("<br>" + "inside in if:" + "<br>");
+        if(status === 'Active'){
+          Write("<br>" + "inside in active:" + "<br>");
+          var resub = {              
+                     "SubscriberKey": subscriberKey,
+                     "Lists": {
+                       "ID": '63', 
+                       "Action": "Update"
+                     },
+                     "Status": "Active"
+                  }; 
+                 var subObj = Subscriber.Init(subscriberKey);
+                 var status = subObj.Update(resub); 
+        }
+        else{
+          //Write("<br>" + "inside in unsub:"+"<br>");
+           var props = [
+           { Name: "SubscriberKey", Value: subscriberKey },
+           { Name: "EmailAddress", Value: email },
+           { Name: "JobID", Value: 0 },
+           { Name: "ListID", Value: 63 },
+           { Name: "BatchID", Value: 0 }
+        ];
+        var data = prox.execute(props, "LogUnsubEvent");
+        }
+      }
+      
+   
+    }
+    }
+}  
+} catch(e) {
+    Platform.Response.Write(Platform.Function.Stringify(e));
+}
+  
+</script>
