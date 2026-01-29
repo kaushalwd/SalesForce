@@ -1,5 +1,206 @@
 <!--ampscript starts-->
+%%[
+VAR @numOfKids, @crmId, @crmIdEn, @methodType
+VAR @gfContactRows, @bfContactRows, @contactRow
+VAR @firstName, @lastName, @city, @gender, @email, @title, @Phone
+VAR @mobilePhoneCode, @birthdate, @language, @nationality, @country
+VAR @married, @doYouHaveKids, @marriedStatus, @GVContactId
+VAR @childDetails, @childDetailsRowCount, @ChildDetailsRow
+VAR @childGender, @childDOB, @childFirstName, @j
+VAR @GuestDetails, @guestDetailsRowCount, @guestDetailsRow
+VAR @assetType, @Id, @primaryReasonForVisit, @customer_survey
+VAR @howOftenVisit, @likeMostAbout
+VAR @offers_promotions, @upcomingEvents
+VAR @new_shows, @new_upgrades
+VAR @emailsTooFrequent, @contentIsNotRelevant, @noLongerInDubai
+VAR @tempPause, @otherSpecify, @reasonForUnsub, @status
+VAR @emailPref, @WhatsAppPref, @smsPref
+SET @assetId = "Dubai Parks and Resorts"
+SET @subAssetId = "Oasis Bay"
+/* -------------------------------------------------------------------------- */
+/* CRM ID Detection */
+/* -------------------------------------------------------------------------- */
 
+/* SET @crmId = "003Qs00000WKkYyIAL" */
+
+SET @crmId = _subscriberkey
+
+IF EMPTY(@crmId) THEN
+    SET @crmIdEn = QueryParameter("sfid")
+    SET @crmId = Base64Decode(@crmIdEn)
+    SET @methodType = "Old"
+
+    IF EMPTY(@crmId) THEN
+        SET @crmId = RequestParameter("sfid")
+
+        IF EMPTY(@crmId) THEN
+            SET @crmId = QueryParameter("sfid")
+        ENDIF
+    ENDIF
+ENDIF
+
+/* -------------------------------------------------------------------------- */
+/* Retrieve Contact Info */
+/* -------------------------------------------------------------------------- */
+
+IF NOT EMPTY(@crmId) THEN
+
+    /* Retrieve contact by Id */
+    SET @gfContactRows = RetrieveSalesforceObjects(
+        "Contact",
+        "Id,Salutation,FirstName,LastName,Email,Phone,Country_Code__c,Birthdate,
+         Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,
+         No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c,GV_ContactId__c",
+        "Id","=", @crmId
+    )
+
+    /* Retrieve contact by GV Contact Id */
+    SET @bfContactRows = RetrieveSalesforceObjects(
+        "Contact",
+        "Id,Salutation,FirstName,LastName,Email,Phone,Country_Code__c,Birthdate,
+         Registration_Language__c,Nationality__c,Marital_Status__c,Residence_Country__c,
+         No_of_Kids__c,GenderIdentity,MailingCity,Do_you_have_kids__c,GV_ContactId__c",
+        "GV_ContactId__c","=", @crmId
+    )
+
+    /* Resolve which one to use */
+    IF RowCount(@gfContactRows) == 1 THEN
+        SET @contactRow = Row(@gfContactRows, 1)
+    ELSEIF RowCount(@bfContactRows) == 1 THEN
+        SET @contactRow = Row(@bfContactRows, 1)
+    ENDIF
+
+    /* ---------------------------------------------------------------------- */
+    /* Map Contact Fields */
+    /* ---------------------------------------------------------------------- */
+    IF NOT EMPTY(@contactRow) THEN
+
+        SET @crmId         = Field(@contactRow, "Id")
+        SET @GVContactId   = Field(@contactRow, "GV_ContactId__c")
+        SET @firstName     = Field(@contactRow, "FirstName")
+        SET @lastName      = Field(@contactRow, "LastName")
+        SET @city          = Field(@contactRow, "MailingCity")
+        SET @gender        = Field(@contactRow, "GenderIdentity")
+        SET @email         = Field(@contactRow, "Email")
+        SET @title         = Field(@contactRow, "Salutation")
+        SET @Phone         = Field(@contactRow, "Phone")
+        SET @mobilePhoneCode = Field(@contactRow, "Country_Code__c")
+        SET @birthdate     = Field(@contactRow, "Birthdate")
+        SET @language      = Field(@contactRow, "Registration_Language__c")
+        SET @nationality   = Field(@contactRow, "Nationality__c")
+        SET @country       = Field(@contactRow, "Residence_Country__c")
+        SET @married       = Field(@contactRow, "Marital_Status__c")
+        SET @doYouHaveKids = Field(@contactRow, "Do_you_have_kids__c")
+        SET @numOfKids     = Field(@contactRow, "No_of_Kids__c")
+
+        /* Kids Yes/No Radio */
+        IF @doYouHaveKids == TRUE THEN
+            SET @childExistsYes = "checked"
+        ELSE
+            SET @childExistsNo = "checked"
+        ENDIF
+
+        /* Marital Status */
+        IF @married == "Married" THEN
+            SET @marriedStatus = "Married"
+        ELSEIF @married == "" THEN
+            SET @marriedStatus = ""
+        ELSE
+            SET @marriedStatus = "Single"
+        ENDIF
+
+        /* ------------------------------------------------------------------ */
+        /* Retrieve Children Details */
+        /* ------------------------------------------------------------------ */
+
+        SET @childDetails = RetrieveSalesforceObjects(
+            "Family_Member__c",
+            "Gender__c,Date_Of_Birth__c,First_Name__c",
+            "Contact__c", "=", @crmId,
+            "Relationship__c", "=", "Child"
+        )
+
+        SET @childDetailsRowCount = RowCount(@childDetails)
+
+        IF @childDetailsRowCount > 0 THEN
+            FOR @j = 1 TO @childDetailsRowCount DO
+                SET @ChildDetailsRow = Row(@childDetails, @j)
+                SET @childGender     = Field(@ChildDetailsRow, "Gender__c")
+                SET @childDOB        = Field(@ChildDetailsRow, "Date_Of_Birth__c")
+                SET @childFirstName  = Field(@ChildDetailsRow, "First_Name__c")
+            NEXT @j
+        ENDIF
+
+        /* ------------------------------------------------------------------ */
+        /* Retrieve Guest Subscription Details */
+        /* ------------------------------------------------------------------ */
+
+        SET @GuestDetails = RetrieveSalesforceObjects(
+            "Guest_Subscription__c",
+            "Id, 
+              Contact__c, 
+              Asset__c, 
+              Sub_Asset__c, 
+              Primary_reason_for_visit_to_Oasis_Bay__c, 
+              What_do_you_like_most_about_Oasis_Bay__c, 
+              Most_likely_to_visit_Oasis_Bay__c, 
+              Offers_and_Promotions__c, 
+              Upcoming_events_for_families__c, 
+              New_shows__c, 
+              New_Upgrades_add_ons__c, 
+              Customer_Survey__c, 
+              Emails_are_too_frequent__c, 
+              Content_isn_t_relevant__c, 
+              I_m_no_longer_in_Dubai__c, 
+              Temporary_Pause_30_Days__c, 
+              Other_Please_specify__c, 
+              Reason_of_Unsubscribe__c, 
+              Status__c, 
+              Email__c, 
+              WhatsApp__c, 
+              SMS__c",
+            "Contact__c","=", @crmId,
+            "Asset__c","=", @assetId,
+            "Sub_Asset__c","=", @subAssetId
+        )
+        
+        SET @guestDetailsRowCount = RowCount(@GuestDetails)
+
+        IF @guestDetailsRowCount > 0 THEN
+
+            SET @guestDetailsRow = Row(@GuestDetails, 1)
+
+            SET @assetType            = Field(@guestDetailsRow, "Asset__c")
+            SET @Id                   = Field(@guestDetailsRow, "Id")
+            SET @primaryReasonForVisit = ProperCase(Field(@guestDetailsRow, "Primary_reason_for_visit_to_Oasis_Bay__c"))
+            SET @likeMostAbout        = ProperCase(Field(@guestDetailsRow, "What_do_you_like_most_about_Oasis_Bay__c"))
+            SET @howOftenVisit        = ProperCase(Field(@guestDetailsRow, "Most_likely_to_visit_Oasis_Bay__c"))
+            
+            SET @offers_promotions    = Field(@guestDetailsRow, "Offers_and_Promotions__c")
+            SET @upcomingEvents       = Field(@guestDetailsRow, "Upcoming_events_for_families__c")
+
+            SET @new_shows            = Field(@guestDetailsRow, "New_shows__c")
+            SET @new_upgrades         = Field(@guestDetailsRow, "New_Upgrades_add_ons__c")
+            SET @customer_survey      = Field(@guestDetailsRow, "Customer_Survey__c")
+            
+            SET @emailsTooFrequent    = Field(@guestDetailsRow, "Emails_are_too_frequent__c")
+            SET @contentIsNotRelevant = Field(@guestDetailsRow, "Content_isn_t_relevant__c")
+            SET @noLongerInDubai      = Field(@guestDetailsRow, "I_m_no_longer_in_Dubai__c")
+            SET @tempPause            = Field(@guestDetailsRow, "Temporary_Pause_30_Days__c")
+            SET @otherSpecify         = Field(@guestDetailsRow, "Other_Please_specify__c")
+            SET @reasonForUnsub       = Field(@guestDetailsRow, "Reason_of_Unsubscribe__c")
+            SET @status               = Field(@guestDetailsRow, "Status__c")
+            SET @emailPref            = Field(@guestDetailsRow, "Email__c")
+            SET @WhatsAppPref         = Field(@guestDetailsRow, "WhatsApp__c")
+            SET @smsPref              = Field(@guestDetailsRow, "SMS__c")
+
+        ENDIF
+     
+    
+
+    ENDIF
+ENDIF
+]%%
 
 <!--ampscript ends-->
 
@@ -13,19 +214,18 @@
 
 
 
-  var listOffers = Platform.Request.GetFormField('DiningOffers') || False;
+  var listOffers = Platform.Request.GetFormField('OffersPromotions') || false;
   var listEvents = Platform.Request.GetFormField('upcomingEvents') || false;
-  var listShows = Platform.Request.GetFormField('familyActivities') || false;
-  var listUpgrades = Platform.Request.GetFormField('newAttractions') || false;
-  var listCustomer = Platform.Request.GetFormField('weekendEntertainment') || false;
+  var listShows = Platform.Request.GetFormField('NewShows') || false;
+  var listUpgrades = Platform.Request.GetFormField('NewUpgrades') || false;
+  var listCustomer = Platform.Request.GetFormField('CustomerSurvey') || false;
 
   var listOfInput = [];
-  listOfInput.push({Name : 'OasisBay - Dining by the river', Status: listOffers})
-  listOfInput.push({Name : 'OasisBay - Visiting the different attractions and experiences', Status: listUpgrades})
-  listOfInput.push({Name : 'OasisBay - Family day out', Status: listShows})
-  listOfInput.push({Name : 'OasisBay - Attending an event or festival', Status: listEvents})
-  listOfInput.push({Name : 'OasisBay - Taking photos / sightseeing', Status: listCustomer})
-  listOfInput.push({Name : 'OasisBay - Visiting Dubai Parks TM and Resorts', Status: listCustomer})
+  listOfInput.push({Name : 'OasisBay - Offers and Promotions', Status: listOffers})
+  listOfInput.push({Name : 'OasisBay - Upcoming events for families', Status: listEvents})
+  listOfInput.push({Name : 'OasisBay - New Upgrades & add-ons', Status:listUpgrades})
+  listOfInput.push({Name : 'OasisBay - New Shows', Status: listShows})
+  listOfInput.push({Name : 'OasisBay - Customer survey', Status: listCustomer})
 
 
 
@@ -113,7 +313,9 @@
                           <link href="https://cloud.explore.OasisBaydubai.com/material-design-iconic-font.min_OasisBay_QA" rel="stylesheet" media="all">
                           <link href="https://cloud.explore.OasisBaydubai.com/font-awesome.min_OasisBay_QA" rel="stylesheet" media="all">
                           <!-- Font special for pages-->
-                          <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+                          <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"> -->
+                          <link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
                           <link href="https://cloud.explore.OasisBaydubai.com/style_OasisBay_QA" rel="stylesheet">
                           
                         
@@ -147,7 +349,7 @@ color:#000;
 
 .nav-pills .nav-link.active {
 color: #ffffff;
-background-color: #0C2070;
+background-color: #0C2070!important;
 
 font-weight: 700;
 }
@@ -237,7 +439,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
 
 
 </script>
-                      </head>
+                          </head>
                     
       <body onload="handleNumOfKidsChange(%%=v(@numOfKids)=%%); kidsPrepopulation(); ShowHideDivkids(); validateForm();">
         
@@ -271,7 +473,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
                                <img src= "https://image.explore.oasisbaydubai.com/lib/fe2c117373640474721071/m/1/bce612d8-621f-40bb-8d59-35eafd87d921.png" alt="banner-img" class="responsive" id="mob-img">
                                   </div>
                                   <div class="container">
-                                    <h1 class="username" >Hi Stoya </h1>
+                                    <h1 class="username" >Hi %%=v(@firstName)=%% </h1>
                                     <!-- %%=v(ProperCase(@firstName))=%% -->
                                 </div>
                                 </section>
@@ -1336,12 +1538,118 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
           </div>
         </div>
 
-<p class="disclaimer" style="font-size:12px;"><b>We request your child’s date of birth to send them birthday greetings and keep you informed about relevant events and promotions.</b></p>
+<p class="disclaimer" style="font-size:12px; color:#000"><b>We request your child’s date of birth to send them birthday greetings and keep you informed about relevant events and promotions.</b></p>
 </div>
 
 </div>
-    
-   
+     
+%%[
+
+/*SET @crmId = "003Qs00000WKkYyIAL"*/
+
+SET @crmId = _subscriberkey
+
+/*
+SET @crmIdEn = QueryParameter("sfid")
+SET @crmIdJS = Base64Decode(@crmIdEn)
+*/
+
+
+IF EMPTY(@crmId) THEN
+    SET @crmIdEn = QueryParameter("sfid")
+    SET @crmId = Base64Decode(@crmIdEn)
+
+    IF EMPTY(@crmId) THEN
+        SET @crmId = RequestParameter("sfid")
+
+        IF EMPTY(@crmId) THEN
+            SET @crmId = QueryParameter("sfid")
+        ENDIF
+    ENDIF
+ENDIF
+
+/* Retrieve Contact by Id */
+SET @gfContactRows = RetrieveSalesforceObjects(
+    "Contact",
+    "Id",
+    "Id", "=", @crmId
+)
+
+/* Retrieve Contact by GV Contact Id */
+SET @bfContactRows = RetrieveSalesforceObjects(
+    "Contact",
+    "Id",
+    "GV_ContactId__c", "=", @crmId
+)
+
+/* Select Contact Row */
+IF RowCount(@gfContactRows) == 1 THEN
+    SET @contactRow = Row(@gfContactRows, 1)
+/* output(concat("<br>contactRowIf ",@contactRow)) */
+
+ELSEIF RowCount(@bfContactRows) == 1 THEN
+    SET @contactRow = Row(@bfContactRows, 1)
+/* output(concat("<br>contactRowElse ",@contactRow)) */
+
+ENDIF
+
+/* Extract CRM Id */
+IF NOT EMPTY(@contactRow) THEN
+    SET @crmId = Field(@contactRow, "Id")
+ENDIF
+
+
+/* -----------------------------------------------------------
+   Fetch Child Records
+----------------------------------------------------------- */
+IF NOT EMPTY(@crmId) THEN
+
+    VAR @j
+
+    SET @childDetails = RetrieveSalesforceObjects(
+        "Family_Member__c",
+        "Gender__c,Date_Of_Birth__c,First_Name__c,ID,Last_Name__c,Deleted_kid__c",
+        "Contact__c", "=", @crmId,
+        "Relationship__c", "=", "Child"
+    )
+
+    SET @childDetailsRowCount = RowCount(@childDetails)
+
+    IF @childDetailsRowCount > 0 THEN
+
+        FOR @j = 1 TO @childDetailsRowCount DO
+
+            SET @childDetailsRow = Row(@childDetails, @j)
+            SET @deleted = Field(@childDetailsRow, "Deleted_kid__c")
+
+            IF @deleted == false THEN
+
+                SET @ChildFirstName = Field(@childDetailsRow, "First_Name__c")
+                SET @childGender    = Field(@childDetailsRow, "Gender__c")
+                SET @childDOB       = Field(@childDetailsRow, "Date_Of_Birth__c")
+                SET @childFirstName = Field(@childDetailsRow, "First_Name__c")
+                SET @childLastName  = Field(@childDetailsRow, "Last_Name__c")
+                SET @childRecID     = Field(@childDetailsRow, "ID")
+
+                /* Build Child Full Name */
+                IF NOT EMPTY(@childFirstName) AND NOT EMPTY(@childLastName) THEN
+                    SET @childFullName = Concat(ProperCase(@childFirstName), " ", ProperCase(@childLastName))
+
+                ELSEIF NOT EMPTY(@childFirstName) AND EMPTY(@childLastName) THEN
+                    SET @childFullName = ProperCase(@childFirstName)
+
+                ELSEIF EMPTY(@childFirstName) AND NOT EMPTY(@childLastName) THEN
+                    SET @childFullName = ProperCase(@childLastName)
+
+                ELSE
+                    SET @childFullName = ""
+                ENDIF
+
+                SET @count = Subtract(@j, 1)
+
+
+
+]%%
 
  
 
@@ -1351,7 +1659,13 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
 <input type="hidden" id="kidRecId%%=v(@count)=%%" name="kidRecId%%=v(@count)=%%" value="%%=v(@childRecID)=%%">
 <input type="hidden" id="deletedKid%%=v(@count)=%%" name="deletedKid%%=v(@count)=%%" value="%%=v(@childRecID)=%%">
       
-    
+%%[
+endif
+       next @j 
+      
+    ENDIF
+ENDIF   
+]%%
     
         <div class="submit-button">
     
@@ -1360,17 +1674,399 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
     </div>
     
     <input name="submittedProfile" type="hidden" value="true">
-                          <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
+        <input name="crmId" type="hidden" value="%%=v(@crmId)=%%">
       <input name="emails" type="hidden" value="%%=v(@email)=%%">
       <input name="numberOfKids" type="hidden" value="%%=v(@numOfKids)=%%">
         </form>
   
-  
-  
+        %%[
+VAR @sfid
+
+IF RequestParameter("submittedProfile") == true THEN
+
+    /* Basic Contact Fields */
+    SET @sfid               = RequestParameter("crmId")
+    SET @emailContact       = RequestParameter("emails")
+    SET @profileSalutation  = RequestParameter("profileSalutation")
+    SET @firstName          = RequestParameter("firstName")
+    SET @lastName           = RequestParameter("lastName")
+    SET @gender             = RequestParameter("gender")
+    SET @city               = RequestParameter("city")
+    SET @numOfKids          = RequestParameter("numberOfKids")
+    SET @deletedKidsId      = RequestParameter("DeletedKidsId")
+    SET @email              = RequestParameter("email")
+    SET @phone              = RequestParameter("phone")
+
+    /* Phone Code Logic */
+    IF RequestParameter("lang") == '' THEN
+        SET @phonecode = '+971'
+    ELSE
+        SET @phonecode = RequestParameter("lang")
+    ENDIF
+
+    SET @birthdate          = RequestParameter("birthday")
+    SET @profileLang        = RequestParameter("profileLang")
+    SET @profileNationality = RequestParameter("profileNationality")
+    SET @profileCountry     = RequestParameter("profileCountry")
+    SET @profileMarriedBox  = RequestParameter("maritalstatus")
+
+    /* Kids Selection */
+    SET @profilekidsValue   = RequestParameter("state")
+    SET @profileKidsBox     = RequestParameter("kidsExists")
+
+    IF @profileKidsBox == 'kids-yes' THEN
+        SET @kidsStatus     = 'True'
+        SET @doYouHaveKids  = 'True'
+    ELSE
+        SET @kidsStatus     = 'False'
+        SET @doYouHaveKids  = 'False'
+    ENDIF
+
+    IF EMPTY(@profilekidsValue) THEN
+        SET @profilekidsValue = 0
+    ENDIF
+
+    /* ---------------------------------------------------
+       UPDATE CONTACT RECORD
+    --------------------------------------------------- */
+    IF NOT EMPTY(@sfid) THEN
+
+        IF EMPTY(@profileNationality) THEN
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Nationality__c"
+            )
+        ENDIF
+
+        IF EMPTY(@city) THEN
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "MailingCity"
+            )
+        ENDIF
+
+        SET @updateRecord = UpdateSingleSalesforceObject(
+            "Contact", @sfid,
+            "Salutation", @profileSalutation,
+            "FirstName", @firstName,
+            "LastName", @lastName,
+            "Email", @email,
+            "MailingCity", @city,
+            "Country_Code__c", @phonecode,
+            "Registration_Language__c", @profileLang,
+            "GenderIdentity", @gender,
+            "Nationality__c", @profileNationality,
+            "Residence_Country__c", @profileCountry,
+            "Do_you_have_kids__c", @doYouHaveKids,
+            "Latest_Channel_Source__c", "CPC - Oasis Bay"
+        )
+
+        /* Birthdate */
+        IF EMPTY(@birthdate) THEN
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Birthdate"
+            )
+        ELSE
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Birthdate", @birthdate
+            )
+        ENDIF
+
+        /* Marital Status */
+        IF EMPTY(@profileMarriedBox) THEN
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Marital_Status__c"
+            )
+        ELSE
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Marital_Status__c", @profileMarriedBox
+            )
+        ENDIF
+
+        /* Null/Update Phone */
+        IF EMPTY(@phone) THEN
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "fieldsToNull", "Phone"
+            )
+        ELSE
+            SET @updateRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Phone", @phone
+            )
+        ENDIF
+
+
+        /* ---------------------------------------------------
+           CREATE OR UPDATE CHILD RECORDS
+        --------------------------------------------------- */
+        IF @profilekidsValue > 0 AND @profileKidsBox == 'kids-yes' THEN
+
+            /* Get CRM Kid IDs */
+            VAR @CRMIdList
+            SET @childIDs = RetrieveSalesforceObjects(
+                "Family_Member__c", "ID",
+                "Contact__c", "=", @sfid,
+                "Relationship__c", "=", "Child"
+            )
+            SET @childIDRowCount = RowCount(@childIDs)
+            IF @childIDRowCount > 0 THEN
+                FOR @p = 1 TO @childIDRowCount DO
+                    SET @childIDRow = Row(@childIDs, @p)
+                    SET @KidID      = Field(@childIDRow, "ID")
+                    SET @CRMIdList  = Concat(@CRMIdList, @KidID, ",")
+                NEXT @p
+            ENDIF
+
+            /* Loop through kids */
+            FOR @k = 1 TO @profilekidsValue DO
+
+                SET @u             = Subtract(@k, 1)
+                SET @kidGenderVal  = RequestParameter(Concat("gender", @u))
+                SET @kidNameval    = RequestParameter(Concat("kidsName", @u))
+                SET @kidDOBVal     = RequestParameter(Concat("kids-birthday", @u))
+                SET @kidRecIdVal   = RequestParameter(Concat("kidRecId", @u))
+            
+                /* Split first & last name */
+                IF IndexOf(@kidNameval, " ") > 0 THEN
+                    SET @kidFirstName = Substring(@kidNameval, 1, Subtract(IndexOf(@kidNameval, " "), 1))
+                    SET @kidLastName  = Substring(@kidNameval, Add(IndexOf(@kidNameval, " "), 1))
+                ELSE
+                    SET @kidFirstName = @kidNameval
+                    SET @kidLastName  = ""
+                ENDIF
+
+                /* UPDATE existing child */
+                IF NOT EMPTY(@kidRecIdVal) THEN
+
+                    SET @childIDs = RetrieveSalesforceObjects(
+                        "Family_Member__c", "ID",
+                        "Id", "=", @kidRecIdVal,
+                        "Relationship__c", "=", "Child"
+                    )
+                    SET @childIDRowCount = RowCount(@childIDs)
+
+                    IF @childIDRowCount > 0 THEN
+
+                        /* Update child — no DOB */
+                        IF EMPTY(@kidDOBVal) THEN
+                            SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                "Family_Member__c", @kidRecIdVal,
+                                "First_Name__c", @kidFirstName,
+                                "Last_Name__c", @kidLastName,
+                                "Gender__c", @kidGenderVal,
+                                "Name", @kidNameval,
+                                "fieldsToNull", "Date_Of_Birth__c"
+                            )
+                        ELSE
+                            SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                "Family_Member__c", @kidRecIdVal,
+                                "First_Name__c", @kidFirstName,
+                                "Last_Name__c", @kidLastName,
+                                "Gender__c", @kidGenderVal,
+                                "Date_Of_Birth__c", @kidDOBVal,
+                                "Name", @kidNameval
+                            )
+                        ENDIF
+
+                        /* Blank gender if empty */
+                        IF EMPTY(@kidGenderVal) THEN
+                            SET @updateKidRecord = UpdateSingleSalesforceObject(
+                                "Family_Member__c", @kidRecIdVal,
+                                "fieldsToNull", "Gender__c"
+                            )
+                        ENDIF
+
+                    ENDIF
+
+                /* CREATE new child */
+                ELSE
+
+                    IF EMPTY(@kidDOBVal) THEN
+
+                        SET @numOfKids = Add(@numOfKids, 1)
+                        SET @updateRecord = UpdateSingleSalesforceObject(
+                            "Contact", @sfid,
+                            "Number_of_kids__c", @numOfKids
+                        )
+
+                        SET @newKidRecord = CreateSalesforceObject(
+                            "Family_Member__c", 6,
+                            "First_Name__c", @kidFirstName,
+                            "Last_Name__c", @kidLastName,
+                            "Gender__c", @kidGenderVal,
+                            "Relationship__c", "Child",
+                            "Contact__c", @sfid,
+                            "Name", @kidNameval,
+                            "fieldsToNull", "Date_Of_Birth__c"
+                        )
+                    ELSE
+                        SET @newKidRecord = CreateSalesforceObject(
+                            "Family_Member__c", 7,
+                            "First_Name__c", @kidFirstName,
+                            "Last_Name__c", @kidLastName,
+                            "Gender__c", @kidGenderVal,
+                            "Date_Of_Birth__c", @kidDOBVal,
+                            "Relationship__c", "Child",
+                            "Contact__c", @sfid,
+                            "Name", @kidNameval
+                        )
+                    ENDIF
+
+                ENDIF
+
+            NEXT @k
+
+        ENDIF
+
+
+        /* ---------------------------------------------------
+           KIDS-NO: mark all CRM kids deleted
+        --------------------------------------------------- */
+        IF @profilekidsValue > 0 AND @profileKidsBox == 'kids-no' THEN
+
+            SET @childIDs = RetrieveSalesforceObjects(
+                "Family_Member__c", "Id",
+                "Contact__c", "=", @sfid,
+                "Relationship__c", "=", "Child"
+            )
+
+            SET @childIDRowCount = RowCount(@childIDs)
+
+            FOR @n = 1 TO @childIDRowCount DO
+                SET @childIDRow = Row(@childIDs, @n)
+                SET @KidID      = Field(@childIDRow, "ID")
+
+                SET @updatedeletedKidRecord = UpdateSingleSalesforceObject(
+                    "Family_Member__c", @KidID,
+                    "Deleted_kid__c", "True"
+                )
+            NEXT @n
+
+            /* Update number of kids on Contact */
+            SET @updateNoOfKidRecord = UpdateSingleSalesforceObject(
+                "Contact", @sfid,
+                "Number_of_kids__c", @childIDRowCount
+            )
+
+        ENDIF
+
+    ENDIF /* End Contact Update */
+
+
+    /* ---------------------------------------------------
+       LOG + REDIRECT
+    --------------------------------------------------- */
+    SET @interests = "#interests"
+
+    IF EMPTY(@sfid) OR IsNull(@sfid) THEN
+        SET @ampError = "00 - NO SUBSCRIBER KEY FOUND"
+    ELSE
+        SET @ampError = ""
+    ENDIF
+    
+    SET @p = InsertData("PreferencesLog_QA", "SubscriberKey", @sfid, "EmailAddress", @emailContact, "Submission", "ProfilePage", "AMPError", @ampError, "FirstName", @firstName, "LastName", @lastName)
+
+    IF @methodType == "Old" THEN
+        Redirect(Concat("https://cloud.explore.OasisBaydubai.com/OasisBay_CPC_QA?sfid=", Base64Encode(@sfid), "#interests"))
+    ELSE
+        Redirect(Concat(CloudPagesURL(5164), @interests))
+    ENDIF
+
+ENDIF /* submittedProfile */
+
+]%%
+
+        
   
       </div>
   </div>
             
+  %%[
+  /* -------------------------
+     Primary Reason For Visit
+     ------------------------- */
+  SET @primaryReasonString = BuildRowsetFromString(@primaryReasonForVisit, ";")
+  SET @primaryReasonCount  = RowCount(@primaryReasonString)
+
+  IF @primaryReasonCount > 0 THEN
+      FOR @i = 1 TO @primaryReasonCount DO
+
+          SET @val = Field(Row(@primaryReasonString, @i), 1)
+
+          IF @val == "Fun family activities" THEN
+              SET @fun_family_activities = "checked"
+
+        ELSEIF @val == "It's on my dubai bucket list" OR @val == "It’s on my dubai bucket list" THEN
+              SET @dubai_bucket_list = "checked"
+
+          ELSEIF @val == "I love waterpark experiences" THEN
+              SET @love_waterpark = "checked"
+
+          ELSEIF @val == "I love themed water attractions" THEN
+              SET @love_theme = "checked"
+          ENDIF
+
+      NEXT @i
+  ENDIF
+
+
+  /* -------------------------
+     Like Most About
+     ------------------------- */
+  SET @likeMostString = BuildRowsetFromString(@likeMostAbout, ";")
+  SET @likeMostCount  = RowCount(@likeMostString)
+
+  IF @likeMostCount > 0 THEN
+      FOR @i = 1 TO @likeMostCount DO
+
+          SET @val = Field(Row(@likeMostString, @i), 1)
+
+          IF @val == "Refreshing food and drink choices" THEN
+              SET @refreshing_food = "checked"
+
+          ELSEIF @val == "Live entertainment & family activities" THEN
+              SET @live_entertainment = "checked"
+
+          ELSEIF @val == "The water slides and splash attractions" THEN
+              SET @water_slides = "checked"
+
+          ELSEIF @val == "The overall themed experience" THEN
+              SET @overall_theme = "checked"
+
+          ELSEIF @val == "Seasonal offers & promotions" THEN
+              SET @seasonal_offers = "checked"
+          ENDIF
+
+      NEXT @i
+  ENDIF
+
+  set @howOftenVisitString = BuildRowsetFromString(@howOftenVisit,";")
+  set @howOftenVisitCount = rowCount(@howOftenVisitString)
+  
+  if @howOftenVisitCount > 0 then
+      for @i = 1 to @howOftenVisitCount do
+            
+            SET @val = Field(Row(@howOftenVisitString,@i),1)
+            
+            IF @val == "October - December" THEN
+            SET @oct = "checked"
+            ELSEIF @val == "December - February" THEN
+            SET @dec = "checked"
+            ELSEIF @val == "February - April" THEN
+            SET @feb = "checked"
+            ELSEIF @val == "April - End of May" THEN       
+            SET @apr = "checked"
+            ENDIF
+            
+      next @i
+    endif
+
+]%%
                              
                              
   <div class="tab-pane fade interest-tab-content" id="interests" role="tabpanel" aria-labelledby="interests-tab">
@@ -1386,62 +2082,62 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
               <div class="radio-wrapper primary-reason radio-width">
                   <div class="form-check form-check">
                     <label class="form-check-label" for="reason1">Fun family activities</label>
-                    <input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@attractions_experiences)=%%>
+                    <input class="form-check-input" type="checkbox" name="reason1" id="reason1" %%=v(@fun_family_activities)=%%>
                   </div>
                   <div class="form-check form-check">
                     <label class="form-check-label" for="reason2">It's on my Dubai bucket list</label>
-                    <input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@Family_day_out)=%%>
+                    <input class="form-check-input" type="checkbox" name="reason2" id="reason2" %%=v(@dubai_bucket_list)=%%>
                   </div>
                   <div class="form-check form-check">
                     <label class="form-check-label" for="reason3">I love waterpark experiences</label>
-                    <input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@event_festival)=%%>
+                    <input class="form-check-input" type="checkbox" name="reason3" id="reason3" %%=v(@love_waterpark)=%%>
                   </div>
                   <div class="form-check form-check">
                     <label class="form-check-label" for="reason4">I love themed water attractions</label>
-                    <input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@Photos_sightseeing)=%%>
+                    <input class="form-check-input" type="checkbox" name="reason4" id="reason4" %%=v(@love_theme)=%%>
                   </div>
               </div> 
               <h4 class="pt-4 pb-3">When are you most likely to visit Oasis Bay?</h4>
               <div class="radio-wrapper primary-reason radio-width">
-                      <div class="form-check form-check">
-                        <label class="form-check-label" for="visit1">October - December</label>
-                          <input class="form-check-input" type="checkbox" name="visit1" id="visit1" %%=v(@oct)=%%>
-                      </div>
-                      <div class="form-check form-check">
-                        <label class="form-check-label" for="visit2">December - February</label>
-                        <input class="form-check-input" type="checkbox" name="visit2" id="visit2" %%=v(@dec)=%%>
-                      </div>
-                      <div class="form-check form-check">
-                        <label class="form-check-label" for="visit3">February - April</label>
-                        <input class="form-check-input" type="checkbox" name="visit3" id="visit3" %%=v(@feb)=%%>
-                      </div>
-                      <div class="form-check form-check">
-                        <label class="form-check-label" for="visit4">April - End of May</label>
-                        <input class="form-check-input" type="checkbox" name="visit4" id="visit4" %%=v(@apr)=%%>
-                      </div>
-                  </div>
+                <div class="form-check form-check">
+                  <label class="form-check-label" for="visit1">October - December</label>
+                    <input class="form-check-input" type="checkbox" name="visit1" id="visit1" %%=v(@oct)=%%>
+                </div>
+                <div class="form-check form-check">
+                  <label class="form-check-label" for="visit2">December - February</label>
+                  <input class="form-check-input" type="checkbox" name="visit2" id="visit2" %%=v(@dec)=%%>
+                </div>
+                <div class="form-check form-check">
+                  <label class="form-check-label" for="visit3">February - April</label>
+                  <input class="form-check-input" type="checkbox" name="visit3" id="visit3" %%=v(@feb)=%%>
+                </div>
+                <div class="form-check form-check">
+                  <label class="form-check-label" for="visit4">April - End of May</label>
+                  <input class="form-check-input" type="checkbox" name="visit4" id="visit4" %%=v(@apr)=%%>
+                </div>
+            </div>
 
             <h4 class="pt-4 pb-3">What do you like the most about Oasis Bay?</h4>
             <div class="radio-wrapper like-most radio-width">
               <div class="form-check form-check">
                 <label class="form-check-label" for="like1">Refreshing food and drink choices</label>
-                  <input class="form-check-input" type="checkbox" name="like1" id="like1" %%=v(@experiences_activities)=%% >                            
+                  <input class="form-check-input" type="checkbox" name="like1" id="like1" %%=v(@refreshing_food)=%% >                            
               </div>
               <div class="form-check form-check">
                 <label class="form-check-label" for="like2">Live entertainment & family activities</label>
-                <input class="form-check-input" type="checkbox" name="like2" id="like2" %%=v(@dining_options)=%%  >
+                <input class="form-check-input" type="checkbox" name="like2" id="like2" %%=v(@live_entertainment)=%%  >
               </div>
               <div class="form-check form-check">
                 <label class="form-check-label" for="like3">The water slides and splash attractions</label>
-                <input class="form-check-input" type="checkbox" name="like3" id="like3" %%=v(@river_scenery)=%% >
+                <input class="form-check-input" type="checkbox" name="like3" id="like3" %%=v(@water_slides)=%% >
               </div>
               <div class="form-check form-check">
                 <label class="form-check-label" for="like4">The overall themed experience</label>
-                <input class="form-check-input" type="checkbox" name="like4" id="like4" %%=v(@live_entertainment)=%% >
+                <input class="form-check-input" type="checkbox" name="like4" id="like4" %%=v(@overall_theme)=%% >
               </div>
               <div class="form-check form-check">
                 <label class="form-check-label" for="like5">Seasonal offers & promotions</label>
-                <input class="form-check-input" type="checkbox" name="like5" id="like5" %%=v(@live_entertainment)=%% >
+                <input class="form-check-input" type="checkbox" name="like5" id="like5" %%=v(@seasonal_offers)=%% >
               </div>
               
           </div>
@@ -1458,7 +2154,105 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
           </form>
            </div>   
       
-   
+           %%[
+           IF RequestParameter("submittedInterests") == "true" THEN
+               SET @sfid        = RequestParameter("crmId")
+               SET @guestId     = RequestParameter("guestId")
+               SET @emailContact = RequestParameter("emails")
+               SET @concatedString = Concat("It", "’")
+                SET @finalConcatedString = Concat(@concatedString,"s on my Dubai bucket list;")
+               SET @oftenVisitValue = RequestParameter("visit")
+           
+               /* ------------ PRIMARY REASON FOR VISIT ------------ */
+               SET @primaryReasonPreferences = CONCAT(
+                   Iif(RequestParameter("reason1") == "on", "Fun family activities;", ""),
+                   Iif(RequestParameter("reason2") == "on", @finalConcatedString, ""),
+                   Iif(RequestParameter("reason3") == "on", "I love waterpark experiences;", ""),
+                   Iif(RequestParameter("reason4") == "on", "I love themed water attractions", "")
+               )
+           
+               IF NOT Empty(@primaryReasonPreferences) THEN
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "Primary_reason_for_visit_to_Oasis_Bay__c", @primaryReasonPreferences
+                   )
+               ELSE
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "fieldsToNull", "Primary_reason_for_visit_to_Oasis_Bay__c"
+                   )
+               ENDIF
+           
+           
+               /* ------------ WHAT THEY LIKE MOST ABOUT OasisBay ------------ */
+               SET @likeMostAboutPreferences = CONCAT(
+                   Iif(RequestParameter("like1") == "on", "Refreshing food and drink choices;", ""),
+                   Iif(RequestParameter("like2") == "on", "Live entertainment & family activities;", ""),
+                   Iif(RequestParameter("like3") == "on", "The water slides and splash attractions;", ""),
+                   Iif(RequestParameter("like4") == "on", "The overall themed experience;", ""),
+                   Iif(RequestParameter("like5") == "on", "Seasonal offers & promotions", "")
+               )
+           
+               IF NOT Empty(@likeMostAboutPreferences) THEN
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "What_do_you_like_most_about_Oasis_Bay__c", @likeMostAboutPreferences
+                   )
+               ELSE
+                   SET @updateRecord = UpdateSingleSalesforceObject(
+                       "Guest_Subscription__c", @guestId,
+                       "fieldsToNull", "What_do_you_like_most_about_Oasis_Bay__c"
+                   )
+               ENDIF
+           
+               SET @oftenVisitValue = CONCAT(
+                Iif(RequestParameter("visit1") == "on", "October - December;", ""),
+                Iif(RequestParameter("visit2") == "on", "December - February;", ""),
+                Iif(RequestParameter("visit3") == "on", "February - April;", ""),
+                Iif(RequestParameter("visit4") == "on", "April - End of May;", "")
+              )
+
+              if not Empty(@oftenVisitValue) then
+                SET @updateRecord = UpdateSingleSalesforceObject(
+                    "Guest_Subscription__c", @guestId,
+                    "Most_likely_to_visit_Oasis_Bay__c", @oftenVisitValue)
+                else
+                    SET @updateRecord = UpdateSingleSalesforceObject(
+                    "Guest_Subscription__c", @guestId,
+                    "fieldsToNull", "Most_likely_to_visit_Oasis_Bay__c")
+
+                endif 
+
+              IF NOT Empty(@sfid) THEN
+
+                   SET @updateContactRecord = UpdateSingleSalesforceObject(
+                   "Contact", @sfid,
+                   "Latest_Channel_Source__c", "CPC - Oasis Bay"
+                    )
+              ENDIF
+           
+           
+               /* ------------ LOG INSERT (single-line to avoid AMPscript error) ------------ */
+               SET @communications = "#communications"
+           
+               IF Empty(@sfid) OR IsNull(@sfid) THEN
+                   SET @ampError = "00 - NO SUBSCRIBER KEY FOUND"
+               ELSE
+                   SET @ampError = ""
+               ENDIF
+           
+               SET @p = InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","InterestPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+           
+           
+               /* ------------ REDIRECTION ------------ */
+               IF @methodType == "Old" THEN
+                   Redirect(Concat("https://cloud.explore.OasisBaydubai.com/OasisBay_CPC_QA?sfid=", Base64Encode(@sfid), "#communications"))
+               ELSE
+                   Redirect(CONCAT(CloudPagesURL(5164), @communications))
+               ENDIF
+              
+           ENDIF
+           ]%%
         
   </div>
   <!-- Interest Tab End -->
@@ -1472,7 +2266,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
            <div class="hear-about">
          <h4 class="pt-4 pb-3">What would you like to hear about? </h4>
          <div class="form-check">
-             <input class="form-check-input" type="checkbox" value="%%=v(@Dining_offers)=%%" id="informCheck11"  name="DiningOffers" %%=IIF(@Dining_offers =='True' ,'checked', "" )=%%>
+             <input class="form-check-input" type="checkbox" value="%%=v(@offers_promotions)=%%" id="informCheck11"  name="OffersPromotions" %%=IIF(@offers_promotions =='True' ,'checked', "" )=%%>
              <label class="form-check-label" for="informCheck11">
               Offers and Promotions
              </label>
@@ -1484,19 +2278,19 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
              </label>
          </div>
          <div class="form-check">
-             <input class="form-check-input" type="checkbox" value="%%=v(@Family_activities)=%%" id="informCheck13"  name="familyActivities" %%=IIF(@Family_activities =='True' ,'checked', "" )=%%>
-             <label class="form-check-label" for="informCheck13">
-              New shows
-             </label>
-         </div>
+          <input class="form-check-input" type="checkbox" value="%%=v(@new_shows)=%%" id="informCheck13"  name="NewShows" %%=IIF(@new_shows =='True' ,'checked', "" )=%%>
+          <label class="form-check-label" for="informCheck13">
+           New Shows
+          </label>
+        </div>
          <div class="form-check">
-             <input class="form-check-input" type="checkbox" value="%%=v(@New_attractions)=%%" id="informCheck14"  name="newAttractions" %%=IIF(@New_attractions =='True' ,'checked', "" )=%%>
+             <input class="form-check-input" type="checkbox" value="%%=v(@new_upgrades)=%%" id="informCheck14"  name="NewUpgrades" %%=IIF(@new_upgrades =='True' ,'checked', "" )=%%>
              <label class="form-check-label" for="informCheck14">
               New Upgrades & add-ons
              </label>
          </div>
          <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="%%=v(@news_updates)=%%" id="informCheck15"  name="newsUpdates" %%=IIF(@news_updates =='True' ,'checked', "" )=%%>
+          <input class="form-check-input" type="checkbox" value="%%=v(@customer_survey)=%%" id="informCheck15"  name="CustomerSurvey" %%=IIF(@customer_survey =='True' ,'checked', "" )=%%>
           <label class="form-check-label" for="informCheck15">
             Customer survey
           </label>
@@ -1514,7 +2308,52 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
      </form>
       <hr>
     
+      %%[
+      IF RequestParameter("submittedCommunications") == true THEN
+          SET @sfid = RequestParameter("crmId")
+          SET @guestId = RequestParameter("guestId")
+          SET @emailContact = RequestParameter("emails")
 
+          set @UpdatedOffersPromotions =  RequestParameter("OffersPromotions")
+          set @UpdatedUpcomingEvents =  RequestParameter("upcomingEvents")
+          set @UpdatedNewUpgrades =  RequestParameter("NewUpgrades")
+          set @UpdatedNewShows =  RequestParameter("NewShows")
+          set @UpdatedCustomerSurvey =  RequestParameter("CustomerSurvey")
+
+          IF NOT Empty(@sfid) THEN
+          SET @updateRecord = UpdateSingleSalesforceObject(
+          "Guest_Subscription__c", @guestId,
+          "Offers_and_Promotions__c", IIF(EMPTY(@UpdatedOffersPromotions), 'False', 'True'), 
+          "Upcoming_events_for_families__c", IIF(EMPTY(@UpdatedUpcomingEvents), 'False', 'True'),
+          "New_Upgrades_add_ons__c", IIF(EMPTY(@UpdatedNewUpgrades), 'False', 'True'),
+          "New_shows__c", IIF(EMPTY(@UpdatedNewShows), 'False', 'True'),
+          "Customer_Survey__c", IIF(EMPTY(@UpdatedCustomerSurvey), 'False', 'True'))
+
+
+      SET @updateContactRecord = UpdateSingleSalesforceObject(
+          "Contact", @sfid,
+          "Latest_Channel_Source__c", "CPC - Oasis Bay"
+          )
+
+
+          set @thankYouPage = '#ThankYou'
+      if empty(@sfid) OR IsNull(@sfid) then
+              Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+          ELSE
+              Set @ampError = ''
+          ENDIF
+              Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+
+      if @methodType== 'Old' then
+              Redirect(Concat("https://cloud.explore.OasisBaydubai.com/ThankYou_OasisBay_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+      ELSE
+              Redirect(CONCAT(CloudPagesURL(5173),@thankYouPage))
+      ENDIF
+
+      ENDIF
+
+    ENDIF
+    ]%%
       
        <!--channel preference block-->
               <form class="channel-preferences-form" action="" method="post">
@@ -1561,7 +2400,7 @@ Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self'
       </div>
       <div class="thankYou-text">
           <p style="font-size:16px; line-height:18px; color:#000000; font-weight: bold;">Your channel subscription preferences have been successfully updated.</p>
-        <p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-top:0rem;">Should you wish to receive our communications again, please subscribe through our <a href="https://www.dubaiparksandresorts.com/en/OasisBay" style=
+        <p style="display: %%=IIF(@status == "Unsubscribed", "block", "none")=%%;font-size:16px; line-height:18px; color:#000000; font-weight: bold; padding-top:0rem;">Should you wish to receive our communications again, please subscribe through our <a href="https://www.dubaiparksandresorts.com" style=
 "color:#212529;text-decoration: underline;" target="_blank">website</a>!</p>
       </div>
   </div>
@@ -1640,7 +2479,99 @@ color:#000;">×</span>
                <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
           </div>
        </form>
-      
+       %%[
+       IF RequestParameter("submittedUnsub") == true THEN
+        SET @sfid = RequestParameter("crmId")
+        SET @guestId = RequestParameter("guestId")
+        SET @emailContact = RequestParameter("emails")
+        SET @unsubTempBox = RequestParameter("unsubTemp")
+        SET @unsubFreqBox = RequestParameter("unsubFreq")
+        SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
+        SET @unsubNoDubaiBox = RequestParameter("unsubNoDubai")
+        SET @unsubOtherBox = RequestParameter("unsubOther")
+        SET @unsubOtherComments = RequestParameter("nameReason")
+        SET @currentDate = Now()
+
+        IF NOT Empty(@sfid) THEN
+            SET @updateContactRecord = UpdateSingleSalesforceObject(
+        "Contact", @sfid,
+        "Latest_Channel_Source__c", "CPC - Oasis Bay"
+        )
+        IF NOT Empty(@unsubTempBox) THEN
+        
+        /* made changes on 14 feb - add pub list to resub in CRM */
+        
+        SET @updateRecord = UpdateSingleSalesforceObject(
+        "Guest_Subscription__c", @guestId,
+        "Temporary_Pause_30_Days__c", 'True',
+        "Emails_are_too_frequent__c",'false',
+        "Content_isn_t_relevant__c",'false',
+        "I_m_no_longer_in_Dubai__c",'false',
+        "Other_Please_specify__c",'false',
+        "fieldsToNull","Reason_of_Unsubscribe__c",
+        "Status__c", "Unsubscribed"
+        )
+        
+        ENDIF
+        
+        IF Empty(@unsubTempBox) THEN
+            /* made changes on 14 feb - add pub list to unsub in CRM */
+        /*Removed the code for unchecking the publication list from CRM - 19th Feb24 */
+        SET @updateRecord = UpdateSingleSalesforceObject(
+        "Guest_Subscription__c", @guestId,
+        "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'false', 'true'),
+        "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'false', 'true'),
+        "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'false', 'true'),
+        "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'false', 'true'),
+        "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'false', 'true'),
+        "Reason_of_Unsubscribe__c", @unsubOtherComments,
+        "Status__c", "Unsubscribed"
+        
+        )
+        ENDIF
+
+        IF NOT Empty(@unsubTempBox) THEN
+            SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email", @emailContact,"DateAdded",@currentDate,"ContactId",@sfid, "UnsubscribeType","Individual","Asset","Oasis Bay")
+        ENDIF
+        
+        
+        IF Empty(@unsubTempBox) THEN
+        set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @guestId)
+        set @count = rowcount(@rowFound)
+        if @count > 0 then
+        set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
+        SET @updateRecord = UpdateSingleSalesforceObject(
+        "Guest_Subscription__c", @guestId,
+        "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
+        "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'False', 'True'),
+        "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'False', 'True'),
+        "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),
+        "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'False', 'True'),
+        "Reason_of_Unsubscribe__c", @unsubOtherComments
+        )
+        /*if a sub. comes back and uncheck temp pause*/
+        endif
+        ENDIF
+
+        set @thankYouPage = '#ThankYou'
+        if empty(@sfid) OR IsNull(@sfid) then
+            Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+        ELSE
+            Set @ampError = ''
+        ENDIF
+            Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+        
+        if @methodType== 'Old' then
+            Redirect(Concat("https://cloud.explore.OasisBaydubai.com/ThankYou_OasisBay_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+            ELSE
+                Redirect(CONCAT(CloudPagesURL(5173),@thankYouPage))
+        ENDIF
+        
+    ENDIF
+
+     
+       ENDIF
+       ]%%
 
      </div>
 
@@ -1738,7 +2669,113 @@ color:#000;">×</span>
             <input name="emails" type="hidden" value="%%=v(@email)=%%"><br>
        </div>
          </form>
+         %%[
+         IF RequestParameter("unsubAll") == true then
+         SET @sfid = RequestParameter("crmId")
+         SET @guestId = RequestParameter("guestId")
+         SET @emailContact = RequestParameter("emails")
+         SET @unsubTempBox = RequestParameter("unsubAllTemp")
+         SET @unsubFreqBox = RequestParameter("unsubFreq")
+         SET @unsubRelevanceBox = RequestParameter("unsubRelevance")
+         SET @unsubNoDubaiBox = RequestParameter("unsubNoDubai")
+         SET @unsubOtherBox = RequestParameter("unsubOther")
+         SET @unsubOtherComments = RequestParameter("nameReason")
+         SET @currentDate = Now()
+         SET @updateContactRecord = UpdateSingleSalesforceObject(
+          "Contact", @sfid,
+          "Latest_Channel_Source__c", "CPC - Oasis Bay"
+           )
+         IF NOT Empty(@unsubTempBox) THEN
+            /* Subscribe from all guest subscriptions */
+             SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
+             SET @GDRowCount = RowCount(@GD)
+
+             IF @GDRowCount > 0 THEN
+                 FOR @i = 1 TO @GDRowCount DO
+                     SET @GDRow = Row(@GD, @i)
+                     SET @GDID = Field(@GDRow, "Id")
+
+                     /* Update Status__c to "Unsubscribed" */
+                      
+                     SET @updateRecord = UpdateSingleSalesforceObject(
+                         "Guest_Subscription__c", @GDID,
+                         "Temporary_Pause_30_Days__c", 'True',
+                         "Emails_are_too_frequent__c",'false',
+                         "Content_isn_t_relevant__c",'false',
+                         "I_m_no_longer_in_Dubai__c",'false',
+                         "Other_Please_specify__c",'false',
+                         "fieldsToNull","Reason_of_Unsubscribe__c",
+                         "Status__c", "Unsubscribed"
+                     )
+                 NEXT @i
+             ENDIF
+             
+             /*Upsert data in Temp pause*/
+             SET @s = upsertData("ENT.TempPauseHandle_QA", 1, "SubscriberKey", @guestId, "Email", @emailContact,"DateAdded",@currentDate,"ContactId",@sfid,"UnsubscribeType","All","Asset","Oasis Bay")
+             
+             /*Upsert data in resub DE to resubscriber contact on enterprise level*/
+             
+            SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "SubsciberStatus", "Unsubscribed", "Temp_30_Days", "True","Frequency","False","Relevance","False","Not_In_Dubai","False","Other","False","DateAdded",@currentDate)
       
+             
+             
+          ELSE
+          
+             /* Unsubscribe from all guest subscriptions */
+                 SET @GD = RetrieveSalesforceObjects("Guest_Subscription__c", "Id", "Contact__c", "=", @sfid)
+                 SET @GDRowCount = RowCount(@GD)
+
+                 IF @GDRowCount > 0 THEN
+                     FOR @i = 1 TO @GDRowCount DO
+                         SET @GDRow = Row(@GD, @i)
+                         SET @GDID = Field(@GDRow, "Id")
+
+                         /* Update Status__c to "Unsubscribed" */
+                         /* made changes - add pub list to unsub in CRM */
+                         SET @updateRecord = UpdateSingleSalesforceObject(
+                             "Guest_Subscription__c", @GDID,
+                             "Temporary_Pause_30_Days__c", IIF(Empty(@unsubTempBox), 'False', 'True'), 
+                             "Emails_are_too_frequent__c", IIF(Empty(@unsubFreqBox), 'False', 'True'),
+                             "Content_isn_t_relevant__c",IIF(Empty(@unsubRelevanceBox), 'False', 'True'),
+                             "I_m_no_longer_in_Dubai__c", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),
+                             "Other_Please_specify__c", IIF(Empty(@unsubOtherBox), 'False', 'True'),
+                             "Reason_of_Unsubscribe__c", @unsubOtherComments,
+                             "Status__c", "Unsubscribed"
+                         )
+                     NEXT @i
+                 ENDIF
+                 
+                 /* change made on 14 feb for storing unsub reason in DE */
+                 
+                 SET @resub = upsertData("ENT.UnsubscribeHandle_QA", 1, "SubscriberKey", @sfid, "EmailAddress", @emailContact, "Frequency", IIF(Empty(@unsubFreqBox), 'False', 'True'),"Relevance", IIF(Empty(@unsubRelevanceBox), 'False', 'True'),"Not_In_Dubai", IIF(Empty(@unsubNoDubaiBox), 'False', 'True'),"Other", IIF(Empty(@unsubOtherBox), 'False', 'True'),"Temp_30_Days","False","DateAdded",@currentDate)
+                 
+                 set @rowFound = LookupRows("ENT.TempPauseHandle_QA","SubscriberKey", @sfid)
+                 set @count = rowcount(@rowFound)
+                 if @count > 0 then
+                    set @deleteCount = DeleteData("ENT.TempPauseHandle_QA","Email", @emailContact)
+                 ENDIF
+             
+         ENDIF
+         
+       /* Redirect to the thank you page */
+      
+        set @thankYouPage = '#ThankYou'
+       if empty(@sfid) OR IsNull(@sfid) then
+               Set @ampError = '00 - NO SUBSCRIBER KEY FOUND'
+            ELSE
+               Set @ampError = ''
+            ENDIF
+                Set @p= InsertData("PreferencesLog_QA","SubscriberKey",@sfid,"EmailAddress",@emailContact,"Submission","CommunicationPage","AMPError",@ampError,"FirstName",@firstName,"LastName",@lastName)
+       
+       if @methodType== 'Old' then
+               Redirect(Concat("https://cloud.explore.OasisBaydubai.com/ThankYou_OasisBay_QA?sfid=", Base64Encode(@sfid), "#ThankYou"))
+              ELSE
+                     Redirect(CONCAT(CloudPagesURL(5173),@thankYouPage))
+             ENDIF
+       ENDIF
+       ENDIF
+
+ ]%%
     
   </div>
     
@@ -1829,7 +2866,7 @@ color:#000;">×</span>
       </div>
       <div class="row footer-row-2">
         <div class="col-lg-8 col-md-8 col-sm-12 col-12 ">
-          <p style="color: rgb(238, 238, 238); font-size: 10px; font-family: Arial, Helvetica, sans-serif; font-weight: normal;  text-align: left;line-height:12px">
+          <p style="color: rgb(238, 238, 238); font-size: 10px; font-weight: normal;  text-align: left;line-height:12px">
             A&copy;2026 The LEGO Group. &copy;2026 DWA LLC. All Rights Reserved  &copy;2026 CPll. All Rights reserved.<br> &copy;2026 SPAI. All Rights Reserved. &copy;2026 GHI. Movie &copy; 2026 Lions Gate Ent. Inc.<br> &copy; Dubai Parks&trade; and Resorts 2026. All Rights Reserved.</p>
         </div>
        
@@ -1880,7 +2917,7 @@ color:#000;">×</span>
           </a>
       </div>
       <div class="col-lg-2 col-md-2 col-sm-2 col-4 business-unit-col" style="padding: 0 5px">
-        <a alias="OasisBay" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank">
+        <a alias="Riverland" href="https://www.dubaiparksandresorts.com/en/riverland" target="_blank">
             <img alt="Riverland" data-assetid="" src="https://image.explore.oasisbaydubai.com/lib/fe2c117373640474721071/m/1/64e4c1e3-38a9-4d65-9551-6e28bb6f4e49.png" width="150">
         </a>
     </div>
