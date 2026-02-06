@@ -1,0 +1,117 @@
+<script runat="server">
+    Platform.Load("Core","1.1.1");
+    
+    try {
+      
+    </script>
+    %%[
+    
+    SET @sk = RequestParameter("sk")
+    
+    if not empty(@sk) then
+    
+    
+    SET @emailAddr = RequestParameter("email")
+    SET @emailname = RequestParameter("emailname")
+    set @contactSource = RequestParameter("contactSource")
+    
+    SET @lue = CreateObject("ExecuteRequest")
+    SetObjectProperty(@lue,"Name","LogUnsubEvent")
+    
+    SET @lue_prop = CreateObject("APIProperty")                 
+    SetObjectProperty(@lue_prop, "Name", "SubscriberKey")
+    SetObjectProperty(@lue_prop, "Value", @sk)
+    AddObjectArrayItem(@lue, "Parameters", @lue_prop)
+    
+    SET @lue_statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
+    
+    Output(concat("res: ", @lue_statusCode))
+    
+    
+    insertData(
+        "Prod CPC Log DE",
+        "SubscriberKey", @sk,
+        "Product Update", "false",
+        "Newsletter", "false",
+        "Education", "false",
+        "Email", "false",
+        "Push", "false",
+        "WhatsApp", "false",
+        "Status", "Unsubscribed",
+        "DateAdded", Now(),
+        "EmailName", @emailname,
+        "EmailAddress", @emailAddr
+      )
+      
+    
+      
+      
+       if @contactSource == "MasterDE" then
+       
+       /* SAVE PREFERENCES ON DE */
+      upsertData(
+        "Prod Ellington Consent Master DE",1,
+        "SubscriberKey", @sk,
+        "Product Update", "false",
+        "Newsletter", "false",
+        "Education", "false",
+        "Email", "false",
+        "Push", "false",
+        "WhatsApp", "false",
+        "Status", "Unsubscribed"
+      )
+      endif
+      
+       if @contactSource == "Account" then
+      
+      
+      /* SAVE PREFERENCES ON Account */
+      
+      UpdateSingleSalesforceObject(
+          "Account", @sk,
+          "Subscription_Status__c","Unsubscribed",
+          "WhatsApp_Consent__c","false",
+          "Email_Consent__c","false",
+          "Push_Notification_Consent__c","false"
+         )
+         
+         
+      
+      endif
+    
+    
+     if @contactSource == "Lead" then
+      
+      
+      /* SAVE PREFERENCES ON LEAD */
+      
+      UpdateSingleSalesforceObject(
+          "Lead", @sk,
+          "Subscription_Status__c","Unsubscribed",
+          "WhatsApp_Consent__c","false",
+          "Email_Consent__c","false",
+          "Push_Notification_Consent__c","false"
+         )
+         
+         
+      
+      endif
+    endif
+    
+    ]%%
+    
+    <script runat="server">
+    Platform.Load("Core","1.1.1");
+        
+        
+    }
+    catch (e) {
+      
+      var contactKey = Variable.GetValue("@contactKey");
+      var emailAddr = Variable.GetValue("@emailAddr");
+      
+      var response = Platform.Function.InsertData("Prod CPC Log DE",["SubscriberKey","AMPError","EmailAddress"],[contactKey, String(e), emailAddr]);
+      
+    }
+        
+        </script>
