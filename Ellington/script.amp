@@ -1,0 +1,377 @@
+
+%%[
+    SET @contactKey = _SubscriberKey
+    SET @showInvalidContactAlert = "false"
+    IF EMPTY(@contactKey) THEN
+        SET @showInvalidContactAlert = "true"
+    ENDIF
+    IF NOT EMPTY(@contactKey) THEN
+        VAR @emailAddr
+        SET @emailname = emailname_
+        SET @lists = LookupRows(
+            "_ListSubscribers",
+            "SubscriberKey",
+            @contactKey,
+            "ListType",
+            "Publication List"
+        )
+        /* Count how many lists were found */
+        SET @rowCount = RowCount(@lists)
+        IF @rowCount > 0 THEN
+            /* Loop through the found lists and display their names */
+            FOR @I = 1 TO @ROWCOUNT DO
+                SET @row = Row(@lists, @i)
+                SET @listName = Field(@row, "ListName")
+                SET @status = Field(@row, "Status")
+                IF (@listName == "Product Update" AND @status == "Active") THEN
+                    SET @ProductUpdate = "True"
+                ELSEIF (@listName == "Education" AND @status == "Active") THEN
+                    SET @Education = "True"
+                ELSEIF (@listName == "Newsletter" AND @status == "Active") THEN
+                    SET @Newsletter = "True"
+                ENDIF
+            NEXT @i
+        ENDIF
+        IF Substring(@contactKey, 1, 3) == "00Q" THEN
+            SET @subscriberRows = RetrieveSalesforceObjects(
+                "Lead",
+                "Name,Id,WhatsApp_Consent__c,Email_Consent__c,Push_Notification_Consent__c,Subscription_Status__c,Reason_for_Unsubscribe__c,Unsubscribe_Other_Reason__c,Email,Communication_Preferences__c",
+                "Id",
+                "=",
+                @contactKey
+            )
+            /* Fetch From NOBL CRM - Lead */
+            /*
+            IF RowCount(@subscriberRows) > 0 THEN
+                */
+                SET @contactSource = "Lead"
+                VAR @subscriberRow, @firstName, @email
+                SET @subscriberRow = Row(@subscriberRows, 1)
+                SET @Name = Field(@subscriberRow, "Name")
+                SET @WhatsApp = Field(@subscriberRow, "WhatsApp_Consent__c")
+                SET @emailPref = Field(@subscriberRow, "Email_Consent__c")
+                SET @Push = Field(@subscriberRow, "Push_Notification_Consent__c")
+                SET @Status = Field(@subscriberRow, "Subscription_Status__c")
+                SET @Reason_for_Unsubscribe__c = IIF(EMPTY(Field(@subscriberRow, "Reason_for_Unsubscribe__c")), "Select Reason", Field(@subscriberRow, "Reason_for_Unsubscribe__c"))
+                SET @Unsubscribe_Other_Reason__c = Field(@subscriberRow, "Unsubscribe_Other_Reason__c")
+                SET @Communication_Preferences__c = Field(@subscriberRow, "Communication_Preferences__c")
+                SET @emailAddr = Field(@subscriberRow, "Email")
+            ELSEIF Substring(@contactKey, 1, 3) == "001" THEN
+                SET @AccountsubscriberRows = RetrieveSalesforceObjects(
+                    "Account",
+                    "Name,Id,WhatsApp_Consent__c,Email_Consent__c,Push_Notification_Consent__c,Reason_for_Unsubscribe__c,Unsubscribe_Other_Reason__c,PersonEmail",
+                    "Id",
+                    "=",
+                    @contactKey
+                )
+                /* Fetch From NOBL CRM - Lead */
+                /*
+                IF RowCount(@AccountsubscriberRows) > 0 THEN
+                    */
+                    SET @contactSource = "Account"
+                    VAR @AccountsubscriberRow
+                    SET @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
+                    SET @Name = Field(@AccountsubscriberRow, "Name")
+                    SET @WhatsApp = Field(@AccountsubscriberRow, "WhatsApp_Consent__c")
+                    SET @emailPref = Field(@AccountsubscriberRow, "Email_Consent__c")
+                    SET @Push = Field(@AccountsubscriberRow, "Push_Notification_Consent__c")
+                    SET @Reason_for_Unsubscribe__c = IIF(EMPTY(Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")), "Select Reason", Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))
+                    SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c")
+                    SET @emailAddr = Field(@AccountsubscriberRow, "PersonEmail")
+                ELSE
+                    /* Fetch From Master DE */
+                    SET @contactSource = "MasterDE"
+                    SET @emailAddr = Lookup("QA Ellington Consent Master DE", "EmailAddress", "SubscriberKey", @contactKey)
+                    SET @ProductUpdate = Lookup("QA Ellington Consent Master DE", "Product Update", "SubscriberKey", @contactKey)
+                    SET @Education = Lookup("QA Ellington Consent Master DE", "Education", "SubscriberKey", @contactKey)
+                    SET @Newsletter = Lookup("QA Ellington Consent Master DE", "Newsletter", "SubscriberKey", @contactKey)
+                    SET @emailPref = Lookup("QA Ellington Consent Master DE", "Email", "SubscriberKey", @contactKey)
+                    SET @WhatsApp = Lookup("QA Ellington Consent Master DE", "WhatsApp", "SubscriberKey", @contactKey)
+                    SET @Push = Lookup("QA Ellington Consent Master DE", "Push", "SubscriberKey", @contactKey)
+                    SET @Status = Lookup("QA Ellington Consent Master DE", "Status", "SubscriberKey", @contactKey)
+                    SET @Reason_for_Unsubscribe__c = Lookup("QA Ellington Consent Master DE", "Unsubscribe Reason", "SubscriberKey", @contactKey)
+                    SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason", @Reason_for_Unsubscribe__c)
+                    SET @Unsubscribe_Other_Reason__c = Lookup("QA Ellington Consent Master DE", "Unsubscribe Other Reason", "SubscriberKey", @contactKey)
+                ENDIF
+                SET @save = RequestParameter("savePref")
+                SET @resubSubmit = RequestParameter("resubSubmit")
+                /* SAVE PREFERENCES */
+                /* === Domain allowlist === */
+                SET @emailLower = Lowercase(@emailAddr)
+                SET @isAllowedDomain = IIF(IndexOf(@emailLower, "@horizontal.com") > 0 OR IndexOf(@emailLower, "@ellingtongroup.com") > 0 OR IndexOf(@emailLower, "@nobl.ae") > 0, "true", "false")
+                IF @save == "1" AND @isAllowedDomain == "true" THEN
+                    VAR @product, @newsletter, @education
+                    VAR @email, @push, @whatsapp
+                    SET @product = IIF(RequestParameter("product") == "on", "true", "false")
+                    SET @newsletter = IIF(RequestParameter("newsletter") == "on", "true", "false")
+                    SET @education = IIF(RequestParameter("education") == "on", "true", "false")
+                    SET @email = IIF(RequestParameter("email") == "on", "true", "false")
+                    SET @push = IIF(RequestParameter("push") == "on", "true", "false")
+                    SET @whatsapp = IIF(RequestParameter("whatsapp") == "on", "true", "false")
+                    IF @email == "false" THEN
+                        SET @subStatus = "Unsubscribed"
+                    ELSE
+                        SET @subStatus = "Active"
+                    ENDIF
+                    /* Ensure subscriber is Active BEFORE list updates */
+                    IF @email == "true" THEN
+                        SET @sub = CreateObject("Subscriber")
+                        SetObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SetObjectProperty(@sub, "Status", "Active")
+                        SET @options = CreateObject("UpdateOptions")
+                        SET @saveOpt = CreateObject("SaveOption")
+                        SetObjectProperty(@saveOpt, "SaveAction", "UpdateAdd")
+                        SetObjectProperty(@saveOpt, "PropertyName", "*")
+                        AddObjectArrayItem(@options, "SaveOptions", @saveOpt)
+                        SET @resub = InvokeUpdate(@sub, @rs, @rc, @options)
+                    ENDIF
+                    SET @ctaName = "Save Preferences"
+                    IF @resubSubmit == "1" THEN
+                        SET @ctaName = "Resubscribe"
+                    ENDIF
+                    insertData(
+                        "QA CPC Log DE",
+                        "SubscriberKey",
+                        @contactKey,
+                        "Page Submission",
+                        @ctaName,
+                        "Product Update",
+                        @product,
+                        "Newsletter",
+                        @newsletter,
+                        "Education",
+                        @education,
+                        "Email",
+                        @email,
+                        "Push",
+                        @push,
+                        "WhatsApp",
+                        @whatsapp,
+                        "Status",
+                        "Active",
+                        "DateAdded",
+                        Now(),
+                        "EmailAddress",
+                        @emailAddr,
+                        "EmailName",
+                        @emailname
+                    )
+                    /* FOR PRODUCT PB LIST */
+                    IF @product == "true" AND @email == "true" THEN
+                        SET @ListID = "1074"
+                        SET @sub = CreateObject("Subscriber")
+                        SETObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SET @lSub = CreateObject("SubscriberList")
+                        SETObjectProperty(@lSub, "ID", @ListID)
+                        SETObjectProperty(@lSub, "Status", "Active")
+                        AddObjectArrayItem(@sub, "Lists", @lSub)
+                        SET @updateStatus = InvokeUpdate(@sub)
+                    ELSEIF @product == "False" THEN
+                        SET @ListID = "1074"
+                        SET @sub = CreateObject("Subscriber")
+                        SETObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SET @lSub = CreateObject("SubscriberList")
+                        SETObjectProperty(@lSub, "ID", @ListID)
+                        SETObjectProperty(@lSub, "Status", "Unsubscribed")
+                        AddObjectArrayItem(@sub, "Lists", @lSub)
+                        SET @updateStatus = InvokeUpdate(@sub)
+                    ENDIF
+                    /* FOR NEWLETTER PUB LIST */
+                    IF @newsletter == "true" AND @email == "true" THEN
+                        SET @ListID = "1076"
+                        SET @sub = CreateObject("Subscriber")
+                        SETObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SET @lSub = CreateObject("SubscriberList")
+                        SETObjectProperty(@lSub, "ID", @ListID)
+                        SETObjectProperty(@lSub, "Status", "Active")
+                        AddObjectArrayItem(@sub, "Lists", @lSub)
+                        SET @updateStatus = InvokeUpdate(@sub)
+                    ELSEIF @newsletter == "False" THEN
+                        SET @ListID = "1076"
+                        SET @sub = CreateObject("Subscriber")
+                        SETObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SET @lSub = CreateObject("SubscriberList")
+                        SETObjectProperty(@lSub, "ID", @ListID)
+                        SETObjectProperty(@lSub, "Status", "Unsubscribed")
+                        AddObjectArrayItem(@sub, "Lists", @lSub)
+                        SET @updateStatus = InvokeUpdate(@sub)
+                    ENDIF
+                    /* FOR EDUCATION PUB LIST */
+                    IF @education == "true" AND @email == "true" THEN
+                        SET @ListID = "1075"
+                        SET @sub = CreateObject("Subscriber")
+                        SETObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SET @lSub = CreateObject("SubscriberList")
+                        SETObjectProperty(@lSub, "ID", @ListID)
+                        SETObjectProperty(@lSub, "Status", "Active")
+                        AddObjectArrayItem(@sub, "Lists", @lSub)
+                        SET @updateStatus = InvokeUpdate(@sub)
+                    ELSEIF @education == "False" THEN
+                        SET @ListID = "1075"
+                        SET @sub = CreateObject("Subscriber")
+                        SETObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SET @lSub = CreateObject("SubscriberList")
+                        SETObjectProperty(@lSub, "ID", @ListID)
+                        SETObjectProperty(@lSub, "Status", "Unsubscribed")
+                        AddObjectArrayItem(@sub, "Lists", @lSub)
+                        SET @updateStatus = InvokeUpdate(@sub)
+                    ENDIF
+                    SET @sub = CreateObject("Subscriber")
+                    SetObjectProperty(@sub, "SubscriberKey", @contactKey)
+                    SetObjectProperty(@sub, "Status", @subStatus)
+                    /* Create UpdateOptions */
+                    SET @options = CreateObject("UpdateOptions")
+                    SET @save = CreateObject("SaveOption")
+                    SetObjectProperty(@save, "SaveAction", "UpdateAdd")
+                    SetObjectProperty(@save, "PropertyName", "*")
+                    AddObjectArrayItem(@options, "SaveOptions", @save)
+                    /* Invoke the update */
+                    SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
+                    IF @contactSource == "Lead" THEN
+                        /* SAVE PREFERENCES ON LEAD */
+                        UpdateSingleSalesforceObject(
+                            "Lead",
+                            @contactKey,
+                            "WhatsApp_Consent__c",
+                            @whatsapp,
+                            "Email_Consent__c",
+                            @email,
+                            "Push_Notification_Consent__c",
+                            @push,
+                            "Subscription_Status__c",
+                            "Active"
+                        )
+                        SET @sub = CreateObject("Subscriber")
+                        SetObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SetObjectProperty(@sub, "Status", @subStatus)
+                        /* Create UpdateOptions */
+                        SET @options = CreateObject("UpdateOptions")
+                        SET @save = CreateObject("SaveOption")
+                        SetObjectProperty(@save, "SaveAction", "UpdateAdd")
+                        SetObjectProperty(@save, "PropertyName", "*")
+                        AddObjectArrayItem(@options, "SaveOptions", @save)
+                        /* Invoke the update */
+                        SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
+                    ELSEIF @contactSource == "Account" THEN
+                        /* SAVE PREFERENCES ON Account */
+                        UpdateSingleSalesforceObject(
+                            "Account",
+                            @contactKey,
+                            "WhatsApp_Consent__c",
+                            @whatsapp,
+                            "Email_Consent__c",
+                            @email,
+                            "Push_Notification_Consent__c",
+                            @push,
+                            "Subscription_Status__c",
+                            "Active"
+                        )
+                        SET @sub = CreateObject("Subscriber")
+                        SetObjectProperty(@sub, "SubscriberKey", @contactKey)
+                        SetObjectProperty(@sub, "Status", @subStatus)
+                        /* Create UpdateOptions */
+                        SET @options = CreateObject("UpdateOptions")
+                        SET @save = CreateObject("SaveOption")
+                        SetObjectProperty(@save, "SaveAction", "UpdateAdd")
+                        SetObjectProperty(@save, "PropertyName", "*")
+                        AddObjectArrayItem(@options, "SaveOptions", @save)
+                        /* Invoke the update */
+                        SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
+                    ELSE
+                        /* SAVE PREFERENCES IN MASTER DE*/
+                        Output(Concat("SAVE PREFERENCES IN MASTER DE", @product))
+                        upsertData(
+                            "QA Ellington Consent Master DE",
+                            1,
+                            "SubscriberKey",
+                            @contactKey,
+                            "Product Update",
+                            @product,
+                            "Newsletter",
+                            @newsletter,
+                            "Education",
+                            @education,
+                            "Email",
+                            @email,
+                            "Push",
+                            @push,
+                            "WhatsApp",
+                            @whatsapp,
+                            "Status",
+                            "Active",
+                            "DateAdded",
+                            Now()
+                        )
+                    ENDIF
+                    SET @showThankYou = "true"
+                    SET @thankYouType = "save"
+                    /* UNSUBSCRIBE */
+                ELSEIF @save == "unsub" AND @isAllowedDomain == "true" THEN
+                    SET @showThankYou = "true"
+                    SET @thankYouType = "unsub"
+                    SET @reason = RequestParameter("unsubReason")
+                    SET @otherReason = RequestParameter("unsubOther")
+                    SET @ctaName = "Submit Unsubscribe Reason"
+                    IF EMPTY(@reason) OR @reason == "Select Reason" THEN
+                        SET @reason = ""
+                    ENDIF
+                    insertData(
+                        "QA CPC Log DE",
+                        "SubscriberKey",
+                        @contactKey,
+                        "Page Submission",
+                        @ctaName,
+                        "Product Update",
+                        "false",
+                        "Newsletter",
+                        "false",
+                        "Education",
+                        "false",
+                        "Email",
+                        "false",
+                        "Push",
+                        "false",
+                        "WhatsApp",
+                        "false",
+                        "Status",
+                        "Unsubscribed",
+                        "Unsubscribe Reason",
+                        @reason,
+                        "DateAdded",
+                        Now(),
+                        "EmailAddress",
+                        @emailAddr,
+                        "EmailName",
+                        @emailname,
+                        "Unsubscribe Other Reason",
+                        @otherReason
+                    )
+                    Output(Concat("upsertData on ubsub", @contactKey))
+                    upsertData(
+                        "QA Ellington Consent Master DE",
+                        1,
+                        "SubscriberKey",
+                        @contactKey,
+                        "Product Update",
+                        "false",
+                        "Newsletter",
+                        "false",
+                        "Education",
+                        "false",
+                        "Email",
+                        "false",
+                        "Push",
+                        "false",
+                        "WhatsApp",
+                        "false",
+                        "Status",
+                        "Unsubscribed",
+                        "Unsubscribe Reason",
+                        @reason,
+                        "Unsubscribe Other Reason",
+                        @otherReason
+                    )
+                    SET @showThankYou = "true"
+                ENDIF
+            ENDIF
+]%%
