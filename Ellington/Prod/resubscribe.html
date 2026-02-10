@@ -1,123 +1,155 @@
 <script runat="server">
-    Platform.Load("Core","1.1.1");
-    
-    try {
-      
-    </script>
-    
-    %%[
-    
-    SET @sk = RequestParameter("sk")
-    SET @emailAddr = RequestParameter("email")
-    SET @emailname = RequestParameter("emailname")
-    set @contactSource = RequestParameter("contactSource")
-    
-    if not empty(@sk) then
-    
-        SET @sub = CreateObject("Subscriber")
-        SetObjectProperty(@sub, "SubscriberKey", @sk)
-        SetObjectProperty(@sub, "Status", "Active")
-        
-        /* Create UpdateOptions */
-        SET @options = CreateObject("UpdateOptions")
-        SET @save = CreateObject("SaveOption")
-        SetObjectProperty(@save, "SaveAction", "UpdateAdd")
-        SetObjectProperty(@save, "PropertyName", "*")
-        AddObjectArrayItem(@options, "SaveOptions", @save)
-    
-        /* Invoke the update */
-        SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
-        
-        
-        insertData(
-        "Prod CPC Log DE",
-        "SubscriberKey", @sk,
-        "Product Update", "True",
-        "Newsletter", "True",
-        "Education", "True",
-        "Email", "True",
-        "Push", "True",
-        "WhatsApp", "True",
-        "Status", "Active",
-        "DateAdded", Now(),
-        "EmailName", @emailname,
-        "EmailAddress", @emailAddr
-      )
-        
-        
-         if @contactSource == "MasterDE" then
-       
-       /* SAVE PREFERENCES ON DE */
-      upsertData(
-        "Prod Ellington Consent Master DE",1,
-        "SubscriberKey", @sk,
-        "Product Update", "True",
-        "Newsletter", "True",
-        "Education", "True",
-        "Email", "True",
-        "Push", "True",
-        "WhatsApp", "True",
-        "Status", "Active",
-        "Unsubscribe Reason","",
-        "Unsubscribe Other Reason",""
-      )
-      endif
-    
-    
-    if @contactSource == "Account" then
-      
-      
-      /* SAVE PREFERENCES ON Account */
-      
-      UpdateSingleSalesforceObject(
-          "Account", @sk,
-          "Subscription_Status__c","Active",
-          "WhatsApp_Consent__c","true",
-          "Email_Consent__c","true",
-          "Push_Notification_Consent__c","true",
-          "Reason_for_Unsubscribe__c","",
-          "Unsubscribe_Other_Reason__c",""
-         )
-         
-         
-      
-      endif
-    
-    
-     if @contactSource == "Lead" then
-      
-      
-      /* SAVE PREFERENCES ON LEAD */
-      
-      UpdateSingleSalesforceObject(
-          "Lead", @sk,
-          "Subscription_Status__c","Active",
-           "WhatsApp_Consent__c","true",
-          "Email_Consent__c","true",
-          "Push_Notification_Consent__c","true",
-           "Reason_for_Unsubscribe__c","",
-          "Unsubscribe_Other_Reason__c",""
-         )
-         
-         
-      
-      endif
-        endif
-        
-    ]%%
-    
-    <script runat="server">
-    Platform.Load("Core","1.1.1");
-        
-        
-    }
-    catch (e) {
-      
-      var contactKey = Variable.GetValue("@contactKey");
-      var emailAddr = Variable.GetValue("@emailAddr");
-      
-      var response = Platform.Function.InsertData("Prod CPC Log DE",["SubscriberKey","AMPError","EmailAddress"],[contactKey, String(e), emailAddr]);
-      
-    }
-        
-        </script>
+  Platform.Load("Core", "1.1.1");
+
+  try {
+
+</script>
+
+%%[
+
+SET @sk = RequestParameter("sk")
+SET @emailAddr = RequestParameter("email")
+SET @emailname = RequestParameter("emailname")
+set @contactSource = RequestParameter("contactSource")
+
+if not empty(@sk) then
+
+SET @sub = CreateObject("Subscriber")
+SetObjectProperty(@sub, "SubscriberKey", @sk)
+SetObjectProperty(@sub, "Status", "Active")
+
+/* Create UpdateOptions */
+SET @options = CreateObject("UpdateOptions")
+SET @save = CreateObject("SaveOption")
+SetObjectProperty(@save, "SaveAction", "UpdateAdd")
+SetObjectProperty(@save, "PropertyName", "*")
+AddObjectArrayItem(@options, "SaveOptions", @save)
+
+/* Invoke the update */
+SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
+
+
+insertData(
+"Prod CPC Log DE",
+"SubscriberKey", @sk,
+"Page Submission", "Resubscribe",
+"Product Update", "True",
+"Newsletter", "True",
+"Education", "True",
+"Email", "True",
+"Push", "True",
+"WhatsApp", "True",
+"Status", "Active",
+"DateAdded", Now(),
+"EmailName", @emailname,
+"EmailAddress", @emailAddr
+)
+
+
+if @contactSource == "MasterDE" then
+
+/* SAVE PREFERENCES ON DE */
+upsertData(
+"Prod Ellington Consent Master DE",1,
+"SubscriberKey", @sk,
+"Product Update", "True",
+"Newsletter", "True",
+"Education", "True",
+"Email", "True",
+"Push", "True",
+"WhatsApp", "True",
+"Status", "Active",
+"Unsubscribe Reason","",
+"Unsubscribe Other Reason",""
+)
+endif
+
+
+if @contactSource == "Account" then
+
+
+/* SAVE PREFERENCES ON Account */
+
+UpdateSingleSalesforceObject(
+"Account", @sk,
+"Subscription_Status__c","Active",
+"WhatsApp_Consent__c","true",
+"Email_Consent__c","true",
+"Push_Notification_Consent__c","true",
+"Reason_for_Unsubscribe__c","",
+"Unsubscribe_Other_Reason__c",""
+)
+
+
+
+endif
+
+
+if @contactSource == "Lead" then
+
+
+/* SAVE PREFERENCES ON LEAD */
+
+UpdateSingleSalesforceObject(
+"Lead", @sk,
+"Subscription_Status__c","Active",
+"WhatsApp_Consent__c","true",
+"Email_Consent__c","true",
+"Push_Notification_Consent__c","true",
+"Reason_for_Unsubscribe__c","",
+"Unsubscribe_Other_Reason__c",""
+)
+
+
+
+endif
+
+/* UPDATING PUBLICATION LIST */
+SET @lists = "1074,1075,1076"
+SET @rowset = BuildRowsetFromString(@lists, ",")
+
+SET @sub = CreateObject("Subscriber")
+SetObjectProperty(@sub, "SubscriberKey", @sk)
+SetObjectProperty(@sub, "Status", "Active")
+
+FOR @i = 1 TO RowCount(@rowset) DO
+SET @listId = Field(Row(@rowset, @i), 1)
+
+SET @lSub = CreateObject("SubscriberList")
+SetObjectProperty(@lSub, "ID", @listId)
+SetObjectProperty(@lSub, "Status", "Active")
+
+AddObjectArrayItem(@sub, "Lists", @lSub)
+NEXT @i
+
+/* Update with UpdateAdd */
+SET @options = CreateObject("UpdateOptions")
+SET @save = CreateObject("SaveOption")
+SetObjectProperty(@save, "SaveAction", "UpdateAdd")
+SetObjectProperty(@save, "PropertyName", "*")
+AddObjectArrayItem(@options, "SaveOptions", @save)
+
+SET @updateStatus = InvokeUpdate(@sub, @status, @errorCode, @options)
+
+
+
+
+endif
+
+]%%
+
+<script runat="server">
+    Platform.Load("Core", "1.1.1");
+
+
+  }
+  catch (e) {
+
+    var contactKey = Variable.GetValue("@contactKey");
+    var emailAddr = Variable.GetValue("@emailAddr");
+
+    var response = Platform.Function.InsertData("Prod CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
+
+  }
+
+</script>
