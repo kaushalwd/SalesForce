@@ -1,3 +1,4 @@
+
 <script runat="server">
   Platform.Load("Core", "1.1.1");
 
@@ -7,7 +8,6 @@
 
 %%[
 SET @contactKey = _SubscriberKey
-
 SET @showInvalidContactAlert = "false"
 
 IF EMPTY(@contactKey) THEN
@@ -15,6 +15,20 @@ SET @showInvalidContactAlert = "true"
 ENDIF
 
 IF NOT EMPTY(@contactKey) then
+
+SET @csrfToken = GUID()
+SET @subscriberKey = _SubscriberKey
+SET @submittedToken = RequestParameter("csrf_token")
+
+/*
+Output(Concat("  submittedToken on Load --> ",@submittedToken))
+Output(Concat("  Generated Token on Load --> ",@csrfToken))
+*/
+
+IF EMPTY(@submittedToken) THEN
+/* Store token in Data Extension */
+  UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
+ENDIF  
 
 var @emailAddr
 set @emailname = emailname_
@@ -92,7 +106,29 @@ set @Unsubscribe_Other_Reason__c = Lookup("QA Ellington Consent Master DE","Unsu
 @contactKey)
 endif
 SET @save = RequestParameter("savePref")
+SET @submittedToken = RequestParameter("csrf_token")
 SET @resubSubmit = RequestParameter("resubSubmit")
+SET @tokenFlag = 'false'
+/* Retrieve stored token */
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @subscriberKey)
+
+IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+  /* Token is valid - process form */
+  SET @tokenFlag = 'true'
+  
+  /* Delete used token */
+  DeleteData("CSRF_Tokens_DE", "SubscriberKey", @subscriberKey)
+  IF @save == 'unsub' THEN
+    UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
+  ENDIF
+  /* Process your form data here */
+    
+ELSE
+  /* Invalid token - possible CSRF attack */
+  SET @tokenFlag = 'false'
+  SET @errorMessage = "Invalid security token. Please refresh and try again."
+ENDIF
+
 /* SAVE PREFERENCES */
 
 /* === Domain allowlist === */
@@ -106,7 +142,7 @@ IndexOf(@emailLower, "@nobl.ae") > 0,
 )
 
 
-IF @save == "1" AND @isAllowedDomain == "true" THEN
+IF @save == "1" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN
 VAR @product, @newsletter, @education
 VAR @email, @push, @whatsapp
 SET @product = IIF(RequestParameter("product") == "on", "true", "false")
@@ -289,7 +325,7 @@ endif
 SET @showThankYou = "true"
 SET @thankYouType = "save"
 /* UNSUBSCRIBE */
-ELSEIF @save == "unsub" AND @isAllowedDomain == "true" THEN
+ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN
 SET @showThankYou = "true"
 SET @thankYouType = "unsub"
 SET @reason = RequestParameter("unsubReason")
@@ -355,6 +391,7 @@ endif
     Platform.Response.SetResponseHeader("X-Frame-Options", "Deny");
     Platform.Response.SetResponseHeader("X-Content-Type-Options", "nosniff");
     Platform.Response.SetResponseHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.marketing.nobl.ae ; frame-ancestors 'none'");
   </script>
 
   <style>
@@ -466,8 +503,8 @@ endif
     button.primary:hover,
     button.primary:active,
     button.primary:focus {
-      background: #0b0f1a !important;
-      color: #ffffff !important;
+      background: #0b0f1a!important;
+      color: #ffffff!important;
     }
 
     .secondary {
@@ -805,166 +842,179 @@ endif
 
   %%[ IF @showThankYou == "true" THEN ]%%
   <!-- ================= THANK YOU ================= -->
-  %%[ IF @thankYouType == "save" THEN ]%%
-  <div class="full-center thankyouPref">
-    <div class="center-card" style="padding:56px 40px; line-height:1.5">
-      <h2>Thank you
-      </h2>
-
-      <p>
-        Your email preferences have been successfully updated. <br>
-        You will now receive communications based on your updated choices. <br><br>
-        If you’d like to make further changes, you can return to your preference centre at any time.
-      </p>
-      <div class="unsubscribe-actions">
-        <button data-show-spinner="true" type="button" class="secondary" onclick="myPreferences()">My
-          Preferences</button>
-      </div>
-    </div>
-  </div>
-  %%[ ENDIF ]%%
-  %%[ IF @thankYouType == "unsub" THEN ]%%
-  <div class="full-center" id="unsubThankYou">
-    <div class="center-card" style="padding:56px 40px; line-height:1.5">
-      <h2>Sorry to see you go
-      </h2>
-
-      <p>
-        You have successfully unsubscribed from our mailing list.<br>
-        You will no longer receive promotional emails from us.<br><br>
-
-        If this was a mistake or you wish to update your preferences, you can resubscribe at any time.
-      </p>
-      <div class="unsubscribe-actions">
-        <button data-show-spinner="true" type="button" class="secondary"
-          onclick="resubscribeFromThankYou()">RESUBSCRIBE</button>
-      </div>
-    </div>
-  </div>
-  %%[ ENDIF ]%%
-  %%[ ELSE ]%%
-  %%[ IF @status == 'Unsubscribed' THEN ]%%
-  <div class="full-center thankyouPref">
-    <div class="center-card" style="padding:56px 40px; line-height:1.5">
-      <h2>You're currently unsubscribed</h2>
-      <p>
-        You are currently unsubscribed from our marketing communications. <br />To start receiving emails again, please
-        click <br />the resubscribe button below.
-      </p>
-      <div class="unsubscribe-actions">
-        <button data-show-spinner="true" type="button" class="primary" onclick="showPreferences('resubRefresh')"
-          style="width:90%">RESUBSCRIBE</button>
-      </div>
-    </div>
-  </div>
-  %%[ ELSE ]%%
-  <div class="container">
-    <form method="post">
-      <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
-      <input type="hidden" name="savePref" value="1">
-      <div class="intro" id="intro">
-        Use the options below to manage the informational updates you receive as NOBL progresses
-        through its development and regulatory journey.
-      </div>
-      <!-- ================= COMMUNICATION PREFERENCES ================= -->
-      <div id="preferences" class="preferences">
-
-        <div class="card communication">
-          <h3>Communication Preferences
-          </h3>
-          <div class="pref-row">
-            <input type="checkbox" name="product" %%[IF @ProductUpdate=="true" THEN]%%checked%%[ENDIF]%%> Product Update
-          </div>
-          <div class="pref-row">
-            <input type="checkbox" name="newsletter" %%[IF @Newsletter=="true" THEN]%%checked%%[ENDIF]%%> Newsletter
-          </div>
-          <div class="pref-row">
-            <input type="checkbox" name="education" %%[IF @Education=="true" THEN]%%checked%%[ENDIF]%%> Education
+      %%[ IF @thankYouType == "save" THEN ]%%
+      <div class="full-center thankyouPref">
+        <div class="center-card" style="padding:56px 40px; line-height:1.5">
+          <h2>Thank you
+          </h2>
+          %%[ 
+            /*
+            Output(Concat("  storedToken --> ",@storedToken))
+            Output(Concat("  csrfToken --> ",@csrfToken))
+            Output(Concat("  subscriberKey --> ",@subscriberKey))
+            Output(Concat("  subscriberKey --> ",@tokenFlag))
+            */
+           ]%%
+          <p>
+            Your email preferences have been successfully updated. <br>
+            You will now receive communications based on your updated choices. <br><br>
+            If you’d like to make further changes, you can return to your preference centre at any time.
+          </p>
+          <div class="unsubscribe-actions">
+            <button data-show-spinner="true" type="button" class="secondary" onclick="myPreferences()">My
+              Preferences</button>
           </div>
         </div>
-        <div class="card communication">
-          <h3>Channel Preferences
-          </h3>
-          <div class="pref-row">
-            <input type="checkbox" name="email" %%[IF @emailPref=="true" THEN]%%checked%%[ENDIF]%%> Email
-          </div>
-          <div class="pref-row">
-            <input type="checkbox" name="push" %%[IF @Push=="true" THEN]%%checked%%[ENDIF]%%> Push Notifications
-          </div>
-          <div class="pref-row">
-            <input type="checkbox" name="whatsapp" %%[IF @WhatsApp=="true" THEN]%%checked%%[ENDIF]%%> WhatsApp
-          </div>
-        </div>
-
-        <div class="actions">
-          %%[ IF @contactSource == 'Lead' And @status == 'Unsubscribed' THEN ]%%
-          <input type="hidden" name="resubSubmit" value="1">
-          <button type="button" class="primary w50" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
-          %%[ ELSE ]%%
-          <button type="submit" class="primary">SAVE PREFERENCES</button>
-          <button type="button" class="secondary" onclick="showUnsubscribe()">UNSUBSCRIBE FROM ALL</button>
-          %%[ ENDIF ]%%
-        </div>
       </div>
-      <div class="note" id="note">
-        This will not affect transactional or security emails.
-      </div>
-
-    </form>
-  </div>
-  <!-- ================= UNSUBSCRIBE ================= -->
-  <div id="unsubscribe" class="hidden">
-    <form method="post">
-      <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
-      <input type="hidden" name="savePref" value="unsub">
-      <input type="hidden" name="unsubOther" id="unsubOther" value="%%=v(@Unsubscribe_Other_Reason__c)=%%">
-      <input type="hidden" name="unsubReason" id="unsubReason" value="%%=v(@Reason_for_Unsubscribe__c)=%%">
-      <div class="full-center">
-        <div class="center-card">
+      %%[ ENDIF ]%%
+      %%[ IF @thankYouType == "unsub" THEN ]%%
+      <div class="full-center" id="unsubThankYou">
+        <div class="center-card" style="padding:56px 40px; line-height:1.5">
           <h2>Sorry to see you go
           </h2>
-          <p>Please confirm your reason to unsubscribe
+
+          <p>
+            You have successfully unsubscribed from our mailing list.<br>
+            You will no longer receive promotional emails from us.<br><br>
+
+            If this was a mistake or you wish to update your preferences, you can resubscribe at any time.
           </p>
-          <div class="dropdown">
-            <div class="dropdown-selected" onclick="toggleDropdown()">
-              <span id="selectedText">%%=v(@Reason_for_Unsubscribe__c)=%%</span>
-              <span>▾</span>
-            </div>
-            <div id="dropdownOptions" class="dropdown-options hidden">
-              <div class="option" onclick="selectReason('I receive too many emails')"
-                style="text-align:left; color:#707070">I receive too many emails
-              </div>
-              <div class="option" onclick="selectReason('The content is not relevant to me')"
-                style="text-align:left; color:#707070">The content is not relevant to me
-              </div>
-              <div class="option" onclick="selectReason('I’m not interested in investment updates')"
-                style="text-align:left; color:#707070">I’m not interested in investment updates
-              </div>
-              <div class="option" onclick="selectReason('I prefer not to receive marketing messages')"
-                style="text-align:left; color:#707070">I prefer not to receive marketing messages
-              </div>
-              <div class="option" onclick="selectReason('My financial priorities have changed')"
-                style="text-align:left; color:#707070">My financial priorities have changed
-              </div>
-              <div class="option" onclick="selectReason('I never subscribed to this list')"
-                style="text-align:left; color:#707070">I never subscribed to this list
-              </div>
-              <div class="option" onclick="selectReason('Other', true)" style="text-align:left; ; color:#707070">Other
-              </div>
-            </div>
-          </div>
-          <textarea id="otherText" class="hidden"
-            placeholder="Please specify">%%=v(@Unsubscribe_Other_Reason__c)=%%</textarea>
           <div class="unsubscribe-actions">
-            <button type="submit" class="primary">SUBMIT</button>
-            <button type="button" class="secondary" onclick="showPreferences()">RESUBSCRIBE</button>
+            <button data-show-spinner="true" type="button" class="secondary"
+              onclick="resubscribeFromThankYou()">RESUBSCRIBE</button>
           </div>
         </div>
       </div>
-    </form>
-  </div>
-  %%[ ENDIF ]%%
-  %%[ ENDIF ]%%
+      %%[ ENDIF ]%%
+    %%[ ELSE ]%%
+      %%[ IF @status == 'Unsubscribed' THEN ]%%
+        <div class="full-center thankyouPref">
+          <div class="center-card" style="padding:56px 40px; line-height:1.5">
+            <h2>You're currently unsubscribed</h2>
+            <p>
+              You are currently unsubscribed from our marketing communications. <br/>To start receiving emails again, please click <br />the resubscribe button below.
+            </p>
+            <div class="unsubscribe-actions">
+              <button data-show-spinner="true" type="button" class="primary" onclick="showPreferences('resubRefresh')" style="width:90%">RESUBSCRIBE</button>
+            </div>
+          </div>
+        </div>
+      %%[ ELSE ]%%
+      <div class="container">
+        <form method="post">
+          <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
+          <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
+          <input type="hidden" name="savePref" value="1">
+          <div class="intro" id="intro">
+            Use the options below to manage the informational updates you receive as NOBL progresses
+            through its development and regulatory journey.
+          </div>
+          <!-- ================= COMMUNICATION PREFERENCES ================= -->
+          <div id="preferences" class="preferences">
+
+            <div class="card communication">
+              <h3>Communication Preferences
+              </h3>
+              <div class="pref-row">
+                <input type="checkbox" name="product" %%[IF @ProductUpdate=="true" THEN]%%checked%%[ENDIF]%%> Product Update
+              </div>
+              <div class="pref-row">
+                <input type="checkbox" name="newsletter" %%[IF @Newsletter=="true" THEN]%%checked%%[ENDIF]%%> Newsletter
+              </div>
+              <div class="pref-row">
+                <input type="checkbox" name="education" %%[IF @Education=="true" THEN]%%checked%%[ENDIF]%%> Education
+              </div>
+            </div>
+            <div class="card communication">
+              <h3>Channel Preferences
+              </h3>
+              <div class="pref-row">
+                <input type="checkbox" name="email" %%[IF @emailPref=="true" THEN]%%checked%%[ENDIF]%%> Email
+              </div>
+              <div class="pref-row">
+                <input type="checkbox" name="push" %%[IF @Push=="true" THEN]%%checked%%[ENDIF]%%> Push Notifications
+              </div>
+              <div class="pref-row">
+                <input type="checkbox" name="whatsapp" %%[IF @WhatsApp=="true" THEN]%%checked%%[ENDIF]%%> WhatsApp
+              </div>
+            </div>
+            
+            <div class="actions">
+              %%[ IF @contactSource == 'Lead' And @status == 'Unsubscribed' THEN ]%%
+              <input type="hidden" name="resubSubmit" value="1">
+              <button type="button" class="primary w50" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
+              %%[ ELSE ]%%
+              <button type="submit" class="primary">SAVE PREFERENCES</button>
+              <button type="button" class="secondary" onclick="showUnsubscribe()">UNSUBSCRIBE FROM ALL</button>
+              %%[ ENDIF ]%%
+            </div>
+          </div>
+          <div class="note" id="note">
+            This will not affect transactional or security emails.
+          </div>
+
+        </form>
+      </div>
+      <!-- ================= UNSUBSCRIBE ================= -->
+      <div id="unsubscribe" class="hidden">
+        <form method="post">
+          <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
+          <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
+          <input type="hidden" name="savePref" value="unsub">
+          <input type="hidden" name="unsubOther" id="unsubOther" value="%%=v(@Unsubscribe_Other_Reason__c)=%%">
+          <input type="hidden" name="unsubReason" id="unsubReason" value="%%=v(@Reason_for_Unsubscribe__c)=%%">
+          <div class="full-center">
+            <div class="center-card">
+              <h2>Sorry to see you go
+              </h2>
+              <p>Please confirm your reason to unsubscribe
+              </p>
+              <div class="dropdown">
+                <div class="dropdown-selected" onclick="toggleDropdown()">
+                  <span id="selectedText">%%=v(@Reason_for_Unsubscribe__c)=%%</span>
+                  <span>▾</span>
+                </div>
+                <div id="dropdownOptions" class="dropdown-options hidden">
+                  <div class="option" onclick="selectReason('I receive too many emails')"
+                    style="text-align:left; color:#707070">I receive too many emails
+                  </div>
+                  <div class="option" onclick="selectReason('The content is not relevant to me')"
+                    style="text-align:left; color:#707070">The content is not relevant to me
+                  </div>
+                  <div class="option" onclick="selectReason('I’m not interested in investment updates')"
+                    style="text-align:left; color:#707070">I’m not interested in investment updates
+                  </div>
+                  <div class="option" onclick="selectReason('I prefer not to receive marketing messages')"
+                    style="text-align:left; color:#707070">I prefer not to receive marketing messages
+                  </div>
+                  <div class="option" onclick="selectReason('My financial priorities have changed')"
+                    style="text-align:left; color:#707070">My financial priorities have changed
+                  </div>
+                  <div class="option" onclick="selectReason('I never subscribed to this list')"
+                    style="text-align:left; color:#707070">I never subscribed to this list
+                  </div>
+                  <div class="option" onclick="selectReason('Other', true)" style="text-align:left; ; color:#707070">Other
+                  </div>
+                </div>
+              </div>
+              <textarea id="otherText" class="hidden"
+                placeholder="Please specify">%%=v(@Unsubscribe_Other_Reason__c)=%%</textarea>
+              <div class="unsubscribe-actions">
+                <button type="submit" class="primary">SUBMIT</button>
+                <button type="button" class="secondary" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
+                %%[ 
+                  /*
+                Output(Concat("  submittedToken on Load --> ",@submittedToken))
+                Output(Concat("  Generated Token on Load --> ",@csrfToken))  
+                */
+                ]%%          
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      %%[ ENDIF ]%%
+    %%[ ENDIF ]%%
   <script runat="server">
       Platform.Load("Core", "1.1.1");
 
@@ -1018,6 +1068,7 @@ endif
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
       if (isAllowedEmail(emailaddr)) {
         fetch("https://cloud.marketing.nobl.ae/ResubscribeQA", {
           method: "POST",
@@ -1028,12 +1079,13 @@ endif
           body: "sk=" + encodeURIComponent(subscriberKey) +
             "&email=" + encodeURIComponent(emailaddr) +
             "&emailname=" + encodeURIComponent(emailname) +
-            "&contactSource=" + encodeURIComponent(contactSource)
+            "&contactSource=" + encodeURIComponent(contactSource)+
+            "&token=" + encodeURIComponent(csrfToken)
         }
         )
           .then(response => response.text())
           .then(data => {
-            console.log("resub response:", data);
+            //console.log("resub response:", data);
             var redirectUrl = "%%=CloudPagesURL(2193)=%%" + "&ts=" + new Date().getTime();
             window.location.replace(redirectUrl);
           }
@@ -1052,6 +1104,7 @@ endif
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
       if (isAllowedEmail(emailaddr)) {
         fetch("https://cloud.marketing.nobl.ae/UnsubscribeQA", {
           method: "POST",
@@ -1062,12 +1115,13 @@ endif
           body: "sk=" + encodeURIComponent(subscriberKey) +
             "&email=" + encodeURIComponent(emailaddr) +
             "&emailname=" + encodeURIComponent(emailname) +
-            "&contactSource=" + encodeURIComponent(contactSource)
+            "&contactSource=" + encodeURIComponent(contactSource)+
+            "&token=" + encodeURIComponent(csrfToken)
         }
         )
           .then(response => response.text())
           .then(data => {
-            console.log("Unsub response:", data);
+            //console.log("Unsub response:", data);
           }
           )
           .catch(error => {
@@ -1087,14 +1141,15 @@ endif
       var loader = document.getElementById("pageLoader");
       if (loader) loader.classList.add("hidden");
 
-      if (getPar == 'resubRefresh')
-        loader.classList.remove("hidden");
-
+      if(getPar == 'resubRefresh')
+      loader.classList.remove("hidden");
+      
 
       var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
       if (isAllowedEmail(emailaddr)) {
         fetch("https://cloud.marketing.nobl.ae/ResubscribeQA", {
           method: "POST",
@@ -1105,13 +1160,15 @@ endif
           body: "sk=" + encodeURIComponent(subscriberKey) +
             "&email=" + encodeURIComponent(emailaddr) +
             "&emailname=" + encodeURIComponent(emailname) +
-            "&contactSource=" + encodeURIComponent(contactSource)
+            "&contactSource=" + encodeURIComponent(contactSource) +
+            "&token=" + encodeURIComponent(csrfToken)
         }
         )
           .then(response => response.text())
           .then(data => {
-            console.log("resub response:", data);
-            if (getPar == 'resubRefresh') {
+            //console.log("resub response:", data);
+            if(getPar == 'resubRefresh')
+            {
               window.location.reload();
             }
           }

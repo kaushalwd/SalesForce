@@ -7,13 +7,34 @@
 %%[
 
 SET @sk = RequestParameter("sk")
+SET @tokenFlag = "false"
+SET @submittedToken = RequestParameter("token")
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
 
-if not empty(@sk) then
+IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+  /* Token is valid - process form */
+  SET @tokenFlag = 'true'
+  
+  /* Delete used token */
+  DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+  
+  /* Process your form data here */
+
+  SET @csrfToken = GUID()
+  UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @sk, "Token", @storedToken, "CreatedDate", Now())
+ELSE
+  /* Invalid token - possible CSRF attack */
+  SET @tokenFlag = 'false'
+  SET @errorMessage = "Invalid security token. Please refresh and try again."
+ENDIF
+
+IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
 
 
 SET @emailAddr = RequestParameter("email")
 SET @emailname = RequestParameter("emailname")
-set @contactSource = RequestParameter("contactSource")
+SET @contactSource = RequestParameter("contactSource")
+
 
 SET @lue = CreateObject("ExecuteRequest")
 SetObjectProperty(@lue,"Name","LogUnsubEvent")

@@ -1,0 +1,47 @@
+<!--Generate a CSRF Token -->
+
+%%[
+SET @csrfToken = GUID()
+SET @subscriberKey = AttributeValue("_subscriberkey") /* or however you identify users */
+
+/* Store token in Data Extension */
+UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
+]%%
+
+<!-- Embed Token in Form -->
+
+<form method="POST" action="%%=RequestParameter('PAGEURL')=%%">
+  <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
+  
+  <input type="text" name="email" required>
+  <input type="text" name="firstname">
+  <button type="submit">Submit</button>
+</form>
+
+<!--Validate Token on Form Submission-->
+%%[
+IF RequestParameter("IsPost") == "true" THEN
+  
+  SET @submittedToken = RequestParameter("csrf_token")
+  SET @subscriberKey = AttributeValue("_subscriberkey")
+  
+  /* Retrieve stored token */
+  SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @subscriberKey)
+  
+  IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+    /* Token is valid - process form */
+    SET @email = RequestParameter("email")
+    SET @firstname = RequestParameter("firstname")
+    
+    /* Delete used token */
+    DeleteData("CSRF_Tokens_DE", "SubscriberKey", @subscriberKey)
+    
+    /* Process your form data here */
+    
+  ELSE
+    /* Invalid token - possible CSRF attack */
+    SET @errorMessage = "Invalid security token. Please refresh and try again."
+  ENDIF
+  
+ENDIF
+]%%
