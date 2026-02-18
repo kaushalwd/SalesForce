@@ -1,7 +1,7 @@
 <script runat="server">
-    Platform.Load("Core", "1.1.1");
+  Platform.Load("Core", "1.1.1");
 
-    try {
+  try {
 
 </script>
 %%[
@@ -12,20 +12,20 @@ SET @submittedToken = RequestParameter("token")
 SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
 
 IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
-  /* Token is valid - process form */
-  SET @tokenFlag = 'true'
-  
-  /* Delete used token */
-  DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
-  
-  /* Process your form data here */
+/* Token is valid - process form */
+SET @tokenFlag = 'true'
 
-  SET @csrfToken = GUID()
-  UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @sk, "Token", @storedToken, "CreatedDate", Now())
+/* Delete used token */
+DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+
+/* Process your form data here */
+
+SET @csrfToken = GUID()
+UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @sk, "Token", @storedToken, "CreatedDate", Now())
 ELSE
-  /* Invalid token - possible CSRF attack */
-  SET @tokenFlag = 'false'
-  SET @errorMessage = "Invalid security token. Please refresh and try again."
+/* Invalid token - possible CSRF attack */
+SET @tokenFlag = 'false'
+SET @errorMessage = "Invalid security token. Please refresh and try again."
 ENDIF
 
 IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
@@ -123,17 +123,17 @@ endif
 ]%%
 
 <script runat="server">
-        Platform.Load("Core", "1.1.1");
+      Platform.Load("Core", "1.1.1");
 
 
-    }
-    catch (e) {
+  }
+  catch (e) {
 
-        var contactKey = Variable.GetValue("@contactKey");
-        var emailAddr = Variable.GetValue("@emailAddr");
+      var contactKey = Variable.GetValue("@contactKey");
+      var emailAddr = Variable.GetValue("@emailAddr");
 
-        var response = Platform.Function.InsertData("QA CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
+      var response = Platform.Function.InsertData("QA CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
 
-    }
+  }
 
 </script>
