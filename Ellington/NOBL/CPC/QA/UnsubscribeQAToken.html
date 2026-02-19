@@ -1,0 +1,143 @@
+<script runat="server">
+    Platform.Load("Core", "1.1.1");
+
+    try {
+
+</script>
+%%[
+
+SET @sk = RequestParameter("sk")
+SET @accountId = ""
+SET @tokenFlag = "false"
+SET @submittedToken = RequestParameter("token")
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
+
+IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+  /* Token is valid - process form */
+  SET @tokenFlag = 'true'
+  
+  /* Delete used token */
+  DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+  
+  /* Process your form data here */
+
+  SET @csrfToken = GUID()
+  UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @sk, "Token", @storedToken, "CreatedDate", Now())
+ELSE
+  /* Invalid token - possible CSRF attack */
+  SET @tokenFlag = 'false'
+  SET @errorMessage = "Invalid security token. Please refresh and try again."
+ENDIF
+
+IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
+
+
+SET @emailAddr = RequestParameter("email")
+SET @emailname = RequestParameter("emailname")
+SET @contactSource = RequestParameter("contactSource")
+
+IF @contactSource == "Account" THEN
+  SET @accountId = RequestParameter("accountId")
+ENDIF 
+
+SET @lue = CreateObject("ExecuteRequest")
+SetObjectProperty(@lue,"Name","LogUnsubEvent")
+
+SET @lue_prop = CreateObject("APIProperty")
+SetObjectProperty(@lue_prop, "Name", "SubscriberKey")
+SetObjectProperty(@lue_prop, "Value", @sk)
+AddObjectArrayItem(@lue, "Parameters", @lue_prop)
+
+SET @lue_statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
+
+Output(concat("res: ", @lue_statusCode))
+
+
+insertData(
+"QA CPC Log DE",
+"SubscriberKey", @sk,
+"Page Submission", "Unsubscribe From All",
+"Product Update", "false",
+"Newsletter", "false",
+"Education", "false",
+"Email", "false",
+"Push", "false",
+"WhatsApp", "false",
+"Status", "Unsubscribed",
+"DateAdded", Now(),
+"EmailName", @emailname,
+"EmailAddress", @emailAddr
+)
+
+
+
+
+if @contactSource == "MasterDE" then
+
+/* SAVE PREFERENCES ON DE */
+upsertData(
+"QA Ellington Consent Master DE",1,
+"SubscriberKey", @sk,
+"Product Update", "false",
+"Newsletter", "false",
+"Education", "false",
+"Email", "false",
+"Push", "false",
+"WhatsApp", "false",
+"Status", "Unsubscribed"
+)
+endif
+
+if @contactSource == "Account" then
+
+
+/* SAVE PREFERENCES ON Account */
+
+UpdateSingleSalesforceObject(
+"Account", @accountId,
+"Subscription_Status__c","Unsubscribed",
+"WhatsApp_Consent__c","false",
+"Email_Consent__c","false",
+"Push_Notification_Consent__c","false"
+)
+
+
+
+endif
+
+
+if @contactSource == "Lead" then
+
+
+/* SAVE PREFERENCES ON LEAD */
+
+UpdateSingleSalesforceObject(
+"Lead", @sk,
+"Subscription_Status__c","Unsubscribed",
+"WhatsApp_Consent__c","false",
+"Email_Consent__c","false",
+"Push_Notification_Consent__c","false"
+)
+
+
+
+endif
+endif
+
+]%%
+
+<script runat="server">
+        Platform.Load("Core", "1.1.1");
+
+
+    }
+    catch (e) {
+
+        var contactKey = Variable.GetValue("@contactKey");
+        var emailAddr = Variable.GetValue("@emailAddr");
+
+        var response = Platform.Function.InsertData("QA CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
+
+    }
+
+</script>

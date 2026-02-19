@@ -347,7 +347,6 @@ SET @thankYouType = "unsub"
 SET @reason = RequestParameter("unsubReason")
 SET @otherReason = RequestParameter("unsubOther")
 SET @ctaName = "Submit Unsubscribe Reason"
-
 IF @reason != "Other" THEN
   SET @otherReason = ""
 ENDIF
@@ -393,26 +392,21 @@ IF @contactSource == "Lead" THEN
   "Reason_for_Unsubscribe__c", @reason,
   "Unsubscribe_Other_Reason__c", @otherReason
   )
-  /*
   Output(Concat("<br />contactKey -> ", @contactKey))
   Output(Concat("<br />contactSource -> ", @contactSource))
   Output(Concat("<br />Reason_for_Unsubscribe__c -> ", @reason))
   Output(Concat("<br />Unsubscribe_Other_Reason__c -> ", @otherReason))
-  */
 ELSEIF @contactSource == "Account" THEN
   UpdateSingleSalesforceObject(
   "Account", @accountId,
   "Reason_for_Unsubscribe__c", @reason,
   "Unsubscribe_Other_Reason__c", @otherReason
   )
-  /*
   Output(Concat("<br />accountId -> ", @accountId))
   Output(Concat("<br />contactSource -> ", @contactSource))
   Output(Concat("<br />Reason_for_Unsubscribe__c -> ", @reason))
   Output(Concat("<br />Unsubscribe_Other_Reason__c -> ", @otherReason))
-  */
 ENDIF
-
 
 SET @showThankYou = "true"
 
@@ -1101,7 +1095,7 @@ endif
       var contactSource = "%%=v(@contactSource)=%%";
       if (isAllowedEmail(emailaddr)) {
 
-        var redirectUrl = "%%=CloudPagesURL(2193)=%%" + "&ts=" + new Date().getTime();
+        var redirectUrl = "%%=CloudPagesURL(2387)=%%" + "&ts=" + new Date().getTime();
         window.location.replace(redirectUrl);
       }
     }
@@ -1120,7 +1114,7 @@ endif
         accountId = "%%=v(@AccountId)=%%";
         
       if (isAllowedEmail(emailaddr)) {
-        fetch("https://cloud.marketing.nobl.ae/ResubscribeQA", {
+        fetch("https://cloud.marketing.nobl.ae/ResubscribeQAtoken", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -1137,7 +1131,7 @@ endif
           .then(response => response.text())
           .then(data => {
             //console.log("resub response:", data);
-            var redirectUrl = "%%=CloudPagesURL(2193)=%%" + "&ts=" + new Date().getTime();
+            var redirectUrl = "%%=CloudPagesURL(2387)=%%" + "&ts=" + new Date().getTime();
             window.location.replace(redirectUrl);
           }
           )
@@ -1160,7 +1154,7 @@ endif
       if (contactSource == "Account")
         accountId = "%%=v(@AccountId)=%%";
       if (isAllowedEmail(emailaddr)) {
-        fetch("https://cloud.marketing.nobl.ae/UnsubscribeQA", {
+        fetch("https://cloud.marketing.nobl.ae/UnsubscribeQAtoken", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -1210,7 +1204,7 @@ endif
         accountId = "%%=v(@AccountId)=%%";
 
       if (isAllowedEmail(emailaddr)) {
-        fetch("https://cloud.marketing.nobl.ae/ResubscribeQA", {
+        fetch("https://cloud.marketing.nobl.ae/ResubscribeQAtoken", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
