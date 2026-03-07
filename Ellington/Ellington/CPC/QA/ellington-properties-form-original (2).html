@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ellington Properties - Update Preferences</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .logo-container {
+            padding: 30px 40px;
+            text-align: left;
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .intro-text {
+            color: #4f5555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            color: #2c3e50;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4f5555;
+        }
+
+        .property-type-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .property-btn {
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .property-btn:hover {
+            background: #f9fafb;
+        }
+
+        .property-btn.active {
+            background: #4f5555;
+            color: white;
+            border-color: #4f5555;
+        }
+
+        .purpose-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .purpose-card {
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .purpose-card:hover {
+            border-color: #4f5555;
+        }
+
+        .purpose-card.active {
+            border-color: #4f5555;
+            background: #f0f4f8;
+        }
+
+        .purpose-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .purpose-card:hover .purpose-icon {
+            color: #000;
+        }
+
+        .purpose-card.active .purpose-icon {
+            color: #000;
+        }
+
+        .purpose-label {
+            font-size: 12px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .timeframe-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .timeframe-btn {
+            padding: 10px 20px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .timeframe-btn:hover {
+            background: #f9fafb;
+        }
+
+        .timeframe-btn.active {
+            background: #4f5555;
+            color: white;
+            border-color: #4f5555;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #4f5555;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 400;
+        }
+
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #4f5555;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3d4444;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4f5555;
+            border: 1px solid #4f5555;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+
+        @media (max-width: 768px) {
+            .preferences-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 80'%3E%3Ctext x='150' y='45' font-family='Arial, sans-serif' font-size='28' font-weight='300' letter-spacing='6' text-anchor='middle' fill='%234f5555'%3EELLINGTON%3C/text%3E%3Ctext x='150' y='60' font-family='Arial, sans-serif' font-size='10' letter-spacing='3' text-anchor='middle' fill='%234f5555'%3EPROPERTIES%3C/text%3E%3C/svg%3E" alt="Ellington Properties">
+    </div>
+
+    <div class="container">
+        <p class="intro-text">
+            Please take a moment to update your preferences to ensure that you receive content from Ellington Properties that's interesting and relevant to you.
+        </p>
+
+        <!-- Profile Information -->
+        <div class="section">
+            <h2 class="section-title">Profile Information</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" value="">
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" value="Test User">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" value="meyce.alauddin@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" value="96025874166">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Country of Residence</label>
+                    <select>
+                        <option>Select Country</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nationality</label>
+                    <select>
+                        <option>Select Nationality</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Employment Type</label>
+                    <select>
+                        <option>Select...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Property Interest Information -->
+        <div class="section">
+            <h2 class="section-title">Property Interest Information</h2>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Property Type *</label>
+                <div class="property-type-buttons">
+                    <button class="property-btn">Studio</button>
+                    <button class="property-btn">1 BHK</button>
+                    <button class="property-btn">2 BHK</button>
+                    <button class="property-btn">3 BHK</button>
+                    <button class="property-btn">4 BHK</button>
+                    <button class="property-btn">Villa</button>
+                    <button class="property-btn">Penthouse</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Budget Range *</label>
+                    <select>
+                        <option>Select Budget</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Purpose of Purchase</label>
+                <div class="purpose-grid">
+                    <div class="purpose-card">
+                        <div class="purpose-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="purpose-label">Rental Returns</div>
+                    </div>
+                    <div class="purpose-card">
+                        <div class="purpose-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </div>
+                        <div class="purpose-label">Retirement</div>
+                    </div>
+                    <div class="purpose-card">
+                        <div class="purpose-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                        </div>
+                        <div class="purpose-label">Long term Gains</div>
+                    </div>
+                    <div class="purpose-card">
+                        <div class="purpose-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <circle cx="12" cy="14" r="2"></circle>
+                            </svg>
+                        </div>
+                        <div class="purpose-label">Homeownership</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>City</label>
+                <select>
+                    <option>Select City</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Preferred Areas</label>
+                <select>
+                    <option>Select Area</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Purchase Timeframe</label>
+                <div class="timeframe-buttons">
+                    <button class="timeframe-btn">Immediate</button>
+                    <button class="timeframe-btn">1 Month</button>
+                    <button class="timeframe-btn">2 Months</button>
+                    <button class="timeframe-btn">6 Months</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="section">
+            <h2 class="section-title">Preferences</h2>
+            
+            <div class="preferences-grid">
+                <div>
+                    <label style="margin-bottom: 15px; display: block;">Publication Preferences</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="weekly" checked>
+                            <label for="weekly">Weekly Highlights</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="personalized" checked>
+                            <label for="personalized">Personalized Recommendations</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="projects" checked>
+                            <label for="projects">New Project Launches</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="essential" checked>
+                            <label for="essential">Essential Updates Only</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="margin-bottom: 15px; display: block;">Channel Preference</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="email" checked>
+                            <label for="email">Email</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="whatsapp" checked>
+                            <label for="whatsapp">WhatsApp</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="push" checked>
+                            <label for="push">Push Notifications</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Meeting -->
+        <div class="section">
+            <h2 class="section-title">Schedule Meeting</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date">
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-primary" style="min-width: 150px; padding: 12px 30px;">Schedule Meeting</button>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <button class="btn btn-primary">Save Changes</button>
+            <button class="btn btn-secondary">Unsubscribe All</button>
+        </div>
+    </div>
+
+    <script>
+        // Property type buttons
+        document.querySelectorAll('.property-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        // Purpose cards
+        document.querySelectorAll('.purpose-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        // Timeframe buttons
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

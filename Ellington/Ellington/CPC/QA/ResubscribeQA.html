@@ -1,0 +1,162 @@
+<script runat="server">
+  Platform.Load("Core","1.1.1");
+  try {
+</script>
+%%[
+  SET @sk = RequestParameter("sk")
+  SET @accountId = ""
+  SET @emailAddr = RequestParameter("email")
+  SET @emailname = RequestParameter("emailname")
+  set @contactSource = RequestParameter("contactSource")
+  /* IF @contactSource == "Account" THEN
+    SET @accountId = RequestParameter("accountId")
+  ENDIF
+  */
+  SET @AccountsubscriberRows = RetrieveSalesforceObjects(
+          "Account",
+          "Id, PersonContactId",
+          "PersonContactId", "=", @sk
+      )
+  SET @rowCount = RowCount(@AccountsubscriberRows)
+  IF @rowCount > 0 THEN
+      SET @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
+      SET @accountId = Field(@AccountsubscriberRow, "Id")
+      SET @contactSource = "Account"
+  ELSE
+      SET @accountId = ""
+  ENDIF    
+/*
+SET @tokenFlag = "false"
+  SET @submittedToken = RequestParameter("token")
+  SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
+  IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+    SET @tokenFlag = 'true'
+    DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+  ELSE
+    SET @tokenFlag = 'false'
+    SET @errorMessage = "Invalid security token. Please refresh and try again."
+  ENDIF
+*/
+
+SET @tokenFlag = "true"
+/* output(Concat('SubscribErkEy->', @sk, '---Email->', @emailAddr, '=== Contact Source -->', @contactSource)) */
+
+  IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
+      SET @sub = CreateObject("Subscriber")
+      SetObjectProperty(@sub, "SubscriberKey", @sk)
+      SetObjectProperty(@sub, "Status", "Active")
+      /* Create UpdateOptions */
+      SET @options = CreateObject("UpdateOptions")
+      SET @save = CreateObject("SaveOption")
+      SetObjectProperty(@save, "SaveAction", "UpdateAdd")
+      SetObjectProperty(@save, "PropertyName", "*")
+      AddObjectArrayItem(@options, "SaveOptions", @save)
+      /* Invoke the update */
+      SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
+      SET @checkFlag = 0
+     /* output(concat('---All SUBS Update ---', @update_sub)) */
+      ================   CPC LOG DE ==================== */   
+      
+      set @createR = insertData(
+      "CPC Log DE",
+      "SubscriberKey", @sk,
+      "Page Submission", "Resubscribe",
+      "Weekly Highlight", "True",
+      "Personalized Recommendation", "True",
+      "New Project Launches", "True",
+      "Essential Updates Only", "True",
+      "Email", "True",
+      "Push", "True",
+      "WhatsApp", "True",
+      "Status", "Active",
+      "DateAdded", Now(),
+      "EmailName", @emailname,
+      "EmailAddress", @emailAddr
+    )
+     /* output(concat('---CPC log  ---', @createR))
+     ================   CRM UpdateE ==================== */
+     
+     if @contactSource == "Account" then
+    /* SAVE PREFERENCES ON Account */
+    set @updateCRM = UpdateSingleSalesforceObject(
+        "Account", @accountId,
+        "Status__c","Active",
+        "WhatsApp__c",1,
+        "PersonHasOptedOutOfEmail",1,
+        "Push_Notifications__c",1,
+        "Weekly_Highlights__c", "true",
+        "Personalized_Recommendations__c", "true",
+        "Essential_Updates_Only__c", "true",
+        "New_Project_Launches__c", "true",
+        "Reason_for_Unsubscribe__c","",
+        "Unsubscribe_Other_Reason__c",""
+       )
+      SET @checkFlag = 1
+    endif
+   if @contactSource == "Lead" then
+    /* SAVE PREFERENCES ON LEAD */
+    set @updateCRM = UpdateSingleSalesforceObject(
+        "Lead", @sk,
+        "Status__c","Active",
+        "WhatsApp__c","true",
+        "HasOptedOutOfEmail", "true",
+        "Push_Notifications__c","true",
+        "Weekly_Highlights__c", "true",
+        "Personalized_Recommendations__c", "true",
+        "Essential_Updates_Only__c", "true",
+        "New_Project_Launches__c", "true",
+        "Reason_for_Unsubscribe__c","",
+        "Unsubscribe_Other_Reason__c",""
+       )
+    endif
+    Output(Concat("Check Flag in Account",@checkFlag))
+    /* output(concat('---CRM log  ---', @updateCRM))
+     ================   CRM UpdateE ==================== */
+     
+  /*  UPDATING PUBLICATION LIST  */
+   /* Create Subscriber object */
+    SET @subObj = CreateObject("Subscriber")
+    SetObjectProperty(@subObj, "SubscriberKey", @sk)
+
+    /* === LIST 1104 === */
+    SET @listObj = CreateObject("SubscriberList")
+    SetObjectProperty(@listObj, "ID", "1104")
+    SetObjectProperty(@listObj, "Status", "Active")
+    AddObjectArrayItem(@subObj, "Lists", @listObj)
+
+    /* === LIST 1105 === */
+    SET @listObj = CreateObject("SubscriberList")
+    SetObjectProperty(@listObj, "ID", "1105")
+    SetObjectProperty(@listObj, "Status", "Active")
+    AddObjectArrayItem(@subObj, "Lists", @listObj)
+
+    /* === LIST 1106 === */
+    SET @listObj = CreateObject("SubscriberList")
+    SetObjectProperty(@listObj, "ID", "1106")
+    SetObjectProperty(@listObj, "Status", "Active")
+    AddObjectArrayItem(@subObj, "Lists", @listObj)
+
+    /* === LIST 1107 === */
+    SET @listObj = CreateObject("SubscriberList")
+    SetObjectProperty(@listObj, "ID", "1107")
+    SetObjectProperty(@listObj, "Status", "Active")
+    AddObjectArrayItem(@subObj, "Lists", @listObj)
+
+    /* Single Update */
+    SET @result = InvokeUpdate(@subObj, @updateStatus)
+ 
+ 
+
+
+     
+  ENDIF
+]%%
+<script runat="server">
+  Platform.Load("Core","1.1.1");
+  }
+  catch (e) {
+    var contactKey = Variable.GetValue("@contactKey");
+    var emailAddr = Variable.GetValue("@emailAddr");
+    var response = Platform.Function.InsertData("QA CPC Log DE",["SubscriberKey","AMPError","EmailAddress"],[contactKey, String(e), emailAddr]);
+  }
+</script>

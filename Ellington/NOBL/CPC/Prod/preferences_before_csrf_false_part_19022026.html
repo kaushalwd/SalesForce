@@ -111,20 +111,18 @@ endif
 SET @save = RequestParameter("savePref")
 SET @submittedToken = RequestParameter("csrf_token")
 SET @resubSubmit = RequestParameter("resubSubmit")
-SET @chkSubKey = RequestParameter("sk")
-SET @tokenFlag = ''
-
+SET @tokenFlag = 'false'
 /* Retrieve stored token */
-SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @chkSubKey)
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @subscriberKey)
 
 IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
 /* Token is valid - process form */
 SET @tokenFlag = 'true'
 
 /* Delete used token */
-DeleteData("CSRF_Tokens_DE", "SubscriberKey", @chkSubKey)
+DeleteData("CSRF_Tokens_DE", "SubscriberKey", @subscriberKey)
 IF @save == 'unsub' THEN
-UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @chkSubKey, "Token", @csrfToken, "CreatedDate", Now())
+UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
 ENDIF
 /* Process your form data here */
 
@@ -195,7 +193,7 @@ insertData(
 "Email", @email,
 "Push", @push,
 "WhatsApp", @whatsapp,
-"Status", @subStatus,
+"Status",  @subStatus,
 "DateAdded", Now(),
 "EmailAddress", @emailAddr,
 "EmailName", @emailname
@@ -347,7 +345,7 @@ SET @otherReason = RequestParameter("unsubOther")
 SET @ctaName = "Submit Unsubscribe Reason"
 
 IF @reason != "Other" THEN
-SET @otherReason = "-"
+SET @otherReason = ""
 ENDIF
 
 IF EMPTY(@reason) OR @reason == "Select Reason" THEN
@@ -412,12 +410,6 @@ ENDIF
 
 
 SET @showThankYou = "true"
-ELSE
-IF (@save == "1" OR @save == 'unsub') AND @tokenFlag == "false" THEN
-/*Output(Concat("<br /><strong>Error:</strong>", @errorMessage))*/
-SET @errorStyle = "display:block"
-SET @outerWrepperStyle = "display:none"
-ENDIF
 
 
 
@@ -738,17 +730,6 @@ endif
       width: 50%;
     }
 
-    #csrf-alert {
-      display: none;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 16px 18px;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-
     .alert {
       display: flex;
       align-items: flex-start;
@@ -885,458 +866,443 @@ endif
           src="http://image.marketing.nobl.ae/lib/fe27117373640474721175/m/1/a3a57391-f6ab-4cba-b5f3-5c2849ec24f7.png"></a>
     </div>
   </header>
+
+  %%[ IF @showInvalidContactAlert == "true" THEN ]%%
   <div class="container">
-    <div class="alert-warning" id="csrf-alert" role="alert" style="%%=v(@errorStyle)=%%">
+    <div class="alert alert-warning" role="alert">
       <span class="alert-icon">⚠️</span>
       <div class="alert-content">
-        <strong class="">Invalid security token. Please refresh and try again.</strong>
+        <strong>Action Required</strong>
+        <p>
+          Please return to the preference page using the link provided in our most
+          recent email communication to update your preferences.
+        </p>
       </div>
     </div>
   </div>
-  <div class="outer-container" id="outer-container" style="%%=v(@outerWrepperStyle)=%%">
-    %%[ IF @showInvalidContactAlert == "true" THEN ]%%
-    <div class="container">
-      <div class="alert alert-warning" role="alert">
-        <span class="alert-icon">⚠️</span>
-        <div class="alert-content">
-          <strong>Action Required</strong>
-          <p>
-            Please return to the preference page using the link provided in our most
-            recent email communication to update your preferences.
+  %%[ ENDIF ]%%
+
+
+
+  %%[ IF @showThankYou == "true" THEN ]%%
+  <!-- ================= THANK YOU ================= -->
+  %%[ IF @thankYouType == "save" THEN ]%%
+  <div class="full-center thankyouPref">
+    <div class="center-card" style="padding:56px 40px; line-height:1.5">
+      <h2>Thank you
+      </h2>
+
+      <p>
+        Your email preferences have been successfully updated. <br>
+        You will now receive communications based on your updated choices. <br><br>
+        If you’d like to make further changes, you can return to your preference centre at any time.
+      </p>
+      <div class="unsubscribe-actions">
+        <button data-show-spinner="true" type="button" class="secondary" onclick="myPreferences()">My
+          Preferences</button>
+      </div>
+    </div>
+  </div>
+  %%[ ENDIF ]%%
+  %%[ IF @thankYouType == "unsub" THEN ]%%
+  <div class="full-center" id="unsubThankYou">
+    <div class="center-card" style="padding:56px 40px; line-height:1.5">
+      <h2>Sorry to see you go
+      </h2>
+
+      <p>
+        You have successfully unsubscribed from our mailing list.<br>
+        You will no longer receive promotional emails from us.<br><br>
+
+        If this was a mistake or you wish to update your preferences, you can resubscribe at any time.
+      </p>
+      <div class="unsubscribe-actions">
+        <button data-show-spinner="true" type="button" class="secondary"
+          onclick="resubscribeFromThankYou()">RESUBSCRIBE</button>
+      </div>
+    </div>
+  </div>
+  %%[ ENDIF ]%%
+  %%[ ELSE ]%%
+  %%[ IF @status == 'Unsubscribed' THEN ]%%
+  <div class="full-center thankyouPref">
+    <div class="center-card" style="padding:56px 40px; line-height:1.5">
+      <h2>You're currently unsubscribed</h2>
+      <p>
+        You are currently unsubscribed from our marketing communications. <br />To start receiving emails again, please
+        click <br />the resubscribe button below.
+      </p>
+      <div class="unsubscribe-actions">
+        <button data-show-spinner="true" type="button" class="primary" onclick="showPreferences('resubRefresh')"
+          style="width:90%">RESUBSCRIBE</button>
+      </div>
+    </div>
+  </div>
+  %%[ ELSE ]%%
+  <div class="container">
+    <form method="post">
+      <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
+      <input type="hidden" name="savePref" value="1">
+      <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
+      <div class="intro" id="intro">
+        Use the options below to manage the informational updates you receive as NOBL progresses
+        through its development and regulatory journey.
+      </div>
+      <!-- ================= COMMUNICATION PREFERENCES ================= -->
+      <div id="preferences" class="preferences">
+
+        <div class="card communication">
+          <h3>Communication Preferences
+          </h3>
+          <div class="pref-row">
+            <input type="checkbox" name="product" %%[IF @ProductUpdate=="true" THEN]%%checked%%[ENDIF]%%> Product Update
+          </div>
+          <div class="pref-row">
+            <input type="checkbox" name="newsletter" %%[IF @Newsletter=="true" THEN]%%checked%%[ENDIF]%%> Newsletter
+          </div>
+          <div class="pref-row">
+            <input type="checkbox" name="education" %%[IF @Education=="true" THEN]%%checked%%[ENDIF]%%> Education
+          </div>
+        </div>
+        <div class="card communication">
+          <h3>Channel Preferences
+          </h3>
+          <div class="pref-row">
+            <input type="checkbox" name="email" %%[IF @emailPref=="true" THEN]%%checked%%[ENDIF]%%> Email
+          </div>
+          <div class="pref-row">
+            <input type="checkbox" name="push" %%[IF @Push=="true" THEN]%%checked%%[ENDIF]%%> Push Notifications
+          </div>
+          <div class="pref-row">
+            <input type="checkbox" name="whatsapp" %%[IF @WhatsApp=="true" THEN]%%checked%%[ENDIF]%%> WhatsApp
+          </div>
+        </div>
+
+        <div class="actions">
+          %%[ IF @contactSource == 'Lead' And @status == 'Unsubscribed' THEN ]%%
+          <input type="hidden" name="resubSubmit" value="1">
+          <button type="button" class="primary w50" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
+          %%[ ELSE ]%%
+          <button type="submit" class="primary">SAVE PREFERENCES</button>
+          <button type="button" class="secondary" onclick="showUnsubscribe()">UNSUBSCRIBE FROM ALL</button>
+          %%[ ENDIF ]%%
+        </div>
+      </div>
+      <div class="note" id="note">
+        This will not affect transactional or security emails.
+      </div>
+
+    </form>
+  </div>
+  <!-- ================= UNSUBSCRIBE ================= -->
+  <div id="unsubscribe" class="hidden">
+    <form method="post">
+      <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
+      <input type="hidden" name="savePref" value="unsub">
+      <input type="hidden" name="unsubOther" id="unsubOther" value="%%=v(@Unsubscribe_Other_Reason__c)=%%">
+      <input type="hidden" name="unsubReason" id="unsubReason" value="%%=v(@Reason_for_Unsubscribe__c)=%%">
+      <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
+      <div class="full-center">
+        <div class="center-card">
+          <h2>Sorry to see you go
+          </h2>
+          <p>Please confirm your reason to unsubscribe
           </p>
-        </div>
-      </div>
-    </div>
-    %%[ ENDIF ]%%
-
-
-
-    %%[ IF @showThankYou == "true" THEN ]%%
-    <!-- ================= THANK YOU ================= -->
-    %%[ IF @thankYouType == "save" THEN ]%%
-    <div class="full-center thankyouPref">
-      <div class="center-card" style="padding:56px 40px; line-height:1.5">
-        <h2>Thank you
-        </h2>
-
-        <p>
-          Your email preferences have been successfully updated. <br>
-          You will now receive communications based on your updated choices. <br><br>
-          If you’d like to make further changes, you can return to your preference centre at any time.
-        </p>
-        <div class="unsubscribe-actions">
-          <button data-show-spinner="true" type="button" class="secondary" onclick="myPreferences()">My
-            Preferences</button>
-        </div>
-      </div>
-    </div>
-    %%[ ENDIF ]%%
-    %%[ IF @thankYouType == "unsub" THEN ]%%
-    <div class="full-center" id="unsubThankYou">
-      <div class="center-card" style="padding:56px 40px; line-height:1.5">
-        <h2>Sorry to see you go
-        </h2>
-
-        <p>
-          You have successfully unsubscribed from our mailing list.<br>
-          You will no longer receive promotional emails from us.<br><br>
-
-          If this was a mistake or you wish to update your preferences, you can resubscribe at any time.
-        </p>
-        <div class="unsubscribe-actions">
-          <button data-show-spinner="true" type="button" class="secondary"
-            onclick="resubscribeFromThankYou()">RESUBSCRIBE</button>
-        </div>
-      </div>
-    </div>
-    %%[ ENDIF ]%%
-    %%[ ELSE ]%%
-    %%[ IF @status == 'Unsubscribed' THEN ]%%
-    <div class="full-center thankyouPref">
-      <div class="center-card" style="padding:56px 40px; line-height:1.5">
-        <h2>You're currently unsubscribed</h2>
-        <p>
-          You are currently unsubscribed from our marketing communications. <br />To start receiving emails again,
-          please
-          click <br />the resubscribe button below.
-        </p>
-        <div class="unsubscribe-actions">
-          <button data-show-spinner="true" type="button" class="primary" onclick="showPreferences('resubRefresh')"
-            style="width:90%">RESUBSCRIBE</button>
-        </div>
-      </div>
-    </div>
-    %%[ ELSE ]%%
-    <div class="container">
-      <form method="post">
-        <input type="hidden" id="sk" name="sk" value="%%=v(@subscriberkey)=%%">
-        <input type="hidden" name="savePref" value="1">
-        <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
-        <div class="intro" id="intro">
-          Use the options below to manage the informational updates you receive as NOBL progresses
-          through its development and regulatory journey.
-        </div>
-        <!-- ================= COMMUNICATION PREFERENCES ================= -->
-        <div id="preferences" class="preferences">
-
-          <div class="card communication">
-            <h3>Communication Preferences
-            </h3>
-            <div class="pref-row">
-              <input type="checkbox" name="product" %%[IF @ProductUpdate=="true" THEN]%%checked%%[ENDIF]%%> Product
-              Update
+          <div class="dropdown">
+            <div class="dropdown-selected" onclick="toggleDropdown()">
+              <span id="selectedText">%%=v(@Reason_for_Unsubscribe__c)=%%</span>
+              <span>▾</span>
             </div>
-            <div class="pref-row">
-              <input type="checkbox" name="newsletter" %%[IF @Newsletter=="true" THEN]%%checked%%[ENDIF]%%> Newsletter
-            </div>
-            <div class="pref-row">
-              <input type="checkbox" name="education" %%[IF @Education=="true" THEN]%%checked%%[ENDIF]%%> Education
-            </div>
-          </div>
-          <div class="card communication">
-            <h3>Channel Preferences
-            </h3>
-            <div class="pref-row">
-              <input type="checkbox" name="email" %%[IF @emailPref=="true" THEN]%%checked%%[ENDIF]%%> Email
-            </div>
-            <div class="pref-row">
-              <input type="checkbox" name="push" %%[IF @Push=="true" THEN]%%checked%%[ENDIF]%%> Push Notifications
-            </div>
-            <div class="pref-row">
-              <input type="checkbox" name="whatsapp" %%[IF @WhatsApp=="true" THEN]%%checked%%[ENDIF]%%> WhatsApp
-            </div>
-          </div>
-
-          <div class="actions">
-            %%[ IF @contactSource == 'Lead' And @status == 'Unsubscribed' THEN ]%%
-            <input type="hidden" name="resubSubmit" value="1">
-            <button type="button" class="primary w50" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
-            %%[ ELSE ]%%
-            <button type="submit" class="primary">SAVE PREFERENCES</button>
-            <button type="button" class="secondary" onclick="showUnsubscribe()">UNSUBSCRIBE FROM ALL</button>
-            %%[ ENDIF ]%%
-          </div>
-        </div>
-        <div class="note" id="note">
-          This will not affect transactional or security emails.
-        </div>
-
-      </form>
-    </div>
-    <!-- ================= UNSUBSCRIBE ================= -->
-    <div id="unsubscribe" class="hidden">
-      <form method="post">
-        <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
-        <input type="hidden" name="savePref" value="unsub">
-        <input type="hidden" name="unsubOther" id="unsubOther" value="%%=v(@Unsubscribe_Other_Reason__c)=%%">
-        <input type="hidden" name="unsubReason" id="unsubReason" value="%%=v(@Reason_for_Unsubscribe__c)=%%">
-        <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
-        <div class="full-center">
-          <div class="center-card">
-            <h2>Sorry to see you go
-            </h2>
-            <p>Please confirm your reason to unsubscribe
-            </p>
-            <div class="dropdown">
-              <div class="dropdown-selected" onclick="toggleDropdown()">
-                <span id="selectedText">%%=v(@Reason_for_Unsubscribe__c)=%%</span>
-                <span>▾</span>
+            <div id="dropdownOptions" class="dropdown-options hidden">
+              <div class="option" onclick="selectReason('I receive too many emails')"
+                style="text-align:left; color:#707070">I receive too many emails
               </div>
-              <div id="dropdownOptions" class="dropdown-options hidden">
-                <div class="option" onclick="selectReason('I receive too many emails')"
-                  style="text-align:left; color:#707070">I receive too many emails
-                </div>
-                <div class="option" onclick="selectReason('The content is not relevant to me')"
-                  style="text-align:left; color:#707070">The content is not relevant to me
-                </div>
-                <div class="option" onclick="selectReason('I’m not interested in investment updates')"
-                  style="text-align:left; color:#707070">I’m not interested in investment updates
-                </div>
-                <div class="option" onclick="selectReason('I prefer not to receive marketing messages')"
-                  style="text-align:left; color:#707070">I prefer not to receive marketing messages
-                </div>
-                <div class="option" onclick="selectReason('My financial priorities have changed')"
-                  style="text-align:left; color:#707070">My financial priorities have changed
-                </div>
-                <div class="option" onclick="selectReason('I never subscribed to this list')"
-                  style="text-align:left; color:#707070">I never subscribed to this list
-                </div>
-                <div class="option" onclick="selectReason('Other', true)" style="text-align:left; ; color:#707070">Other
-                </div>
+              <div class="option" onclick="selectReason('The content is not relevant to me')"
+                style="text-align:left; color:#707070">The content is not relevant to me
+              </div>
+              <div class="option" onclick="selectReason('I’m not interested in investment updates')"
+                style="text-align:left; color:#707070">I’m not interested in investment updates
+              </div>
+              <div class="option" onclick="selectReason('I prefer not to receive marketing messages')"
+                style="text-align:left; color:#707070">I prefer not to receive marketing messages
+              </div>
+              <div class="option" onclick="selectReason('My financial priorities have changed')"
+                style="text-align:left; color:#707070">My financial priorities have changed
+              </div>
+              <div class="option" onclick="selectReason('I never subscribed to this list')"
+                style="text-align:left; color:#707070">I never subscribed to this list
+              </div>
+              <div class="option" onclick="selectReason('Other', true)" style="text-align:left; ; color:#707070">Other
               </div>
             </div>
-            <textarea id="otherText" class="hidden"
-              placeholder="Please specify">%%=v(@Unsubscribe_Other_Reason__c)=%%</textarea>
-            <div class="unsubscribe-actions">
-              <button type="submit" class="primary">SUBMIT</button>
-              <button type="button" class="secondary" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
-            </div>
+          </div>
+          <textarea id="otherText" class="hidden"
+            placeholder="Please specify">%%=v(@Unsubscribe_Other_Reason__c)=%%</textarea>
+          <div class="unsubscribe-actions">
+            <button type="submit" class="primary">SUBMIT</button>
+            <button type="button" class="secondary" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
           </div>
         </div>
-      </form>
-    </div>
-    %%[ ENDIF ]%%
-    %%[ ENDIF ]%%
+      </div>
+    </form>
+  </div>
+  %%[ ENDIF ]%%
+  %%[ ENDIF ]%%
 
-    <script runat="server">
-        Platform.Load("Core", "1.1.1");
+  <script runat="server">
+      Platform.Load("Core", "1.1.1");
 
 
-      }
-      catch (e) {
+    }
+    catch (e) {
 
-        var contactKey = Variable.GetValue("@contactKey");
-        var emailAddr = Variable.GetValue("@emailAddr");
+      var contactKey = Variable.GetValue("@contactKey");
+      var emailAddr = Variable.GetValue("@emailAddr");
 
-        var response = Platform.Function.InsertData("Prod CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
+      var response = Platform.Function.InsertData("Prod CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
 
-      }
+    }
 
-    </script>
-    <script>
+  </script>
+  <script>
+    var subscriberKey = "%%=v(@contactKey)=%%";
+    var emailaddr = "%%=v(@emailAddr)=%%";
+    var emailname = "%%=v(@emailname)=%%";
+    var contactSource = "%%=v(@contactSource)=%%";
+
+
+    function isAllowedEmail(email) {
+      if (!email) return false;
+      const e = email.toLowerCase();
+      return (
+        e.includes("@horizontal.com") ||
+        e.includes("@ellingtongroup.com") ||
+        e.includes("@nobl.ae")
+      );
+    }
+
+
+    function myPreferences() {
+      showSpinner();
       var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
-
-
-      function isAllowedEmail(email) {
-        if (!email) return false;
-        const e = email.toLowerCase();
-        return (
-          e.includes("@horizontal.com") ||
-          e.includes("@ellingtongroup.com") ||
-          e.includes("@nobl.ae")
-        );
+      if (isAllowedEmail(emailaddr)) {
+        var redirectUrl = "%%=CloudPagesURL(2327)=%%" + "&ts=" + new Date().getTime();
+        window.location.replace(redirectUrl);
       }
+    }
 
 
-      function myPreferences() {
-        showSpinner();
-        var subscriberKey = "%%=v(@contactKey)=%%";
-        var emailaddr = "%%=v(@emailAddr)=%%";
-        var emailname = "%%=v(@emailname)=%%";
-        var contactSource = "%%=v(@contactSource)=%%";
-        if (isAllowedEmail(emailaddr)) {
-          var redirectUrl = "%%=CloudPagesURL(2327)=%%" + "&ts=" + new Date().getTime();
-          window.location.replace(redirectUrl);
+
+    function resubscribeFromThankYou() {
+      showSpinner();
+      var subscriberKey = "%%=v(@contactKey)=%%";
+      var emailaddr = "%%=v(@emailAddr)=%%";
+      var emailname = "%%=v(@emailname)=%%";
+      var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
+      var accountId = "";
+      if (contactSource == "Account")
+        accountId = "%%=v(@AccountId)=%%";
+
+      if (isAllowedEmail(emailaddr)) {
+        fetch("https://cloud.marketing.nobl.ae/Resubscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+          ,
+          body: "sk=" + encodeURIComponent(subscriberKey) +
+            "&accountId=" + encodeURIComponent(accountId) +
+            "&email=" + encodeURIComponent(emailaddr) +
+            "&emailname=" + encodeURIComponent(emailname) +
+            "&contactSource=" + encodeURIComponent(contactSource) +
+            "&token=" + encodeURIComponent(csrfToken)
+
         }
-      }
-
-
-
-      function resubscribeFromThankYou() {
-        showSpinner();
-        var subscriberKey = "%%=v(@contactKey)=%%";
-        var emailaddr = "%%=v(@emailAddr)=%%";
-        var emailname = "%%=v(@emailname)=%%";
-        var contactSource = "%%=v(@contactSource)=%%";
-        var csrfToken = "%%=v(@csrfToken)=%%";
-        var accountId = "";
-        if (contactSource == "Account")
-          accountId = "%%=v(@AccountId)=%%";
-
-        if (isAllowedEmail(emailaddr)) {
-          fetch("https://cloud.marketing.nobl.ae/Resubscribe", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-            ,
-            body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId) +
-              "&email=" + encodeURIComponent(emailaddr) +
-              "&emailname=" + encodeURIComponent(emailname) +
-              "&contactSource=" + encodeURIComponent(contactSource) +
-              "&token=" + encodeURIComponent(csrfToken)
-
+        )
+          .then(response => response.text())
+          .then(data => {
+            console.log("resub response:", data);
+            var redirectUrl = "%%=CloudPagesURL(2327)=%%" + "&ts=" + new Date().getTime();
+            window.location.replace(redirectUrl);
           }
           )
-            .then(response => response.text())
-            .then(data => {
-              console.log("resub response:", data);
-              var redirectUrl = "%%=CloudPagesURL(2327)=%%" + "&ts=" + new Date().getTime();
-              window.location.replace(redirectUrl);
-            }
-            )
-            .catch(error => {
-              console.error("resub error:", error);
-            }
-            );
+          .catch(error => {
+            console.error("resub error:", error);
+          }
+          );
+
+      }
+    }
+
+    function showUnsubscribe() {
+      var subscriberKey = "%%=v(@contactKey)=%%";
+      var emailaddr = "%%=v(@emailAddr)=%%";
+      var emailname = "%%=v(@emailname)=%%";
+      var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
+      var accountId = "";
+      if (contactSource == "Account")
+        accountId = "%%=v(@AccountId)=%%";
+
+      if (isAllowedEmail(emailaddr)) {
+        fetch("https://cloud.marketing.nobl.ae/Unsubscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+          ,
+          body: "sk=" + encodeURIComponent(subscriberKey) +
+            "&accountId=" + encodeURIComponent(accountId) +
+            "&email=" + encodeURIComponent(emailaddr) +
+            "&emailname=" + encodeURIComponent(emailname) +
+            "&contactSource=" + encodeURIComponent(contactSource) +
+            "&token=" + encodeURIComponent(csrfToken)
 
         }
-      }
-
-      function showUnsubscribe() {
-        var subscriberKey = document.getElementById("sk").value;
-        var emailaddr = "%%=v(@emailAddr)=%%";
-        var emailname = "%%=v(@emailname)=%%";
-        var contactSource = "%%=v(@contactSource)=%%";
-        var csrfToken = "%%=v(@csrfToken)=%%";
-        var accountId = "";
-        if (contactSource == "Account")
-          accountId = "%%=v(@AccountId)=%%";
-
-        if (isAllowedEmail(emailaddr)) {
-          fetch("https://cloud.marketing.nobl.ae/Unsubscribe", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-            ,
-            body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId) +
-              "&email=" + encodeURIComponent(emailaddr) +
-              "&emailname=" + encodeURIComponent(emailname) +
-              "&contactSource=" + encodeURIComponent(contactSource) +
-              "&token=" + encodeURIComponent(csrfToken)
-
+        )
+          .then(response => response.text())
+          .then(data => {
+            console.log("Unsub response:", data);
           }
           )
-            .then(response => response.text())
-            .then(data => {
-              //console.log("Unsub response:", data);
-              if (data.includes("csrf-alert")) {
-                document.getElementById("csrf-alert").style.display = "block";
-                document.getElementById("outer-container").style.display = "none";
-              }
-            }
-            )
-            .catch(error => {
-              console.error("Unsub error:", error);
-            }
-            );
-          document.getElementById("preferences").classList.add("hidden");
-          document.getElementById("intro").classList.add("hidden");
-          document.getElementById("note").classList.add("hidden");
-          document.getElementById("unsubscribe").classList.remove("hidden");
-          document.getElementById("otherText").value = "";
-          document.getElementById("pageLoader").classList.add("hidden");
-        }
-      }
-      function showPreferences(getPar) {
-
-
-        var loader = document.getElementById("pageLoader");
-        if (loader) loader.classList.add("hidden");
-
-        if (getPar == 'resubRefresh')
-          loader.classList.remove("hidden");
-
-        var subscriberKey = "%%=v(@contactKey)=%%";
-        var emailaddr = "%%=v(@emailAddr)=%%";
-        var emailname = "%%=v(@emailname)=%%";
-        var contactSource = "%%=v(@contactSource)=%%";
-        var csrfToken = "%%=v(@csrfToken)=%%";
-        var accountId = "";
-        if (contactSource == "Account")
-          accountId = "%%=v(@AccountId)=%%";
-
-        if (isAllowedEmail(emailaddr)) {
-          fetch("https://cloud.marketing.nobl.ae/Resubscribe", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-            ,
-            body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId) +
-              "&email=" + encodeURIComponent(emailaddr) +
-              "&emailname=" + encodeURIComponent(emailname) +
-              "&contactSource=" + encodeURIComponent(contactSource) +
-              "&token=" + encodeURIComponent(csrfToken)
-
+          .catch(error => {
+            console.error("Unsub error:", error);
           }
-          )
-            .then(response => response.text())
-            .then(data => {
-              console.log("resub response:", data);
-              if (getPar == 'resubRefresh') {
-                window.location.reload();
-              }
-            }
-            )
-            .catch(error => {
-              console.error("resub error:", error);
-            }
-            );
-          document.getElementById("unsubscribe").classList.add("hidden");
-          document.getElementById("preferences").classList.remove("hidden");
-          document.getElementById("intro").classList.remove("hidden");
-          document.getElementById("note").classList.remove("hidden");
-        }
-      }
-      function toggleDropdown() {
-        document.getElementById("dropdownOptions").classList.toggle("hidden");
-      }
-      function selectReason(text, isOther = false) {
-        document.getElementById("selectedText").innerText = text;
-        document.getElementById("dropdownOptions").classList.add("hidden");
-        // Store value for AMPscript
-        document.getElementById("unsubReason").value = text;
-        const otherBox = document.getElementById("otherText");
-        if (isOther) {
-          otherBox.classList.remove("hidden");
-          otherBox.focus();
-        }
-        else {
-          otherBox.classList.add("hidden");
-          document.getElementById("unsubOther").value = "";
-        }
-      }
-      // Capture "Other" text
-      document.getElementById("otherText").addEventListener("input", function () {
-        document.getElementById("unsubOther").value = this.value;
-      }
-      );
-      document.addEventListener("DOMContentLoaded", function () {
-        var displayReason = "%%=v(@Reason_for_Unsubscribe__c)=%%";
-        if (displayReason && displayReason !== "Select Reason") {
-          document.getElementById("selectedText").innerText = displayReason;
-          document.getElementById("unsubReason").value = displayReason;
-          if (displayReason === "Other") {
-            document.getElementById("otherText").classList.remove("hidden");
-          }
-        }
-      }
-      );
-      document.addEventListener("click", function (e) {
-        const dropdown = document.querySelector(".dropdown");
-        if (dropdown && !dropdown.contains(e.target)) {
-          document.getElementById("dropdownOptions").classList.add("hidden");
-        }
-      }
-      );
-
-
-
-      function showSpinner() {
-        document.getElementById("pageLoader").classList.remove("hidden");
-      }
-
-      /* Show spinner on ALL form submits */
-      document.querySelectorAll("form").forEach(function (form) {
-        form.addEventListener("submit", function () {
-          showSpinner();
-        });
-      });
-
-      /* Only show spinner for REAL navigations */
-      document.querySelectorAll("[data-show-spinner='true']").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          showSpinner();
-        });
-      });
-
-
-      /* Hide spinner once page is fully loaded */
-      window.addEventListener("load", function () {
+          );
+        document.getElementById("preferences").classList.add("hidden");
+        document.getElementById("intro").classList.add("hidden");
+        document.getElementById("note").classList.add("hidden");
+        document.getElementById("unsubscribe").classList.remove("hidden");
+        document.getElementById("otherText").value = "";
         document.getElementById("pageLoader").classList.add("hidden");
+      }
+    }
+    function showPreferences(getPar) {
+
+
+      var loader = document.getElementById("pageLoader");
+      if (loader) loader.classList.add("hidden");
+
+      if (getPar == 'resubRefresh')
+        loader.classList.remove("hidden");
+
+      var subscriberKey = "%%=v(@contactKey)=%%";
+      var emailaddr = "%%=v(@emailAddr)=%%";
+      var emailname = "%%=v(@emailname)=%%";
+      var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
+      var accountId = "";
+      if (contactSource == "Account")
+        accountId = "%%=v(@AccountId)=%%";
+
+      if (isAllowedEmail(emailaddr)) {
+        fetch("https://cloud.marketing.nobl.ae/Resubscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+          ,
+          body: "sk=" + encodeURIComponent(subscriberKey) +
+            "&accountId=" + encodeURIComponent(accountId) +
+            "&email=" + encodeURIComponent(emailaddr) +
+            "&emailname=" + encodeURIComponent(emailname) +
+            "&contactSource=" + encodeURIComponent(contactSource) +
+            "&token=" + encodeURIComponent(csrfToken)
+
+        }
+        )
+          .then(response => response.text())
+          .then(data => {
+            console.log("resub response:", data);
+            if (getPar == 'resubRefresh') {
+              window.location.reload();
+            }
+          }
+          )
+          .catch(error => {
+            console.error("resub error:", error);
+          }
+          );
+        document.getElementById("unsubscribe").classList.add("hidden");
+        document.getElementById("preferences").classList.remove("hidden");
+        document.getElementById("intro").classList.remove("hidden");
+        document.getElementById("note").classList.remove("hidden");
+      }
+    }
+    function toggleDropdown() {
+      document.getElementById("dropdownOptions").classList.toggle("hidden");
+    }
+    function selectReason(text, isOther = false) {
+      document.getElementById("selectedText").innerText = text;
+      document.getElementById("dropdownOptions").classList.add("hidden");
+      // Store value for AMPscript
+      document.getElementById("unsubReason").value = text;
+      const otherBox = document.getElementById("otherText");
+      if (isOther) {
+        otherBox.classList.remove("hidden");
+        otherBox.focus();
+      }
+      else {
+        otherBox.classList.add("hidden");
+        document.getElementById("unsubOther").value = "";
+      }
+    }
+    // Capture "Other" text
+    document.getElementById("otherText").addEventListener("input", function () {
+      document.getElementById("unsubOther").value = this.value;
+    }
+    );
+    document.addEventListener("DOMContentLoaded", function () {
+      var displayReason = "%%=v(@Reason_for_Unsubscribe__c)=%%";
+      if (displayReason && displayReason !== "Select Reason") {
+        document.getElementById("selectedText").innerText = displayReason;
+        document.getElementById("unsubReason").value = displayReason;
+        if (displayReason === "Other") {
+          document.getElementById("otherText").classList.remove("hidden");
+        }
+      }
+    }
+    );
+    document.addEventListener("click", function (e) {
+      const dropdown = document.querySelector(".dropdown");
+      if (dropdown && !dropdown.contains(e.target)) {
+        document.getElementById("dropdownOptions").classList.add("hidden");
+      }
+    }
+    );
+
+
+
+    function showSpinner() {
+      document.getElementById("pageLoader").classList.remove("hidden");
+    }
+
+    /* Show spinner on ALL form submits */
+    document.querySelectorAll("form").forEach(function (form) {
+      form.addEventListener("submit", function () {
+        showSpinner();
       });
+    });
+
+    /* Only show spinner for REAL navigations */
+    document.querySelectorAll("[data-show-spinner='true']").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        showSpinner();
+      });
+    });
 
 
-    </script>
-  </div>
+    /* Hide spinner once page is fully loaded */
+    window.addEventListener("load", function () {
+      document.getElementById("pageLoader").classList.add("hidden");
+    });
+
+
+  </script>
 </body>
 
 </html>

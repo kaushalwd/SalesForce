@@ -50,7 +50,9 @@ IF NOT EMPTY(@sk) THEN
 
   SET @lue_statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
 
-  /*Output(concat("res: ", @lue_statusCode))*/
+  Output(concat("res: ", @lue_statusCode))
+
+  
   InsertData("CPC Log DE",
         "SubscriberKey", @sk,
         "Page Submission", "Unsubscribe From All",
@@ -66,23 +68,30 @@ IF NOT EMPTY(@sk) THEN
         "DateAdded", Now(),
         "EmailName", @emailname
         )
-
+  SET @checkFlag = 0
   IF @contactSource == "Account" THEN
     /* SAVE PREFERENCES ON Account */
-    Output("Account Update")
     UpdateSingleSalesforceObject(
     "Account", @accountId,
-    "WhatsApp__c","false",
-    "PersonHasOptedOutOfEmail",0,
-    "Push_Notifications__c","false",
-    "Reason_for_Unsubscribe__c","",
-    "Unsubscribe_Other_Reason__c",""
+    "PersonHasOptedOutOfEmail", 0,
+    "WhatsApp__c", 0,
+    "Push_Notifications__c", 0,
+    "Weekly_Highlights__c", 0,
+    "Personalized_Recommendations__c", 0,
+    "Essential_Updates_Only__c", 0,
+    "New_Project_Launches__c", 0
     )
+    UpdateSingleSalesforceObject(
+    "Account", @accountId,
+    "PersonHasOptedOutOfEmail", 0
+    )
+    SET @checkFlag = @accountId
     /*"Status__c","Unsubscribed",*/
   ENDIF
 
   IF @contactSource == "Lead" THEN
     /* SAVE PREFERENCES ON LEAD */
+
     UpdateSingleSalesforceObject(
     "Lead", @sk,
     "Status__c","Unsubscribed",
@@ -98,13 +107,11 @@ ELSE
   Output(concat("csrf-alert: ", @errorMessage))
   ENDIF
 ENDIF
-
+Output(Concat("Check Flag",@checkFlag))
 ]%%
 
 <script runat="server">
     Platform.Load("Core", "1.1.1");
-
-
   }
   catch (e) {
 

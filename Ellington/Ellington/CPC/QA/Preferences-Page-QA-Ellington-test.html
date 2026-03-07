@@ -33,7 +33,7 @@ IF NOT EMPTY(@contactKey) THEN
   SET @emailname = emailname_
 
   SET @save = RequestParameter("savePref")
-  /* Output(Concat("<br />savePref -> ", @save)) */
+  Output(Concat("<br />savePref -> ", @save))
 
   /* Getting Publication Lists status */
   
@@ -95,20 +95,21 @@ IF NOT EMPTY(@contactKey) THEN
       "Account",
       "FirstName, LastName, Id, Phone, PersonEmail,  PersonContactId, Country__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c",
       "PersonContactId", "=", @contactKey )
+
       
       SET @LeadAccountsubscriberRows = RetrieveSalesforceObjects(
-          "Lead",
-          "Id, Account__c",
-          "Account__c", "=", @contactKey
-      )
-      SET @rowCount = RowCount(@LeadAccountsubscriberRows)
-      IF @rowCount > 0 THEN
-          SET @LeadAccountsubscriberRow = Row(@LeadAccountsubscriberRows, 1)
-          SET @leadId = Field(@LeadAccountsubscriberRow, "Id")
+      "Lead",
+      "Id, Account__c",
+      "Account__c", "=", @contactKey )
+      SET @LeadAccountsubscriberRow = Row(@LeadAccountsubscriberRows, 1) 
+
+      IF @LeadAccountsubscriberRow != 0 THEN 
+        SET @leadId = Field(@LeadAccountsubscriberRow, "Id")
       ELSE
-          SET @leadId = ""
+        SET @leadId = ""
       ENDIF
 
+      SET @leadId = ""
       SET @contactSource = "Account"
       SET @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
       SET @accountId = Field(@AccountsubscriberRow, "Id")
@@ -122,8 +123,8 @@ IF NOT EMPTY(@contactKey) THEN
       SET @employmentType = Field(@AccountsubscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@AccountsubscriberRow, "Interested_Property_Type__c")
       SET @budget = Field(@AccountsubscriberRow, "Budget__c")
-      SET @purposeOfInvestment = Field(@AccountsubscriberRow, "Purpose_of_Investment__c")
-      /*SET @purposeOfInvestment = ""*/
+      /* SET @purposeOfInvestment = Field(@subscriberRow, "Purpose_of_Investment__c") */
+      SET @purposeOfInvestment = ""
       SET @preferredAreas = Field(@AccountsubscriberRow, "Preferred_Areas__c")
       SET @purchaseTimeframe = Field(@AccountsubscriberRow, "Purchase_Timeframe__c")
 
@@ -182,26 +183,26 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
     SET @preferredAreas = RequestParameter("area")
     SET @purchaseTimeframe = RequestParameter("timeFrame")
 
-    SET @weeklyHighlights = IIF(RequestParameter("WeeklyHighlights") == "on", "Active", "Unsubscribed")
-    SET @personalizedRecommendations = IIF(RequestParameter("PersonalizedRecommendations") == "on", "Active", "Unsubscribed")
-    SET @newProjectLaunches = IIF(RequestParameter("NewProjectLaunches") == "on", "Active", "Unsubscribed")
-    SET @essentialUpdatesOnly = IIF(RequestParameter("EssentialUpdatesOnly") == "on", "Active", "Unsubscribed")
+    SET @weeklyHighlights = IIF(RequestParameter("WeeklyHighlights") == "on", "Active", "Unsubscribe")
+    SET @personalizedRecommendations = IIF(RequestParameter("PersonalizedRecommendations") == "on", "Active", "Unsubscribe")
+    SET @newProjectLaunches = IIF(RequestParameter("NewProjectLaunches") == "on", "Active", "Unsubscribe")
+    SET @essentialUpdatesOnly = IIF(RequestParameter("EssentialUpdatesOnly") == "on", "Active", "Unsubscribe")
    
-    /* SET @emailPref = IIF(RequestParameter("emailPref") == "on", "true", "false") */
-    SET @emailPref = IIF(RequestParameter("emailPref") == "on", 1, 0) 
+    SET @emailPref = IIF(RequestParameter("emailPref") == "on", "true", "false")
+       /* SET @emailPref = IIF(RequestParameter("emailPref") == "on", 1, 0) */
     SET @push = IIF(RequestParameter("push") == "on", "true", "false")
     SET @whatsApp = IIF(RequestParameter("whatsApp") == "on", "true", "false")
     
     SET @meetingDate = RequestParameter("meetingDate")
     SET @meetingTime = RequestParameter("time-slot")
 
-    IF @emailPref == "false" OR @emailPref == 0 THEN
+    IF @emailPref == "false" THEN
       SET @subStatus = "Unsubscribed"
     ELSE
       SET @subStatus = "Active"
     ENDIF
 
-    IF (@emailPref == "false" OR @emailPref == 0) AND @push == "false" AND @whatsApp == "false" THEN
+    IF @emailPref == "false" and @push == "false" and @whatsApp == "false" THEN
       SET @crmSubStatus = "Unsubscribed"
     ELSE
       SET @crmSubStatus = "Active"
@@ -359,18 +360,15 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
     ELSEIF Substring(@contactKey, 1, 3) == "003" OR @leadStatus == "Converted" THEN 
       /* Lead Id, not Converted OR  Contact Id */
       Output(Concat("<br />Inside Accont: ", @accountId))
-      
-      UpdateSingleSalesforceObject(
+       UpdateSingleSalesforceObject(
       "Account", @accountId,
       "Country__c", @country,
       "Nationality__c", @nationality,
       "Employment_Type__c", @employmentType,
-      "Interested_Property_Type__c", @interestedPropertyType,
-      "Purpose_of_Investment__c", @purposeOfInvestment,
-      "Preferred_Areas__c", @preferredAreas,
+      "Budget__c", @budget,
       "Purchase_Timeframe__c", @purchaseTimeframe,
       "WhatsApp__c", @whatsApp,
-      "PersonHasOptedOutOfEmail", @emailStatus,
+      "PersonHasOptedOutOfEmail", @emailPref,
       "Push_Notifications__c",@push,
       "Weekly_Highlights__c", @weeklyHighlights,
       "Personalized_Recommendations__c", @personalizedRecommendations,
@@ -380,19 +378,16 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
       "Reason_for_Unsubscribe__c","",
       "Unsubscribe_Other_Reason__c",""
       )
-      
       IF @leadId != "" THEN
         UpdateSingleSalesforceObject(
         "Lead", @leadId,
         "Country__c", @country,
         "Nationality__c", @nationality,
         "Employment_Type__c", @employmentType,
-        "Interested_Property_Type__c", @interestedPropertyType,
-        "Purpose_of_Investment__c", @purposeOfInvestment,
-        "Preferred_Areas__c", @preferredAreas,
+        "Budget__c", @budget,
         "Purchase_Timeframe__c", @purchaseTimeframe,
         "WhatsApp__c", @whatsApp,
-        "HasOptedOutOfEmail", @emailStatus,
+        "HasOptedOutOfEmail", @emailPref,
         "Push_Notifications__c", @push,
         "Weekly_Highlights__c", @weeklyHighlights,
         "Personalized_Recommendations__c", @personalizedRecommendations,
@@ -413,7 +408,7 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
         SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
       ENDIF  
     ENDIF
-    /*"Budget__c", @budget,*/
+    
     SET @sub = CreateObject("Subscriber")
     SetObjectProperty(@sub, "SubscriberKey", @contactKey)
     SetObjectProperty(@sub, "Status", @subStatus)
@@ -442,7 +437,6 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
       SET @thankYouType = "unsub"
       SET @reason = RequestParameter("unsubReason")
       SET @otherReason = RequestParameter("unsubOther")
-      SET @emailAddr = RequestParameter("email")
       SET @ctaName = "Submit Unsubscribe Reason"
 
       IF EMPTY(@reason) OR @reason == "Select Reason" THEN
@@ -485,6 +479,9 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
       ELSEIF @contactSource == "Account" THEN
         UpdateSingleSalesforceObject(
         "Account", @accountId,
+        "WhatsApp__c", "false",
+        "PersonHasOptedOutOfEmail", "false",
+        "Push_Notifications__c", "false",
         "Reason_for_Unsubscribe__c", @reason,
         "Unsubscribe_Other_Reason__c", @otherReason
         )
@@ -1182,55 +1179,54 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
               </h3>
               <div class="pref-row long-block">
                 <label>Property Type<sup class="value-required">*</sup></label>
-                <input type="text" id="propertyType" name="propertyType" value="%%=v(@interestedPropertyType)=%%" required="required" class="makeItSmall" />
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'studio','active','')=%%" data-value="Studio">Studio</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '1 bhk','active','')=%%" data-value="1 BHK">1 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '2 bhk','active','')=%%" data-value="2 BHK">2 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '3 bhk','active','')=%%" data-value="3 BHK">3 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '4 bhk','active','')=%%" data-value="4 BHK">4 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'villa','active','')=%%" data-value="Villa">Villa</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'penthouse','active','')=%%" data-value="Penthouse">Penthouse</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'townhouse','active','')=%%" data-value="Townhouse">Townhouse</div>
+                <input type="text" id="propertyType" name="propertyType" required="required" class="makeItSmall" />
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), 'studio') > 0,'active','')=%%" data-value="Studio">Studio</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), '1 bhk') > 0,'active','')=%%" data-value="1 BHK">1 BHK</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), '2 bhk') > 0,'active','')=%%" data-value="2 BHK">2 BHK</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), '3 bhk') > 0,'active','')=%%" data-value="3 BHK">3 BHK</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), '4 bhk') > 0,'active','')=%%" data-value="4 BHK">4 BHK</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), 'villa') > 0,'active','')=%%" data-value="Villa">Villa</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), 'penthouse') > 0,'active','')=%%" data-value="Penthouse">Penthouse</div>
+                <div class="prop-box %%=IIF(IndexOf(Lowercase(@interestedPropertyType), 'townhouse') > 0,'active','')=%%" data-value="Townhouse">Townhouse</div>
                 
               </div>
               <div class="pref-row long-block">
                 <label>Budget Range<sup class="value-required">*</sup></label>
                 <select class="form-control" name="budget" id="budget" required="required">
                   <option value="">Select Budget</option>
-                  <option value="Less than 500k AED" %%=IIF(@budget == 'Less than 500k AED','selected','')=%% >Less than 500k AED</option>
-                  <option value="Between 500k to 1 Mn" %%=IIF(@budget == 'Between 500k to 1 Mn','selected','')=%% >Between 500k to 1 Mn</option>
-                  <option value="Between 1 Mn to 1.5 Mn" %%=IIF(@budget == 'Between 1 Mn to 1.5 Mn','selected','')=%% >1 Mn to 1.5 Mn</option>
-                  <option value="Between 1.5 Mn to 2 Mn" %%=IIF(@budget == 'Between 1.5 Mn to 2 Mn','selected','')=%% >1.5 Mn to 2 Mn</option>
-                  <option value="Between 2 Mn to 2.5 Mn" %%=IIF(@budget == 'Between 2 Mn to 2.5 Mn','selected','')=%% >2 Mn to 2.5 Mn</option>
-                  <option value="Between 2.5 Mn to 3 Mn" %%=IIF(@budget == 'Between 2.5 Mn to 3 Mn','selected','')=%% >2.5 Mn to 3 Mn</option>
-                  <option value="Between 1 Mn to 3 Mn"   %%=IIF(@budget == 'Between 1 Mn to 3 Mn','selected','')=%% >1 Mn to 3 Mn</option>
-                  <option value="Between 3 Mn to 3.5 Mn" %%=IIF(@budget == 'Between 3 Mn to 3.5 Mn','selected','')=%% >3 Mn to 3.5 Mn</option>
-                  <option value="Between 3.5 Mn to 4 Mn" %%=IIF(@budget == 'Between 3.5 Mn to 4 Mn','selected','')=%% >3.5 Mn to 4 Mn</option>
-                  <option value="Between 4 Mn to 4.5 Mn" %%=IIF(@budget == 'Between 4 Mn to 4.5 Mn','selected','')=%% >4 Mn to 4.5 Mn</option>
-                  <option value="Between 4.5 Mn to 5 Mn" %%=IIF(@budget == 'Between 4.5 Mn to 5 Mn','selected','')=%% >4.5 Mn to 5 Mn</option>
-                  <option value="Between 3 Mn to 5 Mn"   %%=IIF(@budget == 'Between 3 Mn to 5 Mn','selected','')=%% >3 Mn to 5 Mn</option>
-                  <option value="More than 5 Mn" %%=IIF(@budget == 'More than 5 Mn','selected','')=%% >More than 5 Mn</option>
+                  <!-- Assuming @budget contains the selected value (e.g., "1 Mn to 1.5 Mn") -->
+                <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_1.5_mn','Between 1 Mn to 1.5 Mn')=%%"    %%=IIF(@budget == '1 Mn to 1.5 Mn','selected','')=%% >1 Mn to 1.5 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_1.5_Mn_to_2_mn','Between 1.5 Mn to 2 Mn')=%%"    %%=IIF(@budget == '1.5 Mn to 2 Mn','selected','')=%% >1.5 Mn to 2 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_2_Mn_to_2.5_mn','Between 2 Mn to 2.5 Mn')=%%"    %%=IIF(@budget == '2 Mn to 2.5 Mn','selected','')=%% >2 Mn to 2.5 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_2.5_Mn_to_3_mn','Between 2.5 Mn to 3 Mn')=%%"   %%=IIF(@budget == '2.5 Mn to 3 Mn','selected','')=%% >2.5 Mn to 3 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_3_mn','Between 1 Mn to 3 Mn')=%%"      %%=IIF(@budget == '1 Mn to 3 Mn','selected','')=%% >1 Mn to 3 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_3.5_mn','Between 3 Mn to 3.5 Mn')=%%"    %%=IIF(@budget == '3 Mn to 3.5 Mn','selected','')=%% >3 Mn to 3.5 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_3.5_mn_to_4_mn','Between 3.5 Mn to 4 Mn')=%%"    %%=IIF(@budget == '3.5 Mn to 4 Mn','selected','')=%% >3.5 Mn to 4 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_4_mn_to_4.5_mn','Between 4 Mn to 4.5 Mn')=%%"    %%=IIF(@budget == '4 Mn to 4.5 Mn','selected','')=%% >4 Mn to 4.5 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_4.5_mn_to_5_mn','Between 4.5 Mn to 5 Mn')=%%"    %%=IIF(@budget == '4.5 Mn to 5 Mn','selected','')=%% >4.5 Mn to 5 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_5_mn','Between 3 Mn to 5 Mn')=%%"      %%=IIF(@budget == '3 Mn to 5 Mn','selected','')=%% >3 Mn to 5 Mn</option>
+                <option value="%%=IIF(@contactSource == 'Lead','more_than_5_mn','More than 5 Mn')=%%"    %%=IIF(@budget == 'More than 5 Mn','selected','')=%% >More than 5 Mn</option>
                 </select> 
               </div>
               <div class="pref-row long-block">
                 <label>Purpose of Purchase</label>
-                <input type="hidden" id="purposeOfPurchase" name="purposeOfPurchase" class="makeItSmall" value="%%=v(@purposeOfInvestment)=%%" />
-                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'rental returns','active','')=%%" data-value="Rental Returns"><div class="purpose-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <input type="hidden" id="purposeOfPurchase" name="purposeOfPurchase" class="makeItSmall" />
+                <div class="purchase-box %%=IIF(IndexOf(Lowercase(@purposeOfInvestment), 'rental returns') > 0,'active','')=%%" data-value="Rental Returns"><div class="purpose-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                             </svg></div><span>Rental Returns</span></div>
-                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'retirement','active','')=%%" data-value="Retirement"><div class="purpose-icon">
+                <div class="purchase-box %%=IIF(IndexOf(Lowercase(@purposeOfInvestment), 'retirement') > 0,'active','')=%%" data-value="Retirement"><div class="purpose-icon">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
                             </svg>
                         </div><span>Retirement</span></div>
-                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'long term gains','active','')=%%" data-value="Long term Gains"><div class="purpose-icon">
+                <div class="purchase-box %%=IIF(IndexOf(Lowercase(@purposeOfInvestment), 'long term gains') > 0,'active','')=%%" data-value="Long term Gains"><div class="purpose-icon">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
                             </svg>
                         </div><span>Long term Gains</span></div>
-                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'homeownership','active','')=%%" data-value="Homeownership"><div class="purpose-icon">
+                <div class="purchase-box %%=IIF(IndexOf(Lowercase(@purposeOfInvestment), 'homeownership') > 0,'active','')=%%" data-value="Homeownership"><div class="purpose-icon">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                 <circle cx="12" cy="14" r="2"></circle>
@@ -1242,7 +1238,7 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
                 <div class="multi-select">
                   <!-- Visible Select Box -->
                   <div class="select-box" onclick="toggleDropdown()" id="selectBox">
-                    %%=Iif(not Empty(@preferredAreas), Replace(@preferredAreas,";",", "), "Select Area")=%%
+                    %%=Iif(not Empty(@preferredAreas), @preferredAreas, "Select Area")=%%
                   </div>
                   <!-- Dropdown with Checkboxes -->
                   <div class="checkbox-dropdown" id="checkboxDropdown">
@@ -1367,9 +1363,7 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
         <div id="unsubscribe" class="hidden">
           <form method="post">
             <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
-            <input type="hidden" name="accountId" value="%%=v(@accountId)=%%">
             <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
-            <input type="hidden" name="email" value="%%=v(@emailAddr)=%%">
             <input type="hidden" name="savePref" value="unsub">
             <input type="hidden" name="unsubOther" id="unsubOther" value="%%=v(@Unsubscribe_Other_Reason__c)=%%">
             <input type="hidden" name="unsubReason" id="unsubReason" value="%%=v(@Reason_for_Unsubscribe__c)=%%">
@@ -1519,7 +1513,6 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
       function resubscribeFromThankYou() {
         showSpinner();
         var subscriberKey = "%%=v(@contactKey)=%%";
-        var accountId = "%%=v(@accountId)=%%";
         var emailaddr = "%%=v(@emailAddr)=%%";
         var emailname = "%%=v(@emailname)=%%";
         var contactSource = "%%=v(@contactSource)=%%";
@@ -1532,7 +1525,6 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
             }
             ,
             body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId)+
               "&email=" + encodeURIComponent(emailaddr) +
               "&emailname=" + encodeURIComponent(emailname) +
               "&contactSource=" + encodeURIComponent(contactSource)+
@@ -1557,7 +1549,6 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
   
       function showUnsubscribe() {
         var subscriberKey = "%%=v(@contactKey)=%%";
-        var accountId = "%%=v(@accountId)=%%";
         var emailaddr = "%%=v(@emailAddr)=%%";
         var emailname = "%%=v(@emailname)=%%";
         var contactSource = "%%=v(@contactSource)=%%";
@@ -1570,7 +1561,6 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
             }
             ,
             body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId)+
               "&email=" + encodeURIComponent(emailaddr) +
               "&emailname=" + encodeURIComponent(emailname) +
               "&contactSource=" + encodeURIComponent(contactSource)+
@@ -1579,7 +1569,7 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
           )
             .then(response => response.text())
             .then(data => {
-              console.log("Unsub response:", data);
+              //console.log("Unsub response:", data);
             }
             )
             .catch(error => {
@@ -1604,11 +1594,10 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
         if (loader) loader.classList.add("hidden");
   
         if(getPar == 'resubRefresh')
-          loader.classList.remove("hidden");
+        loader.classList.remove("hidden");
         
   
         var subscriberKey = "%%=v(@contactKey)=%%";
-        var accountId = "%%=v(@accountId)=%%";
         var emailaddr = "%%=v(@emailAddr)=%%";
         var emailname = "%%=v(@emailname)=%%";
         var contactSource = "%%=v(@contactSource)=%%";
@@ -1621,7 +1610,6 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
             }
             ,
             body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId) +
               "&email=" + encodeURIComponent(emailaddr) +
               "&emailname=" + encodeURIComponent(emailname) +
               "&contactSource=" + encodeURIComponent(contactSource) +
@@ -1714,23 +1702,28 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
         document.getElementById("pageLoader").classList.add("hidden");
       });
   
-      document.querySelectorAll('.propType').forEach(btn => {
-          btn.addEventListener('click', function() {
+      const propertyTypeField = document.getElementById('propertyType');
+        document.querySelectorAll('.prop-box').forEach(box => {
+            box.addEventListener('click', function () {
 
-              // Remove active from all
-              document.querySelectorAll('.propType')
-                  .forEach(b => b.classList.remove('active'));
+                // Remove active class from all boxes
+                document.querySelectorAll('.prop-box').forEach(el => {
+                    el.classList.remove('active');
+                });
 
-              // Add active to clicked
-              this.classList.add('active');
+                // Add active class to clicked box
+                this.classList.add('active');
 
-              // Get value from data attribute
-              const selectedValue = this.getAttribute('data-value');
+                // Get selected value
+                const selectedValue = this.dataset.value;
 
-              // Set value to hidden field
-              document.getElementById('propertyType').value = selectedValue;
-          });
-      });
+                // Store value
+                propertyTypeField.value = selectedValue;
+
+                console.log(propertyTypeField.value); // optional debug
+            });
+        });
+
         const purchasePurposeField = document.getElementById('purposeOfPurchase');
           document.querySelectorAll('.purchase-box').forEach(box => {
               box.addEventListener('click', function () {
@@ -1784,12 +1777,10 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
       document.addEventListener("click", function(event) {
         var dropdown = document.getElementById("checkboxDropdown");
         var selectBox = document.getElementById("selectBox");
-        if (dropdown && selectBox) {
-            if (!selectBox.contains(event.target) && !dropdown.contains(event.target)) {
-                dropdown.style.display = "none";
-            }
+        if (!selectBox.contains(event.target) && !dropdown.contains(event.target)) {
+          dropdown.style.display = "none";
         }
-        });
+      });
 
       document.getElementById("selectBox").addEventListener("click", function() {
         var dropdown = document.getElementById("checkboxDropdown");
@@ -1809,7 +1800,7 @@ Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
           }
         });
 
-        document.getElementById("area").value = selected.join("; ");
+        document.getElementById("area").value = selected.join(", ");
         document.getElementById("selectBox").innerText = selected.length > 0 
           ? selected.join(", ") 
           : "Select Area";

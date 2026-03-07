@@ -7,6 +7,7 @@
 
 %%[
 SET @contactKey = _SubscriberKey
+
 SET @showInvalidContactAlert = "false"
 
 IF EMPTY(@contactKey) THEN
@@ -14,21 +15,6 @@ SET @showInvalidContactAlert = "true"
 ENDIF
 
 IF NOT EMPTY(@contactKey) then
-
-
-  SET @csrfToken = GUID()
-  SET @subscriberKey = _SubscriberKey
-  SET @submittedToken = RequestParameter("csrf_token")
-
-  /*
-  Output(Concat(" submittedToken on Load --> ",@submittedToken))
-  Output(Concat(" Generated Token on Load --> ",@csrfToken))
-  */
-
-  IF EMPTY(@submittedToken) THEN
-  /* Store token in Data Extension */
-    UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
-  ENDIF
 
 var @emailAddr
 set @emailname = emailname_
@@ -50,7 +36,6 @@ SET @Newsletter = "True"
 ENDIF
 NEXT @i
 ENDIF
-/* Output(Concat("<br />status from _ListSubscribers ",@status)) */
 IF Substring(@contactKey, 1, 3) == "00Q" THEN
 set @subscriberRows = RetrieveSalesforceObjects(
 "Lead",
@@ -71,22 +56,20 @@ Field(@subscriberRow, "Reason_for_Unsubscribe__c"))
 set @Unsubscribe_Other_Reason__c = Field(@subscriberRow, "Unsubscribe_Other_Reason__c")
 set @Communication_Preferences__c = Field(@subscriberRow, "Communication_Preferences__c")
 set @emailAddr = Field(@subscriberRow, "Email")
-elseif Substring(@contactKey, 1, 3) == "003" THEN
+elseif Substring(@contactKey, 1, 3) == "001" THEN
 set @AccountsubscriberRows = RetrieveSalesforceObjects(
 "Account",
-"Name,Id,WhatsApp_Consent__c,Email_Consent__c,Push_Notification_Consent__c,Subscription_Status__c,Reason_for_Unsubscribe__c,Unsubscribe_Other_Reason__c,PersonEmail",
-"PersonContactId", "=", @contactKey )
+"Name,Id,WhatsApp_Consent__c,Email_Consent__c,Push_Notification_Consent__c,Reason_for_Unsubscribe__c,Unsubscribe_Other_Reason__c,PersonEmail",
+"Id", "=", @contactKey )
 /* Fetch From NOBL CRM - Lead */
 /* if RowCount(@AccountsubscriberRows) > 0 then */
 set @contactSource = "Account"
 var @AccountsubscriberRow
 set @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
-set @AccountId = Field(@AccountsubscriberRow, "Id")
 set @Name = Field(@AccountsubscriberRow, "Name")
 set @WhatsApp = Field(@AccountsubscriberRow, "WhatsApp_Consent__c")
 set @emailPref = Field(@AccountsubscriberRow, "Email_Consent__c")
 set @Push = Field(@AccountsubscriberRow, "Push_Notification_Consent__c")
-set @Status = Field(@AccountsubscriberRow, "  ")
 set @Reason_for_Unsubscribe__c = IIF(EMPTY(Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")), "Select Reason",
 Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))
 set @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c")
@@ -94,52 +77,25 @@ set @emailAddr = Field(@AccountsubscriberRow, "PersonEmail")
 else
 /* Fetch From Master DE */
 set @contactSource = "MasterDE"
-set @emailAddr = Lookup("QA Ellington Consent Master DE","EmailAddress","SubscriberKey", @contactKey)
-set @ProductUpdate = Lookup("QA Ellington Consent Master DE","Product Update","SubscriberKey", @contactKey)
-set @Education = Lookup("QA Ellington Consent Master DE","Education","SubscriberKey", @contactKey)
-set @Newsletter = Lookup("QA Ellington Consent Master DE","Newsletter","SubscriberKey", @contactKey)
-set @emailPref = Lookup("QA Ellington Consent Master DE","Email","SubscriberKey", @contactKey)
-set @WhatsApp = Lookup("QA Ellington Consent Master DE","WhatsApp","SubscriberKey", @contactKey)
-set @Push = Lookup("QA Ellington Consent Master DE","Push","SubscriberKey", @contactKey)
-set @Status = Lookup("QA Ellington Consent Master DE","Status","SubscriberKey", @contactKey)
-set @Reason_for_Unsubscribe__c = Lookup("QA Ellington Consent Master DE","Unsubscribe Reason","SubscriberKey",
+set @emailAddr = Lookup("Prod Ellington Consent Master DE","EmailAddress","SubscriberKey", @contactKey)
+set @ProductUpdate = Lookup("Prod Ellington Consent Master DE","Product Update","SubscriberKey", @contactKey)
+set @Education = Lookup("Prod Ellington Consent Master DE","Education","SubscriberKey", @contactKey)
+set @Newsletter = Lookup("Prod Ellington Consent Master DE","Newsletter","SubscriberKey", @contactKey)
+set @emailPref = Lookup("Prod Ellington Consent Master DE","Email","SubscriberKey", @contactKey)
+set @WhatsApp = Lookup("Prod Ellington Consent Master DE","WhatsApp","SubscriberKey", @contactKey)
+set @Push = Lookup("Prod Ellington Consent Master DE","Push","SubscriberKey", @contactKey)
+set @Status = Lookup("Prod Ellington Consent Master DE","Status","SubscriberKey", @contactKey)
+set @Reason_for_Unsubscribe__c = Lookup("Prod Ellington Consent Master DE","Unsubscribe Reason","SubscriberKey",
 @contactKey)
 set @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason", @Reason_for_Unsubscribe__c)
-set @Unsubscribe_Other_Reason__c = Lookup("QA Ellington Consent Master DE","Unsubscribe Other Reason","SubscriberKey",
+set @Unsubscribe_Other_Reason__c = Lookup("Prod Ellington Consent Master DE","Unsubscribe Other Reason","SubscriberKey",
 @contactKey)
 endif
-
 SET @save = RequestParameter("savePref")
-SET @submittedToken = RequestParameter("csrf_token")
 SET @resubSubmit = RequestParameter("resubSubmit")
-SET @chkSubKey = RequestParameter("sk")
-SET @tokenFlag = ''
-/* Retrieve stored token */
-SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @chkSubKey)
 
-IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
-/* Token is valid - process form */
-SET @tokenFlag = 'true'
-
-/* Delete used token */
-DeleteData("CSRF_Tokens_DE", "SubscriberKey", @chkSubKey)
-
-IF @save == 'unsub' THEN
-UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @chkSubKey, "Token", @csrfToken, "CreatedDate", Now())
-ENDIF
-/* Process your form data here */
-
-ELSE
-/* Invalid token - possible CSRF attack */
-SET @tokenFlag = 'false'
-SET @errorMessage = "Invalid security token. Please refresh and try again."
-ENDIF
-
-/*
-Output(Concat("<br />status ",@status))
-Output(Concat("<br />AccountID ",@AccountId))
-*/
 /* SAVE PREFERENCES */
+
 
 /* === Domain allowlist === */
 SET @emailLower = Lowercase(@emailAddr)
@@ -152,21 +108,21 @@ IndexOf(@emailLower, "@nobl.ae") > 0,
 )
 
 
-IF @save == "1" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN
-  VAR @product, @newsletter, @education
-  VAR @email, @push, @whatsapp
-  SET @product = IIF(RequestParameter("product") == "on", "true", "false")
-  SET @newsletter = IIF(RequestParameter("newsletter") == "on", "true", "false")
-  SET @education = IIF(RequestParameter("education") == "on", "true", "false")
-  SET @email = IIF(RequestParameter("email") == "on", "true", "false")
-  SET @push = IIF(RequestParameter("push") == "on", "true", "false")
-  SET @whatsapp = IIF(RequestParameter("whatsapp") == "on", "true", "false")
+IF @save == "1" AND @isAllowedDomain == "true" THEN
+VAR @product, @newsletter, @education
+VAR @email, @push, @whatsapp
+SET @product = IIF(RequestParameter("product") == "on", "true", "false")
+SET @newsletter = IIF(RequestParameter("newsletter") == "on", "true", "false")
+SET @education = IIF(RequestParameter("education") == "on", "true", "false")
+SET @email = IIF(RequestParameter("email") == "on", "true", "false")
+SET @push = IIF(RequestParameter("push") == "on", "true", "false")
+SET @whatsapp = IIF(RequestParameter("whatsapp") == "on", "true", "false")
 
-  IF @email == "False" THEN
-  SET @subStatus = "Unsubscribed"
-  ELSE
-  SET @subStatus = "Active"
-  ENDIF
+IF @email == "false" THEN
+SET @subStatus = "Unsubscribed"
+ELSE
+SET @subStatus = "Active"
+ENDIF
 
 /* Ensure subscriber is Active BEFORE list updates */
 IF @email == "true" THEN
@@ -189,8 +145,8 @@ IF @resubSubmit == "1" THEN
 SET @ctaName = "Resubscribe"
 ENDIF
 
-InsertData(
-"QA CPC Log DE",
+insertData(
+"Prod CPC Log DE",
 "SubscriberKey", @contactKey,
 "Page Submission", @ctaName,
 "Product Update", @product,
@@ -199,7 +155,7 @@ InsertData(
 "Email", @email,
 "Push", @push,
 "WhatsApp", @whatsapp,
-"Status", @subStatus,
+"Status", "Active",
 "DateAdded", Now(),
 "EmailAddress", @emailAddr,
 "EmailName", @emailname
@@ -264,7 +220,6 @@ SETObjectProperty(@lSub, "Status", "Unsubscribed")
 AddObjectArrayItem(@sub, "Lists", @lSub)
 SET @updateStatus = InvokeUpdate(@sub)
 endif
-
 SET @sub = CreateObject("Subscriber")
 SetObjectProperty(@sub, "SubscriberKey", @contactKey)
 SetObjectProperty(@sub, "Status", @subStatus)
@@ -276,15 +231,6 @@ SetObjectProperty(@save, "PropertyName", "*")
 AddObjectArrayItem(@options, "SaveOptions", @save)
 /* Invoke the update */
 SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, @options)
-
-/* Checking if all Pref Chanels are empty */
-IF @email == "False" and @push == "False" and @whatsapp == "False" THEN
-SET @crmSubStatus = "Unsubscribed"
-ELSE
-SET @crmSubStatus = "Active"
-ENDIF
-
-
 if @contactSource == "Lead" then
 /* SAVE PREFERENCES ON LEAD */
 UpdateSingleSalesforceObject(
@@ -292,9 +238,8 @@ UpdateSingleSalesforceObject(
 "WhatsApp_Consent__c", @whatsapp,
 "Email_Consent__c", @email,
 "Push_Notification_Consent__c",@push,
-"Subscription_Status__c",@crmSubStatus
+"Subscription_Status__c","Active"
 )
-
 SET @sub = CreateObject("Subscriber")
 SetObjectProperty(@sub, "SubscriberKey", @contactKey)
 SetObjectProperty(@sub, "Status", @subStatus)
@@ -311,11 +256,11 @@ SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, 
 elseif @contactSource == "Account" then
 /* SAVE PREFERENCES ON Account */
 UpdateSingleSalesforceObject(
-"Account", @AccountId,
+"Account", @contactKey,
 "WhatsApp_Consent__c", @whatsapp,
 "Email_Consent__c", @email,
 "Push_Notification_Consent__c",@push,
-"Subscription_Status__c",@crmSubStatus
+"Subscription_Status__c","Active"
 )
 SET @sub = CreateObject("Subscriber")
 SetObjectProperty(@sub, "SubscriberKey", @contactKey)
@@ -331,7 +276,7 @@ SET @update_sub = InvokeUpdate(@sub, @update_sub_status, @update_sub_errorcode, 
 else
 /* SAVE PREFERENCES IN MASTER DE*/
 upsertData(
-"QA Ellington Consent Master DE", 1,
+"Prod Ellington Consent Master DE", 1,
 "SubscriberKey", @contactKey,
 "Product Update", @product,
 "Newsletter", @newsletter,
@@ -339,93 +284,60 @@ upsertData(
 "Email", @email,
 "Push", @push,
 "WhatsApp", @whatsapp,
-"Status", @crmSubStatus,
+"Status", "Active",
 "DateAdded", Now()
 )
 endif
 SET @showThankYou = "true"
 SET @thankYouType = "save"
 /* UNSUBSCRIBE */
-ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN
-  SET @showThankYou = "true"
-  SET @thankYouType = "unsub"
-  SET @reason = RequestParameter("unsubReason")
-  SET @otherReason = RequestParameter("unsubOther")
-  SET @ctaName = "Submit Unsubscribe Reason"
+ELSEIF @save == "unsub" AND @isAllowedDomain == "true" THEN
+SET @showThankYou = "true"
+SET @thankYouType = "unsub"
+SET @reason = RequestParameter("unsubReason")
+SET @otherReason = RequestParameter("unsubOther")
+SET @ctaName = "Submit Unsubscribe Reason"
 
-  IF @reason != "Other" THEN
-  SET @otherReason = "-"
-  ENDIF
+IF EMPTY(@reason) OR @reason == "Select Reason" THEN
+SET @reason = ""
+ENDIF
+insertData(
+"Prod CPC Log DE",
+"SubscriberKey", @contactKey,
+"Page Submission", @ctaName,
+"Product Update", "false",
+"Newsletter", "false",
+"Education", "false",
+"Email", "false",
+"Push", "false",
+"WhatsApp", "false",
+"Status", "Unsubscribed",
+"Unsubscribe Reason", @reason,
+"DateAdded", Now(),
+"EmailAddress", @emailAddr,
+"EmailName", @emailname,
+"Unsubscribe Other Reason",@otherReason
+)
 
-  IF EMPTY(@reason) OR @reason == "Select Reason" THEN
-  SET @reason = ""
-  ENDIF
-  insertData(
-  "QA CPC Log DE",
-  "SubscriberKey", @contactKey,
-  "Page Submission", @ctaName,
-  "Product Update", "false",
-  "Newsletter", "false",
-  "Education", "false",
-  "Email", "false",
-  "Push", "false",
-  "WhatsApp", "false",
-  "Status", "Unsubscribed",
-  "Unsubscribe Reason", @reason,
-  "DateAdded", Now(),
-  "EmailAddress", @emailAddr,
-  "EmailName", @emailname,
-  "Unsubscribe Other Reason",@otherReason
-  )
+upsertData(
+"Prod Ellington Consent Master DE",1,
+"SubscriberKey", @contactKey,
+"Product Update", "false",
+"Newsletter", "false",
+"Education", "false",
+"Email", "false",
+"Push", "false",
+"WhatsApp", "false",
+"Status", "Unsubscribed",
+"Unsubscribe Reason", @reason,
+"Unsubscribe Other Reason",@otherReason
+)
 
-  upsertData(
-  "QA Ellington Consent Master DE",1,
-  "SubscriberKey", @contactKey,
-  "Product Update", "false",
-  "Newsletter", "false",
-  "Education", "false",
-  "Email", "false",
-  "Push", "false",
-  "WhatsApp", "false",
-  "Status", "Unsubscribed",
-  "Unsubscribe Reason", @reason,
-  "Unsubscribe Other Reason",@otherReason
-  )
-
-  IF @contactSource == "Lead" THEN
-  UpdateSingleSalesforceObject(
-  "Lead", @contactKey,
-  "Reason_for_Unsubscribe__c", @reason,
-  "Unsubscribe_Other_Reason__c", @otherReason
-  )
-  /*
-  Output(Concat("<br />contactKey -> ", @contactKey))
-  Output(Concat("<br />contactSource -> ", @contactSource))
-  Output(Concat("<br />Reason_for_Unsubscribe__c -> ", @reason))
-  Output(Concat("<br />Unsubscribe_Other_Reason__c -> ", @otherReason))
-  */
-  ELSEIF @contactSource == "Account" THEN
-  UpdateSingleSalesforceObject(
-  "Account", @accountId,
-  "Reason_for_Unsubscribe__c", @reason,
-  "Unsubscribe_Other_Reason__c", @otherReason
-  )
-  /*
-  Output(Concat("<br />accountId -> ", @accountId))
-  Output(Concat("<br />contactSource -> ", @contactSource))
-  Output(Concat("<br />Reason_for_Unsubscribe__c -> ", @reason))
-  Output(Concat("<br />Unsubscribe_Other_Reason__c -> ", @otherReason))
-  */
-  ENDIF 
 
 SET @showThankYou = "true"
 
-ELSE
-  IF (@save == "1" OR @save == 'unsub') AND @tokenFlag == "false" THEN
-    /*Output(Concat("<br /><strong>Error:</strong>", @errorMessage))*/
-    SET @errorStyle = "display:block"
-    SET @outerWrepperStyle = "display:none"
-  ENDIF  
+
+
 ENDIF
 endif
 ]%%
@@ -439,13 +351,12 @@ endif
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" sizes="32x32"
     href="https://image.marketing.nobl.ae/lib/fe27117373640474721175/m/1/0134afdb-5f58-4a54-82d2-5f21a650a59d.png">
-  <script runat='server'>
-    Platform.Response.SetResponseHeader("Strict-Transport-Security", "max-age=200");
-    Platform.Response.SetResponseHeader("X-XSS-Protection", "1; mode=block");
-    Platform.Response.SetResponseHeader("X-Frame-Options", "Deny");
-    Platform.Response.SetResponseHeader("X-Content-Type-Options", "nosniff");
-    Platform.Response.SetResponseHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    Platform.Response.SetResponseHeader("Content-Security-Policy", "script-src 'self' 'unsafe-inline' https://image.marketing.nobl.ae ; frame-ancestors 'none'");
+  <script runat=server>
+  Platform.Response.SetResponseHeader("Strict-Transport-Security", "max-age=200");
+  Platform.Response.SetResponseHeader("X-XSS-Protection", "1; mode=block");
+  Platform.Response.SetResponseHeader("X-Frame-Options", "Deny");
+  Platform.Response.SetResponseHeader("X-Content-Type-Options", "nosniff");
+  Platform.Response.SetResponseHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   </script>
 
   <style>
@@ -531,10 +442,10 @@ endif
       cursor: pointer;
       border: none;
     }
-
     .actions button.w50 {
       width: 50%;
     }
+
 
     /* FIX mobile blue button text issue */
     button,
@@ -559,6 +470,7 @@ endif
     button.primary:focus {
       background: #0b0f1a !important;
       color: #ffffff !important;
+
     }
 
     .secondary {
@@ -740,15 +652,7 @@ endif
       align-items: center;
       width: 50%;
     }
-    #csrf-alert {
-      display: none;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 16px 18px;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.5;
-    }
+
     .alert {
       display: flex;
       align-items: flex-start;
@@ -869,6 +773,7 @@ endif
       }
 
     }
+
   </style>
 </head>
 
@@ -885,15 +790,7 @@ endif
           src="http://image.marketing.nobl.ae/lib/fe27117373640474721175/m/1/a3a57391-f6ab-4cba-b5f3-5c2849ec24f7.png"></a>
     </div>
   </header>
-  <div class="container">
-    <div class="alert-warning" id="csrf-alert" role="alert" style="%%=v(@errorStyle)=%%">
-      <span class="alert-icon">⚠️</span>
-      <div class="alert-content">
-        <strong class="">Invalid security token. Please refresh and try again.</strong>
-      </div>
-    </div>
-  </div> 
-  <div class="outer-container" id="outer-container" style="%%=v(@outerWrepperStyle)=%%">
+
   %%[ IF @showInvalidContactAlert == "true" THEN ]%%
   <div class="container">
     <div class="alert alert-warning" role="alert">
@@ -910,72 +807,65 @@ endif
   %%[ ENDIF ]%%
 
 
+
   %%[ IF @showThankYou == "true" THEN ]%%
   <!-- ================= THANK YOU ================= -->
-    %%[ IF @thankYouType == "save" THEN ]%%
-    <div class="full-center thankyouPref">
-      <div class="center-card" style="padding:56px 40px; line-height:1.5">
-        <h2>Thank you
-        </h2>
-        %%[
-        /*
-        Output(Concat(" storedToken --> ",@storedToken))
-        Output(Concat(" csrfToken --> ",@csrfToken))
-        Output(Concat(" subscriberKey --> ",@subscriberKey))
-        Output(Concat(" subscriberKey --> ",@tokenFlag))
-        */
-        ]%%
-        <p>
-          Your email preferences have been successfully updated. <br>
-          You will now receive communications based on your updated choices. <br><br>
-          If you’d like to make further changes, you can return to your preference centre at any time.
-        </p>
-        <div class="unsubscribe-actions">
-          <button data-show-spinner="true" type="button" class="secondary" onclick="myPreferences()">My
-            Preferences</button>
-        </div>
+  %%[ IF @thankYouType == "save" THEN ]%%
+  <div class="full-center thankyouPref">
+    <div class="center-card" style="padding:56px 40px; line-height:1.5">
+      <h2>Thank you
+      </h2>
+
+      <p>
+        Your email preferences have been successfully updated. <br>
+        You will now receive communications based on your updated choices. <br><br>
+        If you’d like to make further changes, you can return to your preference centre at any time.
+      </p>
+      <div class="unsubscribe-actions">
+        <button data-show-spinner="true" type="button" class="secondary" onclick="myPreferences()">My
+          Preferences</button>
       </div>
     </div>
-    %%[ ENDIF ]%%
-    %%[ IF @thankYouType == "unsub" THEN ]%%
-    <div class="full-center" id="unsubThankYou">
-      <div class="center-card" style="padding:56px 40px; line-height:1.5">
-        <h2>Sorry to see you go
-        </h2>
+  </div>
+  %%[ ENDIF ]%%
+  %%[ IF @thankYouType == "unsub" THEN ]%%
+  <div class="full-center" id="unsubThankYou">
+    <div class="center-card" style="padding:56px 40px; line-height:1.5">
+      <h2>Sorry to see you go
+      </h2>
 
-        <p>
-          You have successfully unsubscribed from our mailing list.<br>
-          You will no longer receive promotional emails from us.<br><br>
+      <p>
+        You have successfully unsubscribed from our mailing list.<br>
+        You will no longer receive promotional emails from us.<br><br>
 
-          If this was a mistake or you wish to update your preferences, you can resubscribe at any time.
-        </p>
-        <div class="unsubscribe-actions">
-          <button data-show-spinner="true" type="button" class="secondary"
-            onclick="resubscribeFromThankYou()">RESUBSCRIBE</button>
-        </div>
+        If this was a mistake or you wish to update your preferences, you can resubscribe at any time.
+      </p>
+      <div class="unsubscribe-actions">
+        <button data-show-spinner="true" type="button" class="secondary"
+          onclick="resubscribeFromThankYou()">RESUBSCRIBE</button>
       </div>
     </div>
-    %%[ ENDIF ]%%
+  </div>
+  %%[ ENDIF ]%%
   %%[ ELSE ]%%
-    %%[ IF @status == 'Unsubscribed' THEN ]%%
-    <div class="full-center thankyouPref">
-      <div class="center-card" style="padding:56px 40px; line-height:1.5">
-        <h2>You're currently unsubscribed</h2>
-        <p>
-          You are currently unsubscribed from our marketing communications. <br />To start receiving emails again, please
-          click <br />the resubscribe button below.
-        </p>
-        <div class="unsubscribe-actions">
-          <button data-show-spinner="true" type="button" class="primary" onclick="showPreferences('resubRefresh')"
-            style="width:90%">RESUBSCRIBE</button>
-        </div>
+  %%[ IF @status == 'Unsubscribed' THEN ]%%
+  <div class="full-center thankyouPref">
+    <div class="center-card" style="padding:56px 40px; line-height:1.5">
+      <h2>You're currently unsubscribed</h2>
+      <p>
+        You are currently unsubscribed from our marketing communications. <br />To start receiving emails again, please
+        click <br />the resubscribe button below.
+      </p>
+      <div class="unsubscribe-actions">
+        <button data-show-spinner="true" type="button" class="primary" onclick="showPreferences('resubRefresh')"
+          style="width:90%">RESUBSCRIBE</button>
       </div>
     </div>
-    %%[ ELSE ]%%
+  </div>
+  %%[ ELSE ]%%
   <div class="container">
     <form method="post">
-      <input type="hidden" id="sk" name="sk" value="%%=v(@subscriberkey)=%%">
-      <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
+      <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
       <input type="hidden" name="savePref" value="1">
       <div class="intro" id="intro">
         Use the options below to manage the informational updates you receive as NOBL progresses
@@ -1031,7 +921,6 @@ endif
   <div id="unsubscribe" class="hidden">
     <form method="post">
       <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
-      <input type="hidden" name="csrf_token" value="%%=v(@csrfToken)=%%">
       <input type="hidden" name="savePref" value="unsub">
       <input type="hidden" name="unsubOther" id="unsubOther" value="%%=v(@Unsubscribe_Other_Reason__c)=%%">
       <input type="hidden" name="unsubReason" id="unsubReason" value="%%=v(@Reason_for_Unsubscribe__c)=%%">
@@ -1073,20 +962,15 @@ endif
             placeholder="Please specify">%%=v(@Unsubscribe_Other_Reason__c)=%%</textarea>
           <div class="unsubscribe-actions">
             <button type="submit" class="primary">SUBMIT</button>
-            <button type="button" class="secondary" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
-            %%[
-            /*
-            Output(Concat(" submittedToken on Load --> ",@submittedToken))
-            Output(Concat(" Generated Token on Load --> ",@csrfToken))
-            */
-            ]%%
+            <button type="button" class="secondary" onclick="showPreferences()">RESUBSCRIBE</button>
           </div>
         </div>
       </div>
     </form>
   </div>
   %%[ ENDIF ]%%
-  %%[ ENDIF ]%%
+%%[ ENDIF ]%%
+
   <script runat="server">
       Platform.Load("Core", "1.1.1");
 
@@ -1097,7 +981,7 @@ endif
       var contactKey = Variable.GetValue("@contactKey");
       var emailAddr = Variable.GetValue("@emailAddr");
 
-      var response = Platform.Function.InsertData("QA CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
+      var response = Platform.Function.InsertData("Prod CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
 
     }
 
@@ -1107,6 +991,7 @@ endif
     var emailaddr = "%%=v(@emailAddr)=%%";
     var emailname = "%%=v(@emailname)=%%";
     var contactSource = "%%=v(@contactSource)=%%";
+
 
     function isAllowedEmail(email) {
       if (!email) return false;
@@ -1126,8 +1011,7 @@ endif
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
       if (isAllowedEmail(emailaddr)) {
-
-        var redirectUrl = "%%=CloudPagesURL(2193)=%%" + "&ts=" + new Date().getTime();
+        var redirectUrl = "%%=CloudPagesURL(2327)=%%" + "&ts=" + new Date().getTime();
         window.location.replace(redirectUrl);
       }
     }
@@ -1140,30 +1024,23 @@ endif
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
-      var csrfToken = "%%=v(@csrfToken)=%%";
-      var accountId = "";
-      if (contactSource == "Account")
-        accountId = "%%=v(@AccountId)=%%";
-
       if (isAllowedEmail(emailaddr)) {
-        fetch("https://cloud.marketing.nobl.ae/ResubscribeQA", {
+        fetch("https://cloud.marketing.nobl.ae/Resubscribe", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
           }
           ,
           body: "sk=" + encodeURIComponent(subscriberKey) +
-            "&accountId=" + encodeURIComponent(accountId) +
             "&email=" + encodeURIComponent(emailaddr) +
             "&emailname=" + encodeURIComponent(emailname) +
-            "&contactSource=" + encodeURIComponent(contactSource) +
-            "&token=" + encodeURIComponent(csrfToken)
+            "&contactSource=" + encodeURIComponent(contactSource)
         }
         )
           .then(response => response.text())
           .then(data => {
-            //console.log("resub response:", data);
-            var redirectUrl = "%%=CloudPagesURL(2193)=%%" + "&ts=" + new Date().getTime();
+            console.log("resub response:", data);
+            var redirectUrl = "%%=CloudPagesURL(2327)=%%" + "&ts=" + new Date().getTime();
             window.location.replace(redirectUrl);
           }
           )
@@ -1172,42 +1049,30 @@ endif
           }
           );
 
-
       }
     }
 
     function showUnsubscribe() {
-      // var subscriberKey = "%%=v(@contactKey)=%%";
-      var subscriberKey = document.getElementById("sk").value;
+      var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
-      var csrfToken = "%%=v(@csrfToken)=%%";
-      var accountId = "";
-      if (contactSource == "Account")
-        accountId = "%%=v(@AccountId)=%%";
       if (isAllowedEmail(emailaddr)) {
-        fetch("https://cloud.marketing.nobl.ae/UnsubscribeQA", {
+        fetch("https://cloud.marketing.nobl.ae/Unsubscribe", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
           }
           ,
           body: "sk=" + encodeURIComponent(subscriberKey) +
-            "&accountId=" + encodeURIComponent(accountId) +
             "&email=" + encodeURIComponent(emailaddr) +
             "&emailname=" + encodeURIComponent(emailname) +
-            "&contactSource=" + encodeURIComponent(contactSource) +
-            "&token=" + encodeURIComponent(csrfToken)
+            "&contactSource=" + encodeURIComponent(contactSource)
         }
         )
           .then(response => response.text())
           .then(data => {
             console.log("Unsub response:", data);
-            if (data.includes("csrf-alert")) {
-              document.getElementById("csrf-alert").style.display = "block";
-              document.getElementById("outer-container").style.display = "none";
-            }
           }
           )
           .catch(error => {
@@ -1218,11 +1083,12 @@ endif
         document.getElementById("intro").classList.add("hidden");
         document.getElementById("note").classList.add("hidden");
         document.getElementById("unsubscribe").classList.remove("hidden");
-        document.getElementById("otherText").value = "";
+
         document.getElementById("pageLoader").classList.add("hidden");
       }
     }
     function showPreferences(getPar) {
+
 
       var loader = document.getElementById("pageLoader");
       if (loader) loader.classList.add("hidden");
@@ -1230,34 +1096,26 @@ endif
       if (getPar == 'resubRefresh')
         loader.classList.remove("hidden");
 
-
       var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
-      var csrfToken = "%%=v(@csrfToken)=%%";
-      var accountId = "";
-      if (contactSource == "Account")
-        accountId = "%%=v(@AccountId)=%%";
-
       if (isAllowedEmail(emailaddr)) {
-        fetch("https://cloud.marketing.nobl.ae/ResubscribeQA", {
+        fetch("https://cloud.marketing.nobl.ae/Resubscribe", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
           }
           ,
           body: "sk=" + encodeURIComponent(subscriberKey) +
-            "&accountId=" + encodeURIComponent(accountId) +
             "&email=" + encodeURIComponent(emailaddr) +
             "&emailname=" + encodeURIComponent(emailname) +
-            "&contactSource=" + encodeURIComponent(contactSource) +
-            "&token=" + encodeURIComponent(csrfToken)
+            "&contactSource=" + encodeURIComponent(contactSource)
         }
         )
           .then(response => response.text())
           .then(data => {
-            //console.log("resub response:", data);
+            console.log("resub response:", data);
             if (getPar == 'resubRefresh') {
               window.location.reload();
             }
@@ -1343,7 +1201,6 @@ endif
 
 
   </script>
-  </div>
 </body>
 
 </html>

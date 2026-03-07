@@ -12,7 +12,31 @@ SET @emailAddr = RequestParameter("email")
 SET @emailname = RequestParameter("emailname")
 set @contactSource = RequestParameter("contactSource")
 
-if not empty(@sk) then
+IF @contactSource == "Account" THEN
+SET @accountId = RequestParameter("accountId")
+ENDIF
+
+SET @tokenFlag = "false"
+SET @submittedToken = RequestParameter("token")
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
+
+IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+/* Token is valid - process form */
+SET @tokenFlag = 'true'
+
+/* Delete used token */
+DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+
+/* Process your form data here */
+
+ELSE
+/* Invalid token - possible CSRF attack */
+SET @tokenFlag = 'false'
+SET @errorMessage = "Invalid security token. Please refresh and try again."
+ENDIF
+
+IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
+
 
 SET @sub = CreateObject("Subscriber")
 SetObjectProperty(@sub, "SubscriberKey", @sk)
@@ -71,13 +95,13 @@ if @contactSource == "Account" then
 /* SAVE PREFERENCES ON Account */
 
 UpdateSingleSalesforceObject(
-"Account", @sk,
+"Account", @accountId,
 "Subscription_Status__c","Active",
 "WhatsApp_Consent__c","true",
 "Email_Consent__c","true",
 "Push_Notification_Consent__c","true",
 "Reason_for_Unsubscribe__c","",
-"Unsubscribe_Other_Reason__c",""
+"Unsubscribe_Other_Reason__c","-"
 )
 
 
@@ -103,7 +127,6 @@ UpdateSingleSalesforceObject(
 
 
 endif
-
 /* UPDATING PUBLICATION LIST */
 SET @lists = "1074,1075,1076"
 SET @rowset = BuildRowsetFromString(@lists, ",")
@@ -130,10 +153,6 @@ SetObjectProperty(@save, "PropertyName", "*")
 AddObjectArrayItem(@options, "SaveOptions", @save)
 
 SET @updateStatus = InvokeUpdate(@sub, @status, @errorCode, @options)
-
-
-
-
 endif
 
 ]%%
