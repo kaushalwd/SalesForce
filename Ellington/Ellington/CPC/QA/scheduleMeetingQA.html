@@ -5,6 +5,9 @@ set @meetingDate = requestParameter('meetingDate')
 set @contactSource = requestParameter('contactSource')
 set @meetingTime = requestParameter('meetingTime')
 set @token = requestParameter('token')
+set @accountOwnerId = requestParameter('accountOwnerId')
+set @OwnerId = requestParameter('OwnerId')
+set @accountId = requestParameter('accountId')
 
 
 SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
@@ -29,13 +32,15 @@ ENDIF
 IF NOT EMPTY(@sk) THEN
 
 SET @taskId = CreateSalesforceObject(
-    "Task", 6,
+    "Task", 8,
     "Subject", "Meeting",
     "Status", "Open",
     "Priority", "High",
     "WhoId", @sk,
     "callback_date__c", @meetingDate,
-    "callback_time__c", @meetingTime
+    "callback_time__c", @meetingTime,
+    "OwnerId", IIF(EMPTY(@OwnerId), @accountOwnerId, @OwnerId),
+    "WhatId", IIF(EMPTY(@accountId), '', @accountId)
 )
  ENDIF
 

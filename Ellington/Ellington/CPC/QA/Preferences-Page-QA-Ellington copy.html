@@ -27,12 +27,35 @@ IF NOT EMPTY(@contactKey) THEN
     SET @contactSource = "Account"
   ENDIF  
   
-  SET @csrfToken = GUID()
-  SET @submittedToken = RequestParameter("csrf_token")
   VAR @emailAddr
   SET @emailname = emailname_
 
   SET @save = RequestParameter("savePref")
+  SET @csrfToken = GUID()
+  SET @submittedToken = RequestParameter("csrf_token")
+
+  IF EMPTY(@submittedToken) THEN
+    UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
+  ENDIF
+
+  IF @save == "1" THEN
+    SET @tokenFlag = ''
+    /* Retrieve stored token */
+    SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @chkSubKey)
+
+    IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+      SET @tokenFlag = 'true'
+      DeleteData("CSRF_Tokens_DE", "SubscriberKey", @chkSubKey)
+      IF @save == 'unsub' THEN
+        UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @chkSubKey, "Token", @csrfToken, "CreatedDate", Now())
+      ENDIF
+    ELSE
+      SET @tokenFlag = 'false'
+      SET @errorMessage = "Invalid security token. Please refresh and try again."
+    ENDIF
+  ENDIF
+
+  
  /* Output(Concat("<br />savePref -> ", @save)) */
 
   /* Getting Publication Lists status */
@@ -191,23 +214,10 @@ IF NOT EMPTY(@contactKey) THEN
     ENDIF
 
 
-    SET @submittedToken = RequestParameter("csrf_token")
+    
     SET @resubSubmit = RequestParameter("resubSubmit")
     SET @chkSubKey = RequestParameter("sk")
-    SET @tokenFlag = ''
-    /* Retrieve stored token */
-    SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @chkSubKey)
-
-    IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
-      SET @tokenFlag = 'true'
-      DeleteData("CSRF_Tokens_DE", "SubscriberKey", @chkSubKey)
-      IF @save == 'unsub' THEN
-        UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @chkSubKey, "Token", @csrfToken, "CreatedDate", Now())
-      ENDIF
-    ELSE
-      SET @tokenFlag = 'false'
-      SET @errorMessage = "Invalid security token. Please refresh and try again."
-    ENDIF
+    
 
     /* === Domain allowlist === */
     SET @emailLower = Lowercase(@emailAddr)
@@ -219,8 +229,8 @@ IF NOT EMPTY(@contactKey) THEN
     "false"
     )
 
-  /*ELSEIF @save == "1" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN*/
-  ELSEIF @save == 1 THEN
+  ELSEIF @save == "1" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN
+  /* ELSEIF @save == 1 THEN */
     /*Output(Concat("<br />savePref Inside -> ", @save))*/
     SET @accountId = RequestParameter("accountId")
     SET @leadId = RequestParameter("leadId")
@@ -458,8 +468,8 @@ IF NOT EMPTY(@contactKey) THEN
     SET @thankYouType = "save"
     /* UNSUBSCRIBE */
 
-  /* ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN */
-    ELSEIF @save == "unsub" THEN
+   ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN 
+    /* ELSEIF @save == "unsub" THEN */
       /*Output(Concat("<br />Save Pref Inside -> ", @save))*/
       SET @showThankYou = "true"
       SET @thankYouType = "unsub"
@@ -578,7 +588,15 @@ IF NOT EMPTY(@contactKey) THEN
             src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/d702ea48-e11c-49ec-b52d-7515742b0578.png"></a>
       </div>
     </header>
-  
+    <div class="container">
+    <div class="alert alert-warning" id="csrf-alert" role="alert" style="%%=v(@errorStyle)=%%">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong class="">Invalid security token. Please refresh and try again.</strong>
+      </div>
+    </div>
+  </div> 
+  <div class="outer-container" id="outer-container" style="%%=v(@outerWrepperStyle)=%%">
     %%[ IF @showThankYou == "true" THEN ]%%
       <!-- ================= THANK YOU ================= -->
       %%[ IF @thankYouType == "save" THEN ]%%
@@ -1904,6 +1922,7 @@ IF NOT EMPTY(@contactKey) THEN
           : "Select Area";
       }
       </script>
+    </div>
   </body>
   
   </html>

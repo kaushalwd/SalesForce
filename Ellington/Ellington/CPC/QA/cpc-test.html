@@ -1,13 +1,47 @@
 %%[
+/*
+      SET @optinStatus = "Unsubscribed"
+      
+      SET @sub = CreateObject("Subscriber")
+      SetObjectProperty(@sub, "SubscriberKey", "00Qan00000QyeZxEAJ")
+      SetObjectProperty(@sub, "Status", "Active")
 
- /*UpdateSingleSalesforceObject(
+      SET @options = CreateObject("UpdateOptions")
+      SET @saveOpt = CreateObject("SaveOption")
+      SetObjectProperty(@saveOpt, "SaveAction", "UpdateAdd")
+      SetObjectProperty(@saveOpt, "PropertyName", "*")
+      AddObjectArrayItem(@options, "SaveOptions", @saveOpt)
+      SET @resub = InvokeUpdate(@sub, @rs, @rc, @options)   
+
+   
+   
+      UpdateSingleSalesforceObject(
+      "Lead", "00Qan00000QyeZxEAJ",
+      
+      "WhatsApp__c", "false",
+      "HasOptedOutOfEmail", 0,
+      "Push_Notifications__c", "true",
+      "Weekly_Highlights__c","false",
+      "Personalized_Recommendations__c", 0,
+      "Essential_Updates_Only__c","false",
+      "New_Project_Launches__c", "false",
+      "Status__c", @crmSubStatus,
+      "Reason_for_Unsubscribe__c","",
+      "Unsubscribe_Other_Reason__c",""
+      )
+*/
+
+
+
+/*
+ UpdateSingleSalesforceObject(
         "Task","00Tan00000egk2bEAA",
         "Callback_Date__c","2026-03-07"
        )
-
+       */
 SET @TasksubscriberRows = RetrieveSalesforceObjects(
         "Task",
-        "Id, Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate",
+        "Id, Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate, WhatId",
         "WhoId","=","00Qan00000QyeZxEAJ"
     )
 
@@ -34,13 +68,14 @@ SET @TasksubscriberRows = RetrieveSalesforceObjects(
 
       NEXT @i
 
-      
+      /* check if callback date is past */
       IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
           SET @isBackDate = 1
       ENDIF
 
     ENDIF
-*/
+
+
 
 /*
 UpdateSingleSalesforceObject(
@@ -66,11 +101,11 @@ UpdateSingleSalesforceObject(
       "Essential_Updates_Only__c", "true",
       "New_Project_Launches__c", "true",
       "Status__c","Active",
-      "Reason_for_Unsubscribe__c","",
+      "Reason_for_Unsubscribe__c", "The content is not relevant to me",
       "Unsubscribe_Other_Reason__c",""
       ) 
       
-  */    
+      
     SET @rows = RetrieveSalesforceObjects(
     "Account",
     "Country__c,Nationality__c,Employment_Type__c,Budget__c,Purchase_Timeframe__c,WhatsApp__c,PersonHasOptedOutOfEmail,Push_Notifications__c,Weekly_Highlights__c,Personalized_Recommendations__c,Essential_Updates_Only__c,New_Project_Launches__c,Status__c,Reason_for_Unsubscribe__c,Unsubscribe_Other_Reason__c",
@@ -102,7 +137,7 @@ IF @rowCount > 0 THEN
 ENDIF
 */
 
-/*
+
 UpdateSingleSalesforceObject(
       "Lead", "00Qan00000QyeZxEAJ",
       
@@ -114,17 +149,19 @@ UpdateSingleSalesforceObject(
       "Essential_Updates_Only__c","false",
       "New_Project_Launches__c", "false",
       "Status__c", @crmSubStatus,
-      "Reason_for_Unsubscribe__c","",
       "Unsubscribe_Other_Reason__c","",
-      "Interested_Property_Type__c", "2 BHK",
-      "Purpose_of_Investment__c", "Retirement",
-      "Preferred_Areas__c", "Business Bay; Dubai Islands"
+      "Interested_Property_Type__c", "4 BHK",
+      "Purpose_of_Investment__c", "rental_returns",
+      "Purchase_Timeframe__c", "1_Month",
+      "Preferred_Areas__c", "Business Bay; Dubai Islands",
+      "Reason_for_Unsubscribe__c", "The content is not relevant to me"
       )
+
 
 
 SET @leadRows = RetrieveSalesforceObjects(
 "Lead",
-"Id, Country__c, Nationality__c, Employment_Type__c, Budget__c, Purchase_Timeframe__c, WhatsApp__c, HasOptedOutOfEmail, Push_Notifications__c, Weekly_Highlights__c, Personalized_Recommendations__c, Essential_Updates_Only__c, New_Project_Launches__c, Status__c, Interested_Property_Type__c, Purpose_of_Investment__c, Preferred_Areas__c", 
+"Id, Country__c, Nationality__c, Employment_Type__c, Budget__c, Purchase_Timeframe__c, WhatsApp__c, HasOptedOutOfEmail, Push_Notifications__c, Weekly_Highlights__c, Personalized_Recommendations__c, Essential_Updates_Only__c, New_Project_Launches__c, Status__c, Reason_for_Unsubscribe__c, Interested_Property_Type__c, Purpose_of_Investment__c, Preferred_Areas__c", 
 "Id","=","00Qan00000QyeZxEAJ"
 )
 
@@ -148,24 +185,25 @@ SET @crmSubStatus = Field(@row,"Status__c")
 SET @iProperty = Field(@row,"Interested_Property_Type__c")
 SET @pInv = Field(@row,"Purpose_of_Investment__c")
 SET @pArea = Field(@row,"Preferred_Areas__c")
+SET @reason = Field(@row,"Reason_for_Unsubscribe__c")
 
 
 
 ENDIF
 
-*/
+
 
 
 ]%%
 
-<!-- Task -->
+<!-- Task 
 <b>taskId:</b> %%=v(@taskId)=%% <br>
 <b>callBackDate:</b> %%=v(@callBackDate)=%% <br>
 <b>callBackTime:</b> %%=v(@callBackTime)=%% <br>
 <b>callBackStatus:</b> %%=v(@callBackStatus)=%% <br>
+-->
 
-
-<!-- Lead
+<!-- Lead -->
 <b>Country:</b> %%=v(@country)=%% <br>
 <b>Nationality:</b> %%=v(@nationality)=%% <br>
 <b>Employment Type:</b> %%=v(@employmentType)=%% <br>
@@ -182,8 +220,9 @@ ENDIF
 <b>pInv:</b> %%=v(@pInv)=%%
 <b>iProperty:</b> %%=v(@iProperty)=%%
 <b>pArea:</b> %%=v(@pArea)=%%
+<b>Reason:</b> %%=v(@reason)=%%
 
--->
+
 
 
 <!-- Account
@@ -202,5 +241,4 @@ New Project Launches: %%=v(@newproject)=%% <br>
 Status: %%=v(@status)=%% <br>
 Reason: %%=v(@reason)=%% <br>
 Other Reason: %%=v(@otherreason)=%%
-
--->
+ -->

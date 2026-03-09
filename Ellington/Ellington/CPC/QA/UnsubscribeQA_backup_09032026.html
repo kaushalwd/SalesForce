@@ -58,7 +58,7 @@ IF NOT EMPTY(@sk) THEN
     /* SAVE PREFERENCES ON Account */
     UpdateSingleSalesforceObject(
     "Account", @accountId,
-    "PersonHasOptedOutOfEmail", 1,
+    "PersonHasOptedOutOfEmail", 0,
     "WhatsApp__c", 0,
     "Push_Notifications__c", 0,
     "Weekly_Highlights__c", 0,
@@ -66,8 +66,12 @@ IF NOT EMPTY(@sk) THEN
     "Essential_Updates_Only__c", 0,
     "New_Project_Launches__c", 0
     )
-    
-    SET @checkFlag = 1
+    UpdateSingleSalesforceObject(
+    "Account", @accountId,
+    "PersonHasOptedOutOfEmail", 0
+    )
+    UpdateSubscriber(@emailAddr,"Unsubscribed")
+    SET @checkFlag = @accountId
     /*"Status__c","Unsubscribed",*/
   ENDIF
 
@@ -78,7 +82,7 @@ IF NOT EMPTY(@sk) THEN
     "Lead", @sk,
     "Status__c","Unsubscribed",
     "WhatsApp__c", 0,
-    "HasOptedOutOfEmail", 1,
+    "HasOptedOutOfEmail", 0,
     "Push_Notifications__c", 0,
     "Weekly_Highlights__c", 0,
     "Personalized_Recommendations__c", 0,
