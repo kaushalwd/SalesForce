@@ -33,7 +33,7 @@ IF NOT EMPTY(@contactKey) THEN
   SET @emailname = emailname_
 
   SET @save = RequestParameter("savePref")
- /* Output(Concat("<br />savePref -> ", @save)) */
+  Output(Concat("<br />savePref -> ", @save))
 
   /* Getting Publication Lists status */
   
@@ -95,10 +95,8 @@ IF NOT EMPTY(@contactKey) THEN
       SET @leadStatus = Field(@subscriberRow, "Status")
       SET @accountId = Field(@subscriberRow, "Account__c")
       SET @Reason_for_Unsubscribe__c = ""
-      /* SET @Reason_for_Unsubscribe__c = Field(@subscriberRow, "Reason_for_Unsubscribe__c") */
-      /* SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)*/
-      /* SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") */
-      SET @Unsubscribe_Other_Reason__c = ""
+      /*SET @Reason_for_Unsubscribe__c = Field(@subscriberRow, "Reason_for_Unsubscribe__c")
+      SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)*/
       
       
     ELSEIF Substring(@contactKey, 1, 3) == "003" THEN
@@ -107,6 +105,8 @@ IF NOT EMPTY(@contactKey) THEN
       "Account",
       "FirstName, LastName, Id, Phone, PersonEmail,  PersonContactId, Country__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c",
       "PersonContactId", "=", @contactKey )
+      
+      
 
       SET @contactSource = "Account"
       SET @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
@@ -131,58 +131,10 @@ IF NOT EMPTY(@contactKey) THEN
       SET @push = Field(@AccountsubscriberRow, "Push_Notifications__c")
       SET @Status = Field(@AccountsubscriberRow, "Status__c")
       SET @Reason_for_Unsubscribe__c = ""
-      /* SET @Reason_for_Unsubscribe__c = Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c") */
-      /* SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)*/
-      /* SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") */
-      SET @Unsubscribe_Other_Reason__c = ""
+      /*SET @Reason_for_Unsubscribe__c = IIF(EMPTY(Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")), "Select Reason",
+Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c"))*/
     ENDIF
     
-    SET @callBackDate = ""
-    SET @callBackTime = ""
-    SET @callBackStatus = ""
-    SET @makeMeDisabled = ""
-    SET @scheduledDetails = ""
-
-    SET @TasksubscriberRows = RetrieveSalesforceObjects(
-        "Task",
-        "Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate",
-        "WhoId","=",@contactKey
-    )
-
-    SET @TaskRowCount = RowCount(@TasksubscriberRows)
-    SET @latestDate = ""
-    SET @isBackDate = 0
-
-    IF @TaskRowCount > 0 THEN
-
-      FOR @i = 1 TO @TaskRowCount DO
-
-        SET @row = Row(@TasksubscriberRows,@i)
-        SET @created = Field(@row,"CreatedDate")
-
-        IF EMPTY(@latestDate) OR @created > @latestDate THEN
-
-            SET @latestDate = @created
-            SET @callBackDate = Field(@row,"Callback_Date__c")
-            SET @callBackTime = Field(@row,"Callback_Time__c")
-            SET @callBackStatus = Field(@row,"Status")
-
-        ENDIF
-
-      NEXT @i
-
-      /* check if callback date is past */
-      IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
-          SET @isBackDate = 1
-      ELSE
-          SET @makeMeDisabled = "disabled"
-          SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
-          SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
-      ENDIF
-
-    ENDIF
-
-
     SET @submittedToken = RequestParameter("csrf_token")
     SET @resubSubmit = RequestParameter("resubSubmit")
     SET @chkSubKey = RequestParameter("sk")
@@ -239,10 +191,8 @@ IF NOT EMPTY(@contactKey) THEN
     SET @push = IIF(RequestParameter("push") == "on", "true", "false")
     SET @whatsApp = IIF(RequestParameter("whatsApp") == "on", "true", "false")
     
-    /*
     SET @meetingDate = RequestParameter("meetingDate")
     SET @meetingTime = RequestParameter("time-slot")
-    */
 
     IF @emailPref == "false" OR @emailPref == 0 THEN
       SET @subStatus = "Unsubscribed"
@@ -256,7 +206,6 @@ IF NOT EMPTY(@contactKey) THEN
       SET @crmSubStatus = "Active"
     ENDIF
 
-    /*
     Output(Concat("<br />Account Id: ", @accountId))
     Output(Concat("<br />Lead Id: ", @leadId))
     Output(Concat("<br />First Name: ", @firstName))
@@ -283,7 +232,7 @@ IF NOT EMPTY(@contactKey) THEN
 
     Output(Concat("<br /><br />Lead Status: ", @leadStatus))
 
-    */
+
     /* Ensure subscriber is Active BEFORE list updates */
     
       SET @sub = CreateObject("Subscriber")
@@ -375,7 +324,6 @@ IF NOT EMPTY(@contactKey) THEN
     SET @newProjectLaunches = IIF(@newProjectLaunches == "Active", "true", "false")
     SET @essentialUpdatesOnly = IIF(@essentialUpdatesOnly == "Active", "true", "false")
     
-    /*
     Output(Concat("<br /><br />Weekly Highlights SFUpdate: ", @weeklyHighlights))
     Output(Concat("<br />Personalized Recommendations SFUpdate: ", @personalizedRecommendations))
     Output(Concat("<br />New Project Launches SFUpdate: ", @newProjectLaunches))
@@ -384,7 +332,7 @@ IF NOT EMPTY(@contactKey) THEN
     Output(Concat("<br /><br />Email Opt-in SFUpdate: ", @emailPref))
     Output(Concat("<br />Push Opt-in SFUpdate: ", @push))
     Output(Concat("<br />WhatsApp Opt-in SFUpdate: ", @whatsApp))
-    */
+
    
     IF Substring(@contactKey, 1, 3) == "00Q" THEN  
       /* Lead Id, not Converted  */
@@ -393,9 +341,6 @@ IF NOT EMPTY(@contactKey) THEN
       "Country__c", @country,
       "Nationality__c", @nationality,
       "Employment_Type__c", @employmentType,
-      "Interested_Property_Type__c", @interestedPropertyType,
-      "Purpose_of_Investment__c", @purposeOfInvestment,
-      "Preferred_Areas__c", @preferredAreas,
       "Budget__c", @budget,
       "Purchase_Timeframe__c", @purchaseTimeframe,
       "WhatsApp__c", @whatsApp,
@@ -403,15 +348,15 @@ IF NOT EMPTY(@contactKey) THEN
       "Push_Notifications__c", @push,
       "Weekly_Highlights__c", @weeklyHighlights,
       "Personalized_Recommendations__c", @personalizedRecommendations,
-      "Essential_Updates_Only__c", @essentialUpdatesOnly,
-      "New_Project_Launches__c", @newProjectLaunches,
+      "Essential_Updates_Only__c", @newProjectLaunches,
+      "New_Project_Launches__c", @essentialUpdatesOnly,
       "Status__c", @crmSubStatus,
       "Reason_for_Unsubscribe__c","",
       "Unsubscribe_Other_Reason__c",""
       )
     ELSEIF Substring(@contactKey, 1, 3) == "003" OR @accountId != "" THEN 
       /* Lead Id, not Converted OR  Contact Id */
-      /* Output(Concat("<br />Inside Accont: ", @accountId)) */
+      Output(Concat("<br />Inside Accont: ", @accountId))
       
       UpdateSingleSalesforceObject(
       "Account", @accountId,
@@ -421,7 +366,6 @@ IF NOT EMPTY(@contactKey) THEN
       "Interested_Property_Type__c", @interestedPropertyType,
       "Purpose_of_Investment__c", @purposeOfInvestment,
       "Preferred_Areas__c", @preferredAreas,
-      "Budget__c", @budget,
       "Purchase_Timeframe__c", @purchaseTimeframe,
       "WhatsApp__c", @whatsApp,
       "PersonHasOptedOutOfEmail", @emailPref,
@@ -451,7 +395,7 @@ IF NOT EMPTY(@contactKey) THEN
 
   /* ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN */
     ELSEIF @save == "unsub" THEN
-      /*Output(Concat("<br />Save Pref Inside -> ", @save))*/
+      Output(Concat("<br />Save Pref Inside -> ", @save))
       SET @showThankYou = "true"
       SET @thankYouType = "unsub"
       SET @reason = RequestParameter("unsubReason")
@@ -462,12 +406,10 @@ IF NOT EMPTY(@contactKey) THEN
       IF EMPTY(@reason) OR @reason == "Select Reason" THEN
         SET @reason = ""
       ENDIF
-      /*
       Output(Concat("<br />contactKey -> ", @contactKey))
       Output(Concat("<br />ctaName -> ", @ctaName))
       Output(Concat("<br />emailAddr -> ", @emailAddr))
       Output(Concat("<br />Save Pref Inside -> ", @emailname))
-      */
       
       
       InsertData("CPC Log DE",
@@ -494,12 +436,10 @@ IF NOT EMPTY(@contactKey) THEN
         "Reason_for_Unsubscribe__c", @reason,
         "Unsubscribe_Other_Reason__c", @otherReason
         )
-        /*
         Output(Concat("<br />contactKey -> ", @contactKey))
         Output(Concat("<br />contactSource -> ", @contactSource))
         Output(Concat("<br />Reason_for_Unsubscribe__c -> ", @reason))
         Output(Concat("<br />Unsubscribe_Other_Reason__c -> ", @otherReason))
-        */
       ELSEIF @contactSource == "Account" THEN
         UpdateSingleSalesforceObject(
         "Account", @accountId,
@@ -1226,24 +1166,25 @@ IF NOT EMPTY(@contactKey) THEN
                 <label>Budget Range<sup class="value-required">*</sup></label>
                 <select class="form-control" name="budget" id="budget" required="required">
                   <option value="">Select Budget</option>
-                    <!-- Assuming @budget contains the selected value (e.g., "1 Mn to 1.5 Mn") -->
-                  <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_1.5_mn','Between 1 Mn to 1.5 Mn')=%%"    %%=IIF(@budget == 'Between 1 Mn to 1.5 Mn' OR @budget == 'between_1_mn_to_1.5_mn', 'selected','')=%% >1 Mn to 1.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_1.5_Mn_to_2_mn','Between 1.5 Mn to 2 Mn')=%%"    %%=IIF(@budget == 'Between 1.5 Mn to 2 Mn' OR @budget == 'between_1.5_Mn_to_2_mn','selected','')=%% >1.5 Mn to 2 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_2_Mn_to_2.5_mn','Between 2 Mn to 2.5 Mn')=%%"    %%=IIF(@budget == 'Between 2 Mn to 2.5 Mn' OR @budget == 'between_2_Mn_to_2.5_mn','selected','')=%% >2 Mn to 2.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_2.5_Mn_to_3_mn','Between 2.5 Mn to 3 Mn')=%%"   %%=IIF(@budget == 'Between 2.5 Mn to 3 Mn' OR @budget == 'between_2.5_Mn_to_3_mn','selected','')=%% >2.5 Mn to 3 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_3_mn','Between 1 Mn to 3 Mn')=%%"      %%=IIF(@budget == 'Between 1 Mn to 3 Mn' OR @budget == 'between_1_mn_to_3_mn','selected','')=%% >1 Mn to 3 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_3.5_mn','Between 3 Mn to 3.5 Mn')=%%"    %%=IIF(@budget == 'Between 3 Mn to 3.5 Mn' OR @budget == 'between_3_mn_to_3.5_mn','selected','')=%% >3 Mn to 3.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_3.5_mn_to_4_mn','Between 3.5 Mn to 4 Mn')=%%"    %%=IIF(@budget == 'Between 3.5 Mn to 4 Mn' OR @budget == 'between_3.5_mn_to_4_mn','selected','')=%% >3.5 Mn to 4 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_4_mn_to_4.5_mn','Between 4 Mn to 4.5 Mn')=%%"    %%=IIF(@budget == 'Between 4 Mn to 4.5 Mn' OR @budget == 'between_4_mn_to_4.5_mn','selected','')=%% >4 Mn to 4.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_4.5_mn_to_5_mn','Between 4.5 Mn to 5 Mn')=%%"    %%=IIF(@budget == 'Between 4.5 Mn to 5 Mn' OR @budget == 'between_4.5_mn_to_5_mn','selected','')=%% >4.5 Mn to 5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_5_mn','Between 3 Mn to 5 Mn')=%%"      %%=IIF(@budget == 'Between 3 Mn to 5 Mn' OR @budget == 'between_3_mn_to_5_mn','selected','')=%% >3 Mn to 5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','more_than_5_mn','More than 5 Mn')=%%"    %%=IIF(@budget == 'More than 5 Mn' OR @budget == 'more_than_5_mn','selected','')=%% >More than 5 Mn</option>
+                  <option value="Less than 500k AED" %%=IIF(@budget == 'Less than 500k AED','selected','')=%% >Less than 500k AED</option>
+                  <option value="Between 500k to 1 Mn" %%=IIF(@budget == 'Between 500k to 1 Mn','selected','')=%% >Between 500k to 1 Mn</option>
+                  <option value="Between 1 Mn to 1.5 Mn" %%=IIF(@budget == 'Between 1 Mn to 1.5 Mn','selected','')=%% >1 Mn to 1.5 Mn</option>
+                  <option value="Between 1.5 Mn to 2 Mn" %%=IIF(@budget == 'Between 1.5 Mn to 2 Mn','selected','')=%% >1.5 Mn to 2 Mn</option>
+                  <option value="Between 2 Mn to 2.5 Mn" %%=IIF(@budget == 'Between 2 Mn to 2.5 Mn','selected','')=%% >2 Mn to 2.5 Mn</option>
+                  <option value="Between 2.5 Mn to 3 Mn" %%=IIF(@budget == 'Between 2.5 Mn to 3 Mn','selected','')=%% >2.5 Mn to 3 Mn</option>
+                  <option value="Between 1 Mn to 3 Mn"   %%=IIF(@budget == 'Between 1 Mn to 3 Mn','selected','')=%% >1 Mn to 3 Mn</option>
+                  <option value="Between 3 Mn to 3.5 Mn" %%=IIF(@budget == 'Between 3 Mn to 3.5 Mn','selected','')=%% >3 Mn to 3.5 Mn</option>
+                  <option value="Between 3.5 Mn to 4 Mn" %%=IIF(@budget == 'Between 3.5 Mn to 4 Mn','selected','')=%% >3.5 Mn to 4 Mn</option>
+                  <option value="Between 4 Mn to 4.5 Mn" %%=IIF(@budget == 'Between 4 Mn to 4.5 Mn','selected','')=%% >4 Mn to 4.5 Mn</option>
+                  <option value="Between 4.5 Mn to 5 Mn" %%=IIF(@budget == 'Between 4.5 Mn to 5 Mn','selected','')=%% >4.5 Mn to 5 Mn</option>
+                  <option value="Between 3 Mn to 5 Mn"   %%=IIF(@budget == 'Between 3 Mn to 5 Mn','selected','')=%% >3 Mn to 5 Mn</option>
+                  <option value="More than 5 Mn" %%=IIF(@budget == 'More than 5 Mn','selected','')=%% >More than 5 Mn</option>
                 </select> 
               </div>
               <div class="pref-row long-block">
                 <label>Purpose of Purchase</label>
                 <input type="hidden" id="purposeOfPurchase" name="purposeOfPurchase" class="makeItSmall" value="%%=v(@purposeOfInvestment)=%%" />
-                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment) == 'rental returns' OR Lowercase(@purposeOfInvestment)  == 'rental_returns','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','rental_returns','Rental Returns')=%%"><div class="purpose-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'rental returns','active','')=%%" data-value="Rental Returns"><div class="purpose-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                             </svg></div><span>Rental Returns</span></div>
                 <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'retirement','active','')=%%" data-value="Retirement"><div class="purpose-icon">
@@ -1252,7 +1193,7 @@ IF NOT EMPTY(@contactKey) THEN
                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
                             </svg>
                         </div><span>Retirement</span></div>
-                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment) == 'long-term gains' OR Lowercase(@purposeOfInvestment)  == 'long_term_gains','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','long_term_gains','Long-term gains')=%%"><div class="purpose-icon">
+                <div class="purchase-box %%=IIF(Lowercase(@purposeOfInvestment)  == 'long term gains','active','')=%%" data-value="Long term Gains"><div class="purpose-icon">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -1305,9 +1246,9 @@ IF NOT EMPTY(@contactKey) THEN
                 <label>Purchase Timeframe</label>
                 <input type="hidden" id="timeFrame" name="timeFrame" class="makeItSmall" value="%%=v(@purchaseTimeframe)=%%" />
                 <div class="prop-box timeframe %%=IIF(@purchaseTimeframe == 'Immediate','active','')=%%" data-value="Immediate">Immediate</div>
-                <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '1 month' OR Lowercase(@purchaseTimeframe) == '1_month','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','1_month','1 Month')=%%">1 Month</div>
-                <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '2 months' OR Lowercase(@purchaseTimeframe) == '2_months','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','2_months','2 Months')=%%">2 Months</div>
-                <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '3 months' OR Lowercase(@purchaseTimeframe) == '3_months','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','3_months','3 Months')=%%">3 Months</div>
+                <div class="prop-box timeframe %%=IIF(@purchaseTimeframe == '1 Months','active','')=%%" data-value="1 Month">1 Month</div>
+                <div class="prop-box timeframe %%=IIF(@purchaseTimeframe == '2 Months','active','')=%%" data-value="2 Months">2 Months</div>
+                <div class="prop-box timeframe %%=IIF(@purchaseTimeframe == '3 Months','active','')=%%" data-value="3 Months">3 Months</div>
               </div>
             </div>
           </div>
@@ -1346,43 +1287,45 @@ IF NOT EMPTY(@contactKey) THEN
               <div class="pref-row">
                 <div class="pref-col">
                   <label>Date</label>
-                  <div class="pref-el"><input class="form-control" type="date" name="meetingDate"  value="%%=v(@callBackDate)=%%" id="meetingDate" %%=v(@makeMeDisabled)=%%>
+                  <div class="pref-el"><input class="form-control" type="date" name="meetingDate"  value="%%=v(@birthdate)=%%" id="meetingDate">
                     <input type="hidden" id="hiddenDate"></div>
                 </div>
                 <div class="pref-col">
                   <label>Time</label>
-                  <select name="time-slot" id="time-slot" %%=v(@makeMeDisabled)=%% style="margin-top:3px">
+                  <select name="time-slot" id="time-slot">
                     <option value="Select">Select Time Slot</option>
-                    <option value="10:00 AM to 10:30 AM" %%=IIF(@callBackTime=='10:00 AM to 10:30 AM','selected','')=%% >10:00 AM to 10:30 AM</option>
-                    <option value="10:30 AM to 11:00 AM" %%=IIF(@callBackTime=='10:30 AM to 11:00 AM','selected','')=%% >10:30 AM to 11:00 AM</option>
-                    <option value="11:00 AM to 11:30 AM" %%=IIF(@callBackTime=='11:00 AM to 11:30 AM','selected','')=%% >11:00 AM to 11:30 AM</option>
-                    <option value="11:30 AM to 12:00 PM" %%=IIF(@callBackTime=='11:30 AM to 12:00 PM','selected','')=%% >11:30 AM to 12:00 PM</option>
-                    <option value="12:00 PM to 12:30 PM" %%=IIF(@callBackTime=='12:00 PM to 12:30 PM','selected','')=%% >12:00 PM to 12:30 PM</option>
-                    <option value="12:30 PM to 1:00 PM" %%=IIF(@callBackTime=='12:30 PM to 1:00 PM','selected','')=%% >12:30 PM to 1:00 PM</option>
-                    <option value="1:00 PM to 1:30 PM" %%=IIF(@callBackTime=='1:00 PM to 1:30 PM','selected','')=%% >1:00 PM to 1:30 PM</option>
-                    <option value="1:30 PM to 2:00 PM" %%=IIF(@callBackTime=='1:30 PM to 2:00 PM','selected','')=%% >1:30 PM to 2:00 PM</option>
-                    <option value="2:00 PM to 2:30 PM" %%=IIF(@callBackTime=='2:00 PM to 2:30 PM','selected','')=%% >2:00 PM to 2:30 PM</option>
-                    <option value="2:30 PM to 3:00 PM" %%=IIF(@callBackTime=='2:30 PM to 3:00 PM','selected','')=%% >2:30 PM to 3:00 PM</option>
-                    <option value="3:00 PM to 3:30 PM" %%=IIF(@callBackTime=='3:00 PM to 3:30 PM','selected','')=%% >3:00 PM to 3:30 PM</option>
-                    <option value="3:30 PM to 4:00 PM" %%=IIF(@callBackTime=='3:30 PM to 4:00 PM','selected','')=%% >3:30 PM to 4:00 PM</option>
-                    <option value="4:00 PM to 4:30 PM" %%=IIF(@callBackTime=='4:00 PM to 4:30 PM','selected','')=%% >4:00 PM to 4:30 PM</option>
-                    <option value="4:30 PM to 5:00 PM" %%=IIF(@callBackTime=='4:30 PM to 5:00 PM','selected','')=%% >4:30 PM to 5:00 PM</option>
-                    <option value="5:00 PM to 5:30 PM" %%=IIF(@callBackTime=='5:00 PM to 5:30 PM','selected','')=%% >5:00 PM to 5:30 PM</option>
-                    <option value="5:30 PM to 6:00 PM" %%=IIF(@callBackTime=='5:30 PM to 6:00 PM','selected','')=%% >5:30 PM to 6:00 PM</option>
-                    <option value="6:00 PM to 6:30 PM" %%=IIF(@callBackTime=='6:00 PM to 6:30 PM','selected','')=%% >6:00 PM to 6:30 PM</option>
+                    <option value="10:00 AM to 10:30 AM" %%=IIF(@meetingTime=='10:00 AM to 10:30 AM','selected','')=%% >10:00 AM to 10:30 AM</option>
+                    <option value="10:30 AM to 11:00 AM" %%=IIF(@meetingTime=='10:30 AM to 11:00 AM','selected','')=%% >10:30 AM to 11:00 AM</option>
+                    <option value="11:00 AM to 11:30 AM" %%=IIF(@meetingTime=='11:00 AM to 11:30 AM','selected','')=%% >11:00 AM to 11:30 AM</option>
+                    <option value="11:30 AM to 12:00 PM" %%=IIF(@meetingTime=='11:30 AM to 12:00 PM','selected','')=%% >11:30 AM to 12:00 PM</option>
+                    <option value="12:00 PM to 12:30 PM" %%=IIF(@meetingTime=='12:00 PM to 12:30 PM','selected','')=%% >12:00 PM to 12:30 PM</option>
+                    <option value="12:30 PM to 1:00 PM" %%=IIF(@meetingTime=='12:30 PM to 1:00 PM','selected','')=%% >12:30 PM to 1:00 PM</option>
+                    <option value="1:00 PM to 1:30 PM" %%=IIF(@meetingTime=='1:00 PM to 1:30 PM','selected','')=%% >1:00 PM to 1:30 PM</option>
+                    <option value="1:30 PM to 2:00 PM" %%=IIF(@meetingTime=='1:30 PM to 2:00 PM','selected','')=%% >1:30 PM to 2:00 PM</option>
+                    <option value="2:00 PM to 2:30 PM" %%=IIF(@meetingTime=='2:00 PM to 2:30 PM','selected','')=%% >2:00 PM to 2:30 PM</option>
+                    <option value="2:30 PM to 3:00 PM" %%=IIF(@meetingTime=='2:30 PM to 3:00 PM','selected','')=%% >2:30 PM to 3:00 PM</option>
+                    <option value="3:00 PM to 3:30 PM" %%=IIF(@meetingTime=='3:00 PM to 3:30 PM','selected','')=%% >3:00 PM to 3:30 PM</option>
+                    <option value="3:30 PM to 4:00 PM" %%=IIF(@meetingTime=='3:30 PM to 4:00 PM','selected','')=%% >3:30 PM to 4:00 PM</option>
+                    <option value="4:00 PM to 4:30 PM" %%=IIF(@meetingTime=='4:00 PM to 4:30 PM','selected','')=%% >4:00 PM to 4:30 PM</option>
+                    <option value="4:30 PM to 5:00 PM" %%=IIF(@meetingTime=='4:30 PM to 5:00 PM','selected','')=%% >4:30 PM to 5:00 PM</option>
+                    <option value="5:00 PM to 5:30 PM" %%=IIF(@meetingTime=='5:00 PM to 5:30 PM','selected','')=%% >5:00 PM to 5:30 PM</option>
+                    <option value="5:30 PM to 6:00 PM" %%=IIF(@meetingTime=='5:30 PM to 6:00 PM','selected','')=%% >5:30 PM to 6:00 PM</option>
+                    <option value="6:00 PM to 6:30 PM" %%=IIF(@meetingTime=='6:00 PM to 6:30 PM','selected','')=%% >6:00 PM to 6:30 PM</option>
                   </select>
-                  <div class="pref-el cta-wrapper"><input id="scheduledMeeting" type="button" onclick="scheduleMeeting()" value="Schedule Meeting" %%=v(@makeMeDisabled)=%% ></div>
+                  <div class="pref-el cta-wrapper"><input type="button" onclick="scheduleMeeting()" value="Schedule Meeting" ></div>
                 </div>
             </div>
-            <div class="pref-row %%=IIF(@isBackDate == 1,'hidden','')=%% " id="meetingScheduleWrapper" style="text-align: right; padding-right: 10px; padding-top: 0;" ><label id="meetingSchedule">%%=v(@scheduledDetails)=%%</label></div>
+              <h2 id='scheduledMeeting' style='display:none'>
+                We will contact you soon!
+              </h2>
             </div>
           </div>
         </div>
         <!-- ================= Actions ================= -->
         <div class="actions" id="actions">
           <input type="hidden" name="resubSubmit" value="1">
-          <button type="submit" class="primary w50">Save Changes</button>
-          <button type="button" class="secondary w50" onclick="showUnsubscribe()">Unsubscribe ALL</button>
+          <button type="submit" class="primary">Save Changes</button>
+          <button type="button" class="secondary" onclick="showUnsubscribe()">Unsubscribe ALL</button>
         </div>
     
         
@@ -1474,18 +1417,7 @@ IF NOT EMPTY(@contactKey) THEN
       var emailaddr = "%%=v(@emailAddr)=%%";
       var emailname = "%%=v(@emailname)=%%";
       var contactSource = "%%=v(@contactSource)=%%";
-
-      document.getElementById("meetingDate").addEventListener("change", function() {
-        const selected = new Date(this.value);
-        const today = new Date();
-        today.setDate(today.getDate() + 1)
-        today.setHours(0,0,0,0);
-
-        if(selected < today){
-            alert("Please select a future date.");
-            this.value = "";
-        }
-      });
+  
       function isAllowedEmail(email) {
         if (!email) return false;
         const e = email.toLowerCase();
@@ -1505,54 +1437,36 @@ IF NOT EMPTY(@contactKey) THEN
         var meetingDate = document.getElementById("meetingDate").value;
       // Get time slot value
         var meetingTime = document.getElementById("time-slot").value;
-
-        const d = new Date();
-        d.setDate(d.getDate() + 1)
-        const todayDate = d.getFullYear()+"-"+String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
-        
-        if(meetingDate < todayDate)
-          alert("Please select a future date.");
-        else if(meetingTime == "Select") 
-          alert("Please select a Time slot.");
-        else {
-          showSpinner();
-          if (isAllowedEmail(emailaddr)) {
-            fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeeting", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-              }
-              ,
-              body: "sk=" + encodeURIComponent(subscriberKey) +
-                "&meetingDate=" + encodeURIComponent(meetingDate) +
-                "&contactSource=" + encodeURIComponent(contactSource) +
-                "&meetingTime=" + encodeURIComponent(meetingTime)+
-                "&token=" + encodeURIComponent(csrfToken)
+    
+    
+        if (isAllowedEmail(emailaddr)) {
+          fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeeting", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            }
+            ,
+            body: "sk=" + encodeURIComponent(subscriberKey) +
+              "&meetingDate=" + encodeURIComponent(meetingDate) +
+              "&contactSource=" + encodeURIComponent(contactSource) +
+              "&meetingTime=" + encodeURIComponent(meetingTime)+
+              "&token=" + encodeURIComponent(csrfToken)
+          }
+          )
+            .then(response => response.text())
+            .then(data => {
+             // console.log("Unsub response:", data);
+            document.getElementById("scheduledMeeting").style.display = "block";
+             
+            
             }
             )
-              .then(response => response.text())
-              .then(data => {
-              // console.log("Unsub response:", data);
-                hideSpinner();
-                document.getElementById("scheduledMeeting").disabled = true;
-                document.getElementById("meetingDate").disabled = true;
-                document.getElementById("time-slot").disabled = true;
-                const d = new Date(meetingDate);
-                const formattedDate =
-                  String(d.getDate()).padStart(2, '0') + "-" +
-                  String(d.getMonth() + 1).padStart(2, '0') + "-" +
-                  d.getFullYear();
-                document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime;
-                document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
-              }
-              )
-              .catch(error => {
-              //  console.error("Unsub error:", error);
-              }
-              );
-        
-          }
-        }  
+            .catch(error => {
+            //  console.error("Unsub error:", error);
+            }
+            );
+       
+        }
       }
       
       
@@ -1747,9 +1661,6 @@ IF NOT EMPTY(@contactKey) THEN
   
       function showSpinner() {
         document.getElementById("pageLoader").classList.remove("hidden");
-      }
-      function hideSpinner() {
-        document.getElementById("pageLoader").classList.add("hidden");
       }
   
       /* Show spinner on ALL form submits */

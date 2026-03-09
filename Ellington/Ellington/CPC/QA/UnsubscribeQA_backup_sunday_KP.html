@@ -36,6 +36,21 @@ IF NOT EMPTY(@sk) THEN
   SET @emailname = RequestParameter("emailname")
   SET @contactSource = RequestParameter("contactSource")
 
+  IF @contactSource == "Account" THEN
+  SET @accountId = RequestParameter("accountId")
+  ENDIF
+
+  SET @lue = CreateObject("ExecuteRequest")
+  SetObjectProperty(@lue,"Name","LogUnsubEvent")
+
+  SET @lue_prop = CreateObject("APIProperty")
+  SetObjectProperty(@lue_prop, "Name", "SubscriberKey")
+  SetObjectProperty(@lue_prop, "Value", @sk)
+  AddObjectArrayItem(@lue, "Parameters", @lue_prop)
+
+  SET @lue_statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
+
+  Output(concat("res: ", @lue_statusCode))
   InsertData("CPC Log DE",
         "SubscriberKey", @sk,
         "Page Submission", "Unsubscribe From All",
@@ -52,9 +67,7 @@ IF NOT EMPTY(@sk) THEN
         "EmailName", @emailname
         )
   SET @checkFlag = 0
-  
   IF @contactSource == "Account" THEN
-  SET @accountId = RequestParameter("accountId")
     /* SAVE PREFERENCES ON Account */
     UpdateSingleSalesforceObject(
     "Account", @accountId,
@@ -81,29 +94,13 @@ IF NOT EMPTY(@sk) THEN
     UpdateSingleSalesforceObject(
     "Lead", @sk,
     "Status__c","Unsubscribed",
-    "WhatsApp__c", 0,
-    "HasOptedOutOfEmail", 0,
-    "Push_Notifications__c", 0,
-    "Weekly_Highlights__c", 0,
-    "Personalized_Recommendations__c", 0,
-    "Essential_Updates_Only__c", 0,
-    "New_Project_Launches__c", 0,
+    "WhatsApp__c","false",
+    "HasOptedOutOfEmail","false",
+    "Push_Notifications__c","false",
     "Reason_for_Unsubscribe__c","",
     "Unsubscribe_Other_Reason__c",""
     )
   ENDIF
-
-  SET @sub = CreateObject("Subscriber")
-  SetObjectProperty(@sub, "SubscriberKey", @sk)
-  SetObjectProperty(@sub, "Status", "Unsubscribed")
-
-  SET @options = CreateObject("UpdateOptions")
-  SET @saveOpt = CreateObject("SaveOption")
-  SetObjectProperty(@saveOpt, "SaveAction", "UpdateAdd")
-  SetObjectProperty(@saveOpt, "PropertyName", "*")
-  AddObjectArrayItem(@options, "SaveOptions", @saveOpt)
-  SET @resub = InvokeUpdate(@sub, @rs, @rc, @options)
-  
 ELSE
   IF @tokenFlag == 'false' THEN
   Output(concat("csrf-alert: ", @errorMessage))

@@ -17,9 +17,7 @@ SET @emailAddr = RequestParameter("email")
 SET @emailname = RequestParameter("emailname")
 SET @contactSource = RequestParameter("contactSource")
 
-  IF @contactSource == "Account" THEN
-    SET @accountId = RequestParameter("accountId")
-  ENDIF
+  
 
   InsertData("CPC Log DE",
         "SubscriberKey", @sk,
@@ -36,7 +34,15 @@ SET @contactSource = RequestParameter("contactSource")
         "DateAdded", Now(),
         "EmailName", @emailname
         )
+        
+        
+   
+        
   SET @checkFlag = 0
+  
+  IF @contactSource == "Account" THEN
+    SET @accountId = RequestParameter("accountId")
+  
   UpdateSingleSalesforceObject(
     "Account", @accountId,
     "PersonHasOptedOutOfEmail", 0,
@@ -47,12 +53,34 @@ SET @contactSource = RequestParameter("contactSource")
     "Essential_Updates_Only__c", 0,
     "New_Project_Launches__c", 0
     )
+    
+   ELSE
+   
     UpdateSingleSalesforceObject(
-    "Account", @accountId,
-    "PersonHasOptedOutOfEmail", 0
-    )
+        "Lead", @sk,
+        "WhatsApp__c", 0,
+        "HasOptedOutOfEmail", 0,
+        "Push_Notifications__c", 0,
+        "Reason_for_Unsubscribe__c", @reason,
+        "Unsubscribe_Other_Reason__c", @otherReason
+        )
+    ENDIF
+
+
+      SET @sub = CreateObject("Subscriber")
+      SetObjectProperty(@sub, "SubscriberKey", @sk)
+      SetObjectProperty(@sub, "Status", "Unsubscribed")
+
+      SET @options = CreateObject("UpdateOptions")
+      SET @saveOpt = CreateObject("SaveOption")
+      SetObjectProperty(@saveOpt, "SaveAction", "UpdateAdd")
+      SetObjectProperty(@saveOpt, "PropertyName", "*")
+      AddObjectArrayItem(@options, "SaveOptions", @saveOpt)
+      SET @resub = InvokeUpdate(@sub, @rs, @rc, @options)
+    
     UpdateSubscriber(@emailAddr,"Unsubscribed")
-    SET @checkFlag = @accountId
+        
+    SET @checkFlag = 1
 
   
 

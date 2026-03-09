@@ -1,4 +1,47 @@
 %%[
+
+ /*UpdateSingleSalesforceObject(
+        "Task","00Tan00000egk2bEAA",
+        "Callback_Date__c","2026-03-07"
+       )
+
+SET @TasksubscriberRows = RetrieveSalesforceObjects(
+        "Task",
+        "Id, Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate",
+        "WhoId","=","00Qan00000QyeZxEAJ"
+    )
+
+    SET @TaskRowCount = RowCount(@TasksubscriberRows)
+    SET @latestDate = ""
+    SET @isBackDate = 0
+
+    IF @TaskRowCount > 0 THEN
+
+      FOR @i = 1 TO @TaskRowCount DO
+
+        SET @row = Row(@TasksubscriberRows,@i)
+        SET @created = Field(@row,"CreatedDate")
+
+        IF EMPTY(@latestDate) OR @created > @latestDate THEN
+
+            SET @latestDate = @created
+            SET @callBackDate = Field(@row,"Callback_Date__c")
+            SET @callBackTime = Field(@row,"Callback_Time__c")
+            SET @taskId = Field(@row,"Id")
+            SET @callBackStatus = Field(@row,"Status")
+
+        ENDIF
+
+      NEXT @i
+
+      
+      IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
+          SET @isBackDate = 1
+      ENDIF
+
+    ENDIF
+*/
+
 /*
 UpdateSingleSalesforceObject(
         "Account","001an00000S0azUAAR",
@@ -27,7 +70,7 @@ UpdateSingleSalesforceObject(
       "Unsubscribe_Other_Reason__c",""
       ) 
       
-      */
+  */    
     SET @rows = RetrieveSalesforceObjects(
     "Account",
     "Country__c,Nationality__c,Employment_Type__c,Budget__c,Purchase_Timeframe__c,WhatsApp__c,PersonHasOptedOutOfEmail,Push_Notifications__c,Weekly_Highlights__c,Personalized_Recommendations__c,Essential_Updates_Only__c,New_Project_Launches__c,Status__c,Reason_for_Unsubscribe__c,Unsubscribe_Other_Reason__c",
@@ -57,7 +100,7 @@ IF @rowCount > 0 THEN
     SET @otherreason = Field(@row,"Unsubscribe_Other_Reason__c")
 
 ENDIF
-
+*/
 
 /*
 UpdateSingleSalesforceObject(
@@ -72,13 +115,16 @@ UpdateSingleSalesforceObject(
       "New_Project_Launches__c", "false",
       "Status__c", @crmSubStatus,
       "Reason_for_Unsubscribe__c","",
-      "Unsubscribe_Other_Reason__c",""
+      "Unsubscribe_Other_Reason__c","",
+      "Interested_Property_Type__c", "2 BHK",
+      "Purpose_of_Investment__c", "Retirement",
+      "Preferred_Areas__c", "Business Bay; Dubai Islands"
       )
 
 
 SET @leadRows = RetrieveSalesforceObjects(
 "Lead",
-"Id, Country__c, Nationality__c, Employment_Type__c, Budget__c, Purchase_Timeframe__c, WhatsApp__c, HasOptedOutOfEmail, Push_Notifications__c, Weekly_Highlights__c, Personalized_Recommendations__c, Essential_Updates_Only__c, New_Project_Launches__c, Status__c",
+"Id, Country__c, Nationality__c, Employment_Type__c, Budget__c, Purchase_Timeframe__c, WhatsApp__c, HasOptedOutOfEmail, Push_Notifications__c, Weekly_Highlights__c, Personalized_Recommendations__c, Essential_Updates_Only__c, New_Project_Launches__c, Status__c, Interested_Property_Type__c, Purpose_of_Investment__c, Preferred_Areas__c", 
 "Id","=","00Qan00000QyeZxEAJ"
 )
 
@@ -99,13 +145,25 @@ SET @personalizedRecommendations = Field(@row,"Personalized_Recommendations__c")
 SET @essentialUpdatesOnly = Field(@row,"Essential_Updates_Only__c")
 SET @newProjectLaunches = Field(@row,"New_Project_Launches__c")
 SET @crmSubStatus = Field(@row,"Status__c")
+SET @iProperty = Field(@row,"Interested_Property_Type__c")
+SET @pInv = Field(@row,"Purpose_of_Investment__c")
+SET @pArea = Field(@row,"Preferred_Areas__c")
+
+
 
 ENDIF
 
-
-
 */
+
+
 ]%%
+
+<!-- Task -->
+<b>taskId:</b> %%=v(@taskId)=%% <br>
+<b>callBackDate:</b> %%=v(@callBackDate)=%% <br>
+<b>callBackTime:</b> %%=v(@callBackTime)=%% <br>
+<b>callBackStatus:</b> %%=v(@callBackStatus)=%% <br>
+
 
 <!-- Lead
 <b>Country:</b> %%=v(@country)=%% <br>
@@ -121,8 +179,14 @@ ENDIF
 <b>Essential Updates Only:</b> %%=v(@essentialUpdatesOnly)=%% <br>
 <b>New Project Launches:</b> %%=v(@newProjectLaunches)=%% <br>
 <b>Status:</b> %%=v(@crmSubStatus)=%%
+<b>pInv:</b> %%=v(@pInv)=%%
+<b>iProperty:</b> %%=v(@iProperty)=%%
+<b>pArea:</b> %%=v(@pArea)=%%
 
 -->
+
+
+<!-- Account
 Country: %%=v(@country)=%% <br>
 Nationality: %%=v(@nationality)=%% <br>
 Employment Type: %%=v(@employmentType)=%% <br>
@@ -138,3 +202,5 @@ New Project Launches: %%=v(@newproject)=%% <br>
 Status: %%=v(@status)=%% <br>
 Reason: %%=v(@reason)=%% <br>
 Other Reason: %%=v(@otherreason)=%%
+
+-->
