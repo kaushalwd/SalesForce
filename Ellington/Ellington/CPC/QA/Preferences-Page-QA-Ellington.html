@@ -27,13 +27,50 @@ IF NOT EMPTY(@contactKey) THEN
     SET @contactSource = "Account"
   ENDIF  
   
-  SET @csrfToken = GUID()
-  SET @submittedToken = RequestParameter("csrf_token")
   VAR @emailAddr
   SET @emailname = emailname_
 
   SET @save = RequestParameter("savePref")
- /* Output(Concat("<br />savePref -> ", @save)) */
+  SET @csrfToken = GUID()
+  SET @submittedToken = RequestParameter("csrf_token")
+
+  IF EMPTY(@submittedToken) THEN
+    UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @subscriberKey, "Token", @csrfToken, "CreatedDate", Now())
+  ENDIF
+
+  IF @save == "1" OR @save == 'unsub' THEN
+    SET @tokenFlag = ''
+    SET @chkSubKey = RequestParameter("sk")
+    /* Retrieve stored token */
+    SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @chkSubKey)
+
+    IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+      SET @tokenFlag = 'true'
+      DeleteData("CSRF_Tokens_DE", "SubscriberKey", @chkSubKey)
+      IF @save == 'unsub' THEN
+        UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @chkSubKey, "Token", @csrfToken, "CreatedDate", Now())
+      ENDIF
+    ELSE
+      SET @tokenFlag = 'false'
+      SET @errorMessage = "Invalid security token. Please refresh and try again."
+    ENDIF
+
+    /* === Domain allowlist === */
+    SET @emailAddr = RequestParameter("email")
+    SET @emailLower = Lowercase(@emailAddr)
+    SET @isAllowedDomain = IIF(
+    IndexOf(@emailLower, "@horizontal.com") > 0 OR
+    IndexOf(@emailLower, "@ellingtongroup.com") > 0 OR
+    IndexOf(@emailLower, "@nobl.ae") > 0 OR 
+    IndexOf(@emailLower, "@gmail.com") > 0,
+    "true",
+    "false"
+    )
+  Output(Concat("<br />savePref -> ", @save, " isAllowedDomain -> ", @isAllowedDomain, "tokenFlag -> ", @tokenFlag))
+  ENDIF
+  
+  
+ 
 
   /* Getting Publication Lists status */
   
@@ -65,11 +102,11 @@ IF NOT EMPTY(@contactKey) THEN
   
   VAR @AccountId
   IF @save != 1 AND @save != 'unsub' THEN
-  /*Output(Concat("<br />Save not One -> ", @save))*/
+  Output(Concat("<br />Inside Loading -> ", @save))
     IF Substring(@contactKey, 1, 3) == "00Q" THEN
       SET @subscriberRows = RetrieveSalesforceObjects(
       "Lead",
-      "FirstName, LastName, Id, Lead_Id__c, Phone, Email, Country__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId",
+      "FirstName, LastName, Id, Lead_Id__c, Phone, Email, Country__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
       "Id", "=", @contactKey )
       
       SET @contactSource = "Lead"
@@ -97,10 +134,10 @@ IF NOT EMPTY(@contactKey) THEN
       SET @accountId = Field(@subscriberRow, "Account__c")
       SET @OwnerId = Field(@subscriberRow, "OwnerId")
 
-      SET @Reason_for_Unsubscribe__c = ""
-      /* SET @Reason_for_Unsubscribe__c = Field(@subscriberRow, "Reason_for_Unsubscribe__c") */
-      /* SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)*/
-      /* SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") */
+      /* SET @Reason_for_Unsubscribe__c = ""*/
+       SET @Reason_for_Unsubscribe__c = Field(@subscriberRow, "Reason_for_Unsubscribe__c") 
+       SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)
+       SET @Unsubscribe_Other_Reason__c = Field(@subscriberRow, "Unsubscribe_Other_Reason__c")
       SET @Unsubscribe_Other_Reason__c = ""
       
       
@@ -108,7 +145,7 @@ IF NOT EMPTY(@contactKey) THEN
     
       SET @AccountsubscriberRows = RetrieveSalesforceObjects(
       "Account",
-      "FirstName, LastName, Id, Phone, PersonEmail,  PersonContactId, Country__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, OwnerId",
+      "FirstName, LastName, Id, Phone, PersonEmail,  PersonContactId, Country__c, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
       "PersonContactId", "=", @contactKey )
 
       SET @contactSource = "Account"
@@ -136,10 +173,10 @@ IF NOT EMPTY(@contactKey) THEN
       SET @Status = Field(@AccountsubscriberRow, "Status__c")
       SET @accountOwnerId = Field(@AccountsubscriberRow, "OwnerId")
 
-      SET @Reason_for_Unsubscribe__c = ""
-      /* SET @Reason_for_Unsubscribe__c = Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c") */
-      /* SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)*/
-      /* SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") */
+      /* SET @Reason_for_Unsubscribe__c = "" */
+       SET @Reason_for_Unsubscribe__c = Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")
+       SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)
+       SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") 
       SET @Unsubscribe_Other_Reason__c = ""
     ENDIF
     
@@ -191,37 +228,13 @@ IF NOT EMPTY(@contactKey) THEN
     ENDIF
 
 
-    SET @submittedToken = RequestParameter("csrf_token")
+    
     SET @resubSubmit = RequestParameter("resubSubmit")
-    SET @chkSubKey = RequestParameter("sk")
-    SET @tokenFlag = ''
-    /* Retrieve stored token */
-    SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @chkSubKey)
+    
 
-    IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
-      SET @tokenFlag = 'true'
-      DeleteData("CSRF_Tokens_DE", "SubscriberKey", @chkSubKey)
-      IF @save == 'unsub' THEN
-        UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @chkSubKey, "Token", @csrfToken, "CreatedDate", Now())
-      ENDIF
-    ELSE
-      SET @tokenFlag = 'false'
-      SET @errorMessage = "Invalid security token. Please refresh and try again."
-    ENDIF
-
-    /* === Domain allowlist === */
-    SET @emailLower = Lowercase(@emailAddr)
-    SET @isAllowedDomain = IIF(
-    IndexOf(@emailLower, "@horizontal.com") > 0 OR
-    IndexOf(@emailLower, "@ellingtongroup.com") > 0 OR
-    IndexOf(@emailLower, "@nobl.ae") > 0,
-    "true",
-    "false"
-    )
-
-  /*ELSEIF @save == "1" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN*/
-  ELSEIF @save == 1 THEN
-    /*Output(Concat("<br />savePref Inside -> ", @save))*/
+  ELSEIF @save == "1" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN
+  /* ELSEIF @save == 1 THEN */
+  Output(Concat("<br />Inside Save -> ", @save))
     SET @accountId = RequestParameter("accountId")
     SET @leadId = RequestParameter("leadId")
     SET @firstName = RequestParameter("fName")
@@ -458,9 +471,9 @@ IF NOT EMPTY(@contactKey) THEN
     SET @thankYouType = "save"
     /* UNSUBSCRIBE */
 
-  /* ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN */
-    ELSEIF @save == "unsub" THEN
-      /*Output(Concat("<br />Save Pref Inside -> ", @save))*/
+   ELSEIF @save == "unsub" AND @isAllowedDomain == "true" AND @tokenFlag == "true" THEN 
+    /* ELSEIF @save == "unsub" THEN */
+    Output(Concat("<br />Inside Unsub -> ", @save))
       SET @showThankYou = "true"
       SET @thankYouType = "unsub"
       SET @reason = RequestParameter("unsubReason")
@@ -578,7 +591,15 @@ IF NOT EMPTY(@contactKey) THEN
             src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/d702ea48-e11c-49ec-b52d-7515742b0578.png"></a>
       </div>
     </header>
-  
+    <div class="container">
+    <div class="alert alert-warning" id="csrf-alert" role="alert" style="%%=v(@errorStyle)=%%">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <strong class="">Invalid security token. Please refresh and try again.</strong>
+      </div>
+    </div>
+  </div> 
+  <div class="outer-container" id="outer-container" style="%%=v(@outerWrepperStyle)=%%">
     %%[ IF @showThankYou == "true" THEN ]%%
       <!-- ================= THANK YOU ================= -->
       %%[ IF @thankYouType == "save" THEN ]%%
@@ -1666,6 +1687,10 @@ IF NOT EMPTY(@contactKey) THEN
             .then(response => response.text())
             .then(data => {
               console.log("Unsub response:", data);
+              if (data.includes("csrf-alert")) {
+                document.getElementById("csrf-alert").style.display = "block";
+                document.getElementById("outer-container").style.display = "none";
+              }
             }
             )
             .catch(error => {
@@ -1904,6 +1929,7 @@ IF NOT EMPTY(@contactKey) THEN
           : "Select Area";
       }
       </script>
+    </div>
   </body>
   
   </html>

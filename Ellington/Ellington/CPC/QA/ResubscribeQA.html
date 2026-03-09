@@ -25,20 +25,18 @@
   ELSE
       SET @accountId = ""
   ENDIF    
-/*
-SET @tokenFlag = "false"
-  SET @submittedToken = RequestParameter("token")
-  SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
-  IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
-    SET @tokenFlag = 'true'
-    DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
-  ELSE
-    SET @tokenFlag = 'false'
-    SET @errorMessage = "Invalid security token. Please refresh and try again."
-  ENDIF
-*/
 
-SET @tokenFlag = "true"
+SET @tokenFlag = "false"
+SET @submittedToken = RequestParameter("token")
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
+IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+  SET @tokenFlag = 'true'
+  DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+ELSE
+  SET @tokenFlag = 'false'
+  SET @errorMessage = "Invalid security token. Please refresh and try again."
+ENDIF
+
 /* output(Concat('SubscribErkEy->', @sk, '---Email->', @emailAddr, '=== Contact Source -->', @contactSource)) */
 
   IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
