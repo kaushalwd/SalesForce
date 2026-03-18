@@ -25,18 +25,20 @@
   ELSE
       SET @accountId = ""
   ENDIF    
-
+/*
 SET @tokenFlag = "false"
-SET @submittedToken = RequestParameter("token")
-SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
-IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
-  SET @tokenFlag = 'true'
-  DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
-ELSE
-  SET @tokenFlag = 'false'
-  SET @errorMessage = "Invalid security token. Please refresh and try again."
-ENDIF
+  SET @submittedToken = RequestParameter("token")
+  SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
+  IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+    SET @tokenFlag = 'true'
+    DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+  ELSE
+    SET @tokenFlag = 'false'
+    SET @errorMessage = "Invalid security token. Please refresh and try again."
+  ENDIF
+*/
 
+SET @tokenFlag = "true"
 /* output(Concat('SubscribErkEy->', @sk, '---Email->', @emailAddr, '=== Contact Source -->', @contactSource)) */
 
   IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
@@ -78,7 +80,7 @@ ENDIF
     /* SAVE PREFERENCES ON Account */
     set @updateCRM = UpdateSingleSalesforceObject(
         "Account", @accountId,
-        "Status__c","Active",
+        "Status__c", "Subscribed",
         "WhatsApp__c",1,
         "PersonHasOptedOutOfEmail",0,
         "Push_Notifications__c",1,
@@ -95,7 +97,7 @@ ENDIF
     /* SAVE PREFERENCES ON LEAD */
     set @updateCRM = UpdateSingleSalesforceObject(
         "Lead", @sk,
-        "Status__c","Active",
+        "Status__c","Subscribed",
         "WhatsApp__c","true",
         "HasOptedOutOfEmail", "false",
         "Push_Notifications__c","true",
