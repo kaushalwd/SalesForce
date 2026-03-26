@@ -13,32 +13,72 @@
       AddObjectArrayItem(@options, "SaveOptions", @saveOpt)
       SET @resub = InvokeUpdate(@sub, @rs, @rc, @options)   
 
-   
-   
-      UpdateSingleSalesforceObject(
-      "Lead", "00Qan00000QyeZxEAJ",
-      
-      "WhatsApp__c", "false",
-      "HasOptedOutOfEmail", 0,
-      "Push_Notifications__c", "true",
-      "Weekly_Highlights__c","false",
-      "Personalized_Recommendations__c", 0,
-      "Essential_Updates_Only__c","false",
-      "New_Project_Launches__c", "false",
-      "Status__c", @crmSubStatus,
-      "Reason_for_Unsubscribe__c","",
-      "Unsubscribe_Other_Reason__c",""
-      )
+  */ 
+  
+/*
+  SET @taskId = CreateSalesforceObject(
+    "Task", 8,
+    "Subject", "Follow Up Required – Lead Interacted with Marketing Campaign",
+    "Status", "Open",
+    "Priority", "High",
+    "WhoId", "00Qan00000QyeZxEAJ",
+    "callback_date__c", "2026-03-21" ,
+    "callback_time__c", "6:00 PM to 6:30 PM",
+    "OwnerId", IIF(EMPTY(@OwnerId), @accountOwnerId, @OwnerId),
+    "WhatId", IIF(EMPTY(@accountId), '', @accountId)
+)
 */
 
 
+/*
+  SET @whoId = "00Qan00000QyeZxEAJ"
+
+  SET @rows = RetrieveSalesforceObjects(
+    "Task",
+    "Id, Callback_Date__c, Callback_Time__c, Status, WhoId",
+    "WhoId",
+    "=",
+    @whoId
+  )
+
+  SET @rowCount = RowCount(@rows)
+  SET @callBackDate = ""
+  SET @callBackStatus = ""
+  SET @callBackTime = ""
+  SET @taskId = ""
+
+  IF @rowCount > 0 THEN
+
+    FOR @i = 1 TO @rowCount DO
+
+      SET @row = Row(@rows,@i)
+      SET @cbDate = Field(@row,"Callback_Date__c")
+      SET @cbStatus = Field(@row,"Status")
+      SET @cbTime = Field(@row,"Callback_Time__c")
+      SET @cbTaskId = Field(@row,"Id")
+      
+      IF (EMPTY(@callBackDate) OR @cbDate > @callBackDate) AND @cbStatus != "Completed" THEN
+          SET @callBackDate = @cbDate
+          SET @callBackStatus = @cbStatus
+          SET @callBackTime = @cbTime
+          SET @taskId = @cbTaskId
+      ENDIF
+
+    NEXT @i
+
+    IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
+          SET @isBackDate = 1
+      ELSE
+          SET @makeMeDisabled = "disabled"
+          SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
+          SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
+      ENDIF
+  ENDIF
+*/
+  
+
 
 /*
- UpdateSingleSalesforceObject(
-        "Task","00Tan00000egk2bEAA",
-        "Callback_Date__c","2026-03-07"
-       )
-       */
 SET @TasksubscriberRows = RetrieveSalesforceObjects(
         "Task",
         "Id, Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate, WhatId",
@@ -54,26 +94,40 @@ SET @TasksubscriberRows = RetrieveSalesforceObjects(
       FOR @i = 1 TO @TaskRowCount DO
 
         SET @row = Row(@TasksubscriberRows,@i)
-        SET @created = Field(@row,"CreatedDate")
+        
+        SET @created = Field(@row,"Callback_Date__c")
+        SET @callBackStatus = Field(@row,"Status")
 
-        IF EMPTY(@latestDate) OR @created > @latestDate THEN
-
-            SET @latestDate = @created
             SET @callBackDate = Field(@row,"Callback_Date__c")
             SET @callBackTime = Field(@row,"Callback_Time__c")
             SET @taskId = Field(@row,"Id")
             SET @callBackStatus = Field(@row,"Status")
 
-        ENDIF
+            Output(Concat("taskId: ",@taskId,"<br>"))
+            Output(Concat("callBackDate: ",@callBackDate,"<br>"))
+            Output(Concat("callBackTime: ",@callBackTime,"<br>"))
+            Output(Concat("callBackStatus: ",@callBackStatus,"<br><br>"))   
 
+        IF (EMPTY(@latestDate) OR @callBackDate > @latestDate) AND @callBackStatus != "Completed" THEN
+
+            SET @latestDate = @created
+            /*SET @callBackDate = Field(@row,"Callback_Date__c")*/
+            SET @callBackTime = Field(@row,"Callback_Time__c")
+            SET @taskId = Field(@row,"Id")
+            SET @callBackStatus = Field(@row,"Status")
+
+        ENDIF
+        
+        
       NEXT @i
 
-      /* check if callback date is past */
+
       IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
           SET @isBackDate = 1
       ENDIF
 
     ENDIF
+*/
 
 
 
@@ -137,7 +191,7 @@ IF @rowCount > 0 THEN
 ENDIF
 */
 
-
+/*
 UpdateSingleSalesforceObject(
       "Lead", "00Qan00000QyeZxEAJ",
       
@@ -157,7 +211,12 @@ UpdateSingleSalesforceObject(
       "Reason_for_Unsubscribe__c", "The content is not relevant to me"
       )
 
+*/
 
+UpdateSingleSalesforceObject(
+      "Lead", "00Qan00000QyeZxEAJ",
+      "Purchase_Timeframe__c", '2 Months'
+      )
 
 SET @leadRows = RetrieveSalesforceObjects(
 "Lead",
@@ -199,8 +258,12 @@ ENDIF
 <!-- Task 
 <b>taskId:</b> %%=v(@taskId)=%% <br>
 <b>callBackDate:</b> %%=v(@callBackDate)=%% <br>
+<b>callBackDate formatted:</b> %%=FormatDate(@callBackDate,"yyyy-MM-dd")=%% <br>
 <b>callBackTime:</b> %%=v(@callBackTime)=%% <br>
-<b>callBackStatus:</b> %%=v(@callBackStatus)=%% <br>
+<b>callBackStatus:</b> %%=v(@callBackStatus)=%% <br><br>
+<b>Latest Callback Date:</b> %%=v(@latestDate)=%% <br>
+<b>Today's Date:</b> %%=FormatDate(Now(),"yyyy-MM-dd")=%% <br>
+<b>Meeting Schedule:</b> %%=v(@scheduledDetails)=%% <br> 
 -->
 
 <!-- Lead -->
@@ -216,16 +279,16 @@ ENDIF
 <b>Personalized Recommendations:</b> %%=v(@personalizedRecommendations)=%% <br>
 <b>Essential Updates Only:</b> %%=v(@essentialUpdatesOnly)=%% <br>
 <b>New Project Launches:</b> %%=v(@newProjectLaunches)=%% <br>
-<b>Status:</b> %%=v(@crmSubStatus)=%%
-<b>pInv:</b> %%=v(@pInv)=%%
-<b>iProperty:</b> %%=v(@iProperty)=%%
-<b>pArea:</b> %%=v(@pArea)=%%
-<b>Reason:</b> %%=v(@reason)=%%
+<b>Status:</b> %%=v(@crmSubStatus)=%% <br>
+<b>pInv:</b> %%=v(@pInv)=%% <br>
+<b>iProperty:</b> %%=v(@iProperty)=%% <br>
+<b>pArea:</b> %%=v(@pArea)=%% <br>
+<b>Reason:</b> %%=v(@reason)=%% <br>
 
 
 
 
-<!-- Account
+<!-- Account 
 Country: %%=v(@country)=%% <br>
 Nationality: %%=v(@nationality)=%% <br>
 Employment Type: %%=v(@employmentType)=%% <br>
@@ -241,4 +304,4 @@ New Project Launches: %%=v(@newproject)=%% <br>
 Status: %%=v(@status)=%% <br>
 Reason: %%=v(@reason)=%% <br>
 Other Reason: %%=v(@otherreason)=%%
- -->
+--> 

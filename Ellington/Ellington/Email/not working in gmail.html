@@ -1,0 +1,89 @@
+<style>
+  .project-1 {padding-right:6.66667px!important}
+  .project-2 {padding-right:3.33333px!important; padding-left:3.33333px!important}
+  .project-3 {padding-left:6.66667px; padding-right:0!important}
+  @media all and (max-width:650px){
+    .responsive-td {
+    margin-bottom:20px!important
+    }
+    .mTable, #mTable {
+    width:100%;
+      min-width:100%
+    }
+  }
+</style>
+<!--[if mso]>
+<table id="mTable" class="mTable" cellspacing="0" cellpadding="0" role="presentation" align="center" width="33%" style="width:33%;border:3px solid yellow">
+<![endif]-->
+
+<!--[if !mso]><!-- -->
+<table id="mTable" class="mTable" cellspacing="0" cellpadding="0" role="presentation" align="center" width="100%" style="width:33%;  border:3px solid blue">
+<!--<![endif]-->
+    <tr>
+    %%[ set @ck = [SubscriberKey] 
+    SET @encryptedCK = Base64Encode(@ck) 
+    
+      
+    VAR @subKey, @rows, @rowCount, @i, @row, @projectName, @projectLink, @projectImage
+    
+    SET @subKey = AttributeValue("SubscriberKey")
+    SET @rows = LookupRows("PropertyMatching_JourneyDE_QA", "SubscriberKey", @subKey)
+    SET @rowCount = RowCount(@rows)
+     IF @rowCount > 1 THEN
+     SET @rowCount = 1
+     ENDIF
+    IF @rowCount > 0 THEN
+
+    FOR @i = 1 TO @rowCount DO
+      SET @row = Row(@rows, @i)
+      SET @projectName = Field(@row, "ProjectName")
+      SET @projectComm = Field(@row, "ProjectCommunity")
+      SET @projectLink = Field(@row, "ProjectLink")
+      SET @projectImageUrl = Field(@row, "ProjectImage")
+      SET @projectId = Field(@row, "ProjectId")
+      
+      SET @encryptedPID = Base64Encode(@projectId)
+      SET @concatedPropertiesLink = Concat(@concatedPropertiesLink, @cpLink)
+      SET @concatedPropertiesLink = concat("https://cloud.marketing.ellingtonproperties.com/PropertyMatching_QA?source=email&sk=", @encryptedCK, "&pid=", @encryptedPID)
+
+    ]%%
+<td valign="top" width="33.33%" class="responsive-td project-%%=v(@i)=%%" style="width: 33%; padding-right: 6.66667px; border:1px solid red">          
+<table cellpadding="0" cellspacing="0" width="100%" role="presentation" class="stylingblock-content-wrapper">
+                <tr>
+                    <td align="center">
+                      <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank"><img src="%%=v(@projectImageUrl)=%%" alt="" width="302" style="display: block; padding: 0px; text-align: center; height: auto; width: 100%; border: 0px; "></a>
+                        <p class="mob-font" style="
+                            font-family: 'acumin-pro', sans-serif;
+                            font-size: 14px;
+                            font-weight: 400;
+                            color: #434343;
+                            line-height: 20px;
+                            margin: 10px 5px 5px;
+                            text-align: center;
+                        ">
+                        %%=v(@projectName)=%%
+                        </p>
+
+                        <p class="mob-font" style="
+                            font-family: 'acumin-pro', sans-serif;
+                            font-size: 14px;
+                            font-weight: 300;
+                            color: #434343;
+                            line-height: 20px;
+                            margin: 10px 5px 15px;
+                            text-align: center;
+                        ">
+                        %%=v(@projectComm)=%%
+                        </p>
+                        <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank"><img src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/69533872-ee7f-461e-ad83-af40860cda38.png" alt="" height="33" width="150" style="display: block; padding: 0px; text-align: center; height: 33px; width: 150px; border: 0px;"></a>
+                    </td>
+                </tr>
+        </table>
+    </td>    
+    %%[
+    NEXT @i
+
+    ENDIF
+    ]%%
+    </tr>
+</table>

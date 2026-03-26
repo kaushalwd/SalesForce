@@ -1,0 +1,94 @@
+%%[
+
+/*
+UpdateSingleSalesforceObject(
+  "Task",
+  "00Tan00000g4b8tEAA",
+  "Callback_Date__c",
+  "2026-03-14"
+)
+*/
+
+
+/*
+SET @taskId = CreateSalesforceObject(
+    "Task", 8,
+    "Subject", "Follow Up Required – Lead Interacted with Marketing Campaign",
+    "Status", "Open",
+    "Priority", "Normal",
+    "WhoId", "00Qan00000QyeZxEAJ",
+    "callback_date__c", "2026-03-24",
+    "callback_time__c", "5:30 PM to 6:00 PM",
+    "OwnerId", IIF(EMPTY(@OwnerId), @accountOwnerId, @OwnerId),
+    "WhatId", IIF(EMPTY(@accountId), '', @accountId)
+)
+*/
+
+SET @TasksubscriberRows = RetrieveSalesforceObjects(
+        "Task",
+        "Id, Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate, WhatId, OwnerId",
+        "WhoId","=","00Qan00000eObVjEAK"
+    )
+
+    SET @TaskRowCount = RowCount(@TasksubscriberRows)
+    SET @isBackDate = 0
+    SET @callBackDate = ""
+    SET @callBackStatus = ""
+    SET @callBackTime = ""
+    SET @taskId = ""
+
+    SET @cbDate = ""
+    SET @cbStatus = ""
+    SET @cbTime = ""
+    SET @cbTaskId = ""
+
+
+    IF @TaskRowCount > 0 THEN
+
+      FOR @i = 1 TO @TaskRowCount DO
+
+        SET @row = Row(@TasksubscriberRows,@i)
+        SET @cbDate = Field(@row,"Callback_Date__c")
+        SET @cbTime = Field(@row,"Callback_Time__c")
+        SET @cbStatus = Field(@row,"Status")
+        SET @cbTaskId = Field(@row,"Id")
+        Output(Concat(
+            "<br>Callback Date: ", @cbDate,
+            "<br>Callback Time: ", @cbTime,
+            "<br>Status: ", @cbStatus,
+            "<br>Task Id: ", @cbTaskId
+            ))
+        
+
+      IF (EMPTY(@callBackDate) OR @cbDate > @callBackDate) AND @cbStatus != "Completed" AND NOT EMPTY(@cbDate) AND NOT EMPTY(@cbTime) THEN
+    
+          SET @callBackDate = @cbDate
+          SET @callBackStatus = @cbStatus
+          SET @callBackTime = @cbTime
+          SET @taskId = @cbTaskId
+
+        ENDIF
+
+      NEXT @i
+
+      /* check if callback date is past */
+      IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
+          SET @isBackDate = 1
+      ELSE
+          SET @makeMeDisabled = "disabled"
+          SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
+          SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
+      ENDIF
+
+    ENDIF
+]%%
+
+<!-- Task -->
+<br><br><b>isBackDate:</b> %%=v(@isBackDate)=%% <br>
+<b>taskId:</b> %%=v(@taskId)=%% <br>
+<b>callBackDate:</b> %%=v(@callBackDate)=%% <br>
+<b>callBackDate formatted:</b> %%=FormatDate(@callBackDate,"yyyy-MM-dd")=%% <br>
+<b>callBackTime:</b> %%=v(@callBackTime)=%% <br>
+<b>callBackStatus:</b> %%=v(@callBackStatus)=%% <br><br>
+<b>Today's Date:</b> %%=FormatDate(Now(),"yyyy-MM-dd")=%% <br>
+<b>Meeting Schedule:</b> %%=v(@scheduledDetails)=%% <br> 

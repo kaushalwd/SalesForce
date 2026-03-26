@@ -7,25 +7,11 @@
   SET @accountId = ""
   SET @emailAddr = RequestParameter("email")
   SET @emailname = RequestParameter("emailname")
-  SET @contactSource = RequestParameter("contactSource")
+  set @contactSource = RequestParameter("contactSource")
   /* IF @contactSource == "Account" THEN
     SET @accountId = RequestParameter("accountId")
   ENDIF
   */
-
-  SET @firstName = RequestParameter("firstName")
-  SET @LastName = RequestParameter("LastName")
-  SET @phone = RequestParameter("phone")
-  SET @country = RequestParameter("country")
-  SET @nationality = RequestParameter("nationality")
-  SET @employmentType = RequestParameter("employmentType")
-  SET @interestedPropertyType = RequestParameter("interestedPropertyType")
-  SET @budget = RequestParameter("budget")
-  SET @purposeOfInvestment = RequestParameter("purposeOfInvestment")
-  SET @preferredAreas = RequestParameter("preferredAreas")
-  SET @purchaseTimeframe = RequestParameter("purchaseTimeframe")
-
-
   SET @AccountsubscriberRows = RetrieveSalesforceObjects(
           "Account",
           "Id, PersonContactId",
@@ -54,55 +40,6 @@ SET @tokenFlag = "false"
 
 SET @tokenFlag = "true"
 /* output(Concat('SubscribErkEy->', @sk, '---Email->', @emailAddr, '=== Contact Source -->', @contactSource)) */
-
-
-IF Substring(@sk, 1, 3) == "00Q" THEN
-      SET @subscriberRows = RetrieveSalesforceObjects(
-      "Lead",
-      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
-      "Id", "=", @sk )
-      
-      SET @contactSource = "Lead"
-      SET @subscriberRow = Row(@subscriberRows, 1)
-      SET @firstName = Field(@subscriberRow, "FirstName")
-      SET @LastName = Field(@subscriberRow, "LastName")
-      SET @emailAddr = Field(@subscriberRow, "Email")
-      SET @phone = Field(@subscriberRow, "MobilePhone")
-      SET @country = Field(@subscriberRow, "Country_of_Residence__c")
-      SET @nationality = Field(@subscriberRow, "Nationality__c")
-      SET @employmentType = Field(@subscriberRow, "Employment_Type__c")
-      SET @interestedPropertyType = Field(@subscriberRow, "Interested_Property_Type__c")
-      SET @budget = Field(@subscriberRow, "Budget__c")
-      SET @purposeOfInvestment = Field(@subscriberRow, "Purpose_of_Investment__c")
-      SET @preferredAreas = Field(@subscriberRow, "Preferred_Areas__c")
-      SET @purchaseTimeframe = Field(@subscriberRow, "Purchase_Timeframe__c")
-
-ELSEIF Substring(@sk, 1, 3) == "003" THEN
-    
-SET @AccountsubscriberRows = RetrieveSalesforceObjects(
-      "Account",
-      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
-      "PersonContactId", "=", @sk)
-
-      SET @contactSource = "Account"
-      SET @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
-      SET @accountId = Field(@AccountsubscriberRow, "Id")
-      SET @firstName = Field(@AccountsubscriberRow, "FirstName")
-      SET @LastName = Field(@AccountsubscriberRow, "LastName")
-      SET @emailAddr = Field(@AccountsubscriberRow, "PersonEmail")
-      SET @phone = Field(@AccountsubscriberRow, "Mobile_Number__c")
-      SET @country = Field(@AccountsubscriberRow, "Country_of_Residence__c")
-      SET @nationality = Field(@AccountsubscriberRow, "Nationality__c")
-      SET @employmentType = Field(@AccountsubscriberRow, "Employment_Type__c")
-      SET @interestedPropertyType = Field(@AccountsubscriberRow, "Interested_Property_Type__c")
-      SET @budget = Field(@AccountsubscriberRow, "Budget__c")
-      SET @purposeOfInvestment = Field(@AccountsubscriberRow, "Purpose_of_Investment__c")
-      SET @preferredAreas = Field(@AccountsubscriberRow, "Preferred_Areas__c")
-      SET @purchaseTimeframe = Field(@AccountsubscriberRow, "Purchase_Timeframe__c")
-
-      
-ENDIF
-
 
   IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN
       SET @sub = CreateObject("Subscriber")
@@ -134,18 +71,7 @@ ENDIF
       "Status", "Active",
       "DateAdded", Now(),
       "EmailName", @emailname,
-      "EmailAddress", @emailAddr,
-      "First Name", @firstName,
-      "Last Name", @lastName,
-      "Mobile Number", @phone,
-      "Country of residence", @country,
-      "Nationality", @nationality,
-      "Employment Type", @employmentType,
-      "Property Type", @interestedPropertyType,
-      "Budget Range", @budget,
-      "Purpose of Purchase", @purposeOfInvestment,
-      "Purchase Timeframe", @purchaseTimeframe,
-      "Preferred Areas", @preferredAreas
+      "EmailAddress", @emailAddr
     )
      /* output(concat('---CPC log  ---', @createR))
      ================   CRM UpdateE ==================== */

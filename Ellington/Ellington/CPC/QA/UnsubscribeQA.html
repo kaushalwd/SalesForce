@@ -89,6 +89,7 @@ IF NOT EMPTY(@sk) THEN
     )
   ENDIF
 
+/*
   SET @sub = CreateObject("Subscriber")
   SetObjectProperty(@sub, "SubscriberKey", @sk)
   SetObjectProperty(@sub, "Status", "Unsubscribed")
@@ -99,7 +100,56 @@ IF NOT EMPTY(@sk) THEN
   SetObjectProperty(@saveOpt, "PropertyName", "*")
   AddObjectArrayItem(@options, "SaveOptions", @saveOpt)
   SET @resub = InvokeUpdate(@sub, @rs, @rc, @options)
-  
+*/
+
+  /*
+  SET @lue = CreateObject("ExecuteRequest")
+  SetObjectProperty(@lue,"Name","LogUnsubEvent")
+
+  SET @lue_prop = CreateObject("APIProperty")
+  SetObjectProperty(@lue_prop, "Name", "SubscriberKey")
+  SetObjectProperty(@lue_prop, "Value", @sk)
+  AddObjectArrayItem(@lue, "Parameters", @lue_prop)
+
+  SET @lue_statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
+
+  */
+
+  SET @lue = CreateObject("ExecuteRequest")
+  SetObjectProperty(@lue,"Name","LogUnsubEvent")
+
+  /* SubscriberKey */
+  SET @p1 = CreateObject("APIProperty")
+  SetObjectProperty(@p1, "Name", "SubscriberKey")
+  SetObjectProperty(@p1, "Value", @sk)
+  AddObjectArrayItem(@lue, "Parameters", @p1)
+
+  /* JobID */
+  SET @p2 = CreateObject("APIProperty")
+  SetObjectProperty(@p2, "Name", "JobID")
+  SetObjectProperty(@p2, "Value", jobid)
+  AddObjectArrayItem(@lue, "Parameters", @p2)
+
+  /* ListID */
+  SET @p3 = CreateObject("APIProperty")
+  SetObjectProperty(@p3, "Name", "ListID")
+  SetObjectProperty(@p3, "Value", listid)
+  AddObjectArrayItem(@lue, "Parameters", @p3)
+
+  /* BatchID */
+  SET @p4 = CreateObject("APIProperty")
+  SetObjectProperty(@p4, "Name", "BatchID")
+  SetObjectProperty(@p4, "Value", _JobSubscriberBatchID)
+  AddObjectArrayItem(@lue, "Parameters", @p4)
+
+  /* Optional Reason */
+  SET @p5 = CreateObject("APIProperty")
+  SetObjectProperty(@p5, "Name", "Reason")
+  SetObjectProperty(@p5, "Value", "BU1 Unsubscribe")
+  AddObjectArrayItem(@lue, "Parameters", @p5)
+
+  SET @statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
+
 ELSE
   IF @tokenFlag == 'false' THEN
   Output(concat("csrf-alert: ", @errorMessage))

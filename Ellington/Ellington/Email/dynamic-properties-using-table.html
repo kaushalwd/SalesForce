@@ -2,24 +2,45 @@
     .project-1 {padding-right:6.66667px!important}
     .project-2 {padding-right:3.33333px!important; padding-left:3.33333px!important}
     .project-3 {padding-left:6.66667px; padding-right:0!important}
+    
     @media all and (max-width:650px){
-      .responsive-td {
-      margin-bottom:20px!important
+      .dy-outer-wrapper {display:block!important}
+      td[class*="responsive-td"]{
+        display:block !important;
+        margin-bottom:20px!important;
+        padding-right:0!important;
+        padding-left:0!important;
+        width:100%;        
       }
     }
   </style>
-  <table cellspacing="0" cellpadding="0" role="presentation" style="width: 100%; ">
-      <tr>
-      %%[ set @ck = [SubscriberKey] 
+
+
+     %%[ set @ck = [SubscriberKey] 
       SET @encryptedCK = Base64Encode(@ck) 
       
         
       VAR @subKey, @rows, @rowCount, @i, @row, @projectName, @projectLink, @projectImage
       
       SET @subKey = AttributeValue("SubscriberKey")
-      SET @rows = LookupRows("PropertyMatching_JourneyDE_QA_Test", "SubscriberKey", @subKey)
+      SET @rows = LookupRows("PropertyMatching_JourneyDE_QA", "SubscriberKey", @subKey)
       SET @rowCount = RowCount(@rows)
-  
+      
+      SET @tableWidth = "100%"
+      IF @rowCount == 1 THEN
+        SET @tableWidth = "33.33%"
+      ELSEIF @rowCount == 2 THEN
+        SET @tableWidth = "66.66%"  
+      ELSEIF @rowCount == 3 THEN
+        SET @tableWidth = "100%"
+      ENDIF      
+    ]%%  
+    <table role="presentation" width="%%=v(@tableWidth)=%%" cellpadding="0" cellspacing="0" align="center">
+        <tr>
+    %%[
+      IF @rowCount > 3 THEN
+       SET @rowCount = 3
+      ENDIF 
       IF @rowCount > 0 THEN
   
       FOR @i = 1 TO @rowCount DO
@@ -28,18 +49,16 @@
         SET @projectComm = Field(@row, "ProjectCommunity")
         SET @projectLink = Field(@row, "ProjectLink")
         SET @projectImageUrl = Field(@row, "ProjectImage")
-        SET @projectId = Field(@row, "ProjectId")
         
+        SET @projectId = Field(@row, "ProjectId")
         SET @encryptedPID = Base64Encode(@projectId)
         SET @concatedPropertiesLink = Concat(@concatedPropertiesLink, @cpLink)
         SET @concatedPropertiesLink = concat("https://cloud.marketing.ellingtonproperties.com/PropertyMatching_QA?source=email&sk=", @encryptedCK, "&pid=", @encryptedPID)
   
       ]%%
-      <td valign="top" class="responsive-td project-%%=v(@i)=%%" style="width: 33%; padding-right: 6.66667px;">
-          <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="min-width: 100%; " class="stylingblock-content-wrapper">
-                  <tr>
-                      <td align="center">
-                        <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank"><img src="%%=v(@projectImageUrl)=%%" alt="" width="302" style="display: block; padding: 0px; text-align: center; height: auto; width: 100%; border: 0px;"></a>
+    <!-- COLUMN 1 -->
+    <td class="responsive-td project-%%=v(@i)=%%" width="33%" style="padding-right:6.66px;">
+      <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank"><img src="%%=v(@projectImageUrl)=%%" alt="" width="302" style="display: block; padding: 0px; text-align: center; height: auto; width: 100%; border: 0px;"></a>
                           <p class="mob-font" style="
                               font-family: 'acumin-pro', sans-serif;
                               font-size: 14px;
@@ -63,15 +82,12 @@
                           ">
                           %%=v(@projectComm)=%%
                           </p>
-                          <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank"><img src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/69533872-ee7f-461e-ad83-af40860cda38.png" alt="" height="33" width="150" style="display: block; padding: 0px; text-align: center; height: 33px; width: 150px; border: 0px;"></a>
-                      </td>
-                  </tr>
-          </table>
-      </td>    
-      %%[
+                          <a style="display:block; text-align:center;" href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank"><img src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/69533872-ee7f-461e-ad83-af40860cda38.png" alt="" height="33" width="150" style="display:inline-block; border:0;"></a>
+    </td>
+    %%[
       NEXT @i
   
       ENDIF
       ]%%
-      </tr>
-  </table>
+  </tr>
+</table>

@@ -1,0 +1,96 @@
+<style>
+  .project-1 {padding-right:6.66667px!important}
+  .project-2 {padding-right:3.33333px!important; padding-left:3.33333px!important}
+  .project-3 {padding-left:6.66667px!important; padding-right:0!important}
+  
+  @media all and (max-width:650px){
+    .responsive-td{
+      display:block!important;
+      width:100%!important;
+      margin-bottom:20px!important;
+    }
+  }
+  </style>
+  
+  <table cellspacing="0" cellpadding="0" role="presentation" width="100%">
+  %%[
+  SET @ck = AttributeValue("SubscriberKey")
+  SET @encryptedCK = Base64Encode(@ck)
+  
+  VAR @rows, @rowCount, @i
+  SET @rows = LookupRows("PropertyMatching_JourneyDE_QA_Test","SubscriberKey",@ck)
+  SET @rowCount = RowCount(@rows)
+  
+  IF @rowCount > 0 THEN
+  
+  FOR @i = 1 TO @rowCount DO
+  
+  SET @row = Row(@rows,@i)
+  SET @projectName = Field(@row,"ProjectName")
+  SET @projectComm = Field(@row,"ProjectCommunity")
+  SET @projectImageUrl = Field(@row,"ProjectImage")
+  SET @projectId = Field(@row,"ProjectId")
+  
+  SET @encryptedPID = Base64Encode(@projectId)
+  
+  SET @concatedPropertiesLink = Concat(
+  "https://cloud.marketing.ellingtonproperties.com/PropertyMatching_QA?source=email&sk=",
+  @encryptedCK,
+  "&pid=",
+  @encryptedPID
+  )
+  
+  /* START ROW EVERY 3 ITEMS */
+  IF Mod(@i,3) == 1 THEN
+  ]%%
+  <tr>
+  %%[ ENDIF ]%%
+  
+  <td class="responsive-td project-%%=v(Mod(@i,3))=%%" width="33%" valign="top" style="width:33%;">
+  
+  <table width="100%" role="presentation">
+  <tr>
+  <td align="center">
+  
+  <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank">
+  <img src="%%=v(@projectImageUrl)=%%" width="302" style="display:block;width:100%;height:auto;border:0;">
+  </a>
+  
+  <p style="font-family:'acumin-pro',sans-serif;font-size:14px;font-weight:400;color:#434343;line-height:20px;margin:10px 5px 5px;text-align:center;">
+  %%=v(@projectName)=%%
+  </p>
+  
+  <p style="font-family:'acumin-pro',sans-serif;font-size:14px;font-weight:300;color:#434343;line-height:20px;margin:10px 5px 15px;text-align:center;">
+  %%=v(@projectComm)=%%
+  </p>
+  
+  <a href="%%=RedirectTo(@concatedPropertiesLink)=%%" target="_blank">
+  <img src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/69533872-ee7f-461e-ad83-af40860cda38.png" height="33" width="150" style="display:block;border:0;">
+  </a>
+  
+  </td>
+  </tr>
+  </table>
+  
+  </td>
+  
+  %%[
+  /* CLOSE ROW AFTER 3 ITEMS */
+  IF Mod(@i,3) == 0 THEN
+  ]%%
+  </tr>
+  %%[ ENDIF ]%%
+  
+  %%[
+  NEXT @i
+  
+  /* CLOSE LAST ROW IF NOT MULTIPLE OF 3 */
+  IF Mod(@rowCount,3) != 0 THEN
+  ]%%
+  
+  %%[
+  ENDIF
+  
+  ENDIF
+  ]%%
+  </table>

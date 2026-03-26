@@ -1,9 +1,3 @@
-<script runat="server">
-    Platform.Load("Core", "1.1.1");
-  
-    try {
-  
-  </script>
 %%[
 
 set @sk = requestParameter('sk')
@@ -48,58 +42,11 @@ SET @taskId = CreateSalesforceObject(
     "OwnerId", IIF(EMPTY(@OwnerId), @accountOwnerId, @OwnerId),
     "WhatId", IIF(EMPTY(@accountId), '', @accountId)
 )
-
-
-SET @TasksubscriberRows = RetrieveSalesforceObjects(
-    "Task",
-    "Id, Callback_Date__c, Callback_Time__c, Status, WhoId, CreatedDate, WhatId, OwnerId",
-    "WhoId","=", @sk,
-    "Callback_Date__c","=",@meetingDate,
-    "Callback_Time__c","=",@meetingTime
-)
-
-SET @rowCount = RowCount(@TasksubscriberRows)
-
-IF @rowCount > 0 THEN
-    SET @TaskRow = Row(@TasksubscriberRows,1)
-    SET @TaskId = Field(@TaskRow,"Id")
-ELSE
-    SET @TaskId = ""
-ENDIF
-
-set @createR = insertData(
-      "CPC Log DE",
-      "SubscriberKey", @sk,
-      "Page Submission", "Task Creation for Meeting Schedule",
-      "DateAdded", Now(),
-      "Callback date", @meetingDate,
-      "Callback time", @meetingTime,
-      "taskId", @TaskId
-    )
-
-SET @successFlag = ""
- IF NOT EMPTY(@taskId) THEN
-     SET @successFlag = "TaskCreated"
-      OutputLine(v(@successFlag))
-  ENDIF
  ENDIF
 
 
 ENDIF
- 
+/* output(v(@taskId)) */
 
 
 ]%%
-<script runat="server">
-    Platform.Load("Core", "1.1.1");
-  }
-  catch (e) {
-
-    var contactKey = Variable.GetValue("@contactKey");
-    var emailAddr = Variable.GetValue("@emailAddr");
-
-    var response = Platform.Function.InsertData("CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
-
-  }
-
-</script>

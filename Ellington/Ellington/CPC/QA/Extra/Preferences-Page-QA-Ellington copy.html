@@ -66,7 +66,7 @@ IF NOT EMPTY(@contactKey) THEN
     "true",
     "false"
     )
-  /* Output(Concat("<br />savePref -> ", @save, " isAllowedDomain -> ", @isAllowedDomain, "tokenFlag -> ", @tokenFlag)) */
+  /*Output(Concat("<br />savePref -> ", @save, " isAllowedDomain -> ", @isAllowedDomain, "tokenFlag -> ", @tokenFlag))*/
   ENDIF
   
   
@@ -99,19 +99,14 @@ IF NOT EMPTY(@contactKey) THEN
     NEXT @i
   ENDIF
   
-  /*
-  Output(Concat("<br >weeklyHighlights --> ", @weeklyHighlights, 
-                "<br >personalizedRecommendations --> ", @personalizedRecommendations,
-                "<br >newProjectLaunches --> ", @newProjectLaunches,
-                "<br >essentialUpdatesOnly --> ", @essentialUpdatesOnly))
-  */
+  
   VAR @AccountId
   IF @save != 1 AND @save != 'unsub' THEN
   /* Output(Concat("<br />Inside Loading -> ", @save)) */
     IF Substring(@contactKey, 1, 3) == "00Q" THEN
       SET @subscriberRows = RetrieveSalesforceObjects(
       "Lead",
-      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
+      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
       "Id", "=", @contactKey )
       
       SET @contactSource = "Lead"
@@ -120,7 +115,7 @@ IF NOT EMPTY(@contactKey) THEN
       SET @LastName = Field(@subscriberRow, "LastName")
       SET @emailAddr = Field(@subscriberRow, "Email")
       SET @phone = Field(@subscriberRow, "MobilePhone")
-      SET @country = Field(@subscriberRow, "Country_of_Residence__c")
+      SET @country = Field(@subscriberRow, "Country__c")
       SET @nationality = Field(@subscriberRow, "Nationality__c")
       SET @employmentType = Field(@subscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@subscriberRow, "Interested_Property_Type__c")
@@ -150,7 +145,7 @@ IF NOT EMPTY(@contactKey) THEN
     
       SET @AccountsubscriberRows = RetrieveSalesforceObjects(
       "Account",
-      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
+      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country__c, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
       "PersonContactId", "=", @contactKey )
 
       SET @contactSource = "Account"
@@ -161,6 +156,7 @@ IF NOT EMPTY(@contactKey) THEN
       SET @emailAddr = Field(@AccountsubscriberRow, "PersonEmail")
       SET @phone = Field(@AccountsubscriberRow, "Mobile_Number__c")
       SET @country = Field(@AccountsubscriberRow, "Country_of_Residence__c")
+      /*SET @country = Field(@AccountsubscriberRow, "Country__c") */
       SET @nationality = Field(@AccountsubscriberRow, "Nationality__c")
       SET @employmentType = Field(@AccountsubscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@AccountsubscriberRow, "Interested_Property_Type__c")
@@ -177,12 +173,10 @@ IF NOT EMPTY(@contactKey) THEN
       SET @Status = Field(@AccountsubscriberRow, "Status__c")
       SET @accountOwnerId = Field(@AccountsubscriberRow, "OwnerId")
 
-       SET @Reason_for_Unsubscribe__c = "" 
-      /*
+      /* SET @Reason_for_Unsubscribe__c = "" */
        SET @Reason_for_Unsubscribe__c = Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")
        SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)
        SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") 
-       */
       SET @Unsubscribe_Other_Reason__c = ""
     ENDIF
     
@@ -200,7 +194,6 @@ IF NOT EMPTY(@contactKey) THEN
 
     SET @TaskRowCount = RowCount(@TasksubscriberRows)
     SET @isBackDate = 0
-    SET @isDataAvailable = 0
     SET @callBackDate = ""
     SET @callBackStatus = ""
     SET @callBackTime = ""
@@ -229,7 +222,6 @@ IF NOT EMPTY(@contactKey) THEN
           SET @callBackStatus = @cbStatus
           SET @callBackTime = @cbTime
           SET @taskId = @cbTaskId
-          SET @isDataAvailable = 1
 
         ENDIF
 
@@ -238,9 +230,7 @@ IF NOT EMPTY(@contactKey) THEN
       /* check if callback date is past */
       IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
           SET @isBackDate = 1
-      ENDIF
-
-      IF @isDataAvailable == 1 AND @isBackDate != 1 THEN
+      ELSE
           SET @makeMeDisabled = "disabled"
           SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
           SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
@@ -248,7 +238,7 @@ IF NOT EMPTY(@contactKey) THEN
 
     ENDIF
 
-    /* Output(Concat("Is Back Date ->", @isBackDate)) */
+
     
     SET @resubSubmit = RequestParameter("resubSubmit")
     
@@ -285,20 +275,12 @@ IF NOT EMPTY(@contactKey) THEN
     SET @meetingDate = RequestParameter("meetingDate")
     SET @meetingTime = RequestParameter("time-slot")
     */
-    /*
-    Output(Concat("<br >weeklyHighlights --> ", @weeklyHighlights, 
-                "<br >personalizedRecommendations --> ", @personalizedRecommendations,
-                "<br >newProjectLaunches --> ", @newProjectLaunches,
-                "<br >essentialUpdatesOnly --> ", @essentialUpdatesOnly))
-    */            
     VAR @AllSubStatusSFMC
-    VAR @PubListFlag
     IF @emailPref == 0 THEN
       SET @AllSubStatusSFMC = "Active"
-      SET @PubListFlag = "Active"
     ELSE
       SET @AllSubStatusSFMC = "Unsubscribed"
-      SET @PubListFlag = "Unsubscribed"
+      
     ENDIF
 
     IF @emailPref == 1 AND @push == "false" AND @whatsApp == "false" THEN
@@ -307,20 +289,7 @@ IF NOT EMPTY(@contactKey) THEN
       SET @crmSubStatus = "Subscribed"
     ENDIF
 
-    IF @weeklyHighlights == "Active" OR @personalizedRecommendations == "Active" OR @newProjectLaunches == "Active" OR @essentialUpdatesOnly == "Active" THEN
-      SET @prefFlag = "0"
-    ELSE
-    SET @prefFlag = "1"  
-    ENDIF  
-
     /*
-    IF @PubListFlag != 'Active' AND @prefFlag != "1" THEN
-      SET @AllSubStatusSFMC = "Active"
-    ENDIF
-    */
-
-
-/*
     Output(Concat("<br />Account Id: ", @accountId))
     Output(Concat("<br />Lead Id: ", @leadId))
     Output(Concat("<br />First Name: ", @firstName))
@@ -344,8 +313,8 @@ IF NOT EMPTY(@contactKey) THEN
     Output(Concat("<br />WhatsApp Opt-in: ", @whatsApp))
 
     Output(Concat("<br /><br />Lead Status: ", @leadStatus))
-*/
 
+    */
     /* Ensure subscriber is Active BEFORE list updates */
     
       SET @sub = CreateObject("Subscriber")
@@ -401,7 +370,6 @@ IF NOT EMPTY(@contactKey) THEN
       "Callback reason", 
     */
 
-
     VAR @subObj, @listObj, @result
 
       /* Create Subscriber object */
@@ -436,45 +404,6 @@ IF NOT EMPTY(@contactKey) THEN
       SET @result = InvokeUpdate(@subObj, @updateStatus)
 
 
-    /*** Update All Publist to Active, if Email subscription id TRUE  ****/
-  
-    IF @PubListFlag == 'Active' AND @prefFlag == "1" THEN
-
-      VAR @subObjPB, @listObjPB, @resultPB
-
-      /* Create Subscriber object */
-      SET @subObjPB = CreateObject("Subscriber")
-      SetObjectProperty(@subObjPB, "SubscriberKey", @contactKey)
-
-      /* === LIST 1104 === */
-      SET @listObjPB = CreateObject("SubscriberList")
-      SetObjectProperty(@listObjPB, "ID", "1104")
-      SetObjectProperty(@listObjPB, "Status", IIF(@PubListFlag == "Active","Active","Unsubscribed"))
-      AddObjectArrayItem(@subObjPB, "Lists", @listObjPB)
-
-      /* === LIST 1105 === */
-      SET @listObjPB = CreateObject("SubscriberList")
-      SetObjectProperty(@listObjPB, "ID", "1105")
-      SetObjectProperty(@listObjPB, "Status", IIF(@PubListFlag == "Active","Active","Unsubscribed"))
-      AddObjectArrayItem(@subObjPB, "Lists", @listObjPB)
-
-      /* === LIST 1106 === */
-      SET @listObjPB = CreateObject("SubscriberList")
-      SetObjectProperty(@listObjPB, "ID", "1106")
-      SetObjectProperty(@listObjPB, "Status", IIF(@PubListFlag == "Active","Active","Unsubscribed"))
-      AddObjectArrayItem(@subObjPB, "Lists", @listObjPB)
-
-      /* === LIST 1107 === */
-      SET @listObjPB = CreateObject("SubscriberList")
-      SetObjectProperty(@listObjPB, "ID", "1107")
-      SetObjectProperty(@listObjPB, "Status", IIF(@PubListFlag == "Active","Active","Unsubscribed"))
-      AddObjectArrayItem(@subObjPB, "Lists", @listObjPB)
-
-      /* Single Update */
-      SET @resultPB = InvokeUpdate(@subObjPB, @updateStatus)
-    ENDIF
-
-
     SET @weeklyHighlights = IIF(@weeklyHighlights == "Active", "true", "false")
     SET @personalizedRecommendations = IIF(@personalizedRecommendations == "Active", "true", "false")
     SET @newProjectLaunches = IIF(@newProjectLaunches == "Active", "true", "false")
@@ -495,7 +424,7 @@ IF NOT EMPTY(@contactKey) THEN
       /* Lead Id, not Converted  */
       UpdateSingleSalesforceObject(
       "Lead", @contactKey,
-      "Country_of_Residence__c", @country,
+      "Country__c", @country,
       "Nationality__c", @nationality,
       "Employment_Type__c", @employmentType,
       "Interested_Property_Type__c", @interestedPropertyType,
@@ -765,21 +694,21 @@ IF NOT EMPTY(@contactKey) THEN
               <div class="pref-row">
                 <div class="pref-col">
                   <label>First Name<sup class="value-required">*</sup></label>
-                  <input type="text" id="fName" name="fName" value="%%=v(ProperCase(@firstName))=%%" class="form-control readonly" readonly>
+                  <input type="text" id="fName" name="fName" value="%%=v(ProperCase(@firstName))=%%" class="form-control" disabled>
                 </div>
                 <div class="pref-col">
                   <label>Last Name<sup class="value-required">*</sup></label>
-                  <input type="text" id="lname" name="lname" value="%%=v(ProperCase(@lastName))=%%" class="form-control readonly" readonly>
+                  <input type="text" id="lname" name="lname" value="%%=v(ProperCase(@lastName))=%%" class="form-control" disabled>
                 </div>
               </div>
               <div class="pref-row">
                 <div class="pref-col">
                   <label>Email Address<sup class="value-required">*</sup></label>
-                  <input type="email" id="email" name="email" value="%%=v(@emailAddr)=%%" class="form-control readonly" aria-required="true" readonly>
+                  <input type="email" id="email" name="email" value="%%=v(@emailAddr)=%%" class="form-control" aria-required="true" disabled>
                 </div>
                 <div class="pref-col">
                   <label>Phone Number<sup class="value-required">*</sup></label>
-                  <input type="text" id="phoneNumber" name="phoneNumber" value="%%=v(@phone)=%%" class="readonly" readonly>
+                  <input type="text" id="phoneNumber" name="phoneNumber" value="%%=v(@phone)=%%" disabled>
                 </div>
               </div>
               <div class="pref-row">
@@ -1384,14 +1313,14 @@ IF NOT EMPTY(@contactKey) THEN
             <div class="card communication">
               <h3>Preferences</h3>
               <div class="pref-row">
-                <div class="pref-col PublicationPreferences">
+                <div class="pref-col">
                   <label>Publication Preferences</label>
                   <div class="pref-el"><input type="checkbox" name="weeklyHighlights"  %%[IF @weeklyHighlights=="true" THEN]%%checked%%[ENDIF]%% > Weekly Highlights</div>
                   <div class="pref-el"><input type="checkbox" name="personalizedRecommendations" %%[IF @personalizedRecommendations=="true" THEN]%%checked%%[ENDIF]%% > Personalised Recommendations</div>
                   <div class="pref-el"><input type="checkbox" name="newProjectLaunches" %%[IF @newProjectLaunches=="true" THEN]%%checked%%[ENDIF]%% > New Project Launches</div>
                   <div class="pref-el"><input type="checkbox" name="essentialUpdatesOnly" %%[IF @essentialUpdatesOnly=="true" THEN]%%checked%%[ENDIF]%% > Essential Updates Only</div>
                 </div>
-                <div class="pref-col ChannelPreferences">
+                <div class="pref-col">
                   <label>Channel Preferences</label>
                   <div class="pref-el">
                   <input type="hidden" name="emailStatus1" value="%%=v(@emailPrefUI)=%%"  />
@@ -1449,7 +1378,7 @@ IF NOT EMPTY(@contactKey) THEN
                   <div class="pref-el cta-wrapper"><input id="scheduledMeeting" type="button" onclick="scheduleMeeting()" value="Schedule Meeting" %%=v(@makeMeDisabled)=%% ></div>
                 </div>
             </div>
-            <div class="pref-row %%=IIF(@isDataAvailable == 1 AND @isBackDate != 1,'','hidden')=%% " id="meetingScheduleWrapper" style="text-align: right; padding-right: 10px; padding-top: 0;" ><label id="meetingSchedule">%%=v(@scheduledDetails)=%%</label></div>
+            <div class="pref-row %%=IIF(@isBackDate == 1,'hidden','')=%% " id="meetingScheduleWrapper" style="text-align: right; padding-right: 10px; padding-top: 0;" ><label id="meetingSchedule">%%=v(@scheduledDetails)=%%</label></div>
             </div>
           </div>
         </div>
@@ -1482,7 +1411,7 @@ IF NOT EMPTY(@contactKey) THEN
                 </p>
                 <div class="dropdown">
                   <div class="dropdown-selected" onclick="toggleDropdownReason()">
-                    <span id="selectedText">Select Reason</span>
+                    <span id="selectedText">%%=v(@Reason_for_Unsubscribe__c)=%%</span>
                     <span>▾</span>
                   </div>
                   <div id="dropdownOptions" class="dropdown-options hidden">
@@ -1514,7 +1443,7 @@ IF NOT EMPTY(@contactKey) THEN
                 <textarea id="otherText" class="hidden"
                   placeholder="Please specify">%%=v(@Unsubscribe_Other_Reason__c)=%%</textarea>
                 <div class="unsubscribe-actions">
-                  <button type="submit" id="reasonSubmit" class="primary" disabled>SUBMIT</button>
+                  <button type="submit" class="primary">SUBMIT</button>
                   <button type="button" class="secondary" onclick="showPreferences('resubRefresh')">RESUBSCRIBE</button>
                 </div>
               </div>
@@ -1538,7 +1467,6 @@ IF NOT EMPTY(@contactKey) THEN
     }
 
   </script>
-  <script src="https://cloud.marketing.ellingtonproperties.com/datetime-validation"></script>
     <script>
       var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
@@ -1548,7 +1476,7 @@ IF NOT EMPTY(@contactKey) THEN
       document.getElementById("meetingDate").addEventListener("change", function() {
         const selected = new Date(this.value);
         const today = new Date();
-        today.setDate(today.getDate())
+        today.setDate(today.getDate() + 1)
         today.setHours(0,0,0,0);
 
         if(selected < today){
@@ -1580,7 +1508,7 @@ IF NOT EMPTY(@contactKey) THEN
         var meetingTime = document.getElementById("time-slot").value;
 
         const d = new Date();
-        d.setDate(d.getDate())
+        d.setDate(d.getDate() + 1)
         const todayDate = d.getFullYear()+"-"+String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
         
         if(meetingDate < todayDate)
@@ -1609,21 +1537,18 @@ IF NOT EMPTY(@contactKey) THEN
             )
               .then(response => response.text())
               .then(data => {
-              console.log("schedule meeting response:", data);
+              // console.log("Unsub response:", data);
                 hideSpinner();
-                if (data.indexOf("TaskCreated") != -1 ){
-                  document.getElementById("scheduledMeeting").disabled = true;
-                  document.getElementById("meetingDate").disabled = true;
-                  document.getElementById("time-slot").disabled = true;
-                  const d = new Date(meetingDate);
-                  const formattedDate =
-                    String(d.getDate()).padStart(2, '0') + "-" +
-                    String(d.getMonth() + 1).padStart(2, '0') + "-" +
-                    d.getFullYear();
-                  document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime;
-                  document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
-                }
-                
+                document.getElementById("scheduledMeeting").disabled = true;
+                document.getElementById("meetingDate").disabled = true;
+                document.getElementById("time-slot").disabled = true;
+                const d = new Date(meetingDate);
+                const formattedDate =
+                  String(d.getDate()).padStart(2, '0') + "-" +
+                  String(d.getMonth() + 1).padStart(2, '0') + "-" +
+                  d.getFullYear();
+                document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime;
+                document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
               }
               )
               .catch(error => {
@@ -1659,17 +1584,6 @@ IF NOT EMPTY(@contactKey) THEN
         var emailname = "%%=v(@emailname)=%%";
         var contactSource = "%%=v(@contactSource)=%%";
         var csrfToken = "%%=v(@csrfToken)=%%";
-        var firstName = "%%=v(@firstName)=%%";
-        var LastName = "%%=v(@LastName)=%%";
-        var phone = "%%=v(@phone)=%%";
-        var country = "%%=v(@country)=%%";
-        var nationality = "%%=v(@nationality)=%%";
-        var employmentType = "%%=v(@employmentType)=%%";
-        var interestedPropertyType = "%%=v(@interestedPropertyType)=%%";
-        var purposeOfInvestment = "%%=v(@purposeOfInvestment)=%%";
-        var preferredAreas = "%%=v(@preferredAreas)=%%";
-        var purchaseTimeframe = "%%=v(@purchaseTimeframe)=%%";
-        
         if (isAllowedEmail(emailaddr)) {
           fetch("https://cloud.marketing.ellingtonproperties.com/ResubscribeQA", {
             method: "POST",
@@ -1682,17 +1596,7 @@ IF NOT EMPTY(@contactKey) THEN
               "&email=" + encodeURIComponent(emailaddr) +
               "&emailname=" + encodeURIComponent(emailname) +
               "&contactSource=" + encodeURIComponent(contactSource)+
-              "&token=" + encodeURIComponent(csrfToken)+
-              "&firstName=" + encodeURIComponent(firstName)+
-              "&LastName=" + encodeURIComponent(LastName)+
-              "&phone=" + encodeURIComponent(phone)+
-              "&country=" + encodeURIComponent(country)+
-              "&nationality=" + encodeURIComponent(nationality)+
-              "&employmentType=" + encodeURIComponent(employmentType)+
-              "&interestedPropertyType=" + encodeURIComponent(interestedPropertyType)+
-              "&purposeOfInvestment=" + encodeURIComponent(purposeOfInvestment)+
-              "&preferredAreas=" + encodeURIComponent(preferredAreas)+
-              "&purchaseTimeframe=" + encodeURIComponent(purchaseTimeframe)
+              "&token=" + encodeURIComponent(csrfToken)
           }
           )
             .then(response => response.text())
@@ -1711,74 +1615,6 @@ IF NOT EMPTY(@contactKey) THEN
         }
       }
   
-      function showPreferences(getPar) {
-  
-        var loader = document.getElementById("pageLoader");
-        if (loader) loader.classList.add("hidden");
-  
-        if(getPar == 'resubRefresh')
-          loader.classList.remove("hidden");
-        
-        var subscriberKey = "%%=v(@contactKey)=%%";
-        var accountId = "%%=v(@accountId)=%%";
-        var emailaddr = "%%=v(@emailAddr)=%%";
-        var emailname = "%%=v(@emailname)=%%";
-        var contactSource = "%%=v(@contactSource)=%%";
-        var csrfToken = "%%=v(@csrfToken)=%%";
-        var firstName = "%%=v(@firstName)=%%";
-        var LastName = "%%=v(@LastName)=%%";
-        var phone = "%%=v(@phone)=%%";
-        var country = "%%=v(@country)=%%";
-        var nationality = "%%=v(@nationality)=%%";
-        var employmentType = "%%=v(@employmentType)=%%";
-        var interestedPropertyType = "%%=v(@interestedPropertyType)=%%";
-        var purposeOfInvestment = "%%=v(@purposeOfInvestment)=%%";
-        var preferredAreas = "%%=v(@preferredAreas)=%%";
-        var purchaseTimeframe = "%%=v(@purchaseTimeframe)=%%";
-        
-        if (isAllowedEmail(emailaddr)) {
-          fetch("https://cloud.marketing.ellingtonproperties.com/ResubscribeQA", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-            ,
-            body: "sk=" + encodeURIComponent(subscriberKey) +
-              "&accountId=" + encodeURIComponent(accountId) +
-              "&email=" + encodeURIComponent(emailaddr) +
-              "&emailname=" + encodeURIComponent(emailname) +
-              "&contactSource=" + encodeURIComponent(contactSource) +
-              "&token=" + encodeURIComponent(csrfToken) +
-              "&firstName=" + encodeURIComponent(firstName)+
-              "&LastName=" + encodeURIComponent(LastName)+
-              "&phone=" + encodeURIComponent(phone)+
-              "&country=" + encodeURIComponent(country)+
-              "&nationality=" + encodeURIComponent(nationality)+
-              "&employmentType=" + encodeURIComponent(employmentType)+
-              "&interestedPropertyType=" + encodeURIComponent(interestedPropertyType)+
-              "&purposeOfInvestment=" + encodeURIComponent(purposeOfInvestment)+
-              "&preferredAreas=" + encodeURIComponent(preferredAreas)+
-              "&purchaseTimeframe=" + encodeURIComponent(purchaseTimeframe)
-          }
-          )
-            .then(response => response.text())
-            .then(data => {
-              //console.log("resub response:", data);
-              if(getPar == 'resubRefresh')
-              {
-                window.location.reload();
-              }
-            }
-            )
-            .catch(error => {
-              console.error("resub error:", error);
-            }
-            );
-          document.getElementById("unsubscribe").classList.add("hidden");
-          document.getElementById("preferences").classList.remove("hidden");
-          document.getElementById("intro").classList.remove("hidden");
-        }
-      }
       function showUnsubscribe() {
         var subscriberKey = "%%=v(@contactKey)=%%";
         var accountId = "%%=v(@accountId)=%%";
@@ -1826,13 +1662,59 @@ IF NOT EMPTY(@contactKey) THEN
           document.getElementById("pageLoader").classList.add("hidden");
         }
       }
-      
+      function showPreferences(getPar) {
+  
+        var loader = document.getElementById("pageLoader");
+        if (loader) loader.classList.add("hidden");
+  
+        if(getPar == 'resubRefresh')
+          loader.classList.remove("hidden");
+        
+  
+        var subscriberKey = "%%=v(@contactKey)=%%";
+        var accountId = "%%=v(@accountId)=%%";
+        var emailaddr = "%%=v(@emailAddr)=%%";
+        var emailname = "%%=v(@emailname)=%%";
+        var contactSource = "%%=v(@contactSource)=%%";
+        var csrfToken = "%%=v(@csrfToken)=%%";
+        if (isAllowedEmail(emailaddr)) {
+          fetch("https://cloud.marketing.ellingtonproperties.com/ResubscribeQA", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            }
+            ,
+            body: "sk=" + encodeURIComponent(subscriberKey) +
+              "&accountId=" + encodeURIComponent(accountId) +
+              "&email=" + encodeURIComponent(emailaddr) +
+              "&emailname=" + encodeURIComponent(emailname) +
+              "&contactSource=" + encodeURIComponent(contactSource) +
+              "&token=" + encodeURIComponent(csrfToken)
+          }
+          )
+            .then(response => response.text())
+            .then(data => {
+              //console.log("resub response:", data);
+              if(getPar == 'resubRefresh')
+              {
+                window.location.reload();
+              }
+            }
+            )
+            .catch(error => {
+              console.error("resub error:", error);
+            }
+            );
+          document.getElementById("unsubscribe").classList.add("hidden");
+          document.getElementById("preferences").classList.remove("hidden");
+          document.getElementById("intro").classList.remove("hidden");
+        }
+      }
       function toggleDropdownReason() {
         document.getElementById("dropdownOptions").classList.toggle("hidden");
       }
       function selectReason(text, isOther = false) {
         document.getElementById("selectedText").innerText = text;
-        document.getElementById("reasonSubmit").disabled = false;
         document.getElementById("dropdownOptions").classList.add("hidden");
         // Store value for AMPscript
         document.getElementById("unsubReason").value = text;
@@ -1851,7 +1733,6 @@ IF NOT EMPTY(@contactKey) THEN
         document.getElementById("unsubOther").value = this.value;
       }
       );
-      /*
       document.addEventListener("DOMContentLoaded", function () {
         var displayReason = "%%=v(@Reason_for_Unsubscribe__c)=%%";
         if (displayReason && displayReason !== "Select Reason") {
@@ -1863,7 +1744,6 @@ IF NOT EMPTY(@contactKey) THEN
         }
       }
       );
-      */
       document.addEventListener("click", function (e) {
         const dropdown = document.querySelector(".dropdown");
         if (dropdown && !dropdown.contains(e.target)) {
@@ -1961,38 +1841,12 @@ IF NOT EMPTY(@contactKey) THEN
           });
       });
     
+    </script>
+    <script>
       function toggleDropdown() {
         document.getElementById("checkboxDropdown").classList.toggle("show");
         document.getElementById("selectBox").classList.toggle("show");
       }
-    
-
-      document.addEventListener("DOMContentLoaded", function () {
-
-        // Section 1 (Publication Preferences)
-        const section1Checkboxes = document.querySelectorAll(
-          '.PublicationPreferences input[type="checkbox"]'
-        );
-
-        // Section 2 (Email checkbox)
-        const emailPref = document.querySelector(
-          '.ChannelPreferences input[name="emailPref"]'
-        );
-
-        function updateEmailPref() {
-          const anyChecked = Array.from(section1Checkboxes).some(cb => cb.checked);
-          emailPref.checked = anyChecked;
-        }
-
-        // Listen to changes in Section 1
-        section1Checkboxes.forEach(cb => {
-          cb.addEventListener("change", updateEmailPref);
-        });
-
-        // Run once on page load
-        updateEmailPref();
-
-      });
 
       document.addEventListener("click", function(event) {
         var dropdown = document.getElementById("checkboxDropdown");
