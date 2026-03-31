@@ -20,6 +20,7 @@
   SET @nationality = RequestParameter("nationality")
   SET @employmentType = RequestParameter("employmentType")
   SET @interestedPropertyType = RequestParameter("interestedPropertyType")
+  SET @propertyRoomNo = RequestParameter("propertyRoomNo")
   SET @budget = RequestParameter("budget")
   SET @purposeOfInvestment = RequestParameter("purposeOfInvestment")
   SET @preferredAreas = RequestParameter("preferredAreas")
@@ -59,7 +60,7 @@ SET @tokenFlag = "true"
 IF Substring(@sk, 1, 3) == "00Q" THEN
       SET @subscriberRows = RetrieveSalesforceObjects(
       "Lead",
-      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
+      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Unit_Preferences__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
       "Id", "=", @sk )
       
       SET @contactSource = "Lead"
@@ -72,6 +73,7 @@ IF Substring(@sk, 1, 3) == "00Q" THEN
       SET @nationality = Field(@subscriberRow, "Nationality__c")
       SET @employmentType = Field(@subscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@subscriberRow, "Interested_Property_Type__c")
+      SET @propertyRoomNo = Field(@subscriberRow, "Unit_Preferences__c")
       SET @budget = Field(@subscriberRow, "Budget__c")
       SET @purposeOfInvestment = Field(@subscriberRow, "Purpose_of_Investment__c")
       SET @preferredAreas = Field(@subscriberRow, "Preferred_Areas__c")
@@ -81,7 +83,7 @@ ELSEIF Substring(@sk, 1, 3) == "003" THEN
     
 SET @AccountsubscriberRows = RetrieveSalesforceObjects(
       "Account",
-      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
+      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Unit_Preferences__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
       "PersonContactId", "=", @sk)
 
       SET @contactSource = "Account"
@@ -95,6 +97,7 @@ SET @AccountsubscriberRows = RetrieveSalesforceObjects(
       SET @nationality = Field(@AccountsubscriberRow, "Nationality__c")
       SET @employmentType = Field(@AccountsubscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@AccountsubscriberRow, "Interested_Property_Type__c")
+      SET @propertyRoomNo = Field(@AccountsubscriberRow, "Unit_Preferences__c")
       SET @budget = Field(@AccountsubscriberRow, "Budget__c")
       SET @purposeOfInvestment = Field(@AccountsubscriberRow, "Purpose_of_Investment__c")
       SET @preferredAreas = Field(@AccountsubscriberRow, "Preferred_Areas__c")
@@ -142,6 +145,7 @@ ENDIF
       "Nationality", @nationality,
       "Employment Type", @employmentType,
       "Property Type", @interestedPropertyType,
+      "No Of Bedrooms", @propertyRoomNo,
       "Budget Range", @budget,
       "Purpose of Purchase", @purposeOfInvestment,
       "Purchase Timeframe", @purchaseTimeframe,

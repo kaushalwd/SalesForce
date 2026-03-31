@@ -61,8 +61,7 @@ IF NOT EMPTY(@contactKey) THEN
     SET @isAllowedDomain = IIF(
     IndexOf(@emailLower, "@horizontal.com") > 0 OR
     IndexOf(@emailLower, "@ellingtongroup.com") > 0 OR
-    IndexOf(@emailLower, "@nobl.ae") > 0 OR 
-    IndexOf(@emailLower, "@gmail.com") > 0,
+    IndexOf(@emailLower, "@nobl.ae") > 0,
     "true",
     "false"
     )
@@ -111,7 +110,7 @@ IF NOT EMPTY(@contactKey) THEN
     IF Substring(@contactKey, 1, 3) == "00Q" THEN
       SET @subscriberRows = RetrieveSalesforceObjects(
       "Lead",
-      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
+      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Unit_Preferences__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
       "Id", "=", @contactKey )
       
       SET @contactSource = "Lead"
@@ -124,6 +123,7 @@ IF NOT EMPTY(@contactKey) THEN
       SET @nationality = Field(@subscriberRow, "Nationality__c")
       SET @employmentType = Field(@subscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@subscriberRow, "Interested_Property_Type__c")
+      SET @propertyRoomNo = Field(@subscriberRow, "Unit_Preferences__c")
       SET @budget = Field(@subscriberRow, "Budget__c")
       SET @purposeOfInvestment = Field(@subscriberRow, "Purpose_of_Investment__c")
       SET @preferredAreas = Field(@subscriberRow, "Preferred_Areas__c")
@@ -145,6 +145,10 @@ IF NOT EMPTY(@contactKey) THEN
        SET @Unsubscribe_Other_Reason__c = Field(@subscriberRow, "Unsubscribe_Other_Reason__c")
       SET @Unsubscribe_Other_Reason__c = ""
       
+
+      IF @interestedPropertyType != "Apartment" THEN
+        SET @propertyRoomNo = ""
+      ENDIF
       
     ELSEIF Substring(@contactKey, 1, 3) == "003" THEN
     
@@ -164,6 +168,8 @@ IF NOT EMPTY(@contactKey) THEN
       SET @nationality = Field(@AccountsubscriberRow, "Nationality__c")
       SET @employmentType = Field(@AccountsubscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@AccountsubscriberRow, "Interested_Property_Type__c")
+      /* SET @propertyRoomNo = Field(@AccountsubscriberRow, "Unit_Preferences__c") */.
+      SET @propertyRoomNo = ""
       SET @budget = Field(@AccountsubscriberRow, "Budget__c")
       SET @purposeOfInvestment = Field(@AccountsubscriberRow, "Purpose_of_Investment__c")
       /*SET @purposeOfInvestment = ""*/
@@ -245,11 +251,16 @@ IF NOT EMPTY(@contactKey) THEN
           SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
           SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
       ENDIF
+      IF @isDataAvailable == 1 AND @isBackDate == 1 THEN
+          SET @callBackDate = ""
+          SET @callBackTime = ""
+      ENDIF
 
     ENDIF
-
-    /* Output(Concat("Is Back Date ->", @isBackDate)) */
-    
+    /*
+    Output(Concat("<br />Is Back Date ->", @isBackDate))
+    Output(Concat("<br />Is Data available ->", @isDataAvailable))
+    */
     SET @resubSubmit = RequestParameter("resubSubmit")
     
 
@@ -266,6 +277,7 @@ IF NOT EMPTY(@contactKey) THEN
     SET @nationality = RequestParameter("nationality")
     SET @employmentType = RequestParameter("employment")
     SET @interestedPropertyType = RequestParameter("propertyType")
+    SET @propertyRoomNo = RequestParameter("noOfbedrooms")
     SET @budget = RequestParameter("budget")
     SET @purposeOfInvestment = RequestParameter("purposeOfPurchase")
     SET @preferredAreas = RequestParameter("area")
@@ -331,6 +343,7 @@ IF NOT EMPTY(@contactKey) THEN
     Output(Concat("<br />Nationality: ", @nationality))
     Output(Concat("<br />Employment Type: ", @employmentType))
     Output(Concat("<br />Interested Property Type: ", @interestedPropertyType))
+    Output(Concat("<br />Property Rooms: ", @propertyRoomNo))
     Output(Concat("<br />Budget: ", @budget))
     Output(Concat("<br />Purpose To Invest: ", @purposeOfInvestment))
     Output(Concat("<br />Preferred Areas: ", @preferredAreas))
@@ -375,6 +388,7 @@ IF NOT EMPTY(@contactKey) THEN
     "Nationality", @nationality,
     "Employment Type", @employmentType,
     "Property Type", @interestedPropertyType,
+    "No Of Bedrooms", @propertyRoomNo,
     "Budget Range", @budget,
     "Purpose of Purchase", @purposeOfInvestment,
     "Purchase Timeframe", @purchaseTimeframe,
@@ -499,6 +513,7 @@ IF NOT EMPTY(@contactKey) THEN
       "Nationality__c", @nationality,
       "Employment_Type__c", @employmentType,
       "Interested_Property_Type__c", @interestedPropertyType,
+      "Unit_Preferences__c", @propertyRoomNo,
       "Purpose_of_Investment__c", @purposeOfInvestment,
       "Preferred_Areas__c", @preferredAreas,
       "Budget__c", @budget,
@@ -517,7 +532,7 @@ IF NOT EMPTY(@contactKey) THEN
     ELSEIF Substring(@contactKey, 1, 3) == "003" OR @accountId != "" THEN 
       /* Lead Id, not Converted OR  Contact Id */
       /* Output(Concat("<br />Inside Accont: ", @accountId)) */
-      
+      /* "Unit_Preferences__c", @propertyRoomNo, */
       UpdateSingleSalesforceObject(
       "Account", @accountId,
       "Country_of_Residence__c", @country,
@@ -744,7 +759,7 @@ IF NOT EMPTY(@contactKey) THEN
       %%[ ELSE ]%%
 
     <div class="container">
-      <form method="post">
+      <form method="post" id="preference-form">
         <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
         <input type="hidden" name="leadStatus" value="%%=v(@leadStatus)=%%">
         <input type="hidden" name="leadId" value="%%=v(@leadId)=%%">
@@ -1278,14 +1293,19 @@ IF NOT EMPTY(@contactKey) THEN
                 <label>Property Type<sup class="value-required">*</sup></label>
                 <input type="text" id="propertyType" name="propertyType" value="%%=v(@interestedPropertyType)=%%" required="required" class="makeItSmall" />
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'studio','active','')=%%" data-value="Studio">Studio</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '1 bhk','active','')=%%" data-value="1 BHK">1 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '2 bhk','active','')=%%" data-value="2 BHK">2 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '3 bhk','active','')=%%" data-value="3 BHK">3 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '4 bhk','active','')=%%" data-value="4 BHK">4 BHK</div>
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'villa','active','')=%%" data-value="Villa">Villa</div>
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'penthouse','active','')=%%" data-value="Penthouse">Penthouse</div>
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'townhouse','active','')=%%" data-value="Townhouse">Townhouse</div>
-                
+                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'apartment','active','')=%%" data-value="Apartment">Apartment</div>
+              </div>
+              <div class="pref-row long-block bedroom-block %%=IIF(@propertyRoomNo != '' AND Lowercase(@interestedPropertyType) == 'apartment','','hidden')=%%" id="bedroom-block">
+                <label>No Of bedrooms<sup class="value-required">*</sup></label>
+                <input type="text" id="noOfbedrooms" name="noOfbedrooms" value="%%=v(@propertyRoomNo)=%%" class="makeItSmall" />
+                <input type="text" id="prevValueOfbedrooms" name="prevValueOfbedrooms" value="%%=v(@propertyRoomNo)=%%" class="makeItSmall" />
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '1 bedroom','active','')=%%" data-value="1 bedroom">1 BHK</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '2 bedroom','active','')=%%" data-value="2 bedroom">2 BHK</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '3 bedroom','active','')=%%" data-value="3 bedroom">3 BHK</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '4 bedroom','active','')=%%" data-value="4 bedroom">4 BHK</div>
               </div>
               <div class="pref-row long-block">
                 <label>Budget Range<sup class="value-required">*</sup></label>
@@ -1562,8 +1582,7 @@ IF NOT EMPTY(@contactKey) THEN
         return (
           e.includes("@horizontal.com") ||
           e.includes("@ellingtongroup.com") ||
-          e.includes("@nobl.ae") ||
-          e.includes("@gmail.com")
+          e.includes("@nobl.ae")
         );
       }
   
@@ -1666,6 +1685,7 @@ IF NOT EMPTY(@contactKey) THEN
         var nationality = "%%=v(@nationality)=%%";
         var employmentType = "%%=v(@employmentType)=%%";
         var interestedPropertyType = "%%=v(@interestedPropertyType)=%%";
+        var propertyRoomNo = "%%=v(@propertyRoomNo)=%%";
         var purposeOfInvestment = "%%=v(@purposeOfInvestment)=%%";
         var preferredAreas = "%%=v(@preferredAreas)=%%";
         var purchaseTimeframe = "%%=v(@purchaseTimeframe)=%%";
@@ -1690,6 +1710,7 @@ IF NOT EMPTY(@contactKey) THEN
               "&nationality=" + encodeURIComponent(nationality)+
               "&employmentType=" + encodeURIComponent(employmentType)+
               "&interestedPropertyType=" + encodeURIComponent(interestedPropertyType)+
+              "&propertyRoomNo=" + encodeURIComponent(propertyRoomNo)+
               "&purposeOfInvestment=" + encodeURIComponent(purposeOfInvestment)+
               "&preferredAreas=" + encodeURIComponent(preferredAreas)+
               "&purchaseTimeframe=" + encodeURIComponent(purchaseTimeframe)
@@ -1732,6 +1753,7 @@ IF NOT EMPTY(@contactKey) THEN
         var nationality = "%%=v(@nationality)=%%";
         var employmentType = "%%=v(@employmentType)=%%";
         var interestedPropertyType = "%%=v(@interestedPropertyType)=%%";
+        var propertyRoomNo = "%%=v(@propertyRoomNo)=%%";
         var purposeOfInvestment = "%%=v(@purposeOfInvestment)=%%";
         var preferredAreas = "%%=v(@preferredAreas)=%%";
         var purchaseTimeframe = "%%=v(@purchaseTimeframe)=%%";
@@ -1756,6 +1778,7 @@ IF NOT EMPTY(@contactKey) THEN
               "&nationality=" + encodeURIComponent(nationality)+
               "&employmentType=" + encodeURIComponent(employmentType)+
               "&interestedPropertyType=" + encodeURIComponent(interestedPropertyType)+
+              "&propertyRoomNo=" + encodeURIComponent(propertyRoomNo)+
               "&purposeOfInvestment=" + encodeURIComponent(purposeOfInvestment)+
               "&preferredAreas=" + encodeURIComponent(preferredAreas)+
               "&purchaseTimeframe=" + encodeURIComponent(purchaseTimeframe)
@@ -1902,6 +1925,7 @@ IF NOT EMPTY(@contactKey) THEN
       });
   
       document.querySelectorAll('.propType').forEach(btn => {
+         var prevValueOfbedrooms = document.getElementById('prevValueOfbedrooms').value
           btn.addEventListener('click', function() {
 
               // Remove active from all
@@ -1913,9 +1937,35 @@ IF NOT EMPTY(@contactKey) THEN
 
               // Get value from data attribute
               const selectedValue = this.getAttribute('data-value');
+              if ( selectedValue == "Apartment"){
+                document.getElementById("bedroom-block").classList.remove("hidden");
 
+              } else{
+                /*document.querySelectorAll('.propRoomNo')
+                  .forEach(b => b.classList.remove('active'));
+                  document.getElementById('noOfbedrooms').value = "";
+                */  
+                document.getElementById("bedroom-block").classList.add("hidden");
+              }
               // Set value to hidden field
               document.getElementById('propertyType').value = selectedValue;
+          });
+      });
+      document.querySelectorAll('.propRoomNo').forEach(btn => {
+          btn.addEventListener('click', function() {
+
+              // Remove active from all
+              document.querySelectorAll('.propRoomNo')
+                  .forEach(b => b.classList.remove('active'));
+
+              // Add active to clicked
+              this.classList.add('active');
+
+              // Get value from data attribute
+              const selectedValue = this.getAttribute('data-value');
+              
+              // Set value to hidden field
+              document.getElementById('noOfbedrooms').value = selectedValue;
           });
       });
         const purchasePurposeField = document.getElementById('purposeOfPurchase');
@@ -2027,6 +2077,34 @@ IF NOT EMPTY(@contactKey) THEN
           ? selected.join(", ") 
           : "Select Area";
       }
+      var form = document.getElementById("preference-form");
+      // Get selected property type
+      function getSelectedPropertyType() {
+          var selected = document.querySelector(".propType.active");
+          return selected ? selected.innerText.trim() : "";
+      }
+
+      // Get selected bedroom
+      function getSelectedBedroom() {
+          var selected = document.querySelector(".propRoomNo.active");
+          return selected ? selected.innerText.trim() : "";
+      }
+
+      form.addEventListener("submit", function (e) {
+
+          var propertyType = getSelectedPropertyType();
+          var bedroom = getSelectedBedroom();
+          
+          // ✅ Apartment → bedroom required
+          if (propertyType === "Apartment" && !bedroom) {
+              alert("Please select number of bedrooms for Apartment.");
+              hideSpinner();
+              e.preventDefault();
+              return;
+              
+          }
+          // ✅ If all good → form submits normally
+      });
       </script>
     </div>
   </body>
