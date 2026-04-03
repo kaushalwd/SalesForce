@@ -2,6 +2,11 @@ var dateInput = document.getElementById("meetingDate");
 var timeSlot = document.getElementById("time-slot");
 var scheduleBtn = document.getElementById("scheduledMeeting");
 
+function isWeekend(d) {
+    var day = d.getDay(); // 0=Sun ... 6=Sat
+    return day === 0 || day === 6;
+}
+
 // Get GST time
 function getGSTNow() {
     var now = new Date();
@@ -37,6 +42,8 @@ function validateForm() {
     gstToday.setHours(0,0,0,0);
 
     var selectedDate = new Date(selectedDateValue + "T00:00:00");
+    
+    if (isWeekend(selectedDate)) return;
 
     // ❌ Past Date
     if (selectedDate < gstToday) return;
@@ -82,10 +89,20 @@ dateInput.addEventListener("change", function () {
 
     var selectedDate = new Date(selectedDateValue + "T00:00:00");
 
+    if (isWeekend(selectedDate)) {
+        // alert("Please do not select Saturday or Sunday.");
+        epAlert("Please do not select Saturday or Sunday.");
+        this.value = "";
+        timeSlot.disabled = true;
+        timeSlot.value = "Select";
+        disableButton();
+        return;
+    }
+    
     // ❌ Past date
     if (selectedDate < gstToday) {
-        alert("You cannot select a past date (GST).");
-
+        // alert("You cannot select a past date (GST).");
+        epAlert("You cannot select a past date (GST).");
         this.value = "";
         timeSlot.disabled = true;
         //timeSlot.classList.add("readonly");
@@ -140,7 +157,8 @@ timeSlot.addEventListener("change", function () {
         selectedDateTime.setSeconds(0);
 
         if (selectedDateTime < gstNow) {
-            alert("Please select a future time slot (GST).");
+            // alert("Please select a future time slot (GST).");
+            epAlert("Please select a future time slot (GST).");
             this.value = "Select";
             disableButton();
             return;
