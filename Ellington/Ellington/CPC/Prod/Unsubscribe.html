@@ -1,0 +1,151 @@
+<script runat="server">
+  Platform.Load("Core", "1.1.1");
+
+  try {
+
+</script>
+%%[
+
+SET @sk = RequestParameter("sk")
+SET @accountId = ""
+SET @tokenFlag = "false"
+SET @submittedToken = RequestParameter("token")
+SET @storedToken = Lookup("CSRF_Tokens_DE", "Token", "SubscriberKey", @sk)
+
+IF @submittedToken == @storedToken AND NOT Empty(@storedToken) THEN
+/* Token is valid - process form */
+SET @tokenFlag = 'true'
+
+/* Delete used token */
+DeleteData("CSRF_Tokens_DE", "SubscriberKey", @sk)
+
+/* Process your form data here */
+
+SET @csrfToken = GUID()
+UpsertData("CSRF_Tokens_DE", 1, "SubscriberKey", @sk, "Token", @storedToken, "CreatedDate", Now())
+ELSE
+/* Invalid token - possible CSRF attack */
+SET @tokenFlag = 'false'
+SET @errorMessage = "Invalid security token. Please refresh and try again."
+ENDIF
+
+/* IF NOT EMPTY(@sk) AND @tokenFlag == "true" THEN */
+IF NOT EMPTY(@sk) THEN
+
+  SET @emailAddr = RequestParameter("email")
+  SET @emailname = RequestParameter("emailname")
+  SET @contactSource = RequestParameter("contactSource")
+
+  InsertData("CPC Log DE",
+        "SubscriberKey", @sk,
+        "Page Submission", "Unsubscribe From All",
+        "EmailAddress", @emailAddr,
+        "Weekly Highlight", "false",
+        "Personalized Recommendation", "false",
+        "Essential Updates Only", "false",
+        "New Project Launches", "false",
+        "Email", "false",
+        "Push", "false",
+        "WhatsApp", "false",
+        "Status", "Unsubscribed",
+        "DateAdded", Now(),
+        "EmailName", @emailname
+        )
+  SET @checkFlag = 0
+  
+  IF @contactSource == "Account" THEN
+  SET @accountId = RequestParameter("accountId")
+    /* SAVE PREFERENCES ON Account */
+    UpdateSingleSalesforceObject(
+    "Account", @accountId,
+    "Status__c","Unsubscribed",
+    "PersonHasOptedOutOfEmail", 1,
+    "WhatsApp__c", 0,
+    "Push_Notifications__c", 0,
+    "Weekly_Highlights__c", 0,
+    "Personalized_Recommendations__c", 0,
+    "Essential_Updates_Only__c", 0,
+    "New_Project_Launches__c", 0
+    )
+    
+    SET @checkFlag = 1
+  ENDIF
+
+  IF @contactSource == "Lead" THEN
+    /* SAVE PREFERENCES ON LEAD */
+
+    UpdateSingleSalesforceObject(
+    "Lead", @sk,
+    "Status__c","Unsubscribed",
+    "WhatsApp__c", 0,
+    "HasOptedOutOfEmail", 1,
+    "Push_Notifications__c", 0,
+    "Weekly_Highlights__c", 0,
+    "Personalized_Recommendations__c", 0,
+    "Essential_Updates_Only__c", 0,
+    "New_Project_Launches__c", 0
+    )
+    /*
+    ,
+    "Reason_for_Unsubscribe__c","",
+    "Unsubscribe_Other_Reason__c",""
+    */
+  ENDIF
+
+
+  SET @lue = CreateObject("ExecuteRequest")
+  SetObjectProperty(@lue,"Name","LogUnsubEvent")
+
+  /* SubscriberKey */
+  SET @p1 = CreateObject("APIProperty")
+  SetObjectProperty(@p1, "Name", "SubscriberKey")
+  SetObjectProperty(@p1, "Value", @sk)
+  AddObjectArrayItem(@lue, "Parameters", @p1)
+
+  /* JobID */
+  SET @p2 = CreateObject("APIProperty")
+  SetObjectProperty(@p2, "Name", "JobID")
+  SetObjectProperty(@p2, "Value", jobid)
+  AddObjectArrayItem(@lue, "Parameters", @p2)
+
+  /* ListID */
+  SET @p3 = CreateObject("APIProperty")
+  SetObjectProperty(@p3, "Name", "ListID")
+  SetObjectProperty(@p3, "Value", listid)
+  AddObjectArrayItem(@lue, "Parameters", @p3)
+
+  /* BatchID */
+  SET @p4 = CreateObject("APIProperty")
+  SetObjectProperty(@p4, "Name", "BatchID")
+  SetObjectProperty(@p4, "Value", _JobSubscriberBatchID)
+  AddObjectArrayItem(@lue, "Parameters", @p4)
+
+  /* Optional Reason */
+  SET @p5 = CreateObject("APIProperty")
+  SetObjectProperty(@p5, "Name", "Reason")
+  SetObjectProperty(@p5, "Value", "BU1 Unsubscribe")
+  AddObjectArrayItem(@lue, "Parameters", @p5)
+
+  SET @statusCode = InvokeExecute(@lue, @overallStatus, @requestId)
+
+ELSE
+  IF @tokenFlag == 'false' THEN
+  Output(concat("csrf-alert: ", @errorMessage))
+  ENDIF
+ENDIF
+Output(Concat("Check Flag",@checkFlag))
+]%%
+
+<script runat="server">
+    Platform.Load("Core", "1.1.1");
+  }
+  catch (e) {
+
+    var contactKey = Variable.GetValue("@contactKey");
+    var emailAddr = Variable.GetValue("@emailAddr");
+
+    var response = Platform.Function.InsertData("CPC Log DE", ["SubscriberKey", "AMPError", "EmailAddress"], [contactKey, String(e), emailAddr]);
+
+  }
+
+</script>
