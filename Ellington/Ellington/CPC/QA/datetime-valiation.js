@@ -1,5 +1,6 @@
 var dateInput = document.getElementById("meetingDate");
 var timeSlot = document.getElementById("time-slot");
+var timeZone = document.getElementById("timezone-select");
 var scheduleBtn = document.getElementById("scheduledMeeting");
 
 function isWeekend(d) {
@@ -94,6 +95,7 @@ dateInput.addEventListener("change", function () {
         epAlert("Please do not select Saturday or Sunday.");
         this.value = "";
         timeSlot.disabled = true;
+        timeZone.disabled = true;
         timeSlot.value = "Select";
         disableButton();
         return;
@@ -105,6 +107,7 @@ dateInput.addEventListener("change", function () {
         epAlert("You cannot select a past date (GST).");
         this.value = "";
         timeSlot.disabled = true;
+        timeZone.disabled = true;
         //timeSlot.classList.add("readonly");
         timeSlot.value = "Select";
 
@@ -114,6 +117,7 @@ dateInput.addEventListener("change", function () {
 
     // ✅ Enable time slot
     timeSlot.disabled = false;
+    timeZone.disabled = false;
     //timeSlot.classList.remove("readonly");
 
     validateForm();
@@ -186,6 +190,7 @@ function setMinDateGST() {
 // Initial Load
 window.addEventListener("load", function () {
     timeSlot.disabled = true;
+    timeZone.disabled = true;
     //timeSlot.classList.add("readonly");
     disableButton();
     setMinDateGST();

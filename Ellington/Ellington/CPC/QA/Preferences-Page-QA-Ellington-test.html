@@ -247,53 +247,57 @@ IF NOT EMPTY(@contactKey) THEN
       SET @cbDateStr = IIF(NOT EMPTY(@callBackDate), FormatDate(@callBackDate,"yyyy-MM-dd"), "")
       SET @isBackDate = 0
 
+      /* 1. Calculate GST Now once */
       IF NOT EMPTY(@callBackDate) AND NOT EMPTY(@callBackTime) THEN
 
-        /* Case 1: callback date is before today in GST */
-        IF @cbDateStr < @todayStrGST THEN
-          SET @isBackDate = 1
+          /* Case 1: callback date is strictly before today */
+          IF @cbDateStr < @todayStrGST THEN
+              SET @isBackDate = 1
 
-        /* Case 2: callback date is today in GST -> compare slot start time */
-        ELSEIF @cbDateStr == @todayStrGST THEN
+          /* Case 2: callback date is today -> Check time slot */
+          ELSEIF @cbDateStr == @todayStrGST THEN
 
-          /* Extract start time from format: '6:00 PM to 6:30 PM' */
-          SET @toPos = IndexOf(@callBackTime, " to ")
+              /* Extract start time: '10:30 AM' from '10:30 AM to 11:00 AM' */
+              SET @toPos = IndexOf(@callBackTime, " to ")
+              IF @toPos > 0 THEN
+                  SET @slotStartTimeRaw = Trim(Substring(@callBackTime, 1, Subtract(@toPos, 1)))
+              ELSE
+                  SET @slotStartTimeRaw = Trim(@callBackTime)
+              ENDIF
 
-          IF @toPos > 0 THEN
-            SET @slotStartTime = Trim(Substring(@callBackTime, 1, Subtract(@toPos, 1)))
-          ELSE
-            /* Fallback if value is only one time */
-            SET @slotStartTime = Trim(@callBackTime)
+              /* Convert the Slot Start String into a proper Date Object for comparison */
+              /* We combine the Callback Date with the Start Time string */
+              SET @fullSlotDateTime = DateParse(Concat(@cbDateStr, " ", @slotStartTimeRaw))
+
+              /* Compare actual Date objects, not strings */
+              /* If the meeting start time is in the past (less than nowGST), mark as backdate */
+              IF @fullSlotDateTime < @nowGST THEN
+                  SET @isBackDate = 1
+              ENDIF
+
           ENDIF
-
-          /* Build full datetime from date + slot start time */
-          SET @cbDateTime = FormatDate(Concat(@cbDateStr, " ", @slotStartTime), "yyyy-MM-dd HH:mm:ss")
-          SET @nowDateTimeGST = FormatDate(@nowGST, "yyyy-MM-dd HH:mm:ss")
-
-          IF @cbDateTime < @nowDateTimeGST THEN
-            SET @isBackDate = 1
-          ENDIF
-
-        ENDIF
-
       ENDIF
 
       IF @isDataAvailable == 1 AND @isBackDate != 1 THEN
         SET @makeMeDisabled = "disabled"
         SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
-        SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
+        SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime, " (GST)")
       ENDIF
 
-      IF @isDataAvailable == 1 AND @isBackDate == 1 THEN
+      /*
+      Output(Concat("<br />Is Back Date ->", @isBackDate, " - callBackDate -> ", @callBackDate, " - callBackTime -> ", @callBackTime))
+      Output(Concat("<br />Is Data available ->", @isDataAvailable))
+      */
+
+    IF @isDataAvailable == 1 AND @isBackDate == 1 THEN
         SET @callBackDate = ""
         SET @callBackTime = ""
       ENDIF
 
     ENDIF
-    /*
-    Output(Concat("<br />Is Back Date ->", @isBackDate))
-    Output(Concat("<br />Is Data available ->", @isDataAvailable))
-    */
+    
+    
+    
     SET @resubSubmit = RequestParameter("resubSubmit")
     
 
@@ -709,6 +713,7 @@ IF NOT EMPTY(@contactKey) THEN
       href="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/608c8788-b1f3-4bfd-8071-6bfb6fbe4125.png">
     <link href='https://cloud.marketing.ellingtonproperties.com/style-qa' rel='stylesheet'>
     <link href='https://cloud.marketing.ellingtonproperties.com/fonts-qa' rel='stylesheet'>
+    <link rel="stylesheet" href="https://use.typekit.net/wji4wrf.css" />
     <script runat='server'>
       Platform.Response.SetResponseHeader("Strict-Transport-Security", "max-age=200");
       Platform.Response.SetResponseHeader("X-XSS-Protection", "1; mode=block");
@@ -724,7 +729,7 @@ IF NOT EMPTY(@contactKey) THEN
     <!-- Default Alert -->
     <div id="ep-alert" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9999; align-items:center; justify-content:center;">
       <div style="background:#fff; border-radius:8px; max-width:420px; width:90%; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2);">
-        <div id="ep-alert-title" style="font-weight:700; margin-bottom:8px;"></div>
+        <div id="ep-alert-title" style="Font-family:'Teodor', Arial; font-weight:600; margin-bottom:8px;"></div>
         <hr />
         <div id="ep-alert-msg" style="margin-bottom:16px;"></div>
         <button type="button" onclick="document.getElementById('ep-alert').style.display='none'" style="float: right;
@@ -1496,33 +1501,75 @@ IF NOT EMPTY(@contactKey) THEN
               <h3>Schedule Meeting
               </h3>
               <div class="pref-row">
-                <div class="pref-col">
+                <div class="pref-col col-33">
                   <label>Date</label>
                   <div class="pref-el"><input class="form-control" type="date" name="meetingDate"  value="%%=v(@callBackDate)=%%" id="meetingDate" %%=v(@makeMeDisabled)=%%>
                     <input type="hidden" id="hiddenDate"></div>
                 </div>
-                <div class="pref-col">
+                <div class="pref-col col-33">
+                  <label for="timezone-select">Timezone</label>
+                  <div class="pref-el">
+                    <select id="timezone-select" name="timezone-select" %%=v(@makeMeDisabled)=%% >
+                    <option value="-12">UTC−12:00 – Baker Island</option>
+                    <option value="-11">UTC−11:00 – American Samoa</option>
+                    <option value="-10">UTC−10:00 – Hawaii</option>
+                    <option value="-9">UTC−09:00 – Alaska</option>
+                    <option value="-8">UTC−08:00 – Pacific Time (US & Canada)</option>
+                    <option value="-7">UTC−07:00 – Mountain Time (US & Canada)</option>
+                    <option value="-6">UTC−06:00 – Central Time (US & Canada)</option>
+                    <option value="-5">UTC−05:00 – Eastern Time (US & Canada)</option>
+                    <option value="-4">UTC−04:00 – Atlantic Time (Canada), Caribbean</option>
+                    <option value="-3">UTC−03:00 – Argentina, Brazil</option>
+                    <option value="-2">UTC−02:00 – South Georgia</option>
+                    <option value="-1">UTC−01:00 – Azores</option>
+                    <option value="0">UTC±00:00 – London, Dublin (GMT)</option>
+                    <option value="1">UTC+01:00 – Central Europe (Germany, France)</option>
+                    <option value="2">UTC+02:00 – Eastern Europe, South Africa</option>
+                    <option value="3">UTC+03:00 – Russia (Moscow), Middle East</option>
+                    <option value="3.5">UTC+03:30 – Iran</option>
+                    <option value="4" selected>UTC+04:00 – UAE, Azerbaijan</option>
+                    <option value="4.5">UTC+04:30 – Afghanistan</option>
+                    <option value="5">UTC+05:00 – Pakistan</option>
+                    <option value="5.5">UTC+05:30 – India (IST)</option>
+                    <option value="5.75">UTC+05:45 – Nepal</option>
+                    <option value="6">UTC+06:00 – Bangladesh</option>
+                    <option value="6.5">UTC+06:30 – Myanmar</option>
+                    <option value="7">UTC+07:00 – Thailand, Vietnam</option>
+                    <option value="8">UTC+08:00 – China, Singapore</option>
+                    <option value="9">UTC+09:00 – Japan, Korea</option>
+                    <option value="9.5">UTC+09:30 – Australia (Central)</option>
+                    <option value="10">UTC+10:00 – Australia (Eastern)</option>
+                    <option value="11">UTC+11:00 – Solomon Islands</option>
+                    <option value="12">UTC+12:00 – New Zealand</option>
+                    <option value="13">UTC+13:00 – Tonga</option>
+                    <option value="14">UTC+14:00 – Line Islands (Kiribati)</option>
+                </select>
+                  </div>
+                </div>
+                <div class="pref-col col-33">
                   <label>Time</label>
-                  <select name="time-slot" id="time-slot" %%=v(@makeMeDisabled)=%% style="margin-top:3px">
-                    <option value="Select">Select Time Slot</option>
-                    <option value="10:00 AM to 10:30 AM" %%=IIF(@callBackTime=='10:00 AM to 10:30 AM','selected','')=%% >10:00 AM to 10:30 AM</option>
-                    <option value="10:30 AM to 11:00 AM" %%=IIF(@callBackTime=='10:30 AM to 11:00 AM','selected','')=%% >10:30 AM to 11:00 AM</option>
-                    <option value="11:00 AM to 11:30 AM" %%=IIF(@callBackTime=='11:00 AM to 11:30 AM','selected','')=%% >11:00 AM to 11:30 AM</option>
-                    <option value="11:30 AM to 12:00 PM" %%=IIF(@callBackTime=='11:30 AM to 12:00 PM','selected','')=%% >11:30 AM to 12:00 PM</option>
-                    <option value="12:00 PM to 12:30 PM" %%=IIF(@callBackTime=='12:00 PM to 12:30 PM','selected','')=%% >12:00 PM to 12:30 PM</option>
-                    <option value="12:30 PM to 1:00 PM" %%=IIF(@callBackTime=='12:30 PM to 1:00 PM','selected','')=%% >12:30 PM to 1:00 PM</option>
-                    <option value="1:00 PM to 1:30 PM" %%=IIF(@callBackTime=='1:00 PM to 1:30 PM','selected','')=%% >1:00 PM to 1:30 PM</option>
-                    <option value="1:30 PM to 2:00 PM" %%=IIF(@callBackTime=='1:30 PM to 2:00 PM','selected','')=%% >1:30 PM to 2:00 PM</option>
-                    <option value="2:00 PM to 2:30 PM" %%=IIF(@callBackTime=='2:00 PM to 2:30 PM','selected','')=%% >2:00 PM to 2:30 PM</option>
-                    <option value="2:30 PM to 3:00 PM" %%=IIF(@callBackTime=='2:30 PM to 3:00 PM','selected','')=%% >2:30 PM to 3:00 PM</option>
-                    <option value="3:00 PM to 3:30 PM" %%=IIF(@callBackTime=='3:00 PM to 3:30 PM','selected','')=%% >3:00 PM to 3:30 PM</option>
-                    <option value="3:30 PM to 4:00 PM" %%=IIF(@callBackTime=='3:30 PM to 4:00 PM','selected','')=%% >3:30 PM to 4:00 PM</option>
-                    <option value="4:00 PM to 4:30 PM" %%=IIF(@callBackTime=='4:00 PM to 4:30 PM','selected','')=%% >4:00 PM to 4:30 PM</option>
-                    <option value="4:30 PM to 5:00 PM" %%=IIF(@callBackTime=='4:30 PM to 5:00 PM','selected','')=%% >4:30 PM to 5:00 PM</option>
-                    <option value="5:00 PM to 5:30 PM" %%=IIF(@callBackTime=='5:00 PM to 5:30 PM','selected','')=%% >5:00 PM to 5:30 PM</option>
-                    <option value="5:30 PM to 6:00 PM" %%=IIF(@callBackTime=='5:30 PM to 6:00 PM','selected','')=%% >5:30 PM to 6:00 PM</option>
-                    <option value="6:00 PM to 6:30 PM" %%=IIF(@callBackTime=='6:00 PM to 6:30 PM','selected','')=%% >6:00 PM to 6:30 PM</option>
-                  </select>
+                  <div class="pref-el">
+                    <select name="time-slot" id="time-slot" %%=v(@makeMeDisabled)=%% >
+                      <option value="Select">Select Time Slot</option>
+                      <option value="10:00 AM to 10:30 AM" %%=IIF(@callBackTime=='10:00 AM to 10:30 AM','selected','')=%% >10:00 AM to 10:30 AM</option>
+                      <option value="10:30 AM to 11:00 AM" %%=IIF(@callBackTime=='10:30 AM to 11:00 AM','selected','')=%% >10:30 AM to 11:00 AM</option>
+                      <option value="11:00 AM to 11:30 AM" %%=IIF(@callBackTime=='11:00 AM to 11:30 AM','selected','')=%% >11:00 AM to 11:30 AM</option>
+                      <option value="11:30 AM to 12:00 PM" %%=IIF(@callBackTime=='11:30 AM to 12:00 PM','selected','')=%% >11:30 AM to 12:00 PM</option>
+                      <option value="12:00 PM to 12:30 PM" %%=IIF(@callBackTime=='12:00 PM to 12:30 PM','selected','')=%% >12:00 PM to 12:30 PM</option>
+                      <option value="12:30 PM to 1:00 PM" %%=IIF(@callBackTime=='12:30 PM to 1:00 PM','selected','')=%% >12:30 PM to 1:00 PM</option>
+                      <option value="1:00 PM to 1:30 PM" %%=IIF(@callBackTime=='1:00 PM to 1:30 PM','selected','')=%% >1:00 PM to 1:30 PM</option>
+                      <option value="1:30 PM to 2:00 PM" %%=IIF(@callBackTime=='1:30 PM to 2:00 PM','selected','')=%% >1:30 PM to 2:00 PM</option>
+                      <option value="2:00 PM to 2:30 PM" %%=IIF(@callBackTime=='2:00 PM to 2:30 PM','selected','')=%% >2:00 PM to 2:30 PM</option>
+                      <option value="2:30 PM to 3:00 PM" %%=IIF(@callBackTime=='2:30 PM to 3:00 PM','selected','')=%% >2:30 PM to 3:00 PM</option>
+                      <option value="3:00 PM to 3:30 PM" %%=IIF(@callBackTime=='3:00 PM to 3:30 PM','selected','')=%% >3:00 PM to 3:30 PM</option>
+                      <option value="3:30 PM to 4:00 PM" %%=IIF(@callBackTime=='3:30 PM to 4:00 PM','selected','')=%% >3:30 PM to 4:00 PM</option>
+                      <option value="4:00 PM to 4:30 PM" %%=IIF(@callBackTime=='4:00 PM to 4:30 PM','selected','')=%% >4:00 PM to 4:30 PM</option>
+                      <option value="4:30 PM to 5:00 PM" %%=IIF(@callBackTime=='4:30 PM to 5:00 PM','selected','')=%% >4:30 PM to 5:00 PM</option>
+                      <option value="5:00 PM to 5:30 PM" %%=IIF(@callBackTime=='5:00 PM to 5:30 PM','selected','')=%% >5:00 PM to 5:30 PM</option>
+                      <option value="5:30 PM to 6:00 PM" %%=IIF(@callBackTime=='5:30 PM to 6:00 PM','selected','')=%% >5:30 PM to 6:00 PM</option>
+                      <option value="6:00 PM to 6:30 PM" %%=IIF(@callBackTime=='6:00 PM to 6:30 PM','selected','')=%% >6:00 PM to 6:30 PM</option>
+                    </select>
+                  </div>
                   <div class="pref-el cta-wrapper"><input id="scheduledMeeting" type="button" onclick="scheduleMeeting()" value="Schedule Meeting" %%=v(@makeMeDisabled)=%% ></div>
                 </div>
             </div>
@@ -1534,7 +1581,7 @@ IF NOT EMPTY(@contactKey) THEN
         <div class="actions" id="actions">
           <input type="hidden" name="resubSubmit" value="1">
           <button type="submit" class="primary w50">Save Changes</button>
-          <button type="button" class="secondary w50" onclick="showUnsubscribe()">Unsubscribe ALL</button>
+          <button type="button" class="secondary w50" onclick="showUnsubscribe()">Unsubscribe All</button>
         </div>
     
         
@@ -1691,15 +1738,22 @@ IF NOT EMPTY(@contactKey) THEN
               console.log("schedule meeting response:", data);
                 hideSpinner();
                 if (data.indexOf("TaskCreated") != -1 ){
+                  
+                  const selectElement = document.getElementById("time-slot");
+                  const meetingTime = selectElement.options[selectElement.selectedIndex].text;
+                  const selectElement_1 = document.getElementById("timezone-select");
+                  const timeZone = selectElement_1.options[selectElement_1.selectedIndex].text;
                   document.getElementById("scheduledMeeting").disabled = true;
                   document.getElementById("meetingDate").disabled = true;
                   document.getElementById("time-slot").disabled = true;
+                  document.getElementById("timezone-select").disabled = true;
                   const d = new Date(meetingDate);
                   const formattedDate =
                     String(d.getDate()).padStart(2, '0') + "-" +
                     String(d.getMonth() + 1).padStart(2, '0') + "-" +
                     d.getFullYear();
-                  document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime;
+                  document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime + " (GST)";
+                  
                   document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
                 }
                 
@@ -1722,7 +1776,7 @@ IF NOT EMPTY(@contactKey) THEN
         var emailname = "%%=v(@emailname)=%%";
         var contactSource = "%%=v(@contactSource)=%%";
         if (isAllowedEmail(emailaddr)) {
-          var redirectUrl = "%%=CloudPagesURL(2446)=%%" + "&ts=" + new Date().getTime();
+          var redirectUrl = "%%=CloudPagesURL(2424)=%%" + "&ts=" + new Date().getTime();
           window.location.replace(redirectUrl);
           /*window.location.replace("https://cloud.marketing.ellingtonproperties.com/preferenceQA");*/
         }
@@ -1779,7 +1833,7 @@ IF NOT EMPTY(@contactKey) THEN
             .then(response => response.text())
             .then(data => {
               //console.log("resub response:", data);
-              var redirectUrl = "%%=CloudPagesURL(2446)=%%" + "&ts=" + new Date().getTime();
+              var redirectUrl = "%%=CloudPagesURL(2424)=%%" + "&ts=" + new Date().getTime();
               window.location.replace(redirectUrl);
             }
             )
@@ -2077,32 +2131,32 @@ IF NOT EMPTY(@contactKey) THEN
       }
     
 
-      // document.addEventListener("DOMContentLoaded", function () {
+      document.addEventListener("DOMContentLoaded", function () {
 
-      //   // Section 1 (Publication Preferences)
-      //   const section1Checkboxes = document.querySelectorAll(
-      //     '.PublicationPreferences input[type="checkbox"]'
-      //   );
+        // Section 1 (Publication Preferences)
+        const section1Checkboxes = document.querySelectorAll(
+          '.PublicationPreferences input[type="checkbox"]'
+        );
 
-      //   // Section 2 (Email checkbox)
-      //   const emailPref = document.querySelector(
-      //     '.ChannelPreferences input[name="emailPref"]'
-      //   );
+        // Section 2 (Email checkbox)
+        const emailPref = document.querySelector(
+          '.ChannelPreferences input[name="emailPref"]'
+        );
 
-      //   function updateEmailPref() {
-      //     const anyChecked = Array.from(section1Checkboxes).some(cb => cb.checked);
-      //     emailPref.checked = anyChecked;
-      //   }
+        function updateEmailPref() {
+          const anyChecked = Array.from(section1Checkboxes).some(cb => cb.checked);
+          emailPref.checked = anyChecked;
+        }
 
-      //   // Listen to changes in Section 1
-      //   section1Checkboxes.forEach(cb => {
-      //     cb.addEventListener("change", updateEmailPref);
-      //   });
+        // Listen to changes in Section 1
+        section1Checkboxes.forEach(cb => {
+          cb.addEventListener("change", updateEmailPref);
+        });
 
-      //   // Run once on page load
-      //   updateEmailPref();
+        // Run once on page load
+        updateEmailPref();
 
-      // });
+      });
 
       document.addEventListener("click", function(event) {
         var dropdown = document.getElementById("checkboxDropdown");
@@ -2171,6 +2225,85 @@ IF NOT EMPTY(@contactKey) THEN
         document.getElementById('ep-alert-msg').textContent = message;
         document.getElementById('ep-alert').style.display = 'flex';
       }
+      document.addEventListener('DOMContentLoaded', function() {
+        const tzSelect = document.getElementById('timezone-select');
+        const timeSelect = document.querySelector('select[name="time-slot"]'); 
+        // const dateInput = document.querySelector('input[type="date"]'); // Ensure this matches your Date input
+        const dateInput = document.getElementById('meetingDate'); // Ensure this matches your Date input
+
+        const originalSlots = [
+            "10:00 AM to 10:30 AM", "10:30 AM to 11:00 AM", "11:00 AM to 11:30 AM",
+            "11:30 AM to 12:00 PM", "12:00 PM to 12:30 PM", "12:30 PM to 1:00 PM",
+            "1:00 PM to 1:30 PM", "1:30 PM to 2:00 PM", "2:00 PM to 2:30 PM",
+            "2:30 PM to 3:00 PM", "3:00 PM to 3:30 PM", "3:30 PM to 4:00 PM",
+            "4:00 PM to 4:30 PM", "4:30 PM to 5:00 PM", "5:00 PM to 5:30 PM",
+            "5:30 PM to 6:00 PM", "6:00 PM to 6:30 PM"
+        ];
+
+        // Updated helper to accept the chosen date string
+        function getConvertedDate(gstTimeString, offsetDiff, baseDateStr) {
+            let [time, modifier] = gstTimeString.split(' ');
+            let [hours, minutes] = time.split(':');
+            hours = parseInt(hours);
+            
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+
+            // Create date based on the user's selected date input
+            let date = new Date(baseDateStr); 
+            date.setHours(hours, parseInt(minutes), 0, 0);
+
+            // Shift from Dubai (UTC+4) to target offset
+            const diffInMinutes = (offsetDiff - 4) * 60;
+            date.setMinutes(date.getMinutes() + diffInMinutes);
+            return date;
+        }
+
+        function updateTimeSlots() {
+            const selectedOffset = parseFloat(tzSelect.value);
+            const options = timeSelect.options;
+
+            // 1. Get the current time in the SELECTED timezone
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const nowInSelectedTZ = new Date(utc + (3600000 * selectedOffset));
+
+            // 2. Get the user-selected date from the input
+            const selectedDateStr = dateInput.value; // e.g., "2026-04-13"
+            
+            for (let i = 1; i < options.length; i++) {
+                let gstRange = originalSlots[i - 1];
+                let parts = gstRange.split(' to ');
+
+                // 3. Create slot date objects anchored to the SELECTED date
+                let startDate = getConvertedDate(parts[0], selectedOffset, selectedDateStr);
+                let endDate = getConvertedDate(parts[1], selectedOffset, selectedDateStr);
+
+                let newStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                let newEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                options[i].text = `${newStart} to ${newEnd}`;
+
+                // 4. Disable logic: Compare the slot's full date/time vs "Now" in that TZ
+                // This handles past days, today, and future days automatically
+                if (startDate < nowInSelectedTZ) {
+                    options[i].disabled = true;
+                    options[i].style.color = '#ccc';
+                    if (timeSelect.selectedIndex === i) timeSelect.selectedIndex = 0;
+                } else {
+                    options[i].disabled = false;
+                    options[i].style.color = '';
+                }
+            }
+        }
+
+        // Listen for changes on both Timezone and Date inputs
+        tzSelect.addEventListener('change', updateTimeSlots);
+        dateInput.addEventListener('change', updateTimeSlots);
+
+        // Run once on load to initialize state
+        updateTimeSlots();
+    });
       </script>
     </div>
   </body>

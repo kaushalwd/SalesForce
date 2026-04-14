@@ -23,7 +23,7 @@ IF NOT EMPTY(@contactKey) THEN
   VAR @contactSource
   IF Substring(@contactKey, 1, 3) == "00Q" THEN
     SET @contactSource = "Lead"
-  ELSEIF Substring(@contactKey, 1, 3) == "00Q" THEN  
+  ELSEIF Substring(@contactKey, 1, 3) == "003" THEN  
     SET @contactSource = "Account"
   ENDIF  
   
@@ -61,8 +61,7 @@ IF NOT EMPTY(@contactKey) THEN
     SET @isAllowedDomain = IIF(
     IndexOf(@emailLower, "@horizontal.com") > 0 OR
     IndexOf(@emailLower, "@ellingtongroup.com") > 0 OR
-    IndexOf(@emailLower, "@nobl.ae") > 0 OR 
-    IndexOf(@emailLower, "@gmail.com") > 0,
+    IndexOf(@emailLower, "@nobl.ae") > 0,
     "true",
     "false"
     )
@@ -111,7 +110,7 @@ IF NOT EMPTY(@contactKey) THEN
     IF Substring(@contactKey, 1, 3) == "00Q" THEN
       SET @subscriberRows = RetrieveSalesforceObjects(
       "Lead",
-      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
+      "FirstName, LastName, Id, Lead_Id__c, MobilePhone, Email, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Unit_Preferences__c, Budget__c, Purpose_of_Investment__c, Preferred_Areas__c, Purchase_Timeframe__c, HasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Status, Account__c, OwnerId, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c",
       "Id", "=", @contactKey )
       
       SET @contactSource = "Lead"
@@ -124,6 +123,7 @@ IF NOT EMPTY(@contactKey) THEN
       SET @nationality = Field(@subscriberRow, "Nationality__c")
       SET @employmentType = Field(@subscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@subscriberRow, "Interested_Property_Type__c")
+      SET @propertyRoomNo = Field(@subscriberRow, "Unit_Preferences__c")
       SET @budget = Field(@subscriberRow, "Budget__c")
       SET @purposeOfInvestment = Field(@subscriberRow, "Purpose_of_Investment__c")
       SET @preferredAreas = Field(@subscriberRow, "Preferred_Areas__c")
@@ -145,14 +145,18 @@ IF NOT EMPTY(@contactKey) THEN
        SET @Unsubscribe_Other_Reason__c = Field(@subscriberRow, "Unsubscribe_Other_Reason__c")
       SET @Unsubscribe_Other_Reason__c = ""
       
+
+      IF @interestedPropertyType != "Apartment" THEN
+        SET @propertyRoomNo = ""
+      ENDIF
       
     ELSEIF Substring(@contactKey, 1, 3) == "003" THEN
-    
+      
       SET @AccountsubscriberRows = RetrieveSalesforceObjects(
       "Account",
-      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
+      "FirstName, LastName, Id, Mobile_Number__c, PersonEmail,  PersonContactId, Country_of_Residence__c, Nationality__c, Employment_Type__c, Interested_Property_Type__c, Unit_Preferences__c, Purpose_of_Investment__c, Budget__c, Preferred_Areas__c, Purchase_Timeframe__c, PersonHasOptedOutOfEmail, Push_Notifications__c, WhatsApp__c, Status__c, Reason_for_Unsubscribe__c, Unsubscribe_Other_Reason__c, OwnerId",
       "PersonContactId", "=", @contactKey )
-
+    
       SET @contactSource = "Account"
       SET @AccountsubscriberRow = Row(@AccountsubscriberRows, 1)
       SET @accountId = Field(@AccountsubscriberRow, "Id")
@@ -164,6 +168,7 @@ IF NOT EMPTY(@contactKey) THEN
       SET @nationality = Field(@AccountsubscriberRow, "Nationality__c")
       SET @employmentType = Field(@AccountsubscriberRow, "Employment_Type__c")
       SET @interestedPropertyType = Field(@AccountsubscriberRow, "Interested_Property_Type__c")
+      SET @propertyRoomNo = Field(@AccountsubscriberRow, "Unit_Preferences__c")
       SET @budget = Field(@AccountsubscriberRow, "Budget__c")
       SET @purposeOfInvestment = Field(@AccountsubscriberRow, "Purpose_of_Investment__c")
       /*SET @purposeOfInvestment = ""*/
@@ -177,13 +182,18 @@ IF NOT EMPTY(@contactKey) THEN
       SET @Status = Field(@AccountsubscriberRow, "Status__c")
       SET @accountOwnerId = Field(@AccountsubscriberRow, "OwnerId")
 
-       SET @Reason_for_Unsubscribe__c = "" 
+      SET @Reason_for_Unsubscribe__c = Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")
       /*
        SET @Reason_for_Unsubscribe__c = Field(@AccountsubscriberRow, "Reason_for_Unsubscribe__c")
        SET @Reason_for_Unsubscribe__c = IIF(EMPTY(@Reason_for_Unsubscribe__c), "Select Reason",@Reason_for_Unsubscribe__c)
        SET @Unsubscribe_Other_Reason__c = Field(@AccountsubscriberRow, "Unsubscribe_Other_Reason__c") 
        */
       SET @Unsubscribe_Other_Reason__c = ""
+      
+      IF @interestedPropertyType != "Apartment" THEN
+        SET @propertyRoomNo = ""
+      ENDIF
+      
     ENDIF
     
     SET @callBackDate = ""
@@ -211,7 +221,6 @@ IF NOT EMPTY(@contactKey) THEN
     SET @cbTime = ""
     SET @cbTaskId = ""
 
-
     IF @TaskRowCount > 0 THEN
 
       FOR @i = 1 TO @TaskRowCount DO
@@ -222,34 +231,69 @@ IF NOT EMPTY(@contactKey) THEN
         SET @cbStatus = Field(@row,"Status")
         SET @cbTaskId = Field(@row,"Id")
 
-        /*IF (EMPTY(@callBackDate) OR @cbDate > @callBackDate) AND @cbStatus != "Completed" AND @cbDate != "" AND @cbTime != "" THEN*/
         IF (EMPTY(@callBackDate) OR @cbDate > @callBackDate) AND @cbStatus != "Completed" AND NOT EMPTY(@cbDate) AND NOT EMPTY(@cbTime) THEN
-    
           SET @callBackDate = @cbDate
           SET @callBackStatus = @cbStatus
           SET @callBackTime = @cbTime
           SET @taskId = @cbTaskId
           SET @isDataAvailable = 1
-
         ENDIF
 
       NEXT @i
 
-      /* check if callback date is past */
-      IF NOT EMPTY(@callBackDate) AND FormatDate(@callBackDate,"yyyy-MM-dd") < FormatDate(Now(),"yyyy-MM-dd") THEN
+      /* GST now (SFMC system time +10 hours) */
+      SET @nowGST = DateAdd(Now(), 10, "H")
+      SET @todayStrGST = FormatDate(@nowGST,"yyyy-MM-dd")
+      SET @cbDateStr = IIF(NOT EMPTY(@callBackDate), FormatDate(@callBackDate,"yyyy-MM-dd"), "")
+      SET @isBackDate = 0
+
+      IF NOT EMPTY(@callBackDate) AND NOT EMPTY(@callBackTime) THEN
+
+        /* Case 1: callback date is before today in GST */
+        IF @cbDateStr < @todayStrGST THEN
           SET @isBackDate = 1
+
+        /* Case 2: callback date is today in GST -> compare slot start time */
+        ELSEIF @cbDateStr == @todayStrGST THEN
+
+          /* Extract start time from format: '6:00 PM to 6:30 PM' */
+          SET @toPos = IndexOf(@callBackTime, " to ")
+
+          IF @toPos > 0 THEN
+            SET @slotStartTime = Trim(Substring(@callBackTime, 1, Subtract(@toPos, 1)))
+          ELSE
+            /* Fallback if value is only one time */
+            SET @slotStartTime = Trim(@callBackTime)
+          ENDIF
+
+          /* Build full datetime from date + slot start time */
+          SET @cbDateTime = FormatDate(Concat(@cbDateStr, " ", @slotStartTime), "yyyy-MM-dd HH:mm:ss")
+          SET @nowDateTimeGST = FormatDate(@nowGST, "yyyy-MM-dd HH:mm:ss")
+
+          IF @cbDateTime < @nowDateTimeGST THEN
+            SET @isBackDate = 1
+          ENDIF
+
+        ENDIF
+
       ENDIF
 
       IF @isDataAvailable == 1 AND @isBackDate != 1 THEN
-          SET @makeMeDisabled = "disabled"
-          SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
-          SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
+        SET @makeMeDisabled = "disabled"
+        SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
+        SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime)
+      ENDIF
+
+      IF @isDataAvailable == 1 AND @isBackDate == 1 THEN
+        SET @callBackDate = ""
+        SET @callBackTime = ""
       ENDIF
 
     ENDIF
-
-    /* Output(Concat("Is Back Date ->", @isBackDate)) */
-    
+    /*
+    Output(Concat("<br />Is Back Date ->", @isBackDate))
+    Output(Concat("<br />Is Data available ->", @isDataAvailable))
+    */
     SET @resubSubmit = RequestParameter("resubSubmit")
     
 
@@ -266,6 +310,7 @@ IF NOT EMPTY(@contactKey) THEN
     SET @nationality = RequestParameter("nationality")
     SET @employmentType = RequestParameter("employment")
     SET @interestedPropertyType = RequestParameter("propertyType")
+    SET @propertyRoomNo = RequestParameter("noOfbedrooms")
     SET @budget = RequestParameter("budget")
     SET @purposeOfInvestment = RequestParameter("purposeOfPurchase")
     SET @preferredAreas = RequestParameter("area")
@@ -331,6 +376,7 @@ IF NOT EMPTY(@contactKey) THEN
     Output(Concat("<br />Nationality: ", @nationality))
     Output(Concat("<br />Employment Type: ", @employmentType))
     Output(Concat("<br />Interested Property Type: ", @interestedPropertyType))
+    Output(Concat("<br />Property Rooms: ", @propertyRoomNo))
     Output(Concat("<br />Budget: ", @budget))
     Output(Concat("<br />Purpose To Invest: ", @purposeOfInvestment))
     Output(Concat("<br />Preferred Areas: ", @preferredAreas))
@@ -375,6 +421,7 @@ IF NOT EMPTY(@contactKey) THEN
     "Nationality", @nationality,
     "Employment Type", @employmentType,
     "Property Type", @interestedPropertyType,
+    "No Of Bedrooms", @propertyRoomNo,
     "Budget Range", @budget,
     "Purpose of Purchase", @purposeOfInvestment,
     "Purchase Timeframe", @purchaseTimeframe,
@@ -490,7 +537,9 @@ IF NOT EMPTY(@contactKey) THEN
     Output(Concat("<br />Push Opt-in SFUpdate: ", @push))
     Output(Concat("<br />WhatsApp Opt-in SFUpdate: ", @whatsApp))
     */
-   
+    IF @interestedPropertyType != "Apartment" THEN
+      SET @propertyRoomNo = ""
+    ENDIF  
     IF Substring(@contactKey, 1, 3) == "00Q" THEN  
       /* Lead Id, not Converted  */
       UpdateSingleSalesforceObject(
@@ -499,6 +548,7 @@ IF NOT EMPTY(@contactKey) THEN
       "Nationality__c", @nationality,
       "Employment_Type__c", @employmentType,
       "Interested_Property_Type__c", @interestedPropertyType,
+      "Unit_Preferences__c", @propertyRoomNo,
       "Purpose_of_Investment__c", @purposeOfInvestment,
       "Preferred_Areas__c", @preferredAreas,
       "Budget__c", @budget,
@@ -524,6 +574,7 @@ IF NOT EMPTY(@contactKey) THEN
       "Nationality__c", @nationality,
       "Employment_Type__c", @employmentType,
       "Interested_Property_Type__c", @interestedPropertyType,
+      "Unit_Preferences__c", @propertyRoomNo,
       "Purpose_of_Investment__c", @purposeOfInvestment,
       "Preferred_Areas__c", @preferredAreas,
       "Budget__c", @budget,
@@ -559,6 +610,7 @@ IF NOT EMPTY(@contactKey) THEN
     /*Output(Concat("<br />Inside Unsub -> ", @save))*/
       SET @showThankYou = "true"
       SET @thankYouType = "unsub"
+      SET @accountId = RequestParameter("accountId")
       SET @reason = RequestParameter("unsubReason")
       SET @otherReason = RequestParameter("unsubOther")
       SET @emailAddr = RequestParameter("email")
@@ -567,6 +619,7 @@ IF NOT EMPTY(@contactKey) THEN
       IF EMPTY(@reason) OR @reason == "Select Reason" THEN
         SET @reason = ""
       ENDIF
+      
       /*
       Output(Concat("<br />contactKey -> ", @contactKey))
       Output(Concat("<br />ctaName -> ", @ctaName))
@@ -591,7 +644,10 @@ IF NOT EMPTY(@contactKey) THEN
       "DateAdded", Now(),
       "EmailName", @emailname
       )
-
+      
+      IF @reason != "Other" THEN
+        SET @otherReason = "-"
+      ENDIF
       
       IF @contactSource == "Lead" THEN
         UpdateSingleSalesforceObject(
@@ -651,8 +707,9 @@ IF NOT EMPTY(@contactKey) THEN
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="32x32"
       href="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/608c8788-b1f3-4bfd-8071-6bfb6fbe4125.png">
-    <link href='https://cloud.marketing.ellingtonproperties.com/style' rel='stylesheet'>
-    <link href='https://cloud.marketing.ellingtonproperties.com/fonts' rel='stylesheet'>
+    <link href='https://cloud.marketing.ellingtonproperties.com/style-qa' rel='stylesheet'>
+    <link href='https://cloud.marketing.ellingtonproperties.com/fonts-qa' rel='stylesheet'>
+    <link rel="stylesheet" href="https://use.typekit.net/wji4wrf.css" />
     <script runat='server'>
       Platform.Response.SetResponseHeader("Strict-Transport-Security", "max-age=200");
       Platform.Response.SetResponseHeader("X-XSS-Protection", "1; mode=block");
@@ -665,6 +722,23 @@ IF NOT EMPTY(@contactKey) THEN
   </head>
   
   <body>
+    <!-- Default Alert -->
+    <div id="ep-alert" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9999; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:8px; max-width:420px; width:90%; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2);">
+        <div id="ep-alert-title" style="font-weight:700; margin-bottom:8px;"></div>
+        <hr />
+        <div id="ep-alert-msg" style="margin-bottom:16px;"></div>
+        <button type="button" onclick="document.getElementById('ep-alert').style.display='none'" style="float: right;
+        background: #727171;
+        color: #fff;
+        padding: 8px 15px;
+        margin-top: 15px;
+        margin-right: 0;
+        border: 1px solid #727171;
+        border-radius: 0;">OK</button>
+        <div style="clear:both"></div>
+      </div>
+    </div>
     <!-- Page Loader -->
     <div id="pageLoader" class="page-loader hidden">
       <div class="css-spinner" aria-label="Loading"></div>
@@ -695,7 +769,7 @@ IF NOT EMPTY(@contactKey) THEN
           <h2>Thank you!
           </h2>
           <p>
-            Your email preferences have been successfully updated. <br>
+            Your preferences have been successfully updated. <br>
             You will now receive communications based on your updated choices. <br><br>
             If you’d like to make further changes, you can return to your preference centre at any time.
           </p>
@@ -744,7 +818,7 @@ IF NOT EMPTY(@contactKey) THEN
       %%[ ELSE ]%%
 
     <div class="container">
-      <form method="post">
+      <form method="post" id="preference-form">
         <input type="hidden" name="sk" value="%%=v(@subscriberkey)=%%">
         <input type="hidden" name="leadStatus" value="%%=v(@leadStatus)=%%">
         <input type="hidden" name="leadId" value="%%=v(@leadId)=%%">
@@ -1277,32 +1351,35 @@ IF NOT EMPTY(@contactKey) THEN
               <div class="pref-row long-block">
                 <label>Property Type<sup class="value-required">*</sup></label>
                 <input type="text" id="propertyType" name="propertyType" value="%%=v(@interestedPropertyType)=%%" required="required" class="makeItSmall" />
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'studio','active','')=%%" data-value="Studio">Studio</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '1 bhk','active','')=%%" data-value="1 BHK">1 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '2 bhk','active','')=%%" data-value="2 BHK">2 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '3 bhk','active','')=%%" data-value="3 BHK">3 BHK</div>
-                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == '4 bhk','active','')=%%" data-value="4 BHK">4 BHK</div>
+                <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'apartment','active','')=%%" data-value="Apartment">Apartment</div>
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'villa','active','')=%%" data-value="Villa">Villa</div>
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'penthouse','active','')=%%" data-value="Penthouse">Penthouse</div>
                 <div class="prop-box propType %%=IIF(Lowercase(@interestedPropertyType) == 'townhouse','active','')=%%" data-value="Townhouse">Townhouse</div>
-                
+              </div>
+              <div class="pref-row long-block bedroom-block %%=IIF(Lowercase(@interestedPropertyType) == 'apartment','','hidden')=%%" id="bedroom-block">
+                <label>No of Bedrooms<sup class="value-required">*</sup></label>
+                <input type="text" id="noOfbedrooms" name="noOfbedrooms" value="%%=v(@propertyRoomNo)=%%" class="makeItSmall" />
+                <input type="text" id="prevValueOfbedrooms" name="prevValueOfbedrooms" value="%%=v(@propertyRoomNo)=%%" class="makeItSmall" />
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == 'studio','active','')=%%" data-value="Studio">Studio</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '1 bedroom','active','')=%%" data-value="1 bedroom">1 Bedroom</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '2 bedroom','active','')=%%" data-value="2 bedroom">2 Bedrooms</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '3 bedroom','active','')=%%" data-value="3 bedroom">3 Bedrooms</div>
+                <div class="prop-box propRoomNo %%=IIF(Lowercase(@propertyRoomNo) == '4 bedroom','active','')=%%" data-value="4 bedroom">4 Bedrooms</div>
               </div>
               <div class="pref-row long-block">
-                <label>Budget Range<sup class="value-required">*</sup></label>
+                <label>Budget Range (AED)<sup class="value-required">*</sup></label>
                 <select class="form-control" name="budget" id="budget" required="required">
                   <option value="">Select Budget</option>
                     <!-- Assuming @budget contains the selected value (e.g., "1 Mn to 1.5 Mn") -->
-                  <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_1.5_mn','Between 1 Mn to 1.5 Mn')=%%"    %%=IIF(@budget == 'Between 1 Mn to 1.5 Mn' OR @budget == 'between_1_mn_to_1.5_mn', 'selected','')=%% >1 Mn to 1.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_1.5_Mn_to_2_mn','Between 1.5 Mn to 2 Mn')=%%"    %%=IIF(@budget == 'Between 1.5 Mn to 2 Mn' OR @budget == 'between_1.5_Mn_to_2_mn','selected','')=%% >1.5 Mn to 2 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_2_Mn_to_2.5_mn','Between 2 Mn to 2.5 Mn')=%%"    %%=IIF(@budget == 'Between 2 Mn to 2.5 Mn' OR @budget == 'between_2_Mn_to_2.5_mn','selected','')=%% >2 Mn to 2.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_2.5_Mn_to_3_mn','Between 2.5 Mn to 3 Mn')=%%"   %%=IIF(@budget == 'Between 2.5 Mn to 3 Mn' OR @budget == 'between_2.5_Mn_to_3_mn','selected','')=%% >2.5 Mn to 3 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_3_mn','Between 1 Mn to 3 Mn')=%%"      %%=IIF(@budget == 'Between 1 Mn to 3 Mn' OR @budget == 'between_1_mn_to_3_mn','selected','')=%% >1 Mn to 3 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_3.5_mn','Between 3 Mn to 3.5 Mn')=%%"    %%=IIF(@budget == 'Between 3 Mn to 3.5 Mn' OR @budget == 'between_3_mn_to_3.5_mn','selected','')=%% >3 Mn to 3.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_3.5_mn_to_4_mn','Between 3.5 Mn to 4 Mn')=%%"    %%=IIF(@budget == 'Between 3.5 Mn to 4 Mn' OR @budget == 'between_3.5_mn_to_4_mn','selected','')=%% >3.5 Mn to 4 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_4_mn_to_4.5_mn','Between 4 Mn to 4.5 Mn')=%%"    %%=IIF(@budget == 'Between 4 Mn to 4.5 Mn' OR @budget == 'between_4_mn_to_4.5_mn','selected','')=%% >4 Mn to 4.5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_4.5_mn_to_5_mn','Between 4.5 Mn to 5 Mn')=%%"    %%=IIF(@budget == 'Between 4.5 Mn to 5 Mn' OR @budget == 'between_4.5_mn_to_5_mn','selected','')=%% >4.5 Mn to 5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_5_mn','Between 3 Mn to 5 Mn')=%%"      %%=IIF(@budget == 'Between 3 Mn to 5 Mn' OR @budget == 'between_3_mn_to_5_mn','selected','')=%% >3 Mn to 5 Mn</option>
-                  <option value="%%=IIF(@contactSource == 'Lead','more_than_5_mn','More than 5 Mn')=%%"    %%=IIF(@budget == 'More than 5 Mn' OR @budget == 'more_than_5_mn','selected','')=%% >More than 5 Mn</option>
+                    <option value="%%=IIF(@contactSource == 'Lead','between_1_mn_to_1.5_mn','Between 1 Mn to 1.5 Mn')=%%"    %%=IIF(@budget == 'Between 1 Mn to 1.5 Mn' OR @budget == 'between_1_mn_to_1.5_mn', 'selected','')=%% >1 – 1.5 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_1.5_Mn_to_2_mn','Between 1.5 Mn to 2 Mn')=%%"    %%=IIF(@budget == 'Between 1.5 Mn to 2 Mn' OR @budget == 'between_1.5_Mn_to_2_mn','selected','')=%% >1.5 – 2 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_2_Mn_to_2.5_mn','Between 2 Mn to 2.5 Mn')=%%"    %%=IIF(@budget == 'Between 2 Mn to 2.5 Mn' OR @budget == 'between_2_Mn_to_2.5_mn','selected','')=%% >2 – 2.5 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_2.5_Mn_to_3_mn','Between 2.5 Mn to 3 Mn')=%%"   %%=IIF(@budget == 'Between 2.5 Mn to 3 Mn' OR @budget == 'between_2.5_Mn_to_3_mn','selected','')=%% >2.5 – 3 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_3_mn_to_3.5_mn','Between 3 Mn to 3.5 Mn')=%%"    %%=IIF(@budget == 'Between 3 Mn to 3.5 Mn' OR @budget == 'between_3_mn_to_3.5_mn','selected','')=%% >3 – 3.5 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_3.5_mn_to_4_mn','Between 3.5 Mn to 4 Mn')=%%"    %%=IIF(@budget == 'Between 3.5 Mn to 4 Mn' OR @budget == 'between_3.5_mn_to_4_mn','selected','')=%% >3.5 – 4 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_4_mn_to_4.5_mn','Between 4 Mn to 4.5 Mn')=%%"    %%=IIF(@budget == 'Between 4 Mn to 4.5 Mn' OR @budget == 'between_4_mn_to_4.5_mn','selected','')=%% >4 – 4.5 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','between_4.5_mn_to_5_mn','Between 4.5 Mn to 5 Mn')=%%"    %%=IIF(@budget == 'Between 4.5 Mn to 5 Mn' OR @budget == 'between_4.5_mn_to_5_mn','selected','')=%% >4.5 – 5 million</option>
+                  <option value="%%=IIF(@contactSource == 'Lead','more_than_5_mn','More than 5 Mn')=%%"    %%=IIF(@budget == 'More than 5 Mn' OR @budget == 'more_than_5_mn','selected','')=%% >More than 5 million</option>
                 </select> 
               </div>
               <div class="pref-row long-block">
@@ -1372,6 +1449,7 @@ IF NOT EMPTY(@contactKey) THEN
                 <div class="prop-box timeframe %%=IIF(@purchaseTimeframe == 'Immediate','active','')=%%" data-value="Immediate">Immediate</div>
                 <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '1 month' OR Lowercase(@purchaseTimeframe) == '1_month','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','1_month','1 Month')=%%">1 Month</div>
                 <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '2 months' OR Lowercase(@purchaseTimeframe) == '2_months','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','2_months','2 Months')=%%">2 Months</div>
+                <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '3 months' OR Lowercase(@purchaseTimeframe) == '3_months','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','3_months','3 Months')=%%">3 Months</div>
                 <div class="prop-box timeframe %%=IIF(Lowercase(@purchaseTimeframe) == '6 months' OR Lowercase(@purchaseTimeframe) == '6_months','active','')=%%" data-value="%%=IIF(@contactSource == 'Lead','6_months','6 Months')=%%">6 Months</div>
               </div>
             </div>
@@ -1457,7 +1535,7 @@ IF NOT EMPTY(@contactKey) THEN
         <div class="actions" id="actions">
           <input type="hidden" name="resubSubmit" value="1">
           <button type="submit" class="primary w50">Save Changes</button>
-          <button type="button" class="secondary w50" onclick="showUnsubscribe()">Unsubscribe ALL</button>
+          <button type="button" class="secondary w50" onclick="showUnsubscribe()">Unsubscribe All</button>
         </div>
     
         
@@ -1538,7 +1616,7 @@ IF NOT EMPTY(@contactKey) THEN
     }
 
   </script>
-  <script src="https://cloud.marketing.ellingtonproperties.com/datetime-validation"></script>
+  <script src="https://cloud.marketing.ellingtonproperties.com/datetime-validation-qa"></script>
     <script>
       var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
@@ -1552,7 +1630,8 @@ IF NOT EMPTY(@contactKey) THEN
         today.setHours(0,0,0,0);
 
         if(selected < today){
-            alert("Please select a future date.");
+            // alert("Please select a future date.");
+            epAlert("Please select a future date.");
             this.value = "";
         }
       });
@@ -1562,8 +1641,7 @@ IF NOT EMPTY(@contactKey) THEN
         return (
           e.includes("@horizontal.com") ||
           e.includes("@ellingtongroup.com") ||
-          e.includes("@nobl.ae") ||
-          e.includes("@gmail.com")
+          e.includes("@nobl.ae")
         );
       }
   
@@ -1584,13 +1662,15 @@ IF NOT EMPTY(@contactKey) THEN
         const todayDate = d.getFullYear()+"-"+String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
         
         if(meetingDate < todayDate)
-          alert("Please select a future date.");
+          // alert("Please select a future date.");
+            epAlert("Please select a future date.");
         else if(meetingTime == "Select") 
-          alert("Please select a Time slot.");
+          // alert("Please select a Time slot.");
+            epAlert("Please select a Time slot.");
         else {
           showSpinner();
           if (isAllowedEmail(emailaddr)) {
-            fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeeting", {
+            fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeetingQA", {
               method: "POST",
               headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -1666,6 +1746,7 @@ IF NOT EMPTY(@contactKey) THEN
         var nationality = "%%=v(@nationality)=%%";
         var employmentType = "%%=v(@employmentType)=%%";
         var interestedPropertyType = "%%=v(@interestedPropertyType)=%%";
+        var propertyRoomNo = "%%=v(@propertyRoomNo)=%%";
         var purposeOfInvestment = "%%=v(@purposeOfInvestment)=%%";
         var preferredAreas = "%%=v(@preferredAreas)=%%";
         var purchaseTimeframe = "%%=v(@purchaseTimeframe)=%%";
@@ -1690,6 +1771,7 @@ IF NOT EMPTY(@contactKey) THEN
               "&nationality=" + encodeURIComponent(nationality)+
               "&employmentType=" + encodeURIComponent(employmentType)+
               "&interestedPropertyType=" + encodeURIComponent(interestedPropertyType)+
+              "&propertyRoomNo=" + encodeURIComponent(propertyRoomNo)+
               "&purposeOfInvestment=" + encodeURIComponent(purposeOfInvestment)+
               "&preferredAreas=" + encodeURIComponent(preferredAreas)+
               "&purchaseTimeframe=" + encodeURIComponent(purchaseTimeframe)
@@ -1732,6 +1814,7 @@ IF NOT EMPTY(@contactKey) THEN
         var nationality = "%%=v(@nationality)=%%";
         var employmentType = "%%=v(@employmentType)=%%";
         var interestedPropertyType = "%%=v(@interestedPropertyType)=%%";
+        var propertyRoomNo = "%%=v(@propertyRoomNo)=%%";
         var purposeOfInvestment = "%%=v(@purposeOfInvestment)=%%";
         var preferredAreas = "%%=v(@preferredAreas)=%%";
         var purchaseTimeframe = "%%=v(@purchaseTimeframe)=%%";
@@ -1756,6 +1839,7 @@ IF NOT EMPTY(@contactKey) THEN
               "&nationality=" + encodeURIComponent(nationality)+
               "&employmentType=" + encodeURIComponent(employmentType)+
               "&interestedPropertyType=" + encodeURIComponent(interestedPropertyType)+
+              "&propertyRoomNo=" + encodeURIComponent(propertyRoomNo)+
               "&purposeOfInvestment=" + encodeURIComponent(purposeOfInvestment)+
               "&preferredAreas=" + encodeURIComponent(preferredAreas)+
               "&purchaseTimeframe=" + encodeURIComponent(purchaseTimeframe)
@@ -1902,6 +1986,7 @@ IF NOT EMPTY(@contactKey) THEN
       });
   
       document.querySelectorAll('.propType').forEach(btn => {
+         var prevValueOfbedrooms = document.getElementById('prevValueOfbedrooms').value
           btn.addEventListener('click', function() {
 
               // Remove active from all
@@ -1913,9 +1998,35 @@ IF NOT EMPTY(@contactKey) THEN
 
               // Get value from data attribute
               const selectedValue = this.getAttribute('data-value');
+              if ( selectedValue == "Apartment"){
+                document.getElementById("bedroom-block").classList.remove("hidden");
 
+              } else{
+                /*document.querySelectorAll('.propRoomNo')
+                  .forEach(b => b.classList.remove('active'));
+                  document.getElementById('noOfbedrooms').value = "";
+                */  
+                document.getElementById("bedroom-block").classList.add("hidden");
+              }
               // Set value to hidden field
               document.getElementById('propertyType').value = selectedValue;
+          });
+      });
+      document.querySelectorAll('.propRoomNo').forEach(btn => {
+          btn.addEventListener('click', function() {
+
+              // Remove active from all
+              document.querySelectorAll('.propRoomNo')
+                  .forEach(b => b.classList.remove('active'));
+
+              // Add active to clicked
+              this.classList.add('active');
+
+              // Get value from data attribute
+              const selectedValue = this.getAttribute('data-value');
+              
+              // Set value to hidden field
+              document.getElementById('noOfbedrooms').value = selectedValue;
           });
       });
         const purchasePurposeField = document.getElementById('purposeOfPurchase');
@@ -2026,6 +2137,40 @@ IF NOT EMPTY(@contactKey) THEN
         document.getElementById("selectBox").innerText = selected.length > 0 
           ? selected.join(", ") 
           : "Select Area";
+      }
+      var form = document.getElementById("preference-form");
+      // Get selected property type
+      function getSelectedPropertyType() {
+          var selected = document.querySelector(".propType.active");
+          return selected ? selected.innerText.trim() : "";
+      }
+
+      // Get selected bedroom
+      function getSelectedBedroom() {
+          var selected = document.querySelector(".propRoomNo.active");
+          return selected ? selected.innerText.trim() : "";
+      }
+
+      form.addEventListener("submit", function (e) {
+
+          var propertyType = getSelectedPropertyType();
+          var bedroom = getSelectedBedroom();
+          
+          // ✅ Apartment → bedroom required
+          if (propertyType === "Apartment" && !bedroom) {
+              // alert("Please select number of bedrooms for Apartment.");
+              epAlert("Please select number of bedrooms for Apartment.");
+              hideSpinner();
+              e.preventDefault();
+              return;
+              
+          }
+          // ✅ If all good → form submits normally
+      });
+      function epAlert(message) {
+        document.getElementById('ep-alert-title').textContent = 'Ellington Properties';
+        document.getElementById('ep-alert-msg').textContent = message;
+        document.getElementById('ep-alert').style.display = 'flex';
       }
       </script>
     </div>
