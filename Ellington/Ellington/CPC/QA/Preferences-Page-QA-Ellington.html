@@ -1752,7 +1752,7 @@ IF NOT EMPTY(@contactKey) THEN
                     String(d.getDate()).padStart(2, '0') + "-" +
                     String(d.getMonth() + 1).padStart(2, '0') + "-" +
                     d.getFullYear();
-                  document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime + " (GST)";
+                  document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime;
                   
                   document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
                 }
@@ -2225,6 +2225,7 @@ IF NOT EMPTY(@contactKey) THEN
         document.getElementById('ep-alert-msg').textContent = message;
         document.getElementById('ep-alert').style.display = 'flex';
       }
+      /*
       document.addEventListener('DOMContentLoaded', function() {
           const tzSelect = document.getElementById('timezone-select');
           const timeSelect = document.querySelector('select[name="time-slot"]'); // Ensure this matches your Time select name
@@ -2274,6 +2275,86 @@ IF NOT EMPTY(@contactKey) THEN
               }
           });
       });
+      */
+      document.addEventListener('DOMContentLoaded', function() {
+        const tzSelect = document.getElementById('timezone-select');
+        const timeSelect = document.querySelector('select[name="time-slot"]'); 
+        // const dateInput = document.querySelector('input[type="date"]'); // Ensure this matches your Date input
+        const dateInput = document.getElementById('meetingDate'); // Ensure this matches your Date input
+
+        const originalSlots = [
+            "10:00 AM to 10:30 AM", "10:30 AM to 11:00 AM", "11:00 AM to 11:30 AM",
+            "11:30 AM to 12:00 PM", "12:00 PM to 12:30 PM", "12:30 PM to 1:00 PM",
+            "1:00 PM to 1:30 PM", "1:30 PM to 2:00 PM", "2:00 PM to 2:30 PM",
+            "2:30 PM to 3:00 PM", "3:00 PM to 3:30 PM", "3:30 PM to 4:00 PM",
+            "4:00 PM to 4:30 PM", "4:30 PM to 5:00 PM", "5:00 PM to 5:30 PM",
+            "5:30 PM to 6:00 PM", "6:00 PM to 6:30 PM"
+        ];
+
+        // Updated helper to accept the chosen date string
+        function getConvertedDate(gstTimeString, offsetDiff, baseDateStr) {
+            let [time, modifier] = gstTimeString.split(' ');
+            let [hours, minutes] = time.split(':');
+            hours = parseInt(hours);
+            
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+
+            // Create date based on the user's selected date input
+            let date = new Date(baseDateStr); 
+            date.setHours(hours, parseInt(minutes), 0, 0);
+
+            // Shift from Dubai (UTC+4) to target offset
+            const diffInMinutes = (offsetDiff - 4) * 60;
+            date.setMinutes(date.getMinutes() + diffInMinutes);
+            return date;
+        }
+
+        function updateTimeSlots() {
+            const selectedOffset = parseFloat(tzSelect.value);
+            const options = timeSelect.options;
+
+            // 1. Get the current time in the SELECTED timezone
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const nowInSelectedTZ = new Date(utc + (3600000 * selectedOffset));
+
+            // 2. Get the user-selected date from the input
+            const selectedDateStr = dateInput.value; // e.g., "2026-04-13"
+            
+            for (let i = 1; i < options.length; i++) {
+                let gstRange = originalSlots[i - 1];
+                let parts = gstRange.split(' to ');
+
+                // 3. Create slot date objects anchored to the SELECTED date
+                let startDate = getConvertedDate(parts[0], selectedOffset, selectedDateStr);
+                let endDate = getConvertedDate(parts[1], selectedOffset, selectedDateStr);
+
+                let newStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                let newEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                options[i].text = `${newStart} to ${newEnd}`;
+
+                // 4. Disable logic: Compare the slot's full date/time vs "Now" in that TZ
+                // This handles past days, today, and future days automatically
+                if (startDate < nowInSelectedTZ) {
+                    options[i].disabled = true;
+                    options[i].style.color = '#ccc';
+                    if (timeSelect.selectedIndex === i) timeSelect.selectedIndex = 0;
+                } else {
+                    options[i].disabled = false;
+                    options[i].style.color = '';
+                }
+            }
+        }
+
+        // Listen for changes on both Timezone and Date inputs
+        tzSelect.addEventListener('change', updateTimeSlots);
+        dateInput.addEventListener('change', updateTimeSlots);
+
+        // Run once on load to initialize state
+        updateTimeSlots();
+    });
       </script>
     </div>
   </body>
