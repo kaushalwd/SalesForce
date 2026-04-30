@@ -280,7 +280,8 @@ IF NOT EMPTY(@contactKey) THEN
 
       IF @isDataAvailable == 1 AND @isBackDate != 1 THEN
         SET @makeMeDisabled = "disabled"
-        SET @formattedDate = FormatDate(@callBackDate,"dd-MM-yyyy")
+        SET @formattedDate = FormatDate(@callBackDate,"dd/MM/yyyy")
+      
         SET @scheduledDetails = Concat("Meeting scheduled for ", @formattedDate, " at ", @callBackTime, " (GST)")
       ENDIF
 
@@ -714,13 +715,14 @@ IF NOT EMPTY(@contactKey) THEN
     <link href='https://cloud.marketing.ellingtonproperties.com/style-qa' rel='stylesheet'>
     <link href='https://cloud.marketing.ellingtonproperties.com/fonts-qa' rel='stylesheet'>
     <link rel="stylesheet" href="https://use.typekit.net/wji4wrf.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script runat='server'>
       Platform.Response.SetResponseHeader("Strict-Transport-Security", "max-age=200");
       Platform.Response.SetResponseHeader("X-XSS-Protection", "1; mode=block");
       Platform.Response.SetResponseHeader("X-Frame-Options", "Deny");
       Platform.Response.SetResponseHeader("X-Content-Type-Options", "nosniff");
       Platform.Response.SetResponseHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-      Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.marketing.ellingtonproperties.com ; frame-ancestors 'none'");
+      Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.marketing.ellingtonproperties.com https://cdn.jsdelivr.net ; frame-ancestors 'none'");
     </script>
 
   </head>
@@ -1503,7 +1505,7 @@ IF NOT EMPTY(@contactKey) THEN
               <div class="pref-row">
                 <div class="pref-col col-33">
                   <label>Date</label>
-                  <div class="pref-el"><input class="form-control" type="date" name="meetingDate"  value="%%=v(@callBackDate)=%%" id="meetingDate" %%=v(@makeMeDisabled)=%%>
+                  <div class="pref-el"><input class="form-control" type="date" name="meetingDate"  value="%%=v(@formattedDate)=%%" id="meetingDate" %%=v(@makeMeDisabled)=%%>
                     <input type="hidden" id="hiddenDate"></div>
                 </div>
                 <div class="pref-col col-33">
@@ -1663,6 +1665,7 @@ IF NOT EMPTY(@contactKey) THEN
 
   </script>
   <script src="https://cloud.marketing.ellingtonproperties.com/datetime-validation-qa"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
       var subscriberKey = "%%=v(@contactKey)=%%";
       var emailaddr = "%%=v(@emailAddr)=%%";
@@ -1691,82 +1694,87 @@ IF NOT EMPTY(@contactKey) THEN
         );
       }
   
-  function scheduleMeeting() {
-        var subscriberKey = "%%=v(@contactKey)=%%";
-        var contactSource = "%%=v(@contactSource)=%%";
-        var csrfToken = "%%=v(@csrfToken)=%%";
-        var OwnerId = "%%=v(@OwnerId)=%%";
-        var accountOwnerId = "%%=v(@accountOwnerId)=%%";
-        var accountId = "%%=v(@accountId)=%%";
-    
-        var meetingDate = document.getElementById("meetingDate").value;
-      // Get time slot value
-        var meetingTime = document.getElementById("time-slot").value;
+      function scheduleMeeting() {
+    var subscriberKey = "%%=v(@contactKey)=%%";
+    var contactSource = "%%=v(@contactSource)=%%";
+    var csrfToken = "%%=v(@csrfToken)=%%";
+    var OwnerId = "%%=v(@OwnerId)=%%";
+    var accountOwnerId = "%%=v(@accountOwnerId)=%%";
+    var accountId = "%%=v(@accountId)=%%";
 
-        const d = new Date();
-        d.setDate(d.getDate())
-        const todayDate = d.getFullYear()+"-"+String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+    // 1. Get the value. Because of Flatpickr's dateFormat: "Y-m-d", 
+    // this will be "2026-05-01" regardless of what the user sees in the box.
+    var meetingDate = document.getElementById("meetingDate").value;
+    var meetingTime = document.getElementById("time-slot").value;
+
+    // Get current date in YYYY-MM-DD format for comparison
+    const d = new Date();
+    const todayDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+
+    // 2. Validation
+    if (!meetingDate || meetingDate < todayDate) {
+        epAlert("Please select a valid future date.");
+    } else if (meetingTime === "Select" || meetingTime === "Select Time Slot") {
+        epAlert("Please select a Time slot.");
+    } else {
+        showSpinner();
         
-        if(meetingDate < todayDate)
-          // alert("Please select a future date.");
-            epAlert("Please select a future date.");
-        else if(meetingTime == "Select") 
-          // alert("Please select a Time slot.");
-            epAlert("Please select a Time slot.");
-        else {
-          showSpinner();
-          if (isAllowedEmail(emailaddr)) {
+        // Assuming emailaddr is defined globally in your script
+        if (isAllowedEmail(emailaddr)) {
+
             fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeetingQA", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-              }
-              ,
-              body: "sk=" + encodeURIComponent(subscriberKey) +
-                "&meetingDate=" + encodeURIComponent(meetingDate) +
-                "&contactSource=" + encodeURIComponent(contactSource) +
-                "&meetingTime=" + encodeURIComponent(meetingTime)+
-                "&token=" + encodeURIComponent(csrfToken)+
-                "&OwnerId=" + encodeURIComponent(OwnerId)+
-                "&accountOwnerId=" + encodeURIComponent(accountOwnerId)+
-                "&accountId=" + encodeURIComponent(accountId)
-
-            }
-            )
-              .then(response => response.text())
-              .then(data => {
-              console.log("schedule meeting response:", data);
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                // Send meetingDate (YYYY-MM-DD) which Salesforce prefers
+                body: "sk=" + encodeURIComponent(subscriberKey) +
+                    "&meetingDate=" + encodeURIComponent(meetingDate) +
+                    "&contactSource=" + encodeURIComponent(contactSource) +
+                    "&meetingTime=" + encodeURIComponent(meetingTime) +
+                    "&token=" + encodeURIComponent(csrfToken) +
+                    "&OwnerId=" + encodeURIComponent(OwnerId) +
+                    "&accountOwnerId=" + encodeURIComponent(accountOwnerId) +
+                    "&accountId=" + encodeURIComponent(accountId)
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log("schedule meeting response:", data);
                 hideSpinner();
-                if (data.indexOf("TaskCreated") != -1 ){
-                  
-                  const selectElement = document.getElementById("time-slot");
-                  const meetingTime = selectElement.options[selectElement.selectedIndex].text;
-                  const selectElement_1 = document.getElementById("timezone-select");
-                  const timeZone = selectElement_1.options[selectElement_1.selectedIndex].text;
-                  document.getElementById("scheduledMeeting").disabled = true;
-                  document.getElementById("meetingDate").disabled = true;
-                  document.getElementById("time-slot").disabled = true;
-                  document.getElementById("timezone-select").disabled = true;
-                  const d = new Date(meetingDate);
-                  const formattedDate =
-                    String(d.getDate()).padStart(2, '0') + "-" +
-                    String(d.getMonth() + 1).padStart(2, '0') + "-" +
-                    d.getFullYear();
-                  document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + formattedDate + " at " + meetingTime;
-                  
-                  document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
-                }
                 
-              }
-              )
-              .catch(error => {
-              //  console.error("Unsub error:", error);
-              }
-              );
-        
-          }
-        }  
-      }
+                if (data.indexOf("TaskCreated") != -1) {
+                    const selectElement = document.getElementById("time-slot");
+                    const meetingTimeText = selectElement.options[selectElement.selectedIndex].text;
+                    const selectElement_1 = document.getElementById("timezone-select");
+                    const timeZone = selectElement_1.options[selectElement_1.selectedIndex].text;
+                    
+                    // Disable inputs
+                    document.getElementById("scheduledMeeting").disabled = true;
+                    document.getElementById("meetingDate").disabled = true;
+                    document.getElementById("time-slot").disabled = true;
+                    document.getElementById("timezone-select").disabled = true;
+
+                    // --- Format the display date from YYYY-MM-DD back to DD/MM/YYYY for the user UI ---
+                    var displayDate = meetingDate.split('-').reverse().join('/');
+
+                    document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + displayDate + " at " + meetingTimeText;
+                    document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
+                    const scheduleInput = document.querySelector('.schedule input[type="text"]');
+
+                    if (scheduleInput) {
+                        scheduleInput.disabled = true;
+                    }
+                } else {
+                    epAlert("There was an issue scheduling your meeting. Please try again.");
+                }
+            })
+            .catch(error => {
+                hideSpinner();
+                console.error("Schedule meeting error:", error);
+            });
+        }
+    }
+}
       
       
       function myPreferences() {
@@ -2279,8 +2287,34 @@ IF NOT EMPTY(@contactKey) THEN
       document.addEventListener('DOMContentLoaded', function() {
         const tzSelect = document.getElementById('timezone-select');
         const timeSelect = document.querySelector('select[name="time-slot"]'); 
-        // const dateInput = document.querySelector('input[type="date"]'); // Ensure this matches your Date input
-        const dateInput = document.getElementById('meetingDate'); // Ensure this matches your Date input
+        const dateInput = document.getElementById('meetingDate');
+
+        const fp = flatpickr(dateInput, {
+            dateFormat: "Y-m-d",    
+            altInput: true,         
+            altFormat: "d/m/Y",     
+            allowInput: true,
+            minDate: "today",
+            %%[ IF NOT EMPTY(@formattedDate) THEN ]%%
+              defaultDate: "%%=v(@formattedDate)=%%",
+            %%[ ENDIF ]%%
+            disable: [
+                function(date) {
+                    return (date.getDay() === 0 || date.getDay() === 6);
+                }
+            ],
+            onReady: function(selectedDates, dateStr, instance) {
+                if (instance.altInput) {
+                    instance.altInput.placeholder = "dd/mm/yyyy";
+                }
+            },
+            onChange: function(selectedDates, dateStr) {
+                updateTimeSlots();
+            }
+        });
+        
+        //console.log("Date ->", dateInput.value) 
+        fp.setDate(dateInput.value, true, "d/m/Y");
 
         const originalSlots = [
             "10:00 AM to 10:30 AM", "10:30 AM to 11:00 AM", "11:00 AM to 11:30 AM",
@@ -2291,7 +2325,7 @@ IF NOT EMPTY(@contactKey) THEN
             "5:30 PM to 6:00 PM", "6:00 PM to 6:30 PM"
         ];
 
-        // Updated helper to accept the chosen date string
+        // UPDATED: Simplified date parsing for YYYY-MM-DD
         function getConvertedDate(gstTimeString, offsetDiff, baseDateStr) {
             let [time, modifier] = gstTimeString.split(' ');
             let [hours, minutes] = time.split(':');
@@ -2300,33 +2334,33 @@ IF NOT EMPTY(@contactKey) THEN
             if (modifier === 'PM' && hours < 12) hours += 12;
             if (modifier === 'AM' && hours === 12) hours = 0;
 
-            // Create date based on the user's selected date input
+            // baseDateStr is now "YYYY-MM-DD", which new Date() handles natively
             let date = new Date(baseDateStr); 
+            
             date.setHours(hours, parseInt(minutes), 0, 0);
 
-            // Shift from Dubai (UTC+4) to target offset
+            // Convert from GST (UTC+4) to selected timezone
             const diffInMinutes = (offsetDiff - 4) * 60;
             date.setMinutes(date.getMinutes() + diffInMinutes);
             return date;
         }
 
         function updateTimeSlots() {
+            // Use fp.dateStr to get the consistent YYYY-MM-DD format from Flatpickr
+            const selectedDateStr = dateInput.value; 
+            if (!selectedDateStr) return;
+
             const selectedOffset = parseFloat(tzSelect.value);
             const options = timeSelect.options;
 
-            // 1. Get the current time in the SELECTED timezone
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const nowInSelectedTZ = new Date(utc + (3600000 * selectedOffset));
 
-            // 2. Get the user-selected date from the input
-            const selectedDateStr = dateInput.value; // e.g., "2026-04-13"
-            
             for (let i = 1; i < options.length; i++) {
                 let gstRange = originalSlots[i - 1];
                 let parts = gstRange.split(' to ');
 
-                // 3. Create slot date objects anchored to the SELECTED date
                 let startDate = getConvertedDate(parts[0], selectedOffset, selectedDateStr);
                 let endDate = getConvertedDate(parts[1], selectedOffset, selectedDateStr);
 
@@ -2335,8 +2369,7 @@ IF NOT EMPTY(@contactKey) THEN
 
                 options[i].text = `${newStart} to ${newEnd}`;
 
-                // 4. Disable logic: Compare the slot's full date/time vs "Now" in that TZ
-                // This handles past days, today, and future days automatically
+                // Disable slots that have already passed for the current day
                 if (startDate < nowInSelectedTZ) {
                     options[i].disabled = true;
                     options[i].style.color = '#ccc';
@@ -2347,12 +2380,14 @@ IF NOT EMPTY(@contactKey) THEN
                 }
             }
         }
+        
+        // --- NEW: Hydration Logic for Page Load ---
+        
+        // 1. Run the initial slot calculation
+        updateTimeSlots();
 
-        // Listen for changes on both Timezone and Date inputs
         tzSelect.addEventListener('change', updateTimeSlots);
-        dateInput.addEventListener('change', updateTimeSlots);
-
-        // Run once on load to initialize state
+        // Initial run to format slots if a date is pre-selected
         updateTimeSlots();
     });
       </script>

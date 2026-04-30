@@ -25,11 +25,18 @@ function enableButton() {
     scheduleBtn.disabled = false;
     //scheduleBtn.classList.remove("readonly");
 }
-
+function parseDDMMYYYY(dateStr) {
+    if (!dateStr) return null;
+    var parts = dateStr.split('/');
+    // new Date(year, monthIndex, day)
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+}
 // Validate everything
 function validateForm() {
 
-    var selectedDateValue = dateInput.value;
+    //var selectedDateValue = dateInput.value;
+    var selectedDateValue = document.getElementById("meetingDate").value;
+    
     var selectedSlot = timeSlot.value;
 
     // Default disable
@@ -43,7 +50,9 @@ function validateForm() {
     gstToday.setHours(0,0,0,0);
 
     var selectedDate = new Date(selectedDateValue + "T00:00:00");
-    
+    // ✅ FIXED: Use the helper instead of string concatenation
+    //var selectedDate = parseDDMMYYYY(selectedDateValue);
+    //console.log("selectedDate -> "+selectedDate+" --- gstToday -> "+gstToday)
     if (isWeekend(selectedDate)) return;
 
     // ❌ Past Date

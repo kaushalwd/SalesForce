@@ -1,0 +1,347 @@
+%%[
+SET @source = RequestParameter("source")
+SET @sk = RequestParameter("sk")
+SET @pid = RequestParameter("pid")
+
+SET @decodedSubKey = Base64Decode(@sk)
+SET @decodedPid = Base64Decode(@pid)
+
+/* Validation */
+SET @isValid = "true"
+
+IF EMPTY(@source) OR EMPTY(@decodedSubKey) THEN
+    SET @isValid = "false"
+ENDIF
+
+IF @isValid == "true" AND NOT EMPTY(@decodedPid) THEN
+
+    /* Check if record exists */
+    SET @existingRows = LookupRows(
+        "PropertyMatching_JourneyDE_Prod",
+        "SubscriberKey", @decodedSubKey,
+        "ProjectId", @decodedPid
+        
+    )
+
+    IF RowCount(@existingRows) > 0 THEN
+    
+      Set @row = Row(@existingRows, 1)
+      Set @ProjectName = Field(@row, "ProjectName")
+
+        /* Update DE */
+        SET @updatedField = UpdateData(
+            "PropertyMatching_JourneyDE_Prod",
+            2,
+            "SubscriberKey", @decodedSubKey,
+            "ProjectId", @decodedPid,
+            "ClickFlag", "True",
+            "ClickSource", @source
+        )
+
+        /* Create Task */
+        SET @subject = Concat("Follow Up Required - Lead Interacted with Marketing Campaign - Interest in: ", @ProjectName)
+        SET @ownerId = Lookup("Master Lead","OwnerId","Id", @decodedSubKey)
+
+        /* Check existing Task in Salesforce */
+        
+        SET @existingTaskRows = RetrieveSalesforceObjects(
+            "Task",
+            "Id, Subject, Status",
+            "WhoId", "=", @decodedSubKey,
+            "Subject", "=", @subject
+        )
+
+        SET @isActiveTaskFound = 0
+        
+            
+        FOR @i = 1 TO RowCount(@existingTaskRows) DO
+
+            SET @rowE = Row(@existingTaskRows, @i)
+            SET @status = Field(@rowE, "Status")
+            /*
+            Output(Concat("<br />@status -> ", @status))
+            */
+            
+            IF Lowercase(@status) == "open" OR Lowercase(@status) == "need more information" THEN
+                SET @isActiveTaskFound = 1
+                /*SET @i = RowCount(@existingTaskRows)*/
+            ENDIF
+            
+
+        NEXT @i
+        /*
+        Output(Concat("<br />If Existing Rows -> ", @isActiveTaskFound, "<br />whoID -> ", @decodedSubKey, "<br />Subject -> ", @subject))
+        */
+        
+        IF @isActiveTaskFound == 0 THEN
+            SET @taskID = CreateSalesforceObject(
+                "Task", 3,
+                "Subject", @subject,
+                "OwnerId", @ownerId,
+                "WhoId", @decodedSubKey
+            )
+        ENDIF      
+        
+        /* Redirect */
+        SET @rowRe = Row(@existingRows,1)
+        SET @projectLink = Field(@rowRe,"ProjectLink")
+        Redirect(@projectLink)
+
+    ENDIF
+
+ENDIF
+]%%
+
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>Ellington Properties - Update Preferences</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" type="image/png" sizes="32x32"
+href="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/608c8788-b1f3-4bfd-8071-6bfb6fbe4125.png">
+
+<link href='https://cloud.marketing.ellingtonproperties.com/style' rel='stylesheet'>
+<link href='https://cloud.marketing.ellingtonproperties.com/fonts' rel='stylesheet'>
+
+<script runat='server'>
+Platform.Response.SetResponseHeader("Strict-Transport-Security", "max-age=200");
+Platform.Response.SetResponseHeader("X-XSS-Protection", "1; mode=block");
+Platform.Response.SetResponseHeader("X-Frame-Options", "Deny");
+Platform.Response.SetResponseHeader("X-Content-Type-Options", "nosniff");
+Platform.Response.SetResponseHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+Platform.Response.SetResponseHeader("Content-Security-Policy","script-src 'self' 'unsafe-inline' https://image.marketing.ellingtonproperties.com ; frame-ancestors 'none'");
+</script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+/* Header */
+header{
+padding:20px 40px;
+}
+
+/* Center page content */
+.page-content{
+min-height:calc(100vh - 120px);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* Property Section */
+.property-section{
+max-width:1100px;
+width:100%;
+padding:20px 15px;
+}
+
+.property-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit, minmax(280px, 320px));
+gap:30px;
+justify-content:center;
+text-align:center;
+}
+
+.property-card img{
+width:100%;
+height:auto;
+display:block;
+}
+
+.property-card{
+width:100%;
+max-width:320px;
+margin:auto;
+}
+
+.property-title{
+font-size:16px;
+letter-spacing:1px;
+margin-top:18px;
+}
+
+.property-location{
+font-size:14px;
+margin-top:6px;
+}
+
+.property-btn{
+display:inline-block;
+margin-top:18px;
+padding:12px 22px;
+text-decoration:none;
+font-size:14px;
+color:#ffffff;
+background:#9a846f;
+}
+
+/* Error UI (minimal, non-intrusive) */
+.error-box{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+text-align:center;
+padding:20px;
+}
+
+.error-message{
+max-width:400px;
+font-size:16px;
+}
+  
+  
+  /* Section Intro */
+.section-header{
+text-align:center;
+max-width:760px;
+margin:0 auto 40px auto;
+padding:0 20px;
+}
+
+.section-header h1{
+font-size:28px;
+font-weight:400;
+line-height:1.5;
+letter-spacing:0.5px;
+color:#2f2f2f;
+margin:0;
+}
+
+@media(max-width:768px){
+.section-header h1{
+font-size:22px;
+line-height:1.6;
+}
+}
+
+</style>
+
+</head>
+
+%%[ IF @isValid == "false" THEN ]%%
+
+<body>
+
+<header>
+<div class="logo">
+<a href="https://ellingtonproperties.ae/en" target="_blank">
+<img width="200"
+src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/d702ea48-e11c-49ec-b52d-7515742b0578.png">
+</a>
+</div>
+</header>
+
+<div class="page-content">
+  <div class="property-section" style="text-align:center;">
+
+    <div style="
+        max-width:520px;
+        margin:auto;
+        padding:40px 30px;
+        border:1px solid #e5e5e5;
+        background:#ffffff;
+    ">
+
+        <!-- Icon -->
+        <div style="font-size:40px; margin-bottom:15px;">⚠️</div>
+
+        <!-- Heading -->
+        <div style="
+            font-size:20px;
+            letter-spacing:1px;
+            margin-bottom:10px;
+        ">
+            Invalid or Expired Link
+        </div>
+
+        <!-- Message -->
+        <div style="
+            font-size:14px;
+            color:#666;
+            line-height:1.6;
+            margin-bottom:25px;
+        ">
+            We’re unable to complete your request due to an invalid or expired link.
+            
+            
+        </div>
+
+       
+
+    </div>
+
+  </div>
+</div>
+
+</body>
+
+%%[ ELSEIF @source == "WhatsApp" AND EMPTY(@decodedPid) THEN ]%%
+
+<body>
+
+<header>
+<div class="logo">
+<a href="https://ellingtonproperties.ae/en" target="_blank">
+<img width="200"
+src="https://image.marketing.ellingtonproperties.com/lib/fe2a11737364047b7d1372/m/1/d702ea48-e11c-49ec-b52d-7515742b0578.png">
+</a>
+</div>
+</header>
+
+<div class="page-content">
+<div class="property-section">
+  <div class="section-header">
+        <h1>
+            Choose the property that aligns with your objectives, and our consultants will be happy to guide you further.
+        </h1>
+    </div>
+<div class="property-grid">
+
+%%[
+SET @rows = LookupRows("PropertyMatching_JourneyDE_Prod", "SubscriberKey", @decodedSubKey) 
+SET @rowCount = RowCount(@rows)
+
+IF @rowCount > 0 THEN 
+
+FOR @i = 1 TO @rowCount DO 
+
+SET @row = Row(@rows, @i) 
+SET @projectName = Field(@row, "ProjectName") 
+SET @projectComm = Field(@row, "ProjectCommunity") 
+SET @projectLink = Field(@row, "ProjectLink") 
+SET @projectImageUrl = Field(@row, "ProjectImage")
+SET @projectId = Field(@row, "ProjectId")
+
+SET @encodedSK = Base64Encode(@decodedSubKey)
+SET @encodedPID = Base64Encode(@projectId)
+]%%
+
+<div class="property-card">
+<img src="%%=v(@projectImageUrl)=%%">
+<div class="property-title">%%=v(@projectName)=%%</div>
+<div class="property-location">%%=v(@projectComm)=%%</div>
+<a href="https://cloud.marketing.ellingtonproperties.com/PropertyMatching?source=WhatsApp&sk=%%=v(@encodedSK)=%%&pid=%%=v(@encodedPID)=%%" class="property-btn">Explore Full Details</a>
+</div>
+
+%%[
+NEXT @i 
+ENDIF 
+]%%
+
+</div>
+</div>
+</div>
+
+</body>
+
+%%[ ENDIF ]%%
+
+</html>
