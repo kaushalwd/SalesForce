@@ -296,9 +296,6 @@ IF NOT EMPTY(@contactKey) THEN
       ENDIF
 
     ENDIF
-    
-    
-    
     SET @resubSubmit = RequestParameter("resubSubmit")
     
 
@@ -1695,86 +1692,86 @@ IF NOT EMPTY(@contactKey) THEN
       }
   
       function scheduleMeeting() {
-    var subscriberKey = "%%=v(@contactKey)=%%";
-    var contactSource = "%%=v(@contactSource)=%%";
-    var csrfToken = "%%=v(@csrfToken)=%%";
-    var OwnerId = "%%=v(@OwnerId)=%%";
-    var accountOwnerId = "%%=v(@accountOwnerId)=%%";
-    var accountId = "%%=v(@accountId)=%%";
+      var subscriberKey = "%%=v(@contactKey)=%%";
+      var contactSource = "%%=v(@contactSource)=%%";
+      var csrfToken = "%%=v(@csrfToken)=%%";
+      var OwnerId = "%%=v(@OwnerId)=%%";
+      var accountOwnerId = "%%=v(@accountOwnerId)=%%";
+      var accountId = "%%=v(@accountId)=%%";
 
-    // 1. Get the value. Because of Flatpickr's dateFormat: "Y-m-d", 
-    // this will be "2026-05-01" regardless of what the user sees in the box.
-    var meetingDate = document.getElementById("meetingDate").value;
-    var meetingTime = document.getElementById("time-slot").value;
+      // 1. Get the value. Because of Flatpickr's dateFormat: "Y-m-d", 
+      // this will be "2026-05-01" regardless of what the user sees in the box.
+      var meetingDate = document.getElementById("meetingDate").value;
+      var meetingTime = document.getElementById("time-slot").value;
 
-    // Get current date in YYYY-MM-DD format for comparison
-    const d = new Date();
-    const todayDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+      // Get current date in YYYY-MM-DD format for comparison
+      const d = new Date();
+      const todayDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
 
-    // 2. Validation
-    if (!meetingDate || meetingDate < todayDate) {
-        epAlert("Please select a valid future date.");
-    } else if (meetingTime === "Select" || meetingTime === "Select Time Slot") {
-        epAlert("Please select a Time slot.");
-    } else {
-        showSpinner();
-        
-        // Assuming emailaddr is defined globally in your script
-        if (isAllowedEmail(emailaddr)) {
+      // 2. Validation
+      if (!meetingDate || meetingDate < todayDate) {
+          epAlert("Please select a valid future date.");
+      } else if (meetingTime === "Select" || meetingTime === "Select Time Slot") {
+          epAlert("Please select a Time slot.");
+      } else {
+          showSpinner();
+          
+          // Assuming emailaddr is defined globally in your script
+          if (isAllowedEmail(emailaddr)) {
 
-            fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeetingQA", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                // Send meetingDate (YYYY-MM-DD) which Salesforce prefers
-                body: "sk=" + encodeURIComponent(subscriberKey) +
-                    "&meetingDate=" + encodeURIComponent(meetingDate) +
-                    "&contactSource=" + encodeURIComponent(contactSource) +
-                    "&meetingTime=" + encodeURIComponent(meetingTime) +
-                    "&token=" + encodeURIComponent(csrfToken) +
-                    "&OwnerId=" + encodeURIComponent(OwnerId) +
-                    "&accountOwnerId=" + encodeURIComponent(accountOwnerId) +
-                    "&accountId=" + encodeURIComponent(accountId)
-            })
-            .then(response => response.text())
-            .then(data => {
-                console.log("schedule meeting response:", data);
-                hideSpinner();
-                
-                if (data.indexOf("TaskCreated") != -1) {
-                    const selectElement = document.getElementById("time-slot");
-                    const meetingTimeText = selectElement.options[selectElement.selectedIndex].text;
-                    const selectElement_1 = document.getElementById("timezone-select");
-                    const timeZone = selectElement_1.options[selectElement_1.selectedIndex].text;
-                    
-                    // Disable inputs
-                    document.getElementById("scheduledMeeting").disabled = true;
-                    document.getElementById("meetingDate").disabled = true;
-                    document.getElementById("time-slot").disabled = true;
-                    document.getElementById("timezone-select").disabled = true;
+              fetch("https://cloud.marketing.ellingtonproperties.com/scheduleMeetingQA", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/x-www-form-urlencoded"
+                  },
+                  // Send meetingDate (YYYY-MM-DD) which Salesforce prefers
+                  body: "sk=" + encodeURIComponent(subscriberKey) +
+                      "&meetingDate=" + encodeURIComponent(meetingDate) +
+                      "&contactSource=" + encodeURIComponent(contactSource) +
+                      "&meetingTime=" + encodeURIComponent(meetingTime) +
+                      "&token=" + encodeURIComponent(csrfToken) +
+                      "&OwnerId=" + encodeURIComponent(OwnerId) +
+                      "&accountOwnerId=" + encodeURIComponent(accountOwnerId) +
+                      "&accountId=" + encodeURIComponent(accountId)
+              })
+              .then(response => response.text())
+              .then(data => {
+                  console.log("schedule meeting response:", data);
+                  hideSpinner();
+                  
+                  if (data.indexOf("TaskCreated") != -1) {
+                      const selectElement = document.getElementById("time-slot");
+                      const meetingTimeText = selectElement.options[selectElement.selectedIndex].text;
+                      const selectElement_1 = document.getElementById("timezone-select");
+                      const timeZone = selectElement_1.options[selectElement_1.selectedIndex].text;
+                      
+                      // Disable inputs
+                      document.getElementById("scheduledMeeting").disabled = true;
+                      document.getElementById("meetingDate").disabled = true;
+                      document.getElementById("time-slot").disabled = true;
+                      document.getElementById("timezone-select").disabled = true;
 
-                    // --- Format the display date from YYYY-MM-DD back to DD/MM/YYYY for the user UI ---
-                    var displayDate = meetingDate.split('-').reverse().join('/');
+                      // --- Format the display date from YYYY-MM-DD back to DD/MM/YYYY for the user UI ---
+                      var displayDate = meetingDate.split('-').reverse().join('/');
 
-                    document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + displayDate + " at " + meetingTimeText;
-                    document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
-                    const scheduleInput = document.querySelector('.schedule input[type="text"]');
+                      document.getElementById("meetingSchedule").innerText = "Meeting scheduled for " + displayDate + " at " + meetingTimeText;
+                      document.getElementById("meetingScheduleWrapper").classList.remove("hidden");
+                      const scheduleInput = document.querySelector('.schedule input[type="text"]');
 
-                    if (scheduleInput) {
-                        scheduleInput.disabled = true;
-                    }
-                } else {
-                    epAlert("There was an issue scheduling your meeting. Please try again.");
-                }
-            })
-            .catch(error => {
-                hideSpinner();
-                console.error("Schedule meeting error:", error);
-            });
-        }
+                      if (scheduleInput) {
+                          scheduleInput.disabled = true;
+                      }
+                  } else {
+                      epAlert("There was an issue scheduling your meeting. Please try again.");
+                  }
+              })
+              .catch(error => {
+                  hideSpinner();
+                  console.error("Schedule meeting error:", error);
+              });
+          }
+      }
     }
-}
       
       
       function myPreferences() {
@@ -2233,57 +2230,6 @@ IF NOT EMPTY(@contactKey) THEN
         document.getElementById('ep-alert-msg').textContent = message;
         document.getElementById('ep-alert').style.display = 'flex';
       }
-      /*
-      document.addEventListener('DOMContentLoaded', function() {
-          const tzSelect = document.getElementById('timezone-select');
-          const timeSelect = document.querySelector('select[name="time-slot"]'); // Ensure this matches your Time select name
-
-          // Store the original GST labels so we don't lose them during multiple conversions
-          const originalSlots = [
-              "10:00 AM to 10:30 AM", "10:30 AM to 11:00 AM", "11:00 AM to 11:30 AM",
-              "11:30 AM to 12:00 PM", "12:00 PM to 12:30 PM", "12:30 PM to 1:00 PM",
-              "1:00 PM to 1:30 PM", "1:30 PM to 2:00 PM", "2:00 PM to 2:30 PM",
-              "2:30 PM to 3:00 PM", "3:00 PM to 3:30 PM", "3:30 PM to 4:00 PM",
-              "4:00 PM to 4:30 PM", "4:30 PM to 5:00 PM", "5:00 PM to 5:30 PM",
-              "5:30 PM to 6:00 PM", "6:00 PM to 6:30 PM"
-          ];
-
-          function convertTime(gstTimeString, offsetDiff) {
-              // Create a dummy date at 10:00 AM GST
-              let [time, modifier] = gstTimeString.split(' ');
-              let [hours, minutes] = time.split(':');
-              hours = parseInt(hours);
-              
-              if (modifier === 'PM' && hours < 12) hours += 12;
-              if (modifier === 'AM' && hours === 12) hours = 0;
-
-              let date = new Date();
-              date.setHours(hours, parseInt(minutes), 0);
-
-              // Apply the offset difference (New Offset - GST Offset of 4)
-              const diffInMinutes = (offsetDiff - 4) * 60;
-              date.setMinutes(date.getMinutes() + diffInMinutes);
-
-              return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-          }
-
-          tzSelect.addEventListener('change', function() {
-              const selectedOffset = parseFloat(this.value);
-              
-              // Loop through options (skipping the first "Select Time Slot" option)
-              const options = timeSelect.options;
-              for (let i = 1; i < options.length; i++) {
-                  let gstRange = originalSlots[i-1];
-                  let parts = gstRange.split(' to ');
-                  
-                  let newStart = convertTime(parts[0], selectedOffset);
-                  let newEnd = convertTime(parts[1], selectedOffset);
-                  
-                  options[i].text = `${newStart} to ${newEnd}`;
-              }
-          });
-      });
-      */
       document.addEventListener('DOMContentLoaded', function() {
         const tzSelect = document.getElementById('timezone-select');
         const timeSelect = document.querySelector('select[name="time-slot"]'); 
