@@ -1,0 +1,120 @@
+<script runat="server">
+    Platform.Load("Core","1.1.1");
+    
+    try {
+        var postData = Platform.Request.GetPostData();
+        
+        if (postData) {
+            var rows = Platform.Function.ParseJSON(postData);
+            
+            // Use the first valid row to get DE and Folder metadata
+            var deName = rows[0].DEName;
+            var folderName = rows[0].FolderName;
+    
+            var filter = {Property: "Name", SimpleOperator: "equals", Value: folderName};
+            var folderRetrieved = Folder.Retrieve(filter);
+            var targetFolderId = (folderRetrieved && folderRetrieved.length > 0) ? folderRetrieved[0].ID : 0;
+    
+            var deFields = [];
+            
+            for (var i = 0; i < rows.length; i++) {
+                // Check if the row actually has a FieldName to avoid 500 error on empty rows
+                if (rows[i].FieldName && rows[i].FieldName != "") {
+                    deFields.push({
+                        "Name": rows[i].FieldName,
+                        "FieldType": rows[i].FieldType,
+                        "MaxLength": rows[i].FieldLength ? parseInt(rows[i].FieldLength) : null,
+                        "IsPrimaryKey": (String(rows[i].IsPrimaryKey).toLowerCase() == "true")
+                    });
+                }
+            }
+    
+            var deObj = {
+                "Name": deName,
+                "CustomerKey": deName + "_" + Platform.Function.Random(1000,9999), // Prevents duplicate key errors
+                "CategoryID": targetFolderId,
+                "Fields": deFields
+            };
+    
+            var result = DataExtension.Add(deObj);
+            Write(Stringify(result));
+        } else {
+            Write("No data received");
+        }
+    
+    } catch (err) {
+        // This prevents the 500 error and tells you exactly what went wrong
+        Write("Error Details: " + Stringify(err));
+    }
+    </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Web Page</title>
+
+    <!-- CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+        }
+    </style>
+    <meta name="referrer" content="no-referrer-when-downgrade">
+</head>
+<body>
+
+    <header>
+        <h1>Welcome to My Website</h1>
+    </header>
+
+    <main>
+
+    
+    <input type="file" id="csvUpload" accept=".csv" />
+    <button onclick="processFile()">Create Data Extension</button>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 My Website</p>
+    </footer>
+
+    <!-- JavaScript -->
+    
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <script>
+    function processFile() {
+        const file = document.getElementById('csvUpload').files[0];
+        
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true, // This prevents errors from empty rows
+            complete: function(results) {
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Add this line
+                    },
+                    body: JSON.stringify(results.data)
+                })
+                .then(res => res.text())
+                .then(data => {
+                    alert("Server Response: " + data);
+                })
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    alert("Network Error: Check console");
+                });
+            }
+        });
+    }
+    </script>
+</body>
+</html>

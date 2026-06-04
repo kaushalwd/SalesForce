@@ -1,4 +1,4 @@
-SELECT TOP 300
+SELECT TOP 2361
     sub.SubscriberKey,
     sub.Email,
     sub.FirstName,
@@ -10,9 +10,9 @@ FROM (
         Email, 
         FirstName, 
         LastName, 
-        'Tier 1' AS SourceTier,
+        'Tier 3' AS SourceTier,
         1 AS Priority
-    FROM [Tier 1 - NonGmail V2]
+    FROM [Tier 3 - NonGmail V2]
 
     UNION ALL
 
