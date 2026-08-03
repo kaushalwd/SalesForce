@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anoopam Mission - Attendance Report</title>
+  
+  <?!= include('Styles'); ?>
+
+  <style>
+    .stats-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+      color: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    }
+
+    .stats-val {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    .stats-label {
+      font-size: 13px;
+      opacity: 0.85;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .report-table th {
+      background-color: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .report-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+    }
+
+    .report-table tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 12px;
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <?!= include('Header', {page: 'attendance-report'}); ?>
+
+  <div class="card">
+    <h2 style="margin-top:0; margin-bottom: 20px; color:#1e293b; font-size: 20px;">Attendance Report & Analytics</h2>
+
+    <!-- Filters Section -->
+    <div class="filter-grid">
+      <div class="form-group">
+        <label>Select Sabha Date</label>
+        <select id="dateFilter" onchange="loadAttendanceData()">
+          <option value="">Loading Dates...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Search Present Haribhakta</label>
+        <input type="text" id="searchFilter" placeholder="Search by name..." onkeyup="filterTable()">
+      </div>
+    </div>
+
+    <!-- Summary Stats Badge Section -->
+    <div class="stats-card">
+      <div>
+        <div class="stats-label">Total Present Count</div>
+        <div class="stats-val" id="totalCount">0</div>
+        <div style="font-size: 13px; margin-top: 6px; opacity: 0.9;" id="genderBreakdown">
+          (M: 0 | F: 0)
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div class="stats-label" id="selectedDateLabel">Sabha Date</div>
+        <div style="font-size: 18px; font-weight: 600; margin-top: 4px;" id="selectedDateValue">-</div>
+      </div>
+    </div>
+
+    <!-- Table List -->
+    <div id="loadingState" style="text-align: center; padding: 20px; color: #64748b;">
+      Select a date to view attendance logs.
+    </div>
+
+    <div class="table-container" id="tableWrapper" style="display: none;">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th>Haribhakta Name</th>
+            <!--th style="width: 120px; text-align: center;">Status</th -->
+          </tr>
+        </thead>
+        <tbody id="attendanceTableBody">
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  let currentAttendees = [];
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // Populate Dates Dropdown
+    google.script.run
+      .withSuccessHandler(function(dates) {
+        const select = document.getElementById('dateFilter');
+        select.innerHTML = '';
+
+        if (!dates || dates.length === 0) {
+          select.innerHTML = '<option value="">No Attendance Data Found</option>';
+          document.getElementById('loadingState').innerText = 'No records available in AttendanceLogs.';
+          return;
+        }
+
+        select.innerHTML = '<option value="">-- Select Sabha Date --</option>';
+        dates.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d;
+          let rawValue = d;
+          if (rawValue) {
+            const d = new Date(rawValue);
+            if (!isNaN(d.getTime())) {
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              d1 = `${day}/${month}/${year}`; // Output: "YYYY-MM-DD"
+            }
+          }
+          opt.textContent = d1;
+          select.appendChild(opt);
+        });
+
+        // Auto select latest date
+        select.selectedIndex = 1;
+        loadAttendanceData();
+      })
+      .getSabhaDatesList();
+  });
+
+  // Load Data for Selected Date
+  function loadAttendanceData() {
+    const selectedDate = document.getElementById('dateFilter').value;
+    const loading = document.getElementById('loadingState');
+    const tableWrapper = document.getElementById('tableWrapper');
+
+    if (!selectedDate) {
+      loading.innerText = 'Please select a date from dropdown.';
+      loading.style.display = 'block';
+      tableWrapper.style.display = 'none';
+      document.getElementById('totalCount').innerText = '0';
+      document.getElementById('selectedDateValue').innerText = '-';
+      return;
+    }
+
+    loading.innerText = 'Fetching attendance logs...';
+    loading.style.display = 'block';
+    tableWrapper.style.display = 'none';
+
+
+    let rawValue = selectedDate;
+
+    if (rawValue) {
+      const d = new Date(rawValue);
+      if (!isNaN(d.getTime())) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        selectedDisplayDate = `${day}/${month}/${year}`; // Output: "DD/MM/YYYY"
+      }
+    }
+    document.getElementById('selectedDateValue').innerText = selectedDisplayDate;
+
+    google.script.run
+      .withSuccessHandler(renderReportTable)
+      .withFailureHandler(function(err) {
+        loading.innerText = 'Error loading data: ' + err;
+      })
+      .getAttendanceAnalytics(selectedDate);
+  }
+
+  // Render Table
+  // AttendanceReport.html ના script ટેગમાં renderReportTable અપડેટ કરો:
+  function renderReportTable(res) {
+    const loading = document.getElementById('loadingState');
+    const tableWrapper = document.getElementById('tableWrapper');
+    const tbody = document.getElementById('attendanceTableBody');
+
+    if (!res.success || !res.attendees || res.attendees.length === 0) {
+      loading.innerText = 'No attendees logged for this date.';
+      document.getElementById('totalCount').innerText = '0';
+      document.getElementById('genderBreakdown').innerText = '(M: 0 | F: 0)';
+      return;
+    }
+
+    currentAttendees = res.attendees;
+    document.getElementById('totalCount').innerText = res.count;
+    document.getElementById('genderBreakdown').innerText = `(M: ${res.maleCount || 0} | F: ${res.femaleCount || 0})`;
+
+    tbody.innerHTML = '';
+    currentAttendees.forEach((item, index) => {
+      const tr = document.createElement('tr');
+      tr.className = 'attendee-row';
+      tr.setAttribute('data-search', item.name.toLowerCase());
+      
+      const genderBadge = item.gender === 'F' 
+        ? '<span style="background:#fce7f3; color:#be185d; padding:2px 8px; border-radius:10px; font-size:11px; margin-left:6px; font-weight:bold;">F</span>' 
+        : '<span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-size:11px; margin-left:6px; font-weight:bold;">M</span>';
+
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td style="font-weight: 600;">${item.name} ${genderBadge}</td>
+        <!-- td style="text-align: center;"><span class="status-badge">Present</span></td -->
+      `;
+      tbody.appendChild(tr);
+    });
+
+    loading.style.display = 'none';
+    tableWrapper.style.display = 'block';
+  }
+
+  // Live Filter in Table
+  function filterTable() {
+    const query = document.getElementById('searchFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('.attendee-row');
+
+    rows.forEach(row => {
+      const text = row.getAttribute('data-search');
+      if (text.includes(query)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Anoopam Mission - Sabha Attendance</title>
+  
+  <?!= include('Styles'); ?>
+
+  <style>
+    .form-group {
+      margin-bottom: 20px; /* વર્ટીકલ ગેપ વધારવા માટે */
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      margin-bottom: 16px; /* સર્ચ બોક્સ અને લિસ્ટ વચ્ચે સ્પેસ */
+    }
+
+    .count-badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-orange, #4f46e5);
+      background: #eef2ff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #e0e7ff;
+    }
+
+    .btn-toggle-all {
+      background: none;
+      border: none;
+      color: var(--primary-orange, #4f46e5);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 4px 8px;
+    }
+
+    .btn-toggle-all:hover {
+      text-decoration: underline;
+    }
+
+    .checklist-wrapper {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      margin-bottom: 20px; /* લિસ્ટ અને સબમિટ બટન વચ્ચે સ્પેસ */
+    }
+
+    .haribhakta-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease;
+    }
+
+    .haribhakta-item:last-child {
+      border-bottom: none;
+    }
+
+    .haribhakta-item:hover {
+      background-color: #f8fafc;
+    }
+
+    .haribhakta-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 14px;
+      cursor: pointer;
+      accent-color: #4f46e5;
+    }
+
+    .haribhakta-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 15px;
+    }
+
+    .status-state {
+      text-align: center;
+      padding: 30px 15px;
+      color: #64748b;
+      font-size: 15px;
+    }
+
+    .btn-container-custom {
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <?!= include('Header', {page: 'attendance'}); ?>
+
+  <div class="card">
+    <h2 style="margin-top:0; margin-bottom: 24px; color:#1e293b; font-size: 20px;">Sabha Attendance</h2>
+
+    <!-- Sabha Date Selection -->
+    <div class="form-group">
+      <label>Sabha Date <span class="required-asterisk">*</span></label>
+      <input type="date" id="sabhaDate" required>
+    </div>
+
+    <!-- Search haribhakta -->
+    <div class="form-group">
+      <label>Search Haribhakta</label>
+      <input type="text" id="searchInput" placeholder="Search by name..." onkeyup="filterList()">
+    </div>
+
+    <div class="actions-bar">
+      <span class="count-badge" id="selectedCount">Selected: 0</span>
+      <button type="button" id="selectAllBtn" class="btn-toggle-all" onclick="toggleSelectAll()">Select All</button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="status-state">
+      Loading Haribhakta master list...
+    </div>
+
+    <!-- haribhakta Checklist Container -->
+    <div class="checklist-wrapper" id="checklistWrapper" style="display:none;">
+      <div id="haribhaktaList"></div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="btn-container btn-container-custom">
+      <button type="button" class="btn-submit" id="submitBtn" onclick="saveAttendance()">Submit Attendance</button>
+    </div>
+  </div>
+
+  <div id="statusMessage"></div>
+
+</div>
+
+<script>
+  let allHaribhaktos = [];
+  let isAllSelected = false;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('sabhaDate').value = today;
+    document.getElementById('sabhaDate').setAttribute('max', today);
+    
+    google.script.run
+      .withSuccessHandler(renderList)
+      .withFailureHandler(function(err) {
+        const loading = document.getElementById('loading');
+        loading.innerText = "Error loading data: " + (err.message || err);
+        loading.style.color = "#dc2626";
+      })
+      .getharibhaktaMasterData();
+  });
+  // Date Change થાય ત્યારે Check કરવું કે આ તારીખે Attendance લેવાઈ ગઈ છે કે નહીં
+  document.getElementById('sabhaDate').addEventListener('change', function() {
+    const selectedDate = this.value;
+    if (!selectedDate) return;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.success && res.count > 0) {
+          alert(`Notice: Attendance for ${selectedDate} is already submitted (${res.count} attendees found). Submitting again will overwrite existing attendance.`);
+        }
+      })
+      .getAttendanceAnalytics(selectedDate);
+  });
+
+  function renderList(data) {
+      allHaribhaktos = data;
+      const container = document.getElementById('haribhaktaList');
+      container.innerHTML = '';
+
+      if (data.length === 0) {
+        document.getElementById('loading').innerText = "કોઈ હરિભક્તનો ડેટા મળ્યો નથી.";
+        return;
+      }
+
+      data.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'haribhakta-item';
+        div.setAttribute('data-search', `${item.name.toLowerCase()} ${item.id.toLowerCase()}`);
+        
+        // Gender Badge Color logic
+        const genderTag = item.gender === 'F' ? '<span style="color:#ec4899; font-weight:bold;">(F)</span>' : '<span style="color:#3b82f6; font-weight:bold;">(M)</span>';
+
+        div.innerHTML = `
+          <input type="checkbox" id="chk_${index}" value="${item.id}" data-name="${item.name}" data-gender="${item.gender}" onchange="updateCount()">
+          <label for="chk_${index}" class="haribhakta-info" style="cursor:pointer; width:100%;">
+            <span class="haribhakta-name">${item.name} ${genderTag}</span>
+          </label>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('checklistWrapper').style.display = 'block';
+    }
+
+  function filterList() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const items = document.querySelectorAll('.haribhakta-item');
+
+    items.forEach(item => {
+      const searchText = item.getAttribute('data-search');
+      if (searchText.includes(query)) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  function updateCount() {
+    const checkedCount = document.querySelectorAll('#haribhaktaList input[type="checkbox"]:checked').length;
+    document.getElementById('selectedCount').innerText = `Selected: ${checkedCount}`;
+  }
+
+  function toggleSelectAll() {
+    isAllSelected = !isAllSelected;
+    const checkboxes = document.querySelectorAll('#haribhaktaList input[type="checkbox"]');
+    
+    checkboxes.forEach(chk => {
+      if (chk.closest('.haribhakta-item').style.display !== 'none') {
+        chk.checked = isAllSelected;
+      }
+    });
+
+    document.getElementById('selectAllBtn').innerText = isAllSelected ? "Deselect All" : "Select All";
+    updateCount();
+  }
+
+  function saveAttendance() {
+    const sabhaDate = document.getElementById('sabhaDate').value;
+    if (!sabhaDate) {
+      alert("Please select a Sabha Date.");
+      return;
+    }
+
+    const checkboxes = document.querySelectorAll('#haribhaktaList input[type="checkbox"]:checked');
+    if (checkboxes.length === 0) {
+      alert("Please select at least one Haribhakta.");
+      return;
+    }
+
+    const selectedHaribhaktos = [];
+      checkboxes.forEach(chk => {
+        selectedHaribhaktos.push({
+          id: chk.value,
+          name: chk.getAttribute('data-name'),
+          gender: chk.getAttribute('data-gender')
+        });
+      });
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerText = "Submitting...";
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerText = "Submit Attendance";
+        if (res.success) {
+          alert(res.message);
+          checkboxes.forEach(chk => chk.checked = false);
+          updateCount();
+          if(isAllSelected) toggleSelectAll();
+        } else {
+          alert("Error: " + res.message);
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerText = "Submit Attendance";
+        alert("Server Error: " + err);
+      })
+      .submitAttendance({
+        sabhaDate: sabhaDate,
+        selectedHaribhaktos: selectedHaribhaktos
+      });
+  }
+</script>
+
+</body>
+</html>

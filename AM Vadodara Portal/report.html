@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Styles'); ?>
+  <style>
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .report-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .card-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px dashed #f1f5f9;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+    }
+
+    .sabha-date-badge {
+      background-color: #fff7ed;
+      color: #c2410c;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      border: 1px solid #ffedd5;
+    }
+
+    .counts-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .count-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-male { background-color: #e0f2fe; color: #0369a1; }
+    .badge-female { background-color: #fce7f3; color: #be185d; }
+    .badge-total { background: var(--primary-orange); color: #ffffff; }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 600px) {
+      .section-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .info-item {
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #f1f5f9;
+    }
+
+    .info-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      white-space: pre-line;
+      line-height: 22px;
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .report-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .report-photo-img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .report-photo-img:hover {
+      transform: scale(1.03);
+    }
+
+    .media-btn {
+      display: inline-block;
+      background: #0284c7;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .footer-time {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 14px;
+      text-align: right;
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 50px 20px;
+      font-size: 18px;
+      color: var(--primary-orange);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <?!= include('Header', {page: 'report'}); ?>
+
+  <!-- Filter Card -->
+  <div class="card">
+    <div style="font-family:'Outfit'; font-weight:700; font-size:16px; color:var(--text-dark); margin-bottom:8px;">
+      🔍 Filter Reports
+    </div>
+    <div class="filter-bar">
+      <input type="date" id="dateFilter" onchange="filterReports()" title="Jump to Date" style="flex:1;">
+      <input type="text" id="searchFilter" placeholder="Search theme, speaker, guest..." oninput="filterReports()" style="flex:2;">
+      <button onclick="resetFilters()" class="btn-submit" style="padding: 8px 16px; font-size:13px;">Reset</button>
+    </div>
+  </div>
+
+  <div id="loading" class="loading-spinner">✨ Loading Sabha Reports...</div>
+  <div id="reportsContainer"></div>
+
+</div>
+
+<script>
+  let allReports = [];
+
+  window.addEventListener('DOMContentLoaded', () => {
+    google.script.run
+      .withSuccessHandler(data => {
+        allReports = data;
+        renderReports(data);
+      })
+      .withFailureHandler(err => {
+        document.getElementById('loading').innerText = '❌ Failed to load reports: ' + err.message;
+      })
+      .getSabhaReportsData();
+  });
+
+  function parseBhaktosCount(rawString) {
+    if (!rawString) return { male: 0, female: 0, total: 0 };
+    let str = String(rawString);
+    let maleMatch = str.match(/M:\s*(\d+)/i);
+    let femaleMatch = str.match(/F:\s*(\d+)/i);
+    let totalMatch = str.match(/^(\d+)/);
+    let male = maleMatch ? parseInt(maleMatch[1]) : 0;
+    let female = femaleMatch ? parseInt(femaleMatch[1]) : 0;
+    let total = totalMatch ? parseInt(totalMatch[1]) : (male + female);
+    return { male, female, total };
+  }
+
+  function filterReports() {
+    const selectedDate = document.getElementById('dateFilter').value;
+    const searchText = document.getElementById('searchFilter').value.toLowerCase();
+
+    const filtered = allReports.filter(r => {
+      const matchDate = selectedDate ? (r.sabhaDate === selectedDate) : true;
+      const matchText = searchText ? (
+        (r.theme && r.theme.toLowerCase().includes(searchText)) ||
+        (r.santo && r.santo.toLowerCase().includes(searchText)) ||
+        (r.guest && r.guest.toLowerCase().includes(searchText)) ||
+        (r.takeaways && r.takeaways.toLowerCase().includes(searchText))
+      ) : true;
+      return matchDate && matchText;
+    });
+
+    renderReports(filtered);
+  }
+
+  function resetFilters() {
+    document.getElementById('dateFilter').value = '';
+    document.getElementById('searchFilter').value = '';
+    renderReports(allReports);
+  }
+
+  function renderReports(reports) {
+    document.getElementById('loading').style.display = 'none';
+    const container = document.getElementById('reportsContainer');
+    container.innerHTML = '';
+
+    if (!reports || reports.length === 0) {
+      container.innerHTML = '<div class="card" style="text-align:center; color:#64748b;">No matching sabha reports found.</div>';
+      return;
+    }
+
+    reports.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'report-card';
+      const counts = parseBhaktosCount(r.totalBhaktos);
+      
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="sabha-date-badge">📅 ${r.displayDate || 'N/A'}</div>
+          <div class="counts-group">
+            <span class="count-badge badge-male">👨🏻 Male: ${counts.male}</span>
+            <span class="count-badge badge-female">👩🏻 Female: ${counts.female}</span>
+            <span class="count-badge badge-total">👥 Total: ${counts.total}</span>
+          </div>
+        </div>
+
+        <div class="section-grid">
+          ${r.theme ? `<div class="info-item full-width"><div class="info-label">🎯 Theme</div><div class="info-value">${r.theme}</div></div>` : ''}
+          ${r.vachanamrut ? `<div class="info-item"><div class="info-label">📖 Vachanamrut</div><div class="info-value">${r.vachanamrut}</div></div>` : ''}
+          ${r.swaminiVato ? `<div class="info-item"><div class="info-label">💡 Swamini Vato</div><div class="info-value">${r.swaminiVato}</div></div>` : ''}
+          ${r.kirtans ? `<div class="info-item"><div class="info-label">🎵 Kirtans</div><div class="info-value">${r.kirtans}</div></div>` : ''}
+          ${r.santo ? `<div class="info-item"><div class="info-label">Santo</div><div class="info-value">${r.santo}</div></div>` : ''}
+          ${r.takeaways ? `<div class="info-item full-width"><div class="info-label">⭐ Key Takeaways</div><div class="info-value">${r.takeaways}</div></div>` : ''}
+
+          ${(r.uploadedPhotos && r.uploadedPhotos.length > 0) ? `
+            <div class="info-item full-width">
+              <div class="info-label">📸 Sabha Photos</div>
+              <div class="report-photo-grid">
+                ${r.uploadedPhotos.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="report-photo-img" title="Click to view full image"></a>`).join('')}
+              </div>
+            </div>` : ''
+          }
+
+          ${r.mediaLink ? `
+            <div class="info-item full-width">
+              <div class="info-label">🖼️ External Album / Video</div>
+              <div><a href="${r.mediaLink}" target="_blank" class="media-btn">📸 View Album / Video</a></div>
+            </div>` : ''
+          }
+        </div>
+
+        <div class="footer-time">Recorded on: ${r.createdOn}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+</script>
+
+</body>
+</html>
