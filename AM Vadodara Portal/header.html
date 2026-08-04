@@ -1,12 +1,38 @@
 <div class="header-card">
-    <h2>Anoopam Mission Vadodara</h2>
-    <p>Weekly Sabha Reporting & Dashboard</p>
-    
-    <div class="nav-tabs">
-      <? var url = ScriptApp.getService().getUrl(); ?>
-      <a href="<?= url ?>?page=index" class="nav-btn <?= page === 'index' ? 'active' : '' ?>" target="_self">📝 Submit Report</a>
-      <a href="<?= url ?>?page=report" class="nav-btn <?= page === 'report' ? 'active' : '' ?>" target="_self">📊 View Dashboard</a>
-      <a href="<?= url ?>?page=attendance" class="nav-btn <?= page === 'attendance' ? 'active' : '' ?>" target="_self">📝 Attendance</a>
-      <a href="<?= url ?>?page=attendance-report" class="nav-btn <?= page === 'attendance-report' ? 'active' : '' ?>" target="_self">📝 Attendance Report</a>
-    </div>
+  <h2>Anoopam Mission Vadodara</h2>
+  <p>Weekly Sabha Reporting & Dashboard</p>
+  
+  <div class="nav-tabs">
+    <button type="button" class="nav-btn <?= page === 'index' ? 'active' : '' ?>" onclick="switchPage('Index')">📝 Submit Report</button>
+    <button type="button" class="nav-btn <?= page === 'report' ? 'active' : '' ?>" onclick="switchPage('Dashboard')">📊 View Dashboard</button>
+    <button type="button" class="nav-btn <?= page === 'attendance' ? 'active' : '' ?>" onclick="switchPage('attendance')">📝 Attendance</button>
+    <button type="button" class="nav-btn <?= page === 'attendance-report' ? 'active' : '' ?>" onclick="switchPage('attendance-report')">📝 Attendance Report</button>
+  </div>
 </div>
+
+<script>
+function switchPage(pageName) {
+  const mainCard = document.querySelector('.container');
+  
+  // સ્ક્રીન પર લોડર બતાવો
+  if (mainCard) {
+    mainCard.innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <div class="spinner"></div>
+        <div style="color:#64748b; font-weight:500; margin-top:10px;">Loading page...</div>
+      </div>`;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(html) {
+      // આખી બોડી રીપ્લેસ કરો જેથી નવું પેજ ઇન્સ્ટન્ટ લોડ થાય (Unload એરર વગર)
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .withFailureHandler(function(err) {
+      alert("Error loading page: " + (err.message || err));
+    })
+    .getPageHtml(pageName);
+}
+</script>

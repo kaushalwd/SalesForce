@@ -144,7 +144,10 @@
   </style>
 </head>
 <body>
-
+<!-- <div id="pageLoader" class="page-loader-overlay">
+  <div class="page-loader-spinner"></div>
+  <div class="page-loader-text" id="pageLoaderText">Loading, please wait...</div>
+</div> -->
 <div class="container">
   
   <?!= include('Header', {page: 'report'}); ?>
@@ -167,16 +170,35 @@
 </div>
 
 <script>
-  let allReports = [];
+ /*
+  function hidePageLoader() {
+  const loader = document.getElementById('pageLoader');
+  if (loader) {
+    loader.classList.add('hide');
+    setTimeout(() => loader.remove(), 300);
+  }
+}
+// Fallback so it never gets stuck forever
+setTimeout(() => {
+  const loader = document.getElementById('pageLoader');
+  if (loader && !loader.classList.contains('hide')) {
+    document.getElementById('pageLoaderText').innerText =
+      'This is taking longer than usual — please check your connection.';
+  }
+}, 8000);
+*/
+  var allReports = [];
 
   window.addEventListener('DOMContentLoaded', () => {
     google.script.run
       .withSuccessHandler(data => {
         allReports = data;
         renderReports(data);
+        //hidePageLoader();
       })
       .withFailureHandler(err => {
         document.getElementById('loading').innerText = '❌ Failed to load reports: ' + err.message;
+        //hidePageLoader();
       })
       .getSabhaReportsData();
   });

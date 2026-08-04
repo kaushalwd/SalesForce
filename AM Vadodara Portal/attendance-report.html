@@ -83,6 +83,22 @@
       margin-bottom: 20px;
     }
 
+    /* CSS Spinner Component */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 16px auto;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     @media (max-width: 600px) {
       .filter-grid {
         grid-template-columns: 1fr;
@@ -91,12 +107,16 @@
   </style>
 </head>
 <body>
-
+<div id="pageLoader" class="page-loader-overlay">
+  <div class="page-loader-spinner"></div>
+  <div class="page-loader-text" id="pageLoaderText">Loading, please wait...</div>
+</div>
 <div class="container">
   
   <?!= include('Header', {page: 'attendance-report'}); ?>
 
-  <div class="card">
+  <!-- Main Card Hidden until window completes loading -->
+  <div class="card" id="mainContent" style="display: none;">
     <h2 style="margin-top:0; margin-bottom: 20px; color:#1e293b; font-size: 20px;">Attendance Report & Analytics</h2>
 
     <!-- Filters Section -->
@@ -140,7 +160,6 @@
           <tr>
             <th style="width: 60px;">#</th>
             <th>Haribhakta Name</th>
-            <!--th style="width: 120px; text-align: center;">Status</th -->
           </tr>
         </thead>
         <tbody id="attendanceTableBody">
@@ -149,48 +168,76 @@
     </div>
 
   </div>
-
 </div>
 
 <script>
-  let currentAttendees = [];
+  /*
+  function hidePageLoader() {
+  const loader = document.getElementById('pageLoader');
+  if (loader) {
+    loader.classList.add('hide');
+    setTimeout(() => loader.remove(), 300);
+  }
+}
+// Fallback so it never gets stuck forever
+setTimeout(() => {
+  const loader = document.getElementById('pageLoader');
+  if (loader && !loader.classList.contains('hide')) {
+    document.getElementById('pageLoaderText').innerText =
+      'This is taking longer than usual — please check your connection.';
+  }
+}, 8000);
+*/
+  var currentAttendees = [];
 
-  window.addEventListener('DOMContentLoaded', () => {
-    // Populate Dates Dropdown
-    google.script.run
-      .withSuccessHandler(function(dates) {
-        const select = document.getElementById('dateFilter');
-        select.innerHTML = '';
+  // Defer execution until window.onload fires completely
+  window.addEventListener('load', () => {
+    // Delay slightly (150ms) to ensure iframe viewport recalculation finishes
+    setTimeout(() => {
+      document.getElementById('pageLoader').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
 
-        if (!dates || dates.length === 0) {
-          select.innerHTML = '<option value="">No Attendance Data Found</option>';
-          document.getElementById('loadingState').innerText = 'No records available in AttendanceLogs.';
-          return;
-        }
+      // Populate Dates Dropdown
+      google.script.run
+        .withSuccessHandler(function(dates) {
+          const select = document.getElementById('dateFilter');
+          select.innerHTML = '';
 
-        select.innerHTML = '<option value="">-- Select Sabha Date --</option>';
-        dates.forEach(d => {
-          const opt = document.createElement('option');
-          opt.value = d;
-          let rawValue = d;
-          if (rawValue) {
-            const d = new Date(rawValue);
-            if (!isNaN(d.getTime())) {
-              const year = d.getFullYear();
-              const month = String(d.getMonth() + 1).padStart(2, '0');
-              const day = String(d.getDate()).padStart(2, '0');
-              d1 = `${day}/${month}/${year}`; // Output: "YYYY-MM-DD"
-            }
+          if (!dates || dates.length === 0) {
+            select.innerHTML = '<option value="">No Attendance Data Found</option>';
+            document.getElementById('loadingState').innerText = 'No records available in AttendanceLogs.';
+            return;
           }
-          opt.textContent = d1;
-          select.appendChild(opt);
-        });
 
-        // Auto select latest date
-        select.selectedIndex = 1;
-        loadAttendanceData();
-      })
-      .getSabhaDatesList();
+          select.innerHTML = '<option value="">-- Select Sabha Date --</option>';
+          dates.forEach(dateStr => {
+            const opt = document.createElement('option');
+            opt.value = dateStr;
+            let displayDate = dateStr;
+
+            if (dateStr) {
+              const dateObj = new Date(dateStr);
+              if (!isNaN(dateObj.getTime())) {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                displayDate = `${day}/${month}/${year}`;
+              }
+            }
+            opt.textContent = displayDate;
+            select.appendChild(opt);
+          });
+
+          // Auto select latest date
+          select.selectedIndex = 1;
+          loadAttendanceData();
+          // hidePageLoader();
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('loadingState').innerText = 'Error fetching dates: ' + (err.message || err);
+        })
+        .getSabhaDatesList();
+    }, 150);
   });
 
   // Load Data for Selected Date
@@ -212,16 +259,14 @@
     loading.style.display = 'block';
     tableWrapper.style.display = 'none';
 
-
-    let rawValue = selectedDate;
-
-    if (rawValue) {
-      const d = new Date(rawValue);
+    let selectedDisplayDate = selectedDate;
+    if (selectedDate) {
+      const d = new Date(selectedDate);
       if (!isNaN(d.getTime())) {
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
-        selectedDisplayDate = `${day}/${month}/${year}`; // Output: "DD/MM/YYYY"
+        selectedDisplayDate = `${day}/${month}/${year}`;
       }
     }
     document.getElementById('selectedDateValue').innerText = selectedDisplayDate;
@@ -229,13 +274,12 @@
     google.script.run
       .withSuccessHandler(renderReportTable)
       .withFailureHandler(function(err) {
-        loading.innerText = 'Error loading data: ' + err;
+        loading.innerText = 'Error loading data: ' + (err.message || err);
       })
       .getAttendanceAnalytics(selectedDate);
   }
 
   // Render Table
-  // AttendanceReport.html ના script ટેગમાં renderReportTable અપડેટ કરો:
   function renderReportTable(res) {
     const loading = document.getElementById('loadingState');
     const tableWrapper = document.getElementById('tableWrapper');
@@ -265,7 +309,6 @@
       tr.innerHTML = `
         <td>${index + 1}</td>
         <td style="font-weight: 600;">${item.name} ${genderBadge}</td>
-        <!-- td style="text-align: center;"><span class="status-badge">Present</span></td -->
       `;
       tbody.appendChild(tr);
     });

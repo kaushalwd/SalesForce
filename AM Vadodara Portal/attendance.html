@@ -94,10 +94,24 @@
     .btn-container-custom {
       margin-top: 24px;
     }
+
+    #retryLoadBtn {
+      margin-top: 10px;
+      background: var(--primary-orange);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-
+<div id="pageLoader" class="page-loader-overlay">
+  <div class="page-loader-spinner"></div>
+  <div class="page-loader-text" id="pageLoaderText">Loading, please wait...</div>
+</div>
 <div class="container">
   
   <?!= include('Header', {page: 'attendance'}); ?>
@@ -143,67 +157,164 @@
 </div>
 
 <script>
-  let allHaribhaktos = [];
-  let isAllSelected = false;
+  // ---------- Page Loader Helpers ----------
+  function hidePageLoader() {
+    const loader = document.getElementById('pageLoader');
+    if (loader) {
+      loader.classList.add('hide');
+      setTimeout(() => loader.remove(), 300);
+    }
+  }
 
+  var allHaribhaktos = [];
+  var isAllSelected = false;
+
+  // ---------- Step 1: Wait until all required DOM elements exist ----------
   window.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('sabhaDate').value = today;
-    document.getElementById('sabhaDate').setAttribute('max', today);
-    
-    google.script.run
-      .withSuccessHandler(renderList)
-      .withFailureHandler(function(err) {
-        const loading = document.getElementById('loading');
-        loading.innerText = "Error loading data: " + (err.message || err);
-        loading.style.color = "#dc2626";
-      })
-      .getharibhaktaMasterData();
-  });
-  // Date Change થાય ત્યારે Check કરવું કે આ તારીખે Attendance લેવાઈ ગઈ છે કે નહીં
-  document.getElementById('sabhaDate').addEventListener('change', function() {
-    const selectedDate = this.value;
-    if (!selectedDate) return;
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (res.success && res.count > 0) {
-          alert(`Notice: Attendance for ${selectedDate} is already submitted (${res.count} attendees found). Submitting again will overwrite existing attendance.`);
-        }
-      })
-      .getAttendanceAnalytics(selectedDate);
+    waitForPageReady();
   });
 
-  function renderList(data) {
-      allHaribhaktos = data;
-      const container = document.getElementById('haribhaktaList');
-      container.innerHTML = '';
+  function waitForPageReady() {
+    const requiredIds = ['sabhaDate', 'searchInput', 'selectedCount', 'selectAllBtn', 'loading', 'checklistWrapper', 'haribhaktaList', 'submitBtn'];
+    const maxWaitMs = 5000;   // safety cap on DOM-readiness polling
+    const pollMs = 100;
+    let elapsed = 0;
 
-      if (data.length === 0) {
-        document.getElementById('loading').innerText = "કોઈ હરિભક્તનો ડેટા મળ્યો નથી.";
+    const readyCheck = setInterval(() => {
+      elapsed += pollMs;
+
+      const allPresent = requiredIds.every(id => document.getElementById(id) !== null);
+
+      if (allPresent) {
+        clearInterval(readyCheck);
+        initAttendancePage();
         return;
       }
 
-      data.forEach((item, index) => {
+      if (elapsed >= maxWaitMs) {
+        clearInterval(readyCheck);
+        // Page structure never fully rendered — show a clear error instead of silently hanging
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.innerText = "Page failed to load properly. Please refresh.";
+          loading.style.color = "#dc2626";
+        }
+        hidePageLoader();
+      }
+    }, pollMs);
+  }
+
+  // ---------- Step 2: Once DOM is confirmed ready, init page + fetch data ----------
+  function initAttendancePage() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('sabhaDate').value = today;
+    document.getElementById('sabhaDate').setAttribute('max', today);
+
+    // Date Change થાય ત્યારે Check કરવું કે આ તારીખે Attendance લેવાઈ ગઈ છે કે નહીં
+    document.getElementById('sabhaDate').addEventListener('change', function() {
+      const selectedDate = this.value;
+      if (!selectedDate) return;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success && res.count > 0) {
+            alert(`Notice: Attendance for ${selectedDate} is already submitted (${res.count} attendees found). Submitting again will overwrite existing attendance.`);
+          }
+        })
+        .getAttendanceAnalytics(selectedDate);
+    });
+
+    fetchMasterData();
+  }
+
+  // ---------- Step 3: Fetch master data with a backend timeout + retry ----------
+  function fetchMasterData() {
+    let settled = false;
+    const loading = document.getElementById('loading');
+    loading.innerText = "Loading Haribhakta master list...";
+    loading.style.color = "#64748b";
+
+    // Backend safety timeout — if google.script.run never calls back (e.g. broken iframe
+    // channel), don't hang forever. Give the user a way out.
+    const backendTimeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      loading.innerHTML = 'Taking longer than expected.<br><button id="retryLoadBtn">Retry</button>';
+      loading.style.color = "#64748b";
+      document.getElementById('retryLoadBtn').onclick = () => {
+        fetchMasterData();
+      };
+      hidePageLoader();
+    }, 12000);
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        // Even if the timeout already fired, still render late data if it arrives —
+        // no point discarding a response that did complete.
+        if (!settled) {
+          settled = true;
+          clearTimeout(backendTimeout);
+        }
+        renderList(data);
+      })
+      .withFailureHandler(function(err) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(backendTimeout);
+        loading.innerText = "Error loading data: " + (err.message || err);
+        loading.style.color = "#dc2626";
+        hidePageLoader();
+      })
+      .getharibhaktaMasterData();
+  }
+
+  function renderList(data) {
+    allHaribhaktos = data;
+    const container = document.getElementById('haribhaktaList');
+    container.innerHTML = '';
+
+    if (!data || data.length === 0) {
+      document.getElementById('loading').innerText = "કોઈ હરિભક્તનો ડેટા મળ્યો નથી.";
+      document.getElementById('loading').style.color = "#64748b";
+      hidePageLoader();
+      return;
+    }
+
+    let idx = 0;
+    const batchSize = 40;
+
+    function renderBatch() {
+      const fragment = document.createDocumentFragment();
+      const end = Math.min(idx + batchSize, data.length);
+      for (; idx < end; idx++) {
+        const item = data[idx];
         const div = document.createElement('div');
         div.className = 'haribhakta-item';
         div.setAttribute('data-search', `${item.name.toLowerCase()} ${item.id.toLowerCase()}`);
-        
-        // Gender Badge Color logic
-        const genderTag = item.gender === 'F' ? '<span style="color:#ec4899; font-weight:bold;">(F)</span>' : '<span style="color:#3b82f6; font-weight:bold;">(M)</span>';
-
+        const genderTag = item.gender === 'F'
+          ? '<span style="color:#ec4899; font-weight:bold;">(F)</span>'
+          : '<span style="color:#3b82f6; font-weight:bold;">(M)</span>';
         div.innerHTML = `
-          <input type="checkbox" id="chk_${index}" value="${item.id}" data-name="${item.name}" data-gender="${item.gender}" onchange="updateCount()">
-          <label for="chk_${index}" class="haribhakta-info" style="cursor:pointer; width:100%;">
+          <input type="checkbox" id="chk_${idx}" value="${item.id}" data-name="${item.name}" data-gender="${item.gender}" onchange="updateCount()">
+          <label for="chk_${idx}" class="haribhakta-info" style="cursor:pointer; width:100%;">
             <span class="haribhakta-name">${item.name} ${genderTag}</span>
-          </label>
-        `;
-        container.appendChild(div);
-      });
+          </label>`;
+        fragment.appendChild(div);
+      }
+      container.appendChild(fragment);
 
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('checklistWrapper').style.display = 'block';
+      if (idx < data.length) {
+        requestAnimationFrame(renderBatch);
+      } else {
+        requestAnimationFrame(() => {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('checklistWrapper').style.display = 'block';
+          hidePageLoader();
+        });
+      }
     }
+    requestAnimationFrame(renderBatch);
+  }
 
   function filterList() {
     const query = document.getElementById('searchInput').value.toLowerCase();

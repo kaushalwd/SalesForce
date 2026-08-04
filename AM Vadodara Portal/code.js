@@ -37,6 +37,27 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/**
+ * ક્લાયન્ટ સાઇડ ડાયનેમિક પેજ સ્વેપિંગ માટે HTML કન્ટેન્ટ ફેચ કરવું
+ */
+function getPageHtml(pageName) {
+  // પેજના નામ મુજબ સાચી ફાઇલ ફેચ કરો
+  var fileName = pageName;
+  
+  // કેસ સેન્સિટિવ મેપિંગ (જો ફાઇલના નામ અલગ હોય તો)
+  if (pageName.toLowerCase() === 'index') {
+    fileName = 'Index';
+  } else if (pageName.toLowerCase() === 'dashboard') {
+    fileName = 'Report';
+  } else if (pageName.toLowerCase() === 'attendance') {
+    fileName = 'Attendance';
+  } else if (pageName.toLowerCase() === 'attendance-report') {
+    fileName = 'AttendanceReport'; // અથવા તમારી ફાઇલનું જે નામ હોય તે
+  }
+
+  return HtmlService.createTemplateFromFile(fileName).evaluate().getContent();
+}
+
 // Helper Function: Date ને સરખી રીતે YYYY-MM-DD ફોર્મેટમાં કન્વર્ટ કરવા માટે
 function normalizeDateString(dateVal) {
   if (!dateVal) return "";
@@ -57,26 +78,20 @@ function normalizeDateString(dateVal) {
 }
 
 // 1. Fetch Unique Sabha Dates List for Dropdown
+// Only reads column B, not all 6 columns of the whole log
 function getSabhaDatesList() {
   try {
     const ss = SpreadsheetApp.openById(MASTER_SPREADSHEET_ID);
     const sheet = ss.getSheetByName("AttendanceLogs");
     if (!sheet) return [];
-
-    const data = sheet.getDataRange().getValues();
-    if (data.length <= 1) return []; // Header સિવાય ડેટા ન હોય તો
-
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return [];
+    const values = sheet.getRange(2, 2, lastRow - 1, 1).getValues(); // Col B only
     const datesSet = new Set();
-
-    for (let i = 1; i < data.length; i++) {
-      const rawDate = data[i][1]; // Column B (Sabha Date)
-      const formattedDate = normalizeDateString(rawDate);
-      if (formattedDate) {
-        datesSet.add(formattedDate);
-      }
-    }
-
-    // લેટેસ્ટ તારીખ પહેલા આવે એ રીતે શોર્ટ કરો
+    values.forEach(row => {
+      const formatted = normalizeDateString(row[0]);
+      if (formatted) datesSet.add(formatted);
+    });
     return Array.from(datesSet).sort().reverse();
   } catch (err) {
     Logger.log("Error in getSabhaDatesList: " + err.toString());
@@ -85,39 +100,40 @@ function getSabhaDatesList() {
 }
 
 // ૧. haribhakta Master ડેટા મેળવવાનું ફંક્શન
+// Cache the master haribhakta list — it rarely changes but is read on every attendance page load
 function getharibhaktaMasterData() {
+  const cache = CacheService.getScriptCache();
+  try {
+    const cached = cache.get('haribhaktaMasterList');
+    if (cached) return JSON.parse(cached);
+  } catch (e) { /* ignore cache errors, fall through to sheet read */ }
+
   try {
     const ss = SpreadsheetApp.openById(MASTER_SPREADSHEET_ID);
     const sheet = ss.getSheetByName("Master List - Family");
-    
-    if (!sheet) {
-      throw new Error("Sheet 'Master List - Family' મળી નથી!");
-    }
-    
+    if (!sheet) throw new Error("Sheet 'Master List - Family' મળી નથી!");
+
     const lastRow = sheet.getLastRow();
     if (lastRow < 2) return [];
-    
-    // Range B2:F (Col B = ID, Col C = Name, Col F = Gender)
+
     const range = sheet.getRange(2, 2, lastRow - 1, 5);
     const values = range.getValues();
-    
     const masterList = [];
-    
+
     for (let i = 0; i < values.length; i++) {
       const id = String(values[i][0]).trim();
       const name = String(values[i][1]).trim();
-      const gender = String(values[i][4]).trim(); // Col F is Index 4 in 5-col range
-      
-      // Header કે ખાલી નામ અટકાવવા માટે Filter
+      const gender = String(values[i][4]).trim();
       if (name !== "" && name.toLowerCase() !== "name" && id.toLowerCase() !== "id") {
-        masterList.push({
-          id: id,
-          name: name,
-          gender: gender || "M" // Gender ખાલી હોય તો Default M
-        });
+        masterList.push({ id, name, gender: gender || "M" });
       }
     }
-      
+
+    try {
+      cache.put('haribhaktaMasterList', JSON.stringify(masterList), 21600); // 6 hrs
+    } catch (e) {
+      Logger.log("Cache put skipped (list too large for cache): " + e.toString());
+    }
     return masterList;
   } catch (error) {
     Logger.log("Error in getharibhaktaMasterData: " + error.toString());
@@ -227,45 +243,28 @@ function getAttendanceAnalytics(selectedDate) {
   try {
     const ss = SpreadsheetApp.openById(MASTER_SPREADSHEET_ID);
     const sheet = ss.getSheetByName("AttendanceLogs");
-    if (!sheet) {
-      return { success: false, message: "AttendanceLogs sheet not found." };
-    }
+    if (!sheet) return { success: false, message: "AttendanceLogs sheet not found." };
 
-    const data = sheet.getDataRange().getDisplayValues();
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return { success: true, count: 0, maleCount: 0, femaleCount: 0, attendees: [] };
+
+    const data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
     const attendees = [];
-    let maleCount = 0;
-    let femaleCount = 0;
+    let maleCount = 0, femaleCount = 0;
+    const target = selectedDate ? selectedDate.trim() : "";
 
-    for (let i = 1; i < data.length; i++) {
-      const rowDate = data[i][1].trim();
-      
-      if (!selectedDate || rowDate === selectedDate.trim()) {
-        const gender = data[i][4] ? data[i][4].trim().toUpperCase() : "M";
-        
-        if (gender === "F" || gender === "FEMALE") {
-          femaleCount++;
-        } else {
-          maleCount++;
-        }
-
+    for (let i = 0; i < data.length; i++) {
+      const rowDate = normalizeDateString(data[i][1]);
+      if (!target || rowDate === target) {
+        const gender = data[i][4] ? String(data[i][4]).trim().toUpperCase() : "M";
+        if (gender === "F" || gender === "FEMALE") femaleCount++; else maleCount++;
         attendees.push({
-          logId: data[i][0],
-          sabhaDate: data[i][1],
-          id: data[i][2],
-          name: data[i][3],
-          gender: gender,
-          status: data[i][5] || "Present"
+          logId: data[i][0], sabhaDate: rowDate, id: data[i][2],
+          name: data[i][3], gender: gender, status: data[i][5] || "Present"
         });
       }
     }
-
-    return {
-      success: true,
-      count: attendees.length,
-      maleCount: maleCount,
-      femaleCount: femaleCount,
-      attendees: attendees
-    };
+    return { success: true, count: attendees.length, maleCount, femaleCount, attendees };
   } catch (err) {
     return { success: false, message: err.toString() };
   }

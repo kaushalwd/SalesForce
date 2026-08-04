@@ -5,7 +5,10 @@
   <?!= include('Styles'); ?>
 </head>
 <body>
-
+<!-- <div id="pageLoader" class="page-loader-overlay">
+  <div class="page-loader-spinner"></div>
+  <div class="page-loader-text" id="pageLoaderText">Loading, please wait...</div>
+</div> -->
 <div class="container">
   
   <?!= include('Header', {page: 'index'}); ?>
@@ -212,8 +215,25 @@
 </div>
 
 <script>
-  let masterData = [];
-  let selectedPhotosBase64 = [];
+ /*
+  function hidePageLoader() {
+  const loader = document.getElementById('pageLoader');
+  if (loader) {
+    loader.classList.add('hide');
+    setTimeout(() => loader.remove(), 300);
+  }
+}
+// Fallback so it never gets stuck forever
+setTimeout(() => {
+  const loader = document.getElementById('pageLoader');
+  if (loader && !loader.classList.contains('hide')) {
+    document.getElementById('pageLoaderText').innerText =
+      'This is taking longer than usual — please check your connection.';
+  }
+}, 8000);
+*/
+  var masterData = [];
+  var selectedPhotosBase64 = [];
 
   window.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
@@ -227,13 +247,16 @@
         masterData = data;
         if (!data || data.length === 0) {
           chapterSelect.innerHTML = '<option value="">No data found in sheet</option>';
+          // hidePageLoader();  
           return;
         }
         populateChapters();
+        // hidePageLoader();  
       })
       .withFailureHandler(err => {
         chapterSelect.innerHTML = '<option value="">Error loading data</option>';
         alert("Failed to load Vachanamrut Data:\n" + err.message);
+        // hidePageLoader();  
       })
       .getVachanamrutMasterData();
   });
@@ -372,7 +395,7 @@
 
     const selectedChap = document.getElementById('vachChapter').value;
     const selectedNum = document.getElementById('vachNumber').value;
-    let selectedTitle = '';
+    var selectedTitle = '';
     
     if (selectedChap && selectedNum) {
       const match = masterData.find(item => 
