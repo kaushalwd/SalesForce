@@ -1,0 +1,860 @@
+/* Shared styles for the registration step forms, imported by every
+   mbpr_regStep* component via `static stylesheets`.
+
+   Uses --mbpr-theme-* with light fallbacks, so the forms still render on the
+   guest SelfRegister page where nothing broadcasts a theme, and pick up dark
+   automatically in-portal.
+
+   Touch band is <=767px, or 768-1199px with pointer:coarse / hover:none. */
+
+/* ---- Root ---- */
+
+.regf {
+    color: var(--mbpr-theme-ink, #101112);
+    display: grid;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    gap: 0.85rem;
+    position: relative;
+}
+
+.regf,
+.regf * {
+    box-sizing: border-box;
+}
+
+/* ---- Sections ---- */
+
+.regf__section {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.regf__section-title {
+    color: var(--mbpr-theme-ink, #101112);
+    font-size: 0.78rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.regf__section-hint {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72));
+    font-size: 0.76rem;
+    line-height: 1.4;
+    margin: -0.3rem 0 0;
+}
+
+/* ---- Form grid (portal .form-grid grammar) ---- */
+
+.regf__grid {
+    display: grid;
+    gap: 0.6rem 0.8rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.regf__grid > .regf-field--wide,
+.regf__grid > .regf__span {
+    grid-column: 1 / -1;
+}
+
+/* No dead cells: a dangling last field in an odd-count grid spans the row. */
+.regf__grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
+/* ---- Field card ---- */
+
+.regf-field {
+    background: var(--mbpr-theme-surface-solid, #ffffff);
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 8px;
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+    padding: 0.36rem 0.58rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.regf-field:hover {
+    border-color: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+}
+
+.regf-field:focus-within {
+    border-color: var(--mbpr-theme-accent, #0b7772);
+    box-shadow: 0 0 0 3px var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+}
+
+.regf-field:has(.regf-field__control:disabled) {
+    background: var(--mbpr-theme-input-disabled-bg, #f3f0ea);
+    opacity: 0.78;
+}
+
+.regf-field--error {
+    border-color: var(--mbpr-theme-error, #8b2f2f);
+}
+
+.regf-field--error:focus-within {
+    border-color: var(--mbpr-theme-error, #8b2f2f);
+    box-shadow: 0 0 0 3px var(--mbpr-theme-error-soft, rgba(139, 47, 47, 0.1));
+}
+
+.regf-field__label {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    font-size: 0.56rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.regf-field--required .regf-field__label::after {
+    color: var(--mbpr-theme-error, #8b2f2f);
+    content: "*";
+    font-size: 0.72rem;
+    font-weight: 950;
+    margin-left: 0.18rem;
+    vertical-align: -0.02rem;
+}
+
+.regf-field__control {
+    background: transparent;
+    border: 0;
+    color: var(--mbpr-theme-ink, #101112);
+    font: inherit;
+    font-size: 0.85rem;
+    min-width: 0;
+    outline: none;
+    padding: 0;
+    width: 100%;
+}
+
+.regf-field__control::placeholder {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+}
+
+.regf-field__control:disabled {
+    cursor: not-allowed;
+}
+
+select.regf-field__control {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 0.85rem) 55%, calc(100% - 0.55rem) 55%;
+    background-repeat: no-repeat;
+    background-size: 0.3rem 0.3rem;
+    cursor: pointer;
+    padding-right: 1.4rem;
+}
+
+textarea.regf-field__control {
+    min-height: 4rem;
+    resize: vertical;
+}
+
+input[type="date"].regf-field__control {
+    min-height: 1.35rem;
+}
+
+.regf-field__error {
+    color: var(--mbpr-theme-error, #8b2f2f);
+    font-size: 0.74rem;
+    font-weight: 650;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.regf-field__help {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    font-size: 0.68rem;
+    line-height: 1.35;
+    margin: 0;
+}
+
+/* ---- Checkbox row ---- */
+
+.regf-check {
+    align-items: center;
+    color: var(--mbpr-theme-ink, #101112);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.8rem;
+    font-weight: 600;
+    gap: 0.5rem;
+    min-height: 2rem;
+    min-width: 0;
+}
+
+.regf-check input {
+    accent-color: var(--mbpr-theme-accent, #0b7772);
+    cursor: pointer;
+    flex: 0 0 auto;
+    height: 1.15rem;
+    margin: 0;
+    width: 1.15rem;
+}
+
+.regf-check input:focus-visible {
+    outline: 2px solid var(--mbpr-theme-accent, #0b7772);
+    outline-offset: 2px;
+}
+
+.regf-check input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ---- Validate rows (field + inline Validate button) ---- */
+
+.regf-validate-row {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 0.8rem;
+}
+
+.regf-validate-row > .regf-field {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
+.regf-validate-row > .regf-field--code {
+    flex: 0 1 10rem;
+    min-width: 8rem;
+}
+
+.regf-validate-row > .regf-button {
+    align-self: center;
+    flex: 0 0 auto;
+}
+
+/* ---- Buttons (portal pill grammar) ---- */
+
+.regf-button {
+    align-items: center;
+    background: var(--mbpr-theme-surface, #ffffff);
+    border: 1px solid var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    border-radius: 999px;
+    color: var(--mbpr-theme-accent-ink, #06504c);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.3rem;
+    justify-content: center;
+    letter-spacing: 0.01em;
+    min-height: 2.25rem;
+    padding: 0.45rem 0.95rem;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.regf-button:hover:not(:disabled) {
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    transform: translateY(-1px);
+}
+
+.regf-button:focus-visible {
+    outline: 2px solid var(--mbpr-theme-accent, #0b7772);
+    outline-offset: 2px;
+}
+
+.regf-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+}
+
+.regf-button--ghost {
+    border-color: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72));
+}
+
+.regf-button--primary {
+    background: var(--mbpr-theme-ink, #101112);
+    border-color: var(--mbpr-theme-ink, #101112);
+    color: var(--mbpr-theme-inverse-ink, #ffffff);
+}
+
+.regf-button--primary:hover:not(:disabled) {
+    background: var(--mbpr-theme-ink, #101112);
+    opacity: 0.88;
+}
+
+.regf-button--danger {
+    border-color: var(--mbpr-theme-error-line, rgba(139, 47, 47, 0.22));
+    color: var(--mbpr-theme-error, #8b2f2f);
+}
+
+.regf-button--danger:hover:not(:disabled) {
+    background: var(--mbpr-theme-error-soft, rgba(139, 47, 47, 0.1));
+}
+
+.regf-button__spinner {
+    animation: regfSpin 720ms linear infinite;
+    border: 2px solid var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    border-radius: 999px;
+    border-top-color: currentColor;
+    display: inline-flex;
+    height: 0.78rem;
+    width: 0.78rem;
+}
+
+@keyframes regfSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---- File upload (dashed drop cell) ---- */
+
+.regf-upload {
+    background: var(--mbpr-theme-surface-soft, #f8f6f2);
+    border: 1px dashed var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    border-radius: 8px;
+    cursor: pointer;
+    display: grid;
+    gap: 0.28rem;
+    min-width: 0;
+    padding: 0.72rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.regf-upload:hover {
+    border-color: var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+}
+
+.regf-upload:focus-within {
+    border-color: var(--mbpr-theme-accent, #0b7772);
+    box-shadow: 0 0 0 3px var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+}
+
+.regf-upload--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.regf-upload--error {
+    border-color: var(--mbpr-theme-error, #8b2f2f);
+    border-style: solid;
+}
+
+.regf-upload__title {
+    color: var(--mbpr-theme-ink, #101112);
+    font-size: 0.76rem;
+    font-weight: 850;
+}
+
+.regf-upload--required .regf-upload__title::after {
+    color: var(--mbpr-theme-error, #8b2f2f);
+    content: "*";
+    font-size: 0.72rem;
+    font-weight: 950;
+    margin-left: 0.18rem;
+}
+
+.regf-upload__hint {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    font-size: 0.68rem;
+}
+
+.regf-upload__input {
+    height: 1px;
+    margin: -1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    width: 1px;
+}
+
+/* ---- Uploaded-file chip ---- */
+
+.regf-chip {
+    align-items: center;
+    background: var(--mbpr-theme-surface-soft, #f8f6f2);
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    gap: 0.35rem 0.5rem;
+    min-width: 0;
+    padding: 0.45rem 0.6rem;
+}
+
+.regf-chip__label {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.regf-chip__name {
+    background: none;
+    border: 0;
+    color: var(--mbpr-theme-accent-ink, #06504c);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+    padding: 0;
+    text-align: left;
+    text-decoration: none;
+}
+
+.regf-chip__name:hover,
+.regf-chip__name:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.16rem;
+}
+
+.regf-chip__action {
+    align-items: center;
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    border: 1px solid var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    border-radius: 999px;
+    color: var(--mbpr-theme-accent-ink, #06504c);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 1.9rem;
+    justify-content: center;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 160ms ease;
+    width: 1.9rem;
+}
+
+.regf-chip__action:hover:not(:disabled) {
+    background: var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+}
+
+.regf-chip__action:focus-visible {
+    outline: 2px solid var(--mbpr-theme-accent, #0b7772);
+    outline-offset: 2px;
+}
+
+.regf-chip__action--danger {
+    background: var(--mbpr-theme-error-soft, rgba(139, 47, 47, 0.1));
+    border-color: var(--mbpr-theme-error-line, rgba(139, 47, 47, 0.22));
+    color: var(--mbpr-theme-error, #8b2f2f);
+}
+
+.regf-chip__action--danger:hover:not(:disabled) {
+    background: var(--mbpr-theme-error-line, rgba(139, 47, 47, 0.22));
+}
+
+.regf-chip__action svg {
+    fill: currentColor;
+    height: 0.85rem;
+    width: 0.85rem;
+}
+
+/* ---- Repeated member card (owners / agency admins) ---- */
+
+.regf-member {
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 12px;
+    display: grid;
+    gap: 0.6rem;
+    padding: 0.85rem 0.95rem;
+}
+
+.regf-member__head {
+    align-items: center;
+    display: flex;
+    gap: 0.6rem;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.regf-member__title {
+    color: var(--mbpr-theme-ink, #101112);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.regf-add-row {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.2rem;
+}
+
+/* ---- Inline note / status banner ---- */
+
+.regf-note {
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    border: 1px solid var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    border-radius: 8px;
+    color: var(--mbpr-theme-accent-ink, #06504c);
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.45;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+}
+
+.regf-note--error {
+    background: var(--mbpr-theme-error-soft, rgba(139, 47, 47, 0.1));
+    border-color: var(--mbpr-theme-error-line, rgba(139, 47, 47, 0.22));
+    color: var(--mbpr-theme-error, #8b2f2f);
+}
+
+.regf-note--success {
+    background: var(--mbpr-theme-success-soft, rgba(32, 131, 92, 0.1));
+    border-color: var(--mbpr-theme-success-line, rgba(32, 131, 92, 0.24));
+    color: var(--mbpr-theme-success, #176443);
+}
+
+.regf-note--warning {
+    background: var(--mbpr-theme-warning-soft, rgba(177, 111, 0, 0.12));
+    border-color: var(--mbpr-theme-warning-line, rgba(177, 111, 0, 0.24));
+    color: var(--mbpr-theme-warning, #7a4d00);
+}
+
+/* ---- Busy veil (step-local) ----
+   Now c-mbpr_loader with the `veil` option, rendered by each step on its own
+   busy flag. The old ring veil that lived here was hard-coded white and showed
+   under the workspace's full-screen loader on Next. */
+
+/* ---- Modal (consent / OTP in the bank step) ---- */
+
+.regf-modal-layer {
+    align-items: center;
+    background: var(--mbpr-theme-overlay, rgba(0, 0, 0, 0.28));
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 9650;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.regf-modal {
+    background: var(--mbpr-theme-surface-solid, #ffffff);
+    border: 1px solid var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    border-radius: 16px;
+    box-shadow: 0 28px 64px rgba(16, 17, 18, 0.22);
+    color: var(--mbpr-theme-ink, #101112);
+    display: flex;
+    flex-direction: column;
+    max-height: min(92dvh, 40rem);
+    max-width: 26rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+.regf-modal__header {
+    align-items: center;
+    border-bottom: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    display: flex;
+    gap: 0.6rem;
+    justify-content: space-between;
+    padding: 0.9rem 1rem 0.7rem;
+}
+
+.regf-modal__title {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.regf-modal__close {
+    align-items: center;
+    background: var(--mbpr-theme-control-bg, #f7f5f1);
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 50%;
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72));
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 2rem;
+    justify-content: center;
+    padding: 0;
+    width: 2rem;
+}
+
+.regf-modal__close:focus-visible {
+    outline: 2px solid var(--mbpr-theme-accent, #0b7772);
+    outline-offset: 2px;
+}
+
+.regf-modal__close svg {
+    fill: currentColor;
+    height: 0.8rem;
+    width: 0.8rem;
+}
+
+.regf-modal__body {
+    display: grid;
+    gap: 0.5rem;
+    overflow-y: auto;
+    padding: 0.8rem 1rem;
+}
+
+.regf-modal__body p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.regf-modal__body ul {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72));
+    display: grid;
+    font-size: 0.8rem;
+    gap: 0.35rem;
+    line-height: 1.45;
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.regf-modal__footer {
+    border-top: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding: 0.7rem 1rem 0.9rem;
+}
+
+/* OTP code input inside the modal */
+.regf-otp .regf-field__control {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    text-align: center;
+}
+
+/* ---- Celebration overlay ---- */
+
+.regf-celebrate-layer {
+    align-items: center;
+    background: var(--mbpr-theme-overlay-strong, rgba(0, 0, 0, 0.58));
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 9700;
+}
+
+.regf-celebrate {
+    background: var(--mbpr-theme-surface-solid, #ffffff);
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 16px;
+    box-shadow: 0 28px 64px rgba(16, 17, 18, 0.22);
+    max-width: min(30rem, calc(100vw - 2rem));
+    padding: 1.6rem 1.4rem;
+    position: relative;
+    text-align: center;
+    z-index: 2;
+}
+
+.regf-celebrate__title {
+    color: var(--mbpr-theme-ink, #101112);
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0 0 0.6rem;
+}
+
+.regf-celebrate__copy {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72));
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0 0 0.45rem;
+}
+
+.regf-celebrate__sr {
+    color: var(--mbpr-theme-accent-ink, #06504c);
+    font-size: 0.85rem;
+    font-weight: 850;
+    margin: 0.6rem 0 0;
+}
+
+.regf-celebrate__canvas {
+    inset: 0;
+    pointer-events: none;
+    position: fixed;
+    z-index: 1;
+}
+
+/* Touch band. 16px controls stop iOS focus zoom; buttons hit 48px and chip
+   actions 44px. */
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .regf-field__control {
+        font-size: 16px;
+        min-height: 1.9rem;
+    }
+
+    .regf-field__control,
+    .regf-upload__input {
+        scroll-margin-block: 7rem 5.5rem;
+    }
+
+    .regf-button {
+        min-height: 48px;
+    }
+
+    .regf-check {
+        min-height: 44px;
+    }
+
+    .regf-chip__action {
+        height: 44px;
+        width: 44px;
+    }
+
+    .regf-upload {
+        min-height: 44px;
+    }
+
+    .regf-modal__close {
+        height: 44px;
+        width: 44px;
+    }
+}
+
+/* Phone: single column, stacked validate rows, modals become bottom sheets. */
+
+@media (max-width: 599px) {
+    .regf__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .regf-validate-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .regf-validate-row > .regf-field,
+    .regf-validate-row > .regf-field--code {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .regf-validate-row > .regf-button {
+        align-self: stretch;
+        width: 100%;
+    }
+
+    .regf-add-row .regf-button {
+        width: 100%;
+    }
+
+    .regf-member {
+        padding: 0.7rem 0.75rem;
+    }
+
+    .regf-modal-layer {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .regf-modal {
+        border-end-end-radius: 0;
+        border-end-start-radius: 0;
+        max-height: min(94dvh, 40rem);
+        max-width: none;
+    }
+
+    .regf-modal__footer {
+        padding-bottom: max(0.9rem, env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (max-width: 374px) {
+    .regf-member {
+        padding: 0.6rem 0.65rem;
+    }
+
+    .regf-modal__body,
+    .regf-modal__header {
+        padding-inline: 0.8rem;
+    }
+}
+
+@media (max-height: 479px) and (max-width: 899px) {
+    .regf-modal {
+        max-height: calc(100dvh - 1rem);
+    }
+}
+
+/* BP-036: success screen that replaces the bank step after the final save. */
+.regf-success {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 2.6rem 1.5rem 2.2rem;
+    text-align: center;
+}
+
+.regf-success__mark {
+    align-items: center;
+    background: var(--mbpr-accent-soft, rgba(111, 214, 198, 0.14));
+    border: 1px solid var(--mbpr-accent-line, rgba(111, 214, 198, 0.45));
+    border-radius: 50%;
+    color: var(--mbpr-accent-ink, var(--mbpr-accent, #2f8f82));
+    display: inline-flex;
+    font-size: 1.6rem;
+    font-weight: 700;
+    height: 3.6rem;
+    justify-content: center;
+    margin-bottom: 0.6rem;
+    width: 3.6rem;
+}
+
+.regf-success__title {
+    font-family: var(--mbpr-serif, Georgia, serif);
+    font-size: 1.85rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.4rem;
+}
+
+.regf-success__copy {
+    color: var(--mbpr-ink-soft, rgba(16, 17, 18, 0.64));
+    margin: 0;
+    max-width: 48ch;
+}
+
+.regf-success__sr {
+    color: var(--mbpr-accent-ink, var(--mbpr-accent, #2f8f82));
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0.9rem 0 0;
+}
+
+.regf-success__done {
+    margin-top: 1.4rem;
+    min-width: 9rem;
+}
+
+/* Reduced motion: spinners stay, they are the loading indicator. */
+
+@media (prefers-reduced-motion: reduce) {
+    .regf-field,
+    .regf-upload,
+    .regf-button,
+    .regf-chip__action {
+        transition: none;
+    }
+
+    .regf-button:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .regf-celebrate__canvas {
+        display: none;
+    }
+}

@@ -1,0 +1,74 @@
+<messaging:emailTemplate subject="Unit Swap {!relatedTo.Name}" recipientType="User" relatedToType="ServiceRequest__c">
+    <messaging:htmlEmailBody >
+        <html>
+            <body style="font-family: Arial, sans-serif; font-size: 14px;">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <h2>Memorandum</h2>
+                    <p><b>Date:</b>
+                        <apex:outputText value="{0,date,dd MMM yyyy}">
+                            <apex:param value="{!TODAY()}" />
+                        </apex:outputText>
+                    </p>
+                    <p><b>Ref No.:</b> {!relatedTo.Name}</p>
+                    <p><b>Subject:</b> Unit Swap Request</p>
+
+                    <h3>CASE DESCRIPTION</h3>
+                    <p>
+                        Dear {!recipient.Name},<br /><br />
+                        {!relatedTo.SalesOrder__r.CustomerAccount__r.Name} Swap a unit From {!relatedTo.SalesOrder__r.Unit__r.Name} to {!relatedTo.Selected_Unit__r.name}. 
+                        Customer is requesting for Unit Swap. 
+                        
+                        Below is the status of the customer and Unit Swap Details:
+                    </p>
+
+                
+                  
+                    <h3>Details</h3>
+                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Sales Order </th>
+                            <th>Old Unit </th>
+                            <th>Old Payment Plan </th>
+                            <th>New Unit </th>                        
+                            <th>New Payment Plan </th>
+                            
+                        </tr>
+                        <tr>
+                            <td>{!relatedTo.SalesOrder__r.name}</td>
+                            <td>{!relatedTo.SalesOrder__r.Unit__r.Name}</td>
+                            <td>{!relatedTo.SalesOrder__r.PaymentPlan__r.name}</td>
+                             <td>{!relatedTo.Selected_Unit__r.name}</td>
+                            <td>{!relatedTo.Selected_Payment_Plan__r.Name}</td>
+
+                        </tr>
+                    </table>
+
+                    <h3>APPROVAL HISTORY</h3>
+                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Approver Name</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                        </tr>
+                        <apex:repeat var="pi" value="{!relatedTo.ProcessInstances}">
+                            <apex:repeat var="step" value="{!pi.Steps}">
+                                <tr>
+                                    <td>{!step.Actor.Name}</td>
+                                    <td>{!step.Actor.Title}</td>
+                                    <td>{!step.StepStatus}</td>
+                                </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                        <tr>
+                            <td>{!recipient.Name}</td>
+                            <td>{!recipient.Title}</td>
+                            <td>Pending</td>
+                        </tr>
+                    </table>
+
+                    <p>Best Regards,</p>
+                </div>
+            </body>
+        </html>
+    </messaging:htmlEmailBody>
+</messaging:emailTemplate>

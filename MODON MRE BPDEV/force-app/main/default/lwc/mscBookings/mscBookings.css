@@ -1,0 +1,1149 @@
+/* Total Sales: the data grid and the booking detail (MSC-056). Self-contained, like mscLeadList
+   and mscEoi. */
+
+:host {
+  display: block;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  color: var(--text, #fafafa);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+input,
+select {
+  font: inherit;
+}
+
+/* primitives */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+/* chip colour is a mapping over the stored value */
+/* UI-08: quiet text on a hairline; only the small dot carries the status colour */
+.chip--new,
+.chip--progress,
+.chip--ok,
+.chip--muted,
+.chip--warn {
+  color: var(--text-muted, #a3a3a3);
+  background: none;
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.chip--muted {
+  color: var(--text-dim, #8a8a8a);
+}
+.chip--new i {
+  background: var(--chip-blue, #60a5fa);
+  opacity: 0.7;
+}
+.chip--progress i {
+  background: var(--chip-amber, #fbbf24);
+  opacity: 0.8;
+}
+.chip--ok i {
+  background: var(--step-done, #16a34a);
+}
+.chip--warn i {
+  background: var(--chip-red, #f87171);
+  opacity: 0.8;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--pill-border, #fafafa);
+  background: var(--pill-bg, transparent);
+  color: var(--pill-fg, #fafafa);
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+.btn c-modon-icon {
+  display: flex;
+  flex-shrink: 0;
+  color: inherit;
+}
+.btn:hover:not(:disabled) {
+  opacity: 0.72;
+}
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.btn-ghost {
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+  color: var(--text-muted, #a3a3a3);
+}
+.btn-sm {
+  min-height: 36px;
+  padding: 0 13px;
+  font-size: 12px;
+}
+.btn-xs {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.btn:focus-visible,
+.seg button:focus-visible,
+.search input:focus-visible,
+.row-main:focus-visible,
+.clr:focus-visible,
+.empty__link:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+.banner {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.banner--error {
+  color: var(--chip-red, #f87171);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+/* MSC-221: the tabs sit beside the search on one row, so the full-width rule under them goes -
+   the active tab keeps its own underline as the indicator. */
+.tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted, #a3a3a3);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tab:hover {
+  color: var(--text, #fafafa);
+}
+.tab em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--divider, rgba(255, 255, 255, 0.13));
+  color: var(--text-dim, #8a8a8a);
+}
+.tab--on {
+  color: var(--text, #fafafa);
+  font-weight: 600;
+  border-bottom-color: var(--text, #fafafa);
+}
+.tab--on em {
+  color: var(--text, #fafafa);
+}
+.tab:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+/* MSC-221: find on the left, the status tabs where the standing figures used to be.
+   Pinned to the top of the scrolling pane; opaque. */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 10px 16px;
+  align-items: center;
+  /* bottom only. c/mscWorkspace's .pane already carries a 14px top margin above the pinned
+     bar; adding a top padding here stacked a second one on it. */
+  padding-bottom: 14px;
+  background: var(--page-bg, #0a0a0a);
+}
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.search__icon {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  color: var(--text-dim, #8a8a8a);
+  pointer-events: none;
+}
+.search input {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  padding: 0 84px 0 40px;
+  background: var(--input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  color: var(--text, #fafafa);
+  outline: none;
+  font-size: 16px;
+}
+.search input::placeholder {
+  color: var(--text-muted, #a3a3a3);
+}
+.search input:focus {
+  border-color: var(--gold, #a8a8a8);
+  box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.1));
+}
+.kbd {
+  position: absolute;
+  right: 12px;
+  display: inline-flex;
+  gap: 4px;
+  pointer-events: none;
+}
+.kbd span {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  color: var(--text-dim, #8a8a8a);
+  font-variant-numeric: tabular-nums;
+}
+.clr {
+  position: absolute;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #a3a3a3);
+  font-size: 12px;
+  text-decoration: underline;
+  padding: 8px 4px;
+}
+.search.has .kbd {
+  display: none;
+}
+/* MSC-220: the Status and Sort selects are gone - the tabs above and the column headings
+   below do that work now, so the .pick pill has no user left. */
+
+/* one grid */
+/* one field per column; scrolls sideways inside this wrapper on a narrow laptop */
+.grid-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* room so a row's focus ring is not clipped */
+  padding: 3px 3px 4px;
+  margin: 0 -3px;
+  /* MSC-222. The gap was always uniform; the tracks were not - 100px beside 176px, with every
+     cell pinned left, so the space the eye read between two columns swung from about 40px
+     (Value to Status) to about 240px (Customer to Value). Seven tracks brought within
+     130-180px of each other, Customer taking the slack, on one 20px gap. */
+  --gcols: 130px 170px minmax(170px, 1fr) 180px 130px 130px 124px;
+  --gcolgap: 20px;
+  /* the tracks' minimums (1034) plus the six gaps (120). content-box, so the row's own
+     16px padding sits outside this and must not be counted in. */
+  --gmin: 1160px;
+}
+/* MSC-221: no gap - the rows are one surface, and the hairline is what parts them */
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: var(--gmin);
+}
+.list-head {
+  display: grid;
+  grid-template-columns: var(--gcols);
+  gap: var(--gcolgap, 20px);
+  min-width: var(--gmin);
+  /* the heading rule and the row hairlines are the same line */
+  padding: 0 16px 10px;
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+}
+/* MSC-222: every heading centred over its own track */
+.list-head span {
+  padding: 0 4px;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+.list-head .h-amt,
+.cell.amt {
+  text-align: center;
+}
+/* MSC-220: click-to-sort headings, in place of the Sort dropdown */
+.hsort {
+  display: inline-flex;
+  align-items: center;
+  /* MSC-222: the button fills its heading so the label centres on the track, not on itself */
+  justify-content: center;
+  width: 100%;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.hsort:hover {
+  color: var(--text, #fafafa);
+}
+.hsort--on {
+  color: var(--text, #fafafa);
+}
+.hsort .arw {
+  font-style: normal;
+  font-size: 8px;
+  line-height: 1;
+}
+.hsort:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.cell.amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.cell.ref {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+/* MSC-221. A row is no longer a card. The per-row border, the 16px radius and the gap between
+   rows are gone: the list is one surface and a single --divider hairline parts each row from the
+   next, on the same line the column headings sit over. Hover moves from the border lighting up
+   to the fill washing in, so nothing along the edge jumps as the cursor travels down. */
+.row {
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  color: var(--text, #fafafa);
+  transition: background-color 0.15s ease;
+}
+.row:last-child {
+  border-bottom: 0;
+}
+.row:hover {
+  background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+/* MSC-221: the awaiting rows' warm wash is gone with the cards - a tinted band across a
+   continuous list reads as a selection. The status chip already says Pending. The class stays
+   as the hook for what kind of row this is. */
+.row-main {
+  display: grid;
+  grid-template-columns: var(--gcols);
+  gap: var(--gcolgap, 20px);
+  align-items: center;
+  padding: 0 16px;
+  min-height: 56px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.row-main--static {
+  cursor: default;
+}
+.cell {
+  padding: 12px 4px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text, #fafafa);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* MSC-222: each column's slack splits equally either side of its content, so the rhythm
+     along a row is regular. The chip in cell-status is inline-level and centres from here too. */
+  text-align: center;
+}
+.cell.dim {
+  color: var(--text-muted, #a3a3a3);
+}
+.cell.mono {
+  font-variant-numeric: tabular-nums;
+}
+.cell small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim, #8a8a8a);
+  margin-top: 2px;
+  font-weight: 400;
+}
+.cell small.hold--warn {
+  color: var(--chip-red, #f87171);
+}
+.cell-cust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 4px;
+  min-width: 0;
+}
+/* UI-19: the customer reads at the same size and weight as the other values */
+.name {
+  font-size: 13px;
+  font-weight: 400;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.cell-status {
+  overflow: visible;
+}
+/* two slots, Resume then a chevron slot, so Resume sits on one line */
+.cell-act {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  /* MSC-222: the button centres in its slot; the chevron keeps the 24px column at the row end */
+  justify-items: center;
+  gap: 6px;
+  padding: 8px 0 8px 4px;
+  overflow: visible;
+}
+.cell-act .chev {
+  color: var(--text-dim, #8a8a8a);
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cell-act .chev c-modon-icon {
+  display: flex;
+}
+.cell-act .chev--none {
+  visibility: hidden;
+}
+/* MSC-221. --pill-border is pure #fafafa, so a page of Resume buttons was the other thing
+   making the list feel busy. The row's own pill keeps its shape and sits on --surface-border,
+   taking the full white only on hover - where the border, not a fade, is the whole signal.
+   Scoped to the row: the detail's buttons are primary actions and keep their edge. */
+.cell-act .btn {
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+  transition: border-color 0.15s ease;
+}
+.cell-act .btn:hover:not(:disabled) {
+  border-color: var(--pill-border, #fafafa);
+  opacity: 1;
+}
+/* MSC-220: why there is no Resume here, in the slot the button would have taken */
+.blocked {
+  font-size: 12px;
+  color: var(--text-dim, #8a8a8a);
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row:hover .cell-act .chev {
+  color: var(--text, #fafafa);
+}
+/* skeleton / empty */
+.sk {
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    var(--row-bg, rgba(255, 255, 255, 0.03)),
+    var(--input-bg, rgba(255, 255, 255, 0.06)),
+    var(--row-bg, rgba(255, 255, 255, 0.03))
+  );
+  background-size: 200% 100%;
+  animation: sh 1.2s linear infinite;
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+/* MSC-221: the list's own skeletons follow the rows - flat, parted by the hairline. The
+   detail's (.sk--facts / .sk--card) are cards and keep their frame. */
+.list .sk {
+  height: 56px;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.sk--facts {
+  height: 76px;
+}
+.sk--card {
+  height: 240px;
+}
+@keyframes sh {
+  to {
+    background-position: -200% 0;
+  }
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 56px 24px;
+}
+.empty .ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px dashed var(--section-active-border, rgba(255, 255, 255, 0.42));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim, #8a8a8a);
+  margin-bottom: 6px;
+}
+.empty .ring c-modon-icon {
+  display: flex;
+}
+.empty h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text, #fafafa);
+}
+.empty p {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 13px;
+  color: var(--text-dim, #8a8a8a);
+  line-height: 1.55;
+}
+.empty__link {
+  color: var(--text, #fafafa);
+  text-decoration: underline;
+}
+
+/* the detail */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+.dtitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.dtitle h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text, #fafafa);
+}
+.dtitle .sub {
+  font-size: 13px;
+  color: var(--text-muted, #a3a3a3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* facts: one field per cell */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+  padding: 6px 6px;
+  border-radius: 16px;
+  background: var(--surface, rgba(15, 15, 15, 0.68));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.fact {
+  padding: 12px 14px;
+  min-width: 0;
+  border-left: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.fact:first-child {
+  border-left: 0;
+}
+.fact b {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+  margin-bottom: 4px;
+}
+.fact span {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+  color: var(--text, #fafafa);
+}
+.fact span.wrap {
+  white-space: normal;
+  line-height: 1.35;
+}
+/* tabs */
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  align-self: flex-start;
+  max-width: 100%;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #a3a3a3);
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.seg button em {
+  font-style: normal;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim, #8a8a8a);
+  background: var(--divider, rgba(255, 255, 255, 0.13));
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+.seg button[aria-pressed="true"] {
+  background: var(--pill-fg, #fafafa);
+  color: var(--text-inverse, #111);
+}
+.seg button[aria-pressed="true"] em {
+  background: rgba(127, 127, 127, 0.25);
+  color: inherit;
+}
+/* payment plan / documents */
+.plan {
+  border-radius: 16px;
+  background: var(--surface, rgba(15, 15, 15, 0.68));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+  overflow: hidden;
+}
+.plan-sum {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  align-items: end;
+  padding: 16px 18px 14px;
+}
+.plan-sum b {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+  display: block;
+  margin-bottom: 4px;
+}
+.plan-sum .big {
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--text, #fafafa);
+}
+.plan-sum .big em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--text-dim, #8a8a8a);
+  margin-right: 5px;
+  font-weight: 500;
+}
+/* MSC-086: Documents reads "2 of 18", so the small half follows the number */
+.plan-sum .big em.aft {
+  margin-right: 0;
+  margin-left: 6px;
+}
+.plan-sum .of {
+  font-size: 12px;
+  color: var(--text-dim, #8a8a8a);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.plan-sum .of span {
+  display: block;
+}
+.bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--divider, rgba(255, 255, 255, 0.13));
+  overflow: hidden;
+  margin-top: 6px;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--step-done, #16a34a);
+  border-radius: 999px;
+}
+.tbl-x {
+  overflow-x: auto;
+}
+.tbl {
+  display: flex;
+  flex-direction: column;
+}
+.tr {
+  display: grid;
+  grid-template-columns: 44px minmax(160px, 1.6fr) 120px 150px 130px;
+  gap: 12px;
+  align-items: center;
+  padding: 0 18px;
+  border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  font-size: 13px;
+  color: var(--text, #fafafa);
+}
+.tr > * {
+  padding: 11px 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tr.th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+}
+.tr.th > * {
+  padding: 8px 0;
+}
+.tr .n {
+  color: var(--text-dim, #8a8a8a);
+  font-variant-numeric: tabular-nums;
+}
+.tr .amt {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.tr .mono {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #a3a3a3);
+}
+.tr .dim {
+  color: var(--text-muted, #a3a3a3);
+}
+.tr .st {
+  overflow: visible;
+}
+/* MSC-086: Document, Received, Status; the middle column holds a date */
+.docs .tr {
+  grid-template-columns: minmax(200px, 1fr) 120px 130px;
+}
+/* MSC-226: the sheet is ~420px wider since MSC-222 and Milestone was the only flexible track,
+   so it absorbed the entire surplus - a ~1000px column with its text pinned to the far left and
+   the rest of the row crowded against the right edge. Five tracks now share the width on one
+   20px gap, and the headings sit over their values as Total Sales sets them.
+   Scope: Documents (.plan.docs) keeps its own three columns and is deliberately left alone -
+   only the three tabs under redesign move. Desktop only, because the phone block at the foot of
+   this file re-declares `.tr` at (0,1,0) as a compact three-column layout; these rules are
+   (0,3,0) and would otherwise outrank it and wreck the phone. */
+@media (min-width: 900px) {
+  .plan:not(.docs) .tr {
+    grid-template-columns:
+      70px minmax(230px, 1.8fr) minmax(150px, 1fr) minmax(170px, 1.15fr) minmax(150px, 1fr);
+    gap: 20px;
+  }
+  .plan:not(.docs) .tr:not(.th) { min-height: 56px; }
+  .plan:not(.docs) .tr > * { text-align: center; }
+  /* the amount joins the rest; the figure keeps its tabular digits and its weight */
+  .plan:not(.docs) .tr .amt { text-align: center; }
+  /* no rule above the heading row: the first line the eye meets is the one beneath it */
+  .plan:not(.docs) .tbl .tr:first-child { border-top: 0; }
+}
+.plan .none {
+  margin: 0;
+  padding: 22px 18px;
+  font-size: 13px;
+  color: var(--text-dim, #8a8a8a);
+  border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.plan .none--first {
+  border-top: 0;
+}
+
+/* phone: the grid becomes cards; the detail stacks */
+@media (max-width: 899px) {
+  /* MSC-221: no room for both on one line - find, then the tabs under it, scrolling sideways */
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .toolbar .search,
+  .toolbar .tabs {
+    grid-column: 1 / -1;
+  }
+  .toolbar .tabs {
+    justify-self: stretch;
+    margin: 0 -4px;
+  }
+  .kbd {
+    display: none;
+  }
+  .grid-scroll {
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+  }
+  .list,
+  .row,
+  .list-head {
+    min-width: 0;
+  }
+  /* MSC-220: the head collapses to the three sort controls - the card carries its own labels */
+  .list-head {
+    display: flex;
+    gap: 16px;
+    grid-template-columns: none;
+    padding: 0 14px 10px;
+  }
+  .list-head span {
+    display: none;
+    padding: 0;
+  }
+  .list-head span.h-sortable {
+    display: inline-flex;
+    text-align: left;
+  }
+  /* UI-19: the sort control keeps its name; the rule above hid it and left the arrow alone */
+  .list-head .hsort span {
+    display: inline;
+  }
+  /* R2-04: no shortcut hint here, so the placeholder gets the room */
+  .search input {
+    padding-right: 60px;
+  }
+  /* UI-19: the name wraps in the card instead of being cut */
+  .name {
+    display: block;
+    white-space: normal;
+    overflow: visible;
+  }
+  .hsort {
+    justify-content: flex-start;
+    width: auto;
+  }
+  /* the card: reference + status, then the fields under small labels */
+  .row-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px 14px;
+    padding: 12px 14px;
+    align-items: start;
+  }
+  /* MSC-222: the centred tracks are a table treatment. The phone card reads as labelled
+     fields down the left edge, so every cell goes back to the start. */
+  .cell {
+    padding: 0;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+  /* UI-19: a block, so the card's label sits above the name as on every other field */
+  .cell-cust {
+    display: block;
+  }
+  .cell.amt {
+    text-align: left;
+  }
+  .cell-act {
+    justify-items: end;
+  }
+  .cell.ref {
+    grid-column: 1 / 2;
+    grid-row: 1;
+    font-size: 14px;
+    align-self: center;
+  }
+  .cell-status {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    max-width: 100%;
+    text-align: right;
+  }
+  /* MSC-221: the rule inside the card went with the card. Two identical hairlines - one under
+     the fields, one under the row - made it unclear where a row ended; spacing does it now. */
+  .cell-act {
+    grid-column: 1 / -1;
+    padding: 12px 0 2px;
+  }
+  .cell[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    margin-bottom: 3px;
+  }
+  .cell.dim {
+    color: var(--text, #fafafa);
+  }
+  /* detail */
+  .dbar {
+    grid-template-columns: auto 1fr;
+    grid-auto-flow: dense;
+  }
+  .dbar .dact {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+  .dbar .dact .btn {
+    width: 100%;
+  }
+  .dtitle {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fact {
+    border-left: 0;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  }
+  .fact:nth-child(-n + 2) {
+    border-top: 0;
+  }
+  .fact:nth-child(2n) {
+    border-left: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  }
+  .seg {
+    align-self: stretch;
+  }
+  .seg button {
+    flex: 1;
+    justify-content: center;
+  }
+  .tr {
+    grid-template-columns: 32px minmax(0, 1fr) 110px;
+    padding: 0 14px;
+  }
+  .tr .due,
+  .tr.th .st {
+    display: none;
+  }
+  .tr .st {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+  .docs .tr {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* MSC-086: the received date goes on a phone */
+  .docs .tr .typ {
+    display: none;
+  }
+  .plan-sum {
+    grid-template-columns: 1fr;
+  }
+  .plan-sum .of {
+    text-align: left;
+  }
+}
+
+
+/* pager (MSC-057): pinned to the bottom of the pane */
+.pager {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.pager__info {
+  font-size: 12px;
+  color: var(--text-dim, #8a8a8a);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pager__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pager__btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted, #a3a3a3);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.pager__btn c-modon-icon {
+  display: flex;
+}
+.pager__btn:hover:not(:disabled) {
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+  color: var(--text, #fafafa);
+}
+.pager__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.pager__btn.is-current {
+  background: var(--pill-fg, #fafafa);
+  color: var(--text-inverse, #111);
+}
+.pager__btn:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+.pager__gap {
+  color: var(--text-dim, #8a8a8a);
+  padding: 0 4px;
+  font-size: 12px;
+}
+.pager__compact {
+  display: none;
+  font-size: 12px;
+  color: var(--text-muted, #a3a3a3);
+  font-variant-numeric: tabular-nums;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  .pager__num,
+  .pager__gap {
+    display: none;
+  }
+  .pager__compact {
+    display: inline;
+  }
+}
+
+/* iOS zoom guard: 16px base, stepped down at 768 */
+@media (min-width: 768px) {
+  .search input {
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  /* MSC-221: .cell-act .btn outranks a bare .btn, so it has to be named here too */
+  .cell-act .btn,
+  .row,
+  .sk {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* autofilled fields: an inset box-shadow in --page-bg paints over the browser's own colours */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text, #fff);
+  -webkit-box-shadow: 0 0 0 1000px var(--page-bg, #111) inset;
+  box-shadow: 0 0 0 1000px var(--page-bg, #111) inset;
+  caret-color: var(--text, #fff);
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s;
+}
+
+/* hide scrollbars app-wide (scroll still works) */
+:host,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

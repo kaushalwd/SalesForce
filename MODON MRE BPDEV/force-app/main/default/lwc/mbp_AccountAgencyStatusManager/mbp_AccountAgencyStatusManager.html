@@ -1,0 +1,111 @@
+<template>
+
+    <template if:true={isLoading}>
+        <div class="spinner-overlay">
+            <lightning-spinner
+                alternative-text="Saving"
+                size="medium">
+            </lightning-spinner>
+        </div>
+    </template>
+
+    <div class="agent-status-wrapper">
+
+        <div class="title-section">
+            <h2>Agency Status Management</h2>
+            <p>Update the agency status and provide a reason.</p>
+        </div>
+
+        <div class="field-section">
+
+            <lightning-combobox
+                label="Agency Status"
+                value={selectedStatus}
+                placeholder="Select Agency Status"
+                options={statusOptions}
+                onchange={handleStatusChange}
+                required>
+            </lightning-combobox>
+
+        </div>
+
+        <div class="field-section">
+
+            <lightning-textarea
+                label="Status Reason"
+                value={reason}
+                placeholder="Enter detailed reason..."
+                onchange={handleReasonChange}
+                required>
+            </lightning-textarea>
+
+        </div>
+
+        <template if:true={isSuspension}>
+
+            <div class="suspension-panel">
+
+                <div class="suspension-panel-header">
+                    <lightning-icon icon-name="utility:warning" size="x-small" variant="warning"></lightning-icon>
+                    <span>Suspension Schedule</span>
+                </div>
+
+                <p class="suspension-panel-copy">
+                    This does not suspend the agency immediately. On the
+                    <strong>Start Date</strong>, the agency and all its agents will be
+                    automatically suspended and lose Broker Portal access. They will be
+                    automatically reactivated the day after the <strong>End Date</strong> —
+                    no manual action needed on either end.
+                </p>
+
+                <div class="date-row">
+
+                    <lightning-input
+                        type="date"
+                        label="Start Date"
+                        value={startDate}
+                        min={minStartDate}
+                        onchange={handleStartDateChange}
+                        required>
+                    </lightning-input>
+
+                    <lightning-input
+                        type="date"
+                        label="End Date"
+                        value={endDate}
+                        min={minEndDate}
+                        onchange={handleEndDateChange}
+                        required>
+                    </lightning-input>
+
+                </div>
+
+                <template if:true={hasDurationSummary}>
+                    <div class="duration-summary">
+                        <lightning-icon icon-name="utility:info" size="xx-small" variant="brand"></lightning-icon>
+                        <span>{durationSummary}</span>
+                    </div>
+                </template>
+
+            </div>
+
+        </template>
+
+        <div class="button-section">
+
+            <lightning-button
+                label="Cancel"
+                onclick={closeModal}>
+            </lightning-button>
+
+            <lightning-button
+                variant="brand"
+                label={submitLabel}
+                onclick={handleSubmit}>
+            </lightning-button>
+
+        </div>
+
+    </div>
+
+</template>

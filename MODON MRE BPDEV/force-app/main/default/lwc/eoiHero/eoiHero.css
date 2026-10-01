@@ -1,0 +1,248 @@
+/* eoiHero — @author Aurelix */
+@font-face {
+    font-family: 'Instrument Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Wadeem_Assets/InstrumentSans.woff2') format('woff2');
+}
+
+:host {
+    --estate: var(--eoi-pine, #0E2E22);
+    --cream: var(--eoi-sand, #F4EFE4);
+    --gold: var(--eoi-champagne, #C7A87A);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: flex;
+    flex-direction: column;
+}
+
+.hero {
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 340px;
+    overflow: hidden;
+    background: var(--estate);
+    font-family: var(--sans);
+}
+
+.hero__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 45%;
+}
+
+.hero__tint {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(27, 26, 43, 0.5) 0%,
+        rgba(27, 26, 43, 0.06) 30%,
+        rgba(27, 26, 43, 0.06) 52%,
+        rgba(27, 26, 43, 0.48) 78%,
+        rgba(27, 26, 43, 0.66) 100%
+    );
+}
+
+.lockup {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: clamp(40px, 7vh, 72px) 24px 0;
+    color: var(--cream);
+}
+
+.lockup__logo {
+    width: var(--eoi-hero-logo-w, clamp(160px, 21vw, 280px)); /* MEOI-LOGO: wide Wadeem Gardens lockup, 190-280px like the split page */
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 2px 12px rgba(27, 26, 43, 0.5));
+}
+
+.tagline {
+    margin: 0;
+    font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-indent: 0.32em;
+    text-transform: none;
+    text-align: center;
+    color: var(--eoi-cream-92, rgba(244, 239, 228, 0.92));
+    text-shadow: 0 1px 10px rgba(27, 26, 43, 0.5);
+}
+
+.hero__cta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(96px, 19vh, 190px);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 0 24px;
+    text-align: center;
+}
+
+.eoi-line {
+    margin: 0;
+    font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-indent: 0.18em;
+    text-transform: none;
+    color: #ffffff;
+    text-shadow: 0 2px 6px rgba(27, 26, 43, 0.85), 0 0 24px rgba(27, 26, 43, 0.6);
+}
+
+.cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--cream);
+    border: 1px solid var(--cream);
+    color: var(--estate);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-indent: 0.06em;
+    text-transform: none;
+    padding: 18px 46px;
+    cursor: pointer;
+    border-radius: 0;
+    box-shadow: 0 6px 26px rgba(27, 26, 43, 0.35);
+    transition: background 0.25s, color 0.25s, border-color 0.25s;
+}
+
+.cta:hover {
+    background: transparent;
+    color: var(--cream);
+    border-color: var(--cream);
+}
+
+.cta:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+}
+
+.arr {
+    transition: transform 0.25s;
+}
+
+.cta:hover .arr {
+    transform: translateX(5px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .hero__media {
+        animation: drift 40s ease-in-out infinite alternate;
+    }
+    .lockup__logo,
+    .tagline {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: rise 1s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+    }
+    .tagline {
+        animation-delay: 0.18s;
+    }
+    /* transform-only on the CTA pair: opacity is never animated, so the
+       button stays visible even if the animation never runs */
+    .cta,
+    .eoi-line {
+        animation: riseOnly 1s cubic-bezier(0.2, 0.6, 0.2, 1) 0.3s backwards;
+    }
+}
+
+@keyframes drift {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+}
+@keyframes rise {
+    to { opacity: 1; transform: none; }
+}
+@keyframes riseOnly {
+    from { transform: translateY(12px); }
+    to { transform: none; }
+}
+
+/* ---------- MEOI-HERO: layout="project" — the modon.com project-page hero, measured on Mridul's
+   reference at 1920 (stacked lockup 160px, H1 40/48, tagline 22/30, white uppercase button 54px
+   tall, 88px above the hero's bottom edge, left-aligned inside a 1320px wrap) ---------- */
+/* eoiHome pins .page to the viewport and the hero flexes to fill it above the footer, so the
+   block is laid over the hero (absolute, inset 0) and sits at its bottom-left, not at 100vh */
+.project {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; align-items: flex-end; justify-content: center;
+    color: #fff;
+}
+.project__wrap { box-sizing: border-box; width: 100%; max-width: 1320px; padding: 120px 24px 88px; }
+.project__content { max-width: 720px; }
+/* MEOI-MODON (13 Sep 2026): MODON's logo in a header band over the hero, exactly as on the landing page
+   (88px band, 20px logo, 1320px wrap); and the landing page's scrim instead of the pine tint */
+.project__hdr { position: absolute; top: 0; left: 0; right: 0; height: 88px; z-index: 3; display: flex; align-items: center; }
+.project__hdr-wrap { box-sizing: border-box; width: 100%; max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+.project__modon { display: block; height: 20px; width: auto; }
+.hero__tint--project { background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,.10) 60%, rgba(0,0,0,.55) 100%); }
+.project__brand { margin-bottom: 20px; line-height: 0; }
+.project__logo { width: 160px; max-width: 100%; height: auto; display: block; }
+.project__title { margin: 0; font-size: 40px; line-height: 48px; font-weight: 500; color: #fff; }
+.project__tagline { margin: 20px 0 0; font-size: 22px; line-height: 30px; font-weight: 400; color: #fff; }
+.project__line { margin: 12px 0 0; font-size: 16px; line-height: 22px; font-weight: 500; color: #fff; }
+.project__btns { margin-top: 50px; display: flex; flex-wrap: wrap; gap: 16px; }
+/* MEOI-HERO2 (12 Sep, Mridul): same look as the landing page's floating "Register Your EOI" bar —
+   dark ground, cream text, champagne hairline, 15px semibold, sentence case */
+.project__btn {
+    display: inline-block; box-sizing: border-box; padding: 15px 30px; margin: 0;
+    font-family: var(--sans); font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: .01em; text-transform: none;
+    color: #F2EFE6; background: var(--estate); border: 1px solid rgba(201, 188, 143, 0.4); border-radius: 0; cursor: pointer;
+    transition: background-color .2s ease;
+}
+.project__btn:hover, .project__btn:active { background: var(--eoi-pine-2, #3B3856); }
+.project__btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+    .project__content { animation: rise 1s cubic-bezier(0.2, 0.6, 0.2, 1) 0.1s both; }
+}
+@media (max-width: 767px) {
+    .project__hdr { height: 72px; }
+    .project__wrap { padding: 96px 24px 56px; }
+    .project__brand { margin-bottom: 16px; }
+    .project__logo { width: 120px; }
+    .project__title { font-size: 32px; line-height: 40px; }
+    .project__tagline { font-size: 18px; line-height: 26px; margin-top: 10px; }
+    .project__btns { margin-top: 32px; }
+    .project__btn { font-size: 15px; line-height: 20px; padding: 14px 24px; }
+}
+@media (max-height: 560px) {
+    .project__wrap { padding: 72px 24px 40px; }
+    .project__logo { width: 100px; }
+    .project__btns { margin-top: 24px; }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+    .hero__media { object-position: center 50%; }
+    .lockup { gap: 18px; }
+    .tagline { letter-spacing: 0.26em; text-indent: 0.26em; }
+    .eoi-line { letter-spacing: 0.14em; text-indent: 0.14em; }
+    .hero__cta { bottom: clamp(72px, 14vh, 140px); gap: 18px; }
+    .cta { padding: 16px 38px; }
+}
+
+/* Short viewports (landscape phones) */
+@media (max-height: 560px) {
+    .hero { min-height: 100%; }
+    .lockup { padding-top: 24px; gap: 12px; }
+    .lockup__logo { width: var(--eoi-hero-logo-w-sm, 150px); }
+    .hero__cta { bottom: 40px; gap: 14px; }
+    .cta { padding: 13px 34px; }
+}

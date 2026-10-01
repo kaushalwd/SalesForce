@@ -1,0 +1,151 @@
+<template>
+    <div class="dt">
+        <!-- ── Main column ─────────────────────────────────────────────── -->
+        <div class="dt__main">
+            <section class="glass card">
+                <header class="card__head">
+                    <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Unit interests</span></div>
+                    <span class="card__meta">{metaLabel}</span>
+                </header>
+
+                <template lwc:if={projectClosed}>
+                    <div class="banner banner--warn card__banner">
+                        <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #fbbf24)"></c-modon-icon>
+                        <span>{projectClosedText}</span>
+                    </div>
+                </template>
+                <template lwc:if={quotaCountError}>
+                    <div class="banner banner--warn card__banner">
+                        <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #fbbf24)"></c-modon-icon>
+                        <span>{quotaCountErrorText}</span>
+                    </div>
+                </template>
+
+                <div class="sels">
+                    <template for:each={cards} for:item="c">
+                        <article key={c.key} class={c.cls}>
+                            <!-- Header row: click to activate; remove on the right -->
+                            <div class="sel__head" role="button" tabindex="0" data-key={c.key} onclick={handleActivate}>
+                                <span class="sel__n">{c.n}</span>
+                                <span class="sel__text">
+                                    <span class="sel__title">{c.summaryTitle}</span>
+                                    <span class="sel__sub">{c.summarySubtitle}</span>
+                                </span>
+                                <span class="sel__right">
+                                    <template lwc:if={c.amountLabel}><span class="sel__amt">{c.amountLabel}</span></template>
+                                    <span class={c.statusChip}>{c.statusLabel}</span>
+                                    <template lwc:if={c.canRemove}>
+                                        <button class="sel__x" type="button" data-key={c.key} onclick={handleRemove} aria-label="Remove unit" title="Remove unit">
+                                            <c-modon-icon name="trash" size="14" color="currentColor"></c-modon-icon>
+                                        </button>
+                                    </template>
+                                </span>
+                            </div>
+
+                            <template lwc:if={c.active}>
+                                <div class="sel__body">
+                                    <div class="field-grid">
+                                        <div class="field">
+                                            <label class="field__label">Phase *</label>
+                                            <select class="field__select" data-key={c.key} data-field="phaseId" onchange={handleField} disabled={busy}>
+                                                <option value="">Select…</option>
+                                                <template for:each={c.phaseOpts} for:item="o">
+                                                    <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                        <template lwc:if={c.showType}>
+                                            <div class="field">
+                                                <label class="field__label">Unit type *</label>
+                                                <select class="field__select" data-key={c.key} data-field="unitType" onchange={handleField} disabled={busy}>
+                                                    <option value="">Select…</option>
+                                                    <template for:each={c.typeOpts} for:item="o">
+                                                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </template>
+                                        <template lwc:if={c.showBeds}>
+                                            <div class="field">
+                                                <label class="field__label">Bedrooms *</label>
+                                                <select class="field__select" data-key={c.key} data-field="bedrooms" onchange={handleField} disabled={busy}>
+                                                    <option value="">Select…</option>
+                                                    <template for:each={c.bedOpts} for:item="o">
+                                                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </template>
+                                        <template lwc:if={c.showTypo}>
+                                            <div class="field">
+                                                <label class="field__label">Typology *</label>
+                                                <select class="field__select" data-key={c.key} data-field="unitTypology" onchange={handleField} disabled={busy}>
+                                                    <option value="">Select…</option>
+                                                    <template for:each={c.typoOpts} for:item="o">
+                                                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <template lwc:if={c.rangeError}>
+                                        <p class="field__error sel__err">{c.rangeError}</p>
+                                    </template>
+                                    <template lwc:if={c.linkError}>
+                                        <p class="field__error sel__err">{c.linkError}</p>
+                                    </template>
+                                    <!-- The amount is the range's, never typed. -->
+                                    <div class="sel__amount">
+                                        <span class="sel__amount-k">EOI amount</span>
+                                        <span class="sel__amount-v">{c.amountOrDash}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </article>
+                    </template>
+                </div>
+
+                <div class="card__actions">
+                    <button class="btn btn-link btn-sm dt__add" type="button" onclick={handleAdd} disabled={addDisabled}>
+                        <c-modon-icon name="plus" size="13" color="currentColor"></c-modon-icon>
+                        <span>Add another unit</span>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ── Rail ────────────────────────────────────────────────────── -->
+        <aside class="dt__rail">
+            <div class="glass sum">
+                <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Summary</span></div>
+                <dl class="sum__facts">
+                    <template lwc:if={customerName}>
+                        <div class="sum__fact"><dt>Customer</dt><dd>{customerName}</dd></div>
+                    </template>
+                    <div class="sum__fact"><dt>Project</dt><dd>{projectName}</dd></div>
+                </dl>
+                <div class="sum__rows">
+                    <template for:each={summaryRows} for:item="r">
+                        <div key={r.key} class={r.cls}>
+                            <span class="sum__row-text">
+                                <span class="sum__row-title">{r.title}</span>
+                                <span class="sum__row-sub">{r.sub}</span>
+                            </span>
+                            <span class="sum__row-amt">{r.amount}</span>
+                        </div>
+                    </template>
+                </div>
+                <div class="sum__total">
+                    <span>Total</span>
+                    <span class="sum__total-v">{totalLabel}</span>
+                </div>
+                <!-- 1.4 (A12): no Pay now / Send link choice; the button always sends links -->
+                <button class="btn btn-primary sum__cta" type="button" onclick={handleSubmit} disabled={submitDisabled}>
+                    <c-modon-icon name={submitIcon} size="14" color="currentColor"></c-modon-icon>
+                    <span>{submitLabel}</span>
+                </button>
+            </div>
+        </aside>
+    </div>
+</template>

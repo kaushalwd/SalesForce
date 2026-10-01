@@ -1,0 +1,543 @@
+<template>
+    <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+
+    <div class="eid-page-wrapper">
+
+        <template if:true={isEntry}>
+            <div class="eid-entry-card">
+                <div class="eid-card-header">
+                    <lightning-icon icon-name="utility:identity" size="medium" class="eid-header-icon">
+                    </lightning-icon>
+                    <div>
+                        <h1 class="eid-card-title">New Lead via UAE Pass</h1>
+                        <p class="eid-card-subtitle">
+                            Enter the customer's Emirates ID. They will receive a UAE Pass
+                            notification to approve — once approved, their details are fetched automatically.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="eid-input-row">
+                    <div class="eid-input-wrap">
+                        <lightning-input
+                            label="Emirates ID"
+                            placeholder="784-XXXX-XXXXXXX-X"
+                            value={eid}
+                            onchange={handleEidChange}
+                            maxlength="18"
+                            class="placeholder"
+                            required>
+                        </lightning-input>
+                    </div>
+                    <button class="slds-button slds-button_brand eid-auth-btn"
+                            onclick={handleAuthenticate}>
+                        <lightning-icon icon-name="utility:shield" size="x-small"
+                            class="slds-button__icon slds-button__icon_left">
+                        </lightning-icon>
+                        Authenticate with UAE Pass
+                    </button>
+                </div>
+
+                <template if:true={errorMsg}>
+                    <div class="eid-error-box" role="alert">
+                        <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                        {errorMsg}
+                    </div>
+                </template>
+
+                <div class="eid-info-row">
+                    <lightning-icon icon-name="utility:info" size="x-small" class="eid-info-icon">
+                    </lightning-icon>
+                    <span>The customer must have the UAE Pass staging app installed and approve the
+                        request for each new lead. A new authentication is required every time.</span>
+                </div>
+
+                <div class="eid-back-row">
+                    <button class="slds-button slds-button_neutral" onclick={handleBack}>
+                        ← Back to Manage Leads
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════════════════
+             LOADING — after UAE Pass redirect back
+             ══════════════════════════════════════════════════════ -->
+        <template if:true={isLoading}>
+            <div class="eid-loading-card">
+                <div class="eid-loading-spinner-wrap">
+                    <lightning-spinner size="medium" alternative-text="Fetching profile">
+                    </lightning-spinner>
+                </div>
+                <h2 class="eid-loading-title">Fetching Customer Profile…</h2>
+                <p class="eid-loading-sub">UAE Pass authentication successful. Retrieving details.</p>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════════════════
+             STEP 2 — PROFILE + LEAD FORM
+             ══════════════════════════════════════════════════════ -->
+        <template if:true={isForm}>
+
+            <!-- Verified banner -->
+            <div class="eid-verified-strip">
+                <lightning-icon icon-name="utility:success" size="x-small" class="eid-verified-icon">
+                </lightning-icon>
+                UAE Pass Verified — Customer identity confirmed
+                <span class="eid-verified-name">{profile.fullNameEn}</span>
+            </div>
+
+            <template if:true={errorMsg}>
+                <div class="eid-error-box" role="alert">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    {errorMsg}
+                </div>
+            </template>
+
+            <!-- ── READ-ONLY PROFILE PANEL ─────────────────────── -->
+            <div class="eid-section-card">
+                <div class="eid-section-header">
+                    <lightning-icon icon-name="utility:identity" size="x-small"></lightning-icon>
+                    <span>Customer Profile — from UAE Pass (read-only)</span>
+                </div>
+
+                <div class="eid-profile-grid">
+
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Full Name (English)</span>
+                        <span class="eid-pf-value">{profile.fullNameEn}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Full Name (Arabic)</span>
+                        <span class="eid-pf-value" dir="rtl">{profile.fullNameAr}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Email</span>
+                        <span class="eid-pf-value">{profile.email}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Mobile</span>
+                        <span class="eid-pf-value">{profile.mobile}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Emirates ID Number</span>
+                        <span class="eid-pf-value">{profile.idn}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">ID Expiry Date</span>
+                        <span class="eid-pf-value">{profile.idExpiryDate}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Date of Birth</span>
+                        <span class="eid-pf-value">{profile.dateOfBirth}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Gender</span>
+                        <span class="eid-pf-value">{profile.gender}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Nationality</span>
+                        <span class="eid-pf-value">{profile.nationality}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+                    <div class="eid-profile-field">
+                        <span class="eid-pf-label">Emirate / State</span>
+                        <span class="eid-pf-value">{profile.emirate}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+
+                    <div class="eid-profile-field eid-profile-field--full">
+                        <span class="eid-pf-label">Street Address</span>
+                        <span class="eid-pf-value">{profile.streetAddress}
+                            <span class="eid-badge">UAE Pass</span></span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── LEAD DETAILS FORM ────────────────────────────── -->
+            <div class="eid-section-card">
+                <div class="eid-section-header">
+                    <lightning-icon icon-name="utility:lead" size="x-small"></lightning-icon>
+                    <span>Lead Information</span>
+                </div>
+
+                <div class="slds-grid slds-gutters slds-wrap">
+
+                    <!-- Lead Type -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Lead Type" name="leadType" value={leadType}
+                            options={leadTypeOptions} onchange={handleLeadTypeChange}
+                            class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Title (individual only) -->
+                    <template if:true={isIndividual}>
+                        <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                            <lightning-combobox label="Title" name="title" value={title}
+                                options={titleOptions} onchange={handleChange}
+                                class="placeholder" required>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- Org fields -->
+                    <template if:true={isOrganization}>
+                        <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                            <lightning-input label="Organization Name" name="orgName"
+                                value={orgName} onchange={handleChange}
+                                class="placeholder" required>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                            <lightning-input label="Trade License Number" name="unifiedNumber"
+                                value={unifiedNumber} onchange={handleChange}
+                                class="placeholder" required>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                            <lightning-combobox label="VAT Certificate Type" name="vatCertificateType"
+                                value={vatCertificateType} options={vatCertificateOptions}
+                                onchange={handleVatTypeChange} class="placeholder" required>
+                            </lightning-combobox>
+                        </div>
+                        <template if:true={showVatRegNumber}>
+                            <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input label="UAE VAT Registration Number" name="vatRegNumber"
+                                    value={vatRegNumber} onchange={handleChange}
+                                    class="placeholder" required>
+                                </lightning-input>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- UAE Resident Status -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="UAE Resident Status" name="uaeResidentStatus"
+                            value={uaeResidentStatus} options={uaeResidentOptions}
+                            onchange={handleUaeResidentChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Country of Residence -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Country of Residence" name="countryOfResidence"
+                            value={countryOfResidence} options={countryOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Nationality (pre-filled from UAE Pass but editable) -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Nationality" name="nationality"
+                            value={nationality} options={nationalityOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                        <lightning-textarea label="Description" name="description"
+                            value={description} onchange={handleChange}
+                            placeholder="Unit number, Building Name, Project Name"
+                            class="custom-textarea">
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── PROPERTY DETAILS ─────────────────────────────── -->
+            <div class="eid-section-card">
+                <div class="eid-section-header">
+                    <lightning-icon icon-name="utility:home" size="x-small"></lightning-icon>
+                    <span>Property Details</span>
+                </div>
+
+                <div class="slds-grid slds-gutters slds-wrap">
+
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Sales Origin" name="salesOrigin"
+                            value={salesOrigin} options={salesOriginOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Lead Origin" name="leadOrigin"
+                            value={leadOrigin} options={leadOriginOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Sales Type" name="salesType"
+                            value={salesType} options={salesTypeOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Project Name" name="projectName"
+                            value={projectName} options={projectOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Number of Bedrooms" name="numberOfBeds"
+                            value={numberOfBeds} options={bedsOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Unit Type" name="unitType"
+                            value={unitType} options={unitTypeOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Purpose of Use" name="purposeOfUse"
+                            value={purposeOfUse} options={purposeOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <lightning-combobox label="Customer Budget" name="customerBudget"
+                            value={customerBudget} options={budgetOptions}
+                            onchange={handleChange} class="placeholder" required>
+                        </lightning-combobox>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── DOCUMENT UPLOAD ──────────────────────────────── -->
+            <div class="eid-section-card">
+                <div class="eid-section-header">
+                    <lightning-icon icon-name="utility:attach" size="x-small"></lightning-icon>
+                    <span>Document Upload</span>
+                </div>
+
+                <!-- KYC download -->
+                <div class="kyc-download-box">
+                    <div class="kyc-download-header">
+                        <lightning-icon icon-name="utility:description" size="small" class="kyc-icon">
+                        </lightning-icon>
+                        <h2 class="kyc-title">KYC Form</h2>
+                    </div>
+                    <p class="kyc-description">Download the KYC form, fill carefully, and re-upload below.</p>
+                    <div class="kyc-download-link">
+                        <a href={kycFormUrl} download="KYC Form.docx" class="kyc-button">
+                            Download Complete KYC Form
+                        </a>
+                    </div>
+                </div>
+
+                <!-- UAE Resident — EID uploads -->
+                <template if:true={showUaeFields}>
+                    <div class="upload-container mt-2">
+                        <lightning-input type="file" label="Upload Emirates ID Front"
+                            data-field="emiratesFront" onchange={handleFile}
+                            class="file-input placeholder" required>
+                        </lightning-input>
+                        <template if:true={emiratesFrontName}>
+                            <div class="uploaded-file">
+                                <p class="file-name">{emiratesFrontName}</p>
+                                <lightning-icon icon-name="utility:delete" data-field="emiratesFront"
+                                    onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                                </lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="upload-container mt-2">
+                        <lightning-input type="file" label="Upload Emirates ID Back"
+                            data-field="emiratesBack" onchange={handleFile}
+                            class="file-input placeholder" required>
+                        </lightning-input>
+                        <template if:true={emiratesBackName}>
+                            <div class="uploaded-file">
+                                <p class="file-name">{emiratesBackName}</p>
+                                <lightning-icon icon-name="utility:delete" data-field="emiratesBack"
+                                    onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                                </lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Non-Resident — passport uploads -->
+                <template if:true={showPassportFields}>
+                    <div class="slds-grid slds-gutters mt-2">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input label="Passport Number" name="passportNumber"
+                                value={passportNumber} onchange={handleChange}
+                                class="placeholder" required>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input type="date" label="Passport Issuance Date"
+                                name="passportIssuance" value={passportIssuance}
+                                onchange={handleChange} class="placeholder" required>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    <div class="slds-grid slds-gutters mt-2">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input type="date" label="Passport Expiry Date"
+                                name="passportExpiry" value={passportExpiry}
+                                onchange={handleChange} class="placeholder" required>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    <div class="upload-container mt-2">
+                        <lightning-input type="file" label="Upload Passport Front"
+                            data-field="passportFront" onchange={handleFile}
+                            class="file-input placeholder" required>
+                        </lightning-input>
+                        <template if:true={passportFrontName}>
+                            <div class="uploaded-file">
+                                <p class="file-name">{passportFrontName}</p>
+                                <lightning-icon icon-name="utility:delete" data-field="passportFront"
+                                    onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                                </lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="upload-container mt-2">
+                        <lightning-input type="file" label="Upload Passport Back"
+                            data-field="passportBack" onchange={handleFile}
+                            class="file-input placeholder" required>
+                        </lightning-input>
+                        <template if:true={passportBackName}>
+                            <div class="uploaded-file">
+                                <p class="file-name">{passportBackName}</p>
+                                <lightning-icon icon-name="utility:delete" data-field="passportBack"
+                                    onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                                </lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- KYC upload -->
+                <div class="upload-container mt-2">
+                    <lightning-input type="file" label="Upload KYC Form"
+                        data-field="kyc" onchange={handleFile}
+                        class="file-input placeholder" required>
+                    </lightning-input>
+                    <template if:true={kycFileName}>
+                        <div class="uploaded-file">
+                            <p class="file-name">{kycFileName}</p>
+                            <lightning-icon icon-name="utility:delete" data-field="kyc"
+                                onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                            </lightning-icon>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Source of Funds -->
+                <div class="upload-container mt-2">
+                    <div class="custom-input-with-help">
+                        <lightning-input type="file" label="Source of Funds Document"
+                            data-field="sourceFunds" onchange={handleFile}
+                            class="file-input placeholder">
+                        </lightning-input>
+                        <span class="help-icon">ℹ
+                            <span class="help-text">Salary certificate in English or 6 months bank statement</span>
+                        </span>
+                    </div>
+                    <template if:true={sourceFundsName}>
+                        <div class="uploaded-file">
+                            <p class="file-name">{sourceFundsName}</p>
+                            <lightning-icon icon-name="utility:delete" data-field="sourceFunds"
+                                onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                            </lightning-icon>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Trade License (org only) -->
+                <template if:true={isOrganization}>
+                    <div class="upload-container mt-2">
+                        <lightning-input type="file" label="Upload Trade License"
+                            data-field="tradeLicense" onchange={handleFile}
+                            class="file-input placeholder" required>
+                        </lightning-input>
+                        <template if:true={tradeLicenseName}>
+                            <div class="uploaded-file">
+                                <p class="file-name">{tradeLicenseName}</p>
+                                <lightning-icon icon-name="utility:delete" data-field="tradeLicense"
+                                    onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                                </lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                    <!-- VAT file -->
+                    <div class="upload-container mt-2">
+                        <lightning-input type="file" label="Upload VAT Certificate"
+                            data-field="vat" onchange={handleFile}
+                            class="file-input placeholder" required>
+                        </lightning-input>
+                        <template if:true={vatFileName}>
+                            <div class="uploaded-file">
+                                <p class="file-name">{vatFileName}</p>
+                                <lightning-icon icon-name="utility:delete" data-field="vat"
+                                    onclick={handleDeleteFile} size="x-small" class="delete-icon">
+                                </lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+            </div><!-- end document section -->
+
+            <!-- ── FORM FOOTER ──────────────────────────────────── -->
+            <div class="eid-form-footer">
+                <button class="slds-button slds-button_neutral" onclick={handleBack}>
+                    Cancel
+                </button>
+                <button class="slds-button slds-button_brand" onclick={handleSubmit}>
+                    Submit Lead
+                </button>
+            </div>
+
+        </template>
+
+        <!-- ══════════════════════════════════════════════════════
+             SUCCESS STATE
+             ══════════════════════════════════════════════════════ -->
+        <template if:true={isSuccess}>
+            <div class="eid-success-card">
+                <lightning-icon icon-name="utility:success" size="large" class="eid-success-icon">
+                </lightning-icon>
+                <h2 class="eid-success-title">Lead Created Successfully</h2>
+                <p class="eid-success-sub">
+                    The lead for <strong>{profile.fullNameEn}</strong> has been created
+                    with all UAE Pass verified details.
+                </p>
+                <div class="eid-success-actions">
+                    <button class="slds-button slds-button_brand" onclick={handleViewLead}>
+                        View Lead Record
+                    </button>
+                    <button class="slds-button slds-button_neutral" onclick={handleNewLead}>
+                        Create Another Lead
+                    </button>
+                    <button class="slds-button slds-button_neutral" onclick={handleBack}>
+                        Back to Manage Leads
+                    </button>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

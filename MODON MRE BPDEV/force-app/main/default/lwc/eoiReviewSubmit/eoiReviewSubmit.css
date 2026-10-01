@@ -1,0 +1,681 @@
+/* eoiReviewSubmit — Wadeem journey design system (EOI-UI-9). @author Aurelix
+   Payment checklist: progress is money, paid and unpaid cards share one
+   skeleton, every card ends on the same rail. */
+
+:host {
+    --pine: var(--eoi-pine, #0D2B21);
+    --pine-2: var(--eoi-pine-2, #123A2C);
+    --abyss: var(--eoi-abyss, #071E16);
+    --champagne: var(--eoi-champagne, #C9BC8F);
+    --champ-40: var(--eoi-champ-40, rgba(201, 188, 143, 0.4));
+    --champ-18: var(--eoi-champ-18, rgba(201, 188, 143, 0.18));
+    --sand: var(--eoi-sand, #EFEAE0);
+    --shell: var(--eoi-shell, #FAF8F2);
+    --card: var(--eoi-card, #FFFFFF);
+    --ink: var(--eoi-ink, #182420);
+    --stone: var(--eoi-stone, #877F6C);
+    --line: var(--eoi-line, #DAD3C2);
+    --line-soft: var(--eoi-line-soft, #E7E2D6);
+    --amber: #8A6D1D;
+    --red: #A34433;
+    --serif: var(--eoi-serif, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: block;
+    font-family: var(--sans);
+    color: var(--ink);
+}
+
+.m-sub {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--eoi-muted, #5B6159);
+    margin: 0 0 24px;
+    max-width: 52ch;
+}
+
+.error {
+    margin: 0 0 18px;
+    padding: 10px 14px;
+    border: 1px solid rgba(163, 68, 51, 0.35);
+    background: rgba(163, 68, 51, 0.06);
+    color: var(--red);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+/* progress rail */
+.m-prog {
+    margin: 0 0 18px;
+}
+.m-prog__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 9px;
+}
+.m-prog__count {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--pine);
+}
+.m-prog__amt {
+    font-size: 11px;
+    color: var(--stone);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+.m-prog__bar {
+    height: 2px;
+    background: var(--line-soft);
+    position: relative;
+}
+.m-prog__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--pine);
+}
+.m-prog__fill::after {
+    content: "";
+    position: absolute;
+    right: -3px;
+    top: -2.5px;
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+    background: var(--champagne);
+}
+
+/* card law */
+.m-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: stretch;
+}
+.m-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.m-card--settled {
+    background: var(--shell);
+    border-color: var(--champ-40);
+}
+.m-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+.m-card__head .m-chip {
+    margin-top: 2px;
+}
+.m-card__name {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 16.5px;
+    line-height: 1.3;
+    color: var(--ink);
+    min-width: 0;
+    text-wrap: balance;
+}
+.m-card__meta {
+    margin: 5px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+}
+.m-card__valrow {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-soft);
+}
+.m-amount {
+    margin: 0 auto 0 0;
+    font-size: 16.5px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+.m-amount small {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--stone);
+    margin-right: 4px;
+}
+.m-counter {
+    font-size: 11px;
+    color: var(--stone);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.m-card__foot {
+    margin-top: auto;
+    padding-top: 14px;
+}
+
+/* chips: one size, always top-right */
+.m-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 5px 10px;
+    white-space: nowrap;
+}
+.m-chip svg {
+    width: 9px;
+    height: 9px;
+}
+.m-chip--ok {
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    box-shadow: inset 0 0 0 1px var(--champ-40);
+}
+.m-chip--open {
+    color: var(--stone);
+    border: 1px solid var(--line);
+}
+
+.m-cardbtn {
+    appearance: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    border: 1px solid var(--champ-40);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 12px 10px;
+}
+.m-cardbtn .arr {
+    color: var(--champagne);
+    letter-spacing: 0;
+}
+.m-cardbtn[disabled] {
+    opacity: 0.6;
+    cursor: default;
+}
+.m-cardbtn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+.m-ref {
+    display: block;
+    text-align: center;
+    font-size: 10.5px;
+    color: var(--stone);
+    font-variant-numeric: tabular-nums;
+    padding: 12px 0 2px;
+    letter-spacing: 0.04em;
+}
+.m-ref b {
+    font-weight: 600;
+    color: var(--pine);
+}
+.m-eoinum {
+    display: block;
+    text-align: center;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--pine);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+    padding-bottom: 2px;
+}
+.m-eoinum--wait {
+    font-weight: 400;
+    color: var(--stone);
+    letter-spacing: 0.04em;
+}
+.m-quiet {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--stone);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.m-quiet:hover {
+    color: var(--pine);
+}
+.m-quiet:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+.m-note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--eoi-muted, #5B6159);
+    margin: 18px 0 0;
+}
+.m-note--tight {
+    margin-top: 8px;
+}
+.m-note svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--stone);
+}
+.m-note a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.backrow {
+    display: flex;
+    justify-content: center;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line-soft);
+}
+.back {
+    appearance: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--stone);
+    padding: 2px 6px;
+}
+.back:hover {
+    color: var(--pine);
+}
+.back:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+/* ---------- tablet (>=700px): two-up cards ---------- */
+@media (min-width: 700px) {
+    .m-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ---------- desktop (>=1000px): single column in the 40% measure ---------- */
+@media (min-width: 1000px) {
+    .m-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================= MEOI-PAY2: compact head, close icon, confirm modal =================
+   Everything that used to stack above the divider (name / meta / big gap) now sits in
+   one head row, so the card no longer looks like two cards. Sizes step down a notch. */
+.m-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 10px;
+}
+.m-card__title {
+    min-width: 0;
+}
+.m-card__name {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.3;
+}
+.m-card__meta {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--stone);
+}
+.m-card__tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.m-close {
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--stone);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.m-close svg { width: 12px; height: 12px; }
+.m-close:hover { color: var(--ink); border-color: var(--stone); }
+.m-close:focus-visible { outline: 2px solid var(--champagne); outline-offset: -2px; }
+.m-close[disabled] { opacity: 0.4; cursor: default; }
+.m-card__valrow {
+    padding-top: 10px;
+}
+.m-amount {
+    font-size: 18px;
+}
+
+/* modal - one job, one question, two answers */
+.m-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 41, 64, 0.45);
+    z-index: 40;
+}
+.m-modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 32px));
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 22px 22px 18px;
+    z-index: 41;
+}
+.m-modal__t {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.m-modal__p {
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--stone);
+}
+.m-modal__row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.m-cardbtn--ghost {
+    background: none;
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
+
+/* ================= MEOI-PAY3: name+meta inline, amount beneath, action on the right ==== */
+.m-card__head {
+    align-items: center;
+}
+.m-card__name .m-card__meta {
+    display: inline;
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--stone);
+}
+.m-card__title .m-amount {
+    margin: 4px 0 0;
+    font-size: 18px;
+}
+.m-card__tools .paybtn {
+    width: auto;
+    padding: 9px 16px;
+    white-space: nowrap;
+}
+
+/* ================= MEOI-PAY5: the layout MODON signed off (9 Sep, 14:47 screenshot) ====
+   Row 1: name · meta, close control at the far right. Row 2: amount, then the status
+   chip beside it, then Pay & register at the far right. Named areas, so the paid
+   variant (no close, EOI number in the action cell) reuses the same cells. */
+.m-card {
+    padding: 14px 16px 14px 18px;
+}
+.m-card__head {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas:
+        "name name  x"
+        "amt  state act";
+    column-gap: 10px;
+    row-gap: 10px;
+    align-items: center;
+    margin: 0;
+}
+.m-card__head--paid {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "name state"
+        "amt  act";
+}
+.m-card__head .m-close {
+    grid-area: x;
+    justify-self: end;
+    align-self: start;
+    width: 24px;
+    height: 24px;
+    margin: -2px -4px 0 0;
+    border: none;
+    background: none;
+}
+.m-card__head .m-close:hover {
+    color: var(--ink);
+    background: var(--sand);
+}
+.m-card__head .m-card__name {
+    grid-area: name;
+}
+.m-card__head .m-amount {
+    grid-area: amt;
+    margin: 0;
+    font-size: 19px;
+}
+.m-card__head .m-chip {
+    grid-area: state;
+    justify-self: start;
+    margin: 0;
+}
+.m-card__head--paid .m-chip {
+    justify-self: end;
+}
+.m-card__head .m-chip--open {
+    font-size: 12px;
+    padding: 5px 10px;
+    background: var(--sand);
+    border: none;
+    color: var(--stone);
+}
+.m-card__head .paybtn {
+    grid-area: act;
+    justify-self: end;
+    width: auto;
+    padding: 10px 18px;
+    white-space: nowrap;
+}
+.m-card__head .m-eoinum {
+    grid-area: act;
+    justify-self: end;
+    text-align: right;
+    padding: 0;
+}
+/* phones: the button takes its own full-width row under the amount.
+   MEOI-PAY6 (10 Sep, tablet check at 768/900/1024): the same stacked layout is
+   needed wherever the card is narrower than ~380px - the two-up grid between 700
+   and 999px gives ~280px cards, and the 40% column at 1000-1139px gives ~330px -
+   so the row layout ("amt state act") overlapped the amount and the chip. The
+   signed-off row layout is unchanged from 1140px up. */
+@media (max-width: 440px), (min-width: 700px) and (max-width: 1139px) {
+    .m-card__head--open {
+        grid-template-areas:
+            "name name  x"
+            "amt  state state"
+            "act  act   act";
+    }
+    .m-card__head .paybtn {
+        width: 100%;
+        justify-self: stretch;
+        margin-top: 2px;
+    }
+}
+
+/* MEOI-TC2 (11 Sep): the acceptance checkbox on the page, the link beside it */
+.m-terms--inline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+}
+.m-accept--inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--ink);
+}
+.m-accept--inline input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--pine);
+    cursor: pointer;
+}
+.m-terms--inline .m-terms__link {
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+/* MEOI-TC3 (11 Sep, evening). The base .m-accept rule below is declared AFTER .m-accept--inline
+   and, at equal specificity, kept its 16px bottom margin and flex-start alignment - so the label
+   box was 16px taller than the link and the link rendered 8px lower than the sentence (shipped
+   like that at TC2; caught by Mridul). Pinned here with a more specific selector. */
+.m-terms--inline .m-accept--inline {
+    margin: 0;
+    align-items: center;
+    line-height: 1.5;
+}
+.m-terms--inline .m-accept--inline input {
+    margin: 0;
+}
+
+/* MEOI-PAY5a. Pay & register as MODON signed it off: an outlined button - white
+   ground, pine border and text, the arrow in pine - not the solid pine block. */
+.m-card__head .paybtn {
+    background: var(--card);
+    color: var(--pine);
+    border: 1.5px solid var(--pine);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 18px;
+    gap: 12px;
+}
+.m-card__head .paybtn .arr {
+    color: var(--pine);
+}
+.m-card__head .paybtn:hover {
+    background: var(--shell);
+}
+.m-card__head .paybtn[disabled] {
+    opacity: 0.5;
+}
+
+/* ================= MEOI-TC: terms line above the cards, terms modal ================= */
+.m-terms {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin: 0 0 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink);
+}
+.m-terms__link {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    color: var(--pine);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.m-terms__ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--pine);
+    font-weight: 600;
+}
+.m-terms__ok svg {
+    width: 12px;
+    height: 12px;
+}
+.m-modal--terms {
+    width: min(560px, calc(100vw - 32px));
+}
+.m-modal__body {
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-bottom: 14px;
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    padding-top: 12px;
+}
+.m-modal__body .m-modal__p {
+    margin: 0 0 12px;
+    color: var(--ink);
+    white-space: pre-line;
+}
+.m-accept {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    color: var(--ink);
+    cursor: pointer;
+}
+.m-accept input {
+    width: 18px;
+    height: 18px;
+    margin: 1px 0 0;
+    accent-color: var(--pine);
+    flex: 0 0 auto;
+}
+.m-cardbtn[disabled] {
+    opacity: 0.45;
+    cursor: default;
+}

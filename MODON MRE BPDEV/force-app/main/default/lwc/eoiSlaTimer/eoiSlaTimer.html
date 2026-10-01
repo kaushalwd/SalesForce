@@ -1,0 +1,165 @@
+<template>
+    <div class="sla-wrap">
+
+        <!-- ── Loading while wire data arrives ───────────────────────── -->
+        <template if:true={isLoading}>
+            <div class="sla-card state-disabled">
+                <div class="sla-icon-wrap disabled">
+                    <lightning-icon icon-name="utility:clock" size="x-small" alternative-text="Loading"></lightning-icon>
+                </div>
+                <div class="sla-text">
+                    <div class="sla-title">Loading SLA Status...</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── SLA disabled org-wide ─────────────────────────────────── -->
+        <template if:true={isSlaDisabled}>
+            <div class="sla-card state-disabled">
+                <div class="sla-icon-wrap disabled">
+                    <lightning-icon icon-name="utility:pause" size="x-small" alternative-text="Disabled"></lightning-icon>
+                </div>
+                <div class="sla-text">
+                    <div class="sla-title">SLA Monitoring Disabled</div>
+                    <div class="sla-sub">Custom Label EOI_SLA_Enabled = false</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── SLA skipped for this record ───────────────────────────── -->
+        <template if:true={isSlaSkipped}>
+            <div class="sla-card state-skipped">
+                <div class="sla-icon-wrap skipped">
+                    <lightning-icon icon-name="utility:skip" size="x-small" alternative-text="Skipped"></lightning-icon>
+                </div>
+                <div class="sla-text">
+                    <div class="sla-title">SLA Skipped</div>
+                    <div class="sla-sub">This EOI has been exempted from SLA monitoring by an admin</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Already voided by batch ───────────────────────────────── -->
+        <template if:true={isVoided}>
+            <div class="sla-card state-voided">
+                <div class="sla-icon-wrap voided">
+                    <lightning-icon icon-name="utility:error" size="x-small" alternative-text="Expired"></lightning-icon>
+                </div>
+                <div class="sla-text">
+                    <div class="sla-title">SLA Breached — EOI Expired</div>
+                    <div class="sla-sub">{voidedReason}</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── v1.3: SLA breached — timer hit zero, batch not yet run ── -->
+        <!-- Shows frozen 00:00:00 + panic reason below the digits       -->
+        <template if:true={isBreached}>
+            <div class="timer-card urgency-critical">
+
+                <div class="timer-header">
+                    <div class="timer-header-left">
+                        <div class="sla-icon-wrap icon-critical">
+                            <lightning-icon icon-name="utility:error" size="x-small" alternative-text="Breached"></lightning-icon>
+                        </div>
+                        <div>
+                            <div class="sla-title">Payment Window Closed</div>
+                            <div class="sla-sub">Your reservation is at risk — act immediately</div>
+                        </div>
+                    </div>
+                    <div class="urgency-badge badge-critical">Critical</div>
+                </div>
+
+                <!-- Frozen digits at 00:00:00 -->
+                <div class="countdown-row">
+                    <div class="countdown-block">
+                        <div class="digit digit-critical">00</div>
+                        <div class="digit-label">Hours</div>
+                    </div>
+                    <div class="separator sep-critical">:</div>
+                    <div class="countdown-block">
+                        <div class="digit digit-critical">00</div>
+                        <div class="digit-label">Minutes</div>
+                    </div>
+                    <div class="separator sep-critical">:</div>
+                    <div class="countdown-block">
+                        <div class="digit digit-critical">00</div>
+                        <div class="digit-label">Seconds</div>
+                    </div>
+                </div>
+
+                <!-- Reason shown below the timer -->
+                <div class="breach-reason">
+                    <span class="breach-reason-icon">⚠️</span>
+                    <span>{breachReason}</span>
+                </div>
+
+                <div class="timer-footer">
+                    <span class="timer-meta">SLA started: {slaStartFormatted}</span>
+                    <span class="timer-meta sla-window-badge">⏱ {slaWindowLabel}</span>
+                    <span class="timer-meta">Deadline: {slaDeadlineFormatted}</span>
+                </div>
+
+            </div>
+        </template>
+
+        <!-- ── Active countdown timer ────────────────────────────────── -->
+        <template if:true={isActive}>
+            <div class={timerCardClass}>
+                <div class="timer-header">
+                    <div class="timer-header-left">
+                        <div class={timerIconWrapClass}>
+                            <lightning-icon icon-name="utility:clock" size="x-small" alternative-text="SLA Timer"></lightning-icon>
+                        </div>
+                        <div>
+                            <div class="sla-title">SLA Timer</div>
+                            <div class="sla-sub">Payment required before countdown expires</div>
+                        </div>
+                    </div>
+                    <div class={urgencyBadgeClass}>{urgencyLabel}</div>
+                </div>
+
+                <div class="countdown-row">
+                    <div class="countdown-block">
+                        <div class={digitClass}>{hoursDisplay}</div>
+                        <div class="digit-label">Hours</div>
+                    </div>
+                    <div class={separatorClass}>:</div>
+                    <div class="countdown-block">
+                        <div class={digitClass}>{minutesDisplay}</div>
+                        <div class="digit-label">Minutes</div>
+                    </div>
+                    <div class={separatorClass}>:</div>
+                    <div class="countdown-block">
+                        <div class={digitClass}>{secondsDisplay}</div>
+                        <div class="digit-label">Seconds</div>
+                    </div>
+                </div>
+
+                <div class="progress-track">
+                    <div class={progressFillClass} style={progressBarStyle}></div>
+                </div>
+
+                <div class="timer-footer">
+                    <span class="timer-meta">SLA started: {slaStartFormatted}</span>
+                    <span class="timer-meta sla-window-badge">⏱ {slaWindowLabel}</span>
+                    <span class="timer-meta">Deadline: {slaDeadlineFormatted}</span>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── SLA met — payment received in time ────────────────────── -->
+        <template if:true={isMet}>
+            <div class="sla-card state-met">
+                <div class="sla-icon-wrap met">
+                    <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Met"></lightning-icon>
+                </div>
+                <div class="sla-text">
+                    <div class="sla-title">SLA Met</div>
+                    <div class="sla-sub">Payment received within the SLA window</div>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

@@ -1,0 +1,99 @@
+<template>
+    <lightning-card>
+        <div class="dashboard-header" slot="title">
+            <lightning-icon icon-name="standard:service_report" size="small" class="header-icon"></lightning-icon>
+            <span class="header-title">Broker Registration — Pending Cases12</span>
+        </div>
+
+        <div slot="actions">
+            <lightning-input
+                type="search"
+                placeholder="Search SR number..."
+                variant="label-hidden"
+                value={searchTerm}
+                onchange={handleSearch}
+                class="search-box">
+            </lightning-input>
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                variant="border-filled"
+                alternative-text="Refresh"
+                title="Refresh"
+                onclick={handleRefresh}
+                class="refresh-btn">
+            </lightning-button-icon>
+        </div>
+
+        <div class="table-wrapper">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+
+            <template if:false={isLoading}>
+                <template if:true={error}>
+                    <div class="error-state">
+                        <lightning-icon icon-name="utility:error" size="small" variant="error"></lightning-icon>
+                        <p>Error loading Service Requests: {error}</p>
+                    </div>
+                </template>
+
+                <template if:true={filteredRequests.length}>
+                    <table class="sr-table">
+                        <thead>
+                            <tr>
+                                <th>SR Number</th>
+                                <th>SR Status</th>
+                                <th>Current Active Step</th>
+                                <th>Active Step Status</th>
+                                <th>Assigned To</th>
+                                <th>RMI Closed By</th>
+                                <th>RMI Closed Date</th>
+                                <th>Original BR Manager Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredRequests} for:item="req">
+                                <tr key={req.srId}>
+                                    <td>
+                                        <a href={req.srUrl} target="_blank" class="sr-link">
+                                            {req.srNumber}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class={req.statusClass}>{req.status}</span>
+                                    </td>
+                                    <td class="step-cell">{req.activeStepDisplay}</td>
+                                    <td>
+                                        <template if:true={req.activeBrStatus}>
+                                            <span class={req.brStatusClass}>{req.activeBrStatus}</span>
+                                        </template>
+                                        <template if:false={req.activeBrStatus}>
+                                            <span class="pill pill-neutral">{req.activeTaskStatusDisplay}</span>
+                                        </template>
+                                    </td>
+                                    <td>{req.activeTaskOwnerDisplay}</td>
+                                    <td>{req.rmiClosedByDisplay}</td>
+                                    <td>{req.rmiClosedDateDisplay}</td>
+                                    <td class="comments-cell" title={req.brManagerComments}>
+                                        {req.commentsDisplay}
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+
+                <template if:false={filteredRequests.length}>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:search" size="medium"></lightning-icon>
+                        <p>No matching Service Requests found.</p>
+                    </div>
+                </template>
+            </template>
+        </div>
+
+        <div class="footer-count" slot="footer">
+            Showing {filteredRequests.length} of {allRequests.length} records
+        </div>
+    </lightning-card>
+</template>

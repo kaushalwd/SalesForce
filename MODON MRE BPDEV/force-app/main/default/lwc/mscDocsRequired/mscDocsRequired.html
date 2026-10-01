@@ -1,0 +1,67 @@
+<template>
+    <!-- 1.4 - THE ALERT BOX IS GONE, by request.
+         Removed rather than re-worded because of what the formula behind it actually
+         is: Further_Documents_Required__c fires on Sub_Status__c being parked with a
+         review team OR on either payment status reading Partially Collected/Partially
+         Paid. A booking fee is a small fraction of the purchase price, so from the
+         moment it lands both legs read Partially Paid - and the banner was on, saying
+         "documents", for a payment condition, on essentially every live booking.
+         The progress line above the list carries the honest version: 0 of 9 approved. -->
+    <!-- 1.2 - COLLAPSED. 1.4 - and it stays collapsed on arrival, always.
+         Nine rows plus a 25-check footnote sat permanently between the money and the
+         obligation ledger - the two things this step is actually for - so the payment
+         screen scrolled past a wall of items belonging to a stage that has not started.
+         The heading keeps the whole answer ("0 of 9 approved"), which is what an agent
+         reads it for; the rows are there when they want them.
+         Same shape and the same classes as the ledger's Scheduled group, so the two
+         collapsed sections on this card read as siblings rather than as two designs. -->
+    <template lwc:if={hasRows}>
+        <div class="chk">
+            <button
+                class={headClass}
+                type="button"
+                aria-expanded={openAttr}
+                onclick={handleToggle}
+            >
+                <span class="chk-title">{labels.DOCS_YOUR_CHECKLIST}</span>
+                <span class={progressCls}>{progressText}</span>
+                <c-modon-icon
+                    name={chevron}
+                    size="14"
+                    color="var(--text-dim, #8a8a8a)"
+                ></c-modon-icon>
+            </button>
+
+            <template lwc:if={open}>
+            <ul class="chk-list">
+                <template for:each={rows} for:item="d">
+                    <li key={d.key} class={d.rowCls}>
+                        <span class="chk-ic">
+                            <c-modon-icon
+                                name={d.icon}
+                                size="14"
+                                color={d.iconColor}
+                            ></c-modon-icon>
+                        </span>
+                        <span class={d.nameCls}>
+                            {d.label}
+                            <template lwc:if={d.reason}>
+                                <span class="chk-reason">{d.reason}</span>
+                            </template>
+                        </span>
+                        <template lwc:if={d.state}>
+                            <span class="chk-state">{d.state}</span>
+                        </template>
+                    </li>
+                </template>
+            </ul>
+
+            <!-- 1.3 - the "25 further checks by Sales Operation, Finance..." line is
+                 gone by request. It was already the compressed form of 25 rows the rep
+                 cannot act on; compressed or not, it is work belonging to a stage that
+                 has not started, on a checklist headed YOUR CHECKLIST. The DTO still
+                 carries laterCount/laterTeams, so restoring it is one template block. -->
+            </template>
+        </div>
+    </template>
+</template>

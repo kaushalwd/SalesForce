@@ -1,0 +1,129 @@
+/* the wrapper around the Ownership panel on the My Bookings detail: somewhere to sit, a
+   skeleton, and two one-line messages. Tokens only. */
+
+:host {
+    display: block;
+}
+
+/* the same card as the sections beside it, taken from c/mscBookings' rules; pads its own content */
+.op {
+    /* MSC-192: the pane's own horizontal padding, published so a child strip (the verification
+       group heading) can bleed to this card's edges. Read only by c/mscVerifyList. */
+    --vl-bleed: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px 16px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 16px;
+    background: var(--surface, rgba(15, 15, 15, 0.68));
+}
+
+/* while it is being read */
+.op__sk {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.op__sk-line {
+    display: block;
+    height: 12px;
+    border-radius: 6px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.06));
+    animation: opPulse 1.4s ease-in-out infinite;
+}
+.op__sk-line--head {
+    width: 38%;
+    height: 10px;
+}
+.op__sk-line:nth-child(2) {
+    width: 100%;
+}
+.op__sk-line:nth-child(3) {
+    width: 72%;
+}
+@keyframes opPulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
+
+/* the two sentences */
+.op__none {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* the opened unit is not one this booking can still show: amber */
+.op__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 9px 11px;
+    border: 1px solid var(--edge-amber, rgba(251, 191, 36, 0.44));
+    border-radius: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--chip-amber, #fbbf24);
+}
+.op__note c-modon-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: inherit;
+}
+
+.op__err {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 11px;
+    border: 1px solid var(--edge-red, rgba(248, 113, 113, 0.4));
+    border-radius: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--chip-red, #f87171);
+}
+.op__err-x {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 28px of paint, 44px of target */
+    width: 28px;
+    height: 28px;
+    margin: -8px -8px -8px 0;
+    padding: 8px;
+    box-sizing: content-box;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+}
+.op__err-x:hover {
+    background: var(--row-bg, rgba(255, 255, 255, 0.06));
+}
+.op__err-x:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+    .op {
+        padding: 12px 12px 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .op__sk-line {
+        animation: none;
+    }
+}

@@ -1,0 +1,431 @@
+<template>
+
+    <!-- Spinner -->
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+    </template>
+
+    <lightning-card>
+
+        <!-- HEADER ACTION BAR -->
+        <div class="slds-grid slds-grid_align-spread slds-p-around_medium slds-border_bottom">
+
+            <div class="slds-text-heading_medium">
+                Property Handover
+            </div>
+
+            <div class="slds-button-group">
+
+                <!-- Top buttons enabled only if rows are selected -->
+                <lightning-button label="Update Zone" onclick={handleUpdatePhasing} disabled={topButtonsDisabled}>
+                </lightning-button>
+
+                <lightning-button label="Handover Phasing" onclick={handleHandoverPhasing}
+                    disabled={topButtonsDisabled}>
+                </lightning-button>
+
+                <lightning-button label="Reassign KAR" onclick={handleReassignKar} disabled={topButtonsDisabled}>
+                </lightning-button>
+
+                <lightning-button label="Assign KAR / Initiate CHO" onclick={handleAssignKar}
+                    disabled={topButtonsDisabled}>
+                </lightning-button>
+
+                <lightning-button label="Finance Verification" onclick={handleFinanceVerification}
+                    disabled={topButtonsDisabled}>
+                </lightning-button>
+
+                <lightning-button label="Upload BCC Letter" variant="brand" onclick={handleUploadBCCLetter}
+                    disabled={topButtonsDisabled}>
+                </lightning-button>
+
+                <!-- Dropdown -->
+                <lightning-button-menu icon-name="utility:down" alternative-text="More Actions"
+                    onselect={handleMenuSelect} disabled={topButtonsDisabled} menu-alignment="right">
+
+                    <lightning-menu-item value="handover" label="Send Handover Completion Letter">
+                    </lightning-menu-item>
+
+                    <lightning-menu-item value="orientation" label="Send Home Orientation Letter">
+                    </lightning-menu-item>
+
+                    <lightning-menu-item value="handover phasing" label="Send Handover Phasing Letter">
+                    </lightning-menu-item>
+
+                </lightning-button-menu>
+
+            </div>
+
+        </div>
+
+        <div class="slds-p-around_medium">
+
+            <!-- FILTERS -->
+            <div class="slds-grid slds-wrap slds-gutters">
+
+                <!-- Project -->
+                <div class="slds-col slds-size_1-of-5">
+                    <h3 class="slds-text-title_bold">Project</h3>
+                    <c-generic-lookup-lwc objname="Project__c" iconname="standard:account"
+                        onlookupselected={handleProjectSelection} onclearlookup={handleProjectClear}>
+                    </c-generic-lookup-lwc>
+                </div>
+
+                <!-- Phase -->
+                <div class="slds-col slds-size_1-of-5">
+                    <h3 class="slds-text-title_bold">Phase</h3>
+                    <c-generic-lookup-lwc objname="Phase__c" iconname="standard:account" display-field="Name"
+                        onlookupselected={handlePhaseSelection} onclearlookup={handlePhaseClear}>
+                    </c-generic-lookup-lwc>
+                </div>
+
+                <!-- Sales Order -->
+                <div class="slds-col slds-size_1-of-5">
+                    <h3 class="slds-text-title_bold">Sales Order</h3>
+                    <c-generic-lookup-lwc objname="SalesOrder__c" iconname="standard:account" display-field="Name"
+                        onlookupselected={handleSalesOrderSelection} onclearlookup={handleSalesOrderClear}>
+                    </c-generic-lookup-lwc>
+                </div>
+
+                <!-- Unit -->
+                <div class="slds-col slds-size_1-of-5">
+                    <h3 class="slds-text-title_bold">Unit</h3>
+                    <c-generic-lookup-lwc objname="Unit__c" iconname="standard:account" display-field="Name"
+                        onlookupselected={handleUnitSelection} onclearlookup={handleUnitClear}>
+                    </c-generic-lookup-lwc>
+                </div>
+
+                <!-- Handover Phase -->
+                <div class="slds-col slds-size_1-of-5">
+                    <h3 class="slds-text-title_bold filter-label">Handover Phase</h3>
+                    <!-- <h3 class="slds-text-title_bold">Handover Phase</h3> -->
+                    <lightning-combobox label="" placeholder="-- Select Phase --" value={selectedHandoverPhase}
+                        options={phasePicklistOptions} onchange={handleHandoverPhaseChange}>
+                    </lightning-combobox>
+                </div>
+
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="slds-m-top_large">
+                <lightning-button label="Search" variant="brand" onclick={handleSearch}>
+                </lightning-button>
+
+                <lightning-button label="Clear" class="slds-m-left_small" onclick={handleClear}>
+                </lightning-button>
+                <lightning-button label="Upload Unit CSV" variant="neutral" class="slds-m-left_small"
+                    onclick={handleUploadCsv}>
+                </lightning-button>
+
+
+                <!-- Hidden native CSV input -->
+
+                <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    class="csv-file-input"
+                    onchange={handleCsvFileChange}
+                />
+
+               
+
+            </div>
+
+            <!-- CSV RESULT INFORMATION -->
+            <template if:true={isCsvSearch}>
+
+                <div class="slds-m-top_large csv-result-summary">
+
+                    <div class="slds-grid slds-wrap slds-grid_align-spread">
+
+                        <div>
+                            <strong>CSV Unit Search</strong>
+                        </div>
+
+                        <div>
+                            Total Units:
+                            <strong>{csvTotalUnits}</strong>
+                            &nbsp;&nbsp; | &nbsp;&nbsp;
+                            Found:
+                            <strong>{csvFoundUnits}</strong>
+                            &nbsp;&nbsp; | &nbsp;&nbsp;
+                            Not Found:
+                            <strong>{csvMissingUnitsCount}</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+            <!-- DATA TABLE -->
+            <template if:true={showTable}>
+
+                <div class="slds-m-top_large">
+
+                    <lightning-datatable key-field="Id" data={records} columns={columns} selected-rows={selectedRows}
+                        hide-checkbox-column={hideCheckboxColumn} show-row-number-column
+                        onrowselection={handleRowSelection}>
+                    </lightning-datatable>
+
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="slds-grid slds-grid_align-center slds-m-top_medium">
+
+                    <lightning-button label="Previous" onclick={handlePrevious} disabled={disablePrevious}>
+                    </lightning-button>
+
+                    <span class="slds-m-horizontal_medium">
+                        Page {pageNumber} of {totalPages}
+                    </span>
+
+                    <lightning-button label="Next" onclick={handleNext} disabled={disableNext}>
+                    </lightning-button>
+
+                </div>
+
+            </template>
+
+            <!-- NO RECORDS -->
+            <template if:true={showNoRecords}>
+                <div class="slds-align_absolute-center slds-m-top_large">
+                    No records found
+                </div>
+            </template>
+
+        </div>
+
+    </lightning-card>
+
+
+    <!-- Modal -->
+    <template if:true={showModal}>
+
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">
+                        {modalHeader}
+                    </h2>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <template if:true={isHandoverPhasing}>
+
+                        <lightning-combobox label="Phase" placeholder="-- Select Phase --" value={phasePicklistValue}
+                            options={phasePicklistOptions} onchange={handleHandoverPhasings} required=true>
+                        </lightning-combobox>
+
+                        <lightning-input type="date" label="Handover Date" value={handoverDate}
+                            onchange={handleHandoverPhasings} required=true>
+                        </lightning-input>
+
+                        <lightning-input type="date" label="Expected Handover Date" value={expectedHandoverDate}
+                            onchange={handleHandoverPhasings} required=true>
+                        </lightning-input>
+                    </template>
+
+                    <template if:true={isAssignKar}>
+                        <lightning-record-picker label="Select User" placeholder="Search User..." object-api-name="User"
+                            value={selectedUserId} onchange={handleUserSelect} required="true">
+                        </lightning-record-picker>
+                    </template>
+
+                    <template if:true={isReassignKar}>
+                        <lightning-record-picker label="Select User" placeholder="Search User..." object-api-name="User"
+                            value={selectedUserId} onchange={handleUserSelect} required="true">
+                        </lightning-record-picker>
+                    </template>
+
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+
+                    <lightning-button label="Cancel" onclick={handleCloseModal}>
+                    </lightning-button>
+
+                    <lightning-button variant="brand" label="Save" class="slds-m-left_small" onclick={handleSaveModal}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+
+    </template>
+
+    <!-- MISSING CSV UNITS -->
+    <template if:true={showMissingUnits}>
+
+        <div class="slds-m-top_large missing-units-container">
+
+            <div class="missing-units-header">
+
+                <div>
+                    <strong>
+                    Units Not Found
+                </strong>
+                </div>
+
+                <div>
+                    {csvMissingUnitsCount} Unit(s)
+                </div>
+
+            </div>
+
+            <div class="slds-p-around_medium">
+
+                <p class="slds-m-bottom_small">
+                    The following Unit Names from the CSV do not have
+                    a matching Business Process / Handover record.
+                </p>
+
+                <div class="missing-unit-list">
+
+                    <template for:each={missingUnitNames} for:item="unitName">
+
+                        <div key={unitName} class="missing-unit-item">
+
+                            {unitName}
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </template>
+
+    <!-- UPDATE PHASING -->
+    <!-- =========================================================
+     UPDATE PHASING MODAL
+     ========================================================= -->
+    <template if:true={showUpdatePhasingModal}>
+
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="update-phasing-heading"
+            class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+
+                    <h2 id="update-phasing-heading" class="slds-text-heading_medium">
+
+                        Update Phasing
+
+                    </h2>
+
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <lightning-combobox label="Zone" placeholder="-- Select Zone --" value={selectedZone}
+                        options={zoneOptions} onchange={handleZoneChange} required>
+                    </lightning-combobox>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+
+                    <lightning-button label="Cancel" onclick={handleCloseUpdatePhasingModal} disabled={isLoading}>
+                    </lightning-button>
+
+                    <lightning-button label="Update" variant="brand" class="slds-m-left_small"
+                        onclick={handleUpdatePhasingSave} disabled={updatePhasingDisabled}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+
+    </template>
+
+
+    <!-- =========================================================
+     UPLOAD BCC LETTER MODAL
+     ========================================================= -->
+    <template if:true={showBCCLetterModal}>
+
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="bcc-letter-heading"
+            class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+
+                    <h2 id="bcc-letter-heading" class="slds-text-heading_medium">
+
+                        Upload BCC Letter
+
+                    </h2>
+
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <div class="slds-m-bottom_medium">
+
+                        <p class="slds-text-body_regular">
+                            Selected Business Processes:
+                            <strong>{selectedRowIds.length}</strong>
+                        </p>
+
+                    </div>
+
+                    <lightning-file-upload label="BCC Letter" name="bccLetterUploader" accept={bccAcceptedFormats}
+                        record-id={bccUploadRecordId} onuploadfinished={handleBCCUploadFinished} multiple="false">
+                    </lightning-file-upload>
+
+                    <template if:true={bccUploadedFileName}>
+
+                        <div class="slds-m-top_medium">
+
+                            <p class="slds-text-body_regular">
+                                Uploaded File:
+                                <strong>{bccUploadedFileName}</strong>
+                            </p>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+
+                    <lightning-button label="Cancel" onclick={handleCloseBCCLetterModal} disabled={isLoading}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+
+    </template>
+
+</template>

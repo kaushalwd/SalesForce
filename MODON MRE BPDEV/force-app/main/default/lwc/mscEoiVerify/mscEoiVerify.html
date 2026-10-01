@@ -1,0 +1,81 @@
+<template>
+    <div class="vf">
+        <section class="glass vf__card">
+            <header class="vf__head">
+                <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Verify the customer</span></div>
+                <h2 class="vf__title">Send a one-time code</h2>
+                <p class="vf__sub">The customer confirms it is them before any record is created. Choose where the code goes.</p>
+            </header>
+
+            <div class="tiles" role="group" aria-label="Verification channel">
+                <template for:each={channels} for:item="c">
+                    <button key={c.key} class={c.cls} type="button" data-method={c.key} disabled={c.disabled} aria-pressed={c.selected} onclick={handleChannel}>
+                        <span class="tile__icon">
+                            <c-modon-icon name={c.icon} size="18" color="currentColor"></c-modon-icon>
+                        </span>
+                        <span class="tile__text">
+                            <span class="tile__title">{c.title}</span>
+                            <span class="tile__sub">{c.sub}</span>
+                        </span>
+                        <template lwc:if={c.loading}>
+                            <span class="tile__spin" aria-hidden="true"></span>
+                        </template>
+                        <template lwc:elseif={c.selected}>
+                            <span class="tile__check">
+                                <c-modon-icon name="check" size="12" color="currentColor"></c-modon-icon>
+                            </span>
+                        </template>
+                    </button>
+                </template>
+            </div>
+
+            <template lwc:if={showCode}>
+                <div class="otp">
+                    <p class="otp__label">Enter the 6-digit code</p>
+                    <div class="otp__row" role="group" aria-label="One-time code">
+                        <template for:each={boxes} for:item="b">
+                            <input
+                                key={b.key}
+                                class={b.cls}
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="6"
+                                aria-label="Digit"
+                                data-index={b.index}
+                                value={b.value}
+                                disabled={inputsDisabled}
+                                oninput={handleInput}
+                                onkeydown={handleKeydown}
+                                onpaste={handlePaste}
+                            />
+                        </template>
+                    </div>
+                    <p class="otp__dest" aria-live="polite">
+                        <template lwc:if={message}>{message}</template>
+                        <template lwc:else>{destinationText}</template>
+                    </p>
+                    <div class="otp__actions">
+                        <template lwc:if={showResend}>
+                            <button class="btn btn-link btn-sm" type="button" onclick={handleResend} disabled={resendDisabled}>{resendLabel}</button>
+                        </template>
+                        <template lwc:if={isVerified}>
+                            <span class="otp__verified">
+                                <c-modon-icon name="shield-check" size="14" color="currentColor"></c-modon-icon>
+                                <span>Verified</span>
+                            </span>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <footer class="vf__foot">
+                <button class="btn btn-ghost" type="button" onclick={handleBack} disabled={busy}>Back</button>
+                <button class="btn btn-primary" type="button" onclick={handleNext} disabled={nextDisabled}>
+                    <span>{nextLabel}</span>
+                    <c-modon-icon name="arrow-right" size="14" color="currentColor"></c-modon-icon>
+                </button>
+            </footer>
+        </section>
+    </div>
+</template>

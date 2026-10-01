@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>VisitorData_Not_Needed_for_Owner</fullName>
+    <active>false</active>
+    <description>Visitor Information not needed for Owner cases. Please clear details in Visitor Information section.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+TEXT(Channel__c) &lt;&gt; &apos;Website&apos;,
+TEXT(Customer_Type__c) = &apos;Owner&apos;,
+OR(
+NOT(ISBLANK( Visitor_Email__c )),
+NOT(ISBLANK(Visitor_First_Name__c )),
+NOT(ISBLANK(Visitor_Phone__c ))
+)
+)
+)</errorConditionFormula>
+    <errorMessage>Visitor Information not needed for Owner cases. Please clear details in Visitor Information section.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,356 @@
+<template>
+    <div class="assignment-card">
+        <!-- Filters Row -->
+        <div class="filters-row">
+            <lightning-combobox name="typeFilter" label="Agency Type" value={selectedType} options={typeOptions}
+                onchange={handleTypeChange}>
+            </lightning-combobox>
+
+            <template if:true={showCountryFilter}>
+                <lightning-combobox name="countryFilter" label="Country" value={selectedCountry}
+                    options={bankCountryOptions} onchange={handleCountryChange}>
+                </lightning-combobox>
+            </template>
+
+            <template if:true={showEmirateFilter}>
+                <lightning-combobox name="emirateFilter" label="Emirate" value={selectedEmirate}
+                    options={emirateOptions} onchange={handleEmirateChange}>
+                </lightning-combobox>
+            </template>
+
+            <lightning-input type="search" label="Search" placeholder="Search Agencies..." value={searchTerm}
+                onchange={handleSearchChange}>
+            </lightning-input>
+        </div>
+
+        <!-- Spinner -->
+        <template if:true={isLoading}>
+            <div class="spinner-container">
+                <lightning-spinner alternative-text="Loading agencies" size="large"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Dual Listbox for Agencies -->
+        <template if:false={isLoading}>
+            <template if:true={agencyOptions.length}>
+                <div class="dual-listbox-section">
+                    <lightning-dual-listbox name="agencySelector" label="Select Agencies" source-label="Available"
+                        selected-label="Selected" options={agencyOptions} value={selectedAgencyIds}
+                        onchange={handleSelectionChange}>
+                    </lightning-dual-listbox>
+                </div>
+            </template>
+            <template if:false={agencyOptions.length}>
+                <p class="no-data-message">No agencies found.</p>
+            </template>
+        </template>
+
+        <!-- Communication Section -->
+        <template if:true={showCommunicationSection}>
+            <div class="communication-section">
+                <div class="communication-header">
+                </div>
+
+                <!-- Broker Type Selection -->
+                <lightning-checkbox-group name="brokerTypeFilter" label="Select Broker Types"
+                    options={brokerTypeOptions} value={selectedBrokerTypes} onchange={handleBrokerTypeChange} required>
+                </lightning-checkbox-group>
+
+                <!-- Email Composition Form -->
+                <div class="email-form">
+                    <lightning-input label="Email Subject" value={emailSubject} required
+                        onchange={handleEmailSubjectChange}>
+                    </lightning-input>
+
+                    <lightning-combobox name="fromAddress" label="From Address" value={selectedFromAddress}
+                        options={fromAddressOptions} onchange={handleFromAddressChange} required>
+                    </lightning-combobox>
+
+                    <lightning-input label="CC Addresses" value={emailCC} onchange={handleEmailCCChange}
+                        placeholder="email1@example.com, email2@example.com">
+                    </lightning-input>
+
+                    <lightning-input label="BCC Addresses" value={emailBCC} onchange={handleEmailBCCChange}
+                        placeholder="email1@example.com, email2@example.com">
+                    </lightning-input>
+
+                    <!-- Banner Upload Section (NEW) -->
+                    <div class="slds-form-element slds-m-top_medium">
+                        <span class="slds-form-element__label">Large Email Banner</span>
+                        <div class="slds-form-element__help slds-m-bottom_x-small">
+                            Upload banner images only. File name will be prefixed with "Banner_"
+                        </div>
+                        
+                        <!-- Banner Preview -->
+                        <template if:true={bannerPreviewUrl}>
+                            <div class="banner-preview-container slds-m-bottom_small">
+                                <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                                    <strong>Banner Preview:</strong>
+                                    <button class="slds-button slds-button_icon slds-button_icon-small remove-btn" 
+                                            title="Remove Banner" onclick={removeBannerFile}>
+                                        <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                    </button>
+                                </div>
+                                <img src={bannerPreviewUrl} alt="Banner Preview" class="banner-preview-img" />
+                            </div>
+                        </template>
+                        
+                        <!-- Upload Button (only show if no banner uploaded) -->
+                        <template if:false={bannerPreviewUrl}>
+                            <lightning-button label="Upload Large Banner" icon-name="utility:add" variant="neutral"
+                                onclick={openBannerUploader} disabled={isUploadingBanner}>
+                            </lightning-button>
+                            <input type="file" class="file-input-banner slds-hide"
+                                accept=".jpg,.jpeg,.png,.gif,.bmp,.svg"
+                                onchange={handleBannerUpload}/>
+                        </template>
+                    </div>
+
+                    <!-- Email Body -->
+                    <label class="slds-form-element__label">Email Body</label>
+                    <lightning-input-rich-text value={emailBody} required onchange={handleEmailBodyChange}>
+                    </lightning-input-rich-text>
+
+
+                    <!-- Attachments Section -->
+                    <div class="slds-form-element slds-m-top_medium attachments-container">
+                        <span class="slds-form-element__label">Attachments</span>
+                        
+                        <div class="slds-form-element__control">
+                            <div class="file-uploader" onclick={handleUploaderClick}>
+                                <input type="file" 
+                                       class="file-input" 
+                                       id="fileInput"
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.csv"
+                                       multiple
+                                       onchange={handleFileUpload}>
+                                
+                                <div class="upload-icon">
+                                    <lightning-icon icon-name="utility:upload" size="medium"></lightning-icon>
+                                </div>
+                                <div class="upload-text">Click to upload or drag and drop</div>
+                                <div class="upload-hint">Maximum 10 files • 10MB each</div>
+                                <div class="file-requirements">
+                                    Accepted: PDF, Word, Excel, PowerPoint, Images, TXT, CSV
+                                </div>
+                            </div>
+
+                            <!-- File List -->
+                            <template if:true={uploadedFiles.length}>
+                                <div class="attachment-list slds-m-top_small">
+                                    <template for:each={uploadedFiles} for:item="file">
+                                        <div key={file.id} class="attachment-item">
+                                            <div class="attachment-info">
+                                                <div class="attachment-icon">
+                                                    <lightning-icon icon-name={file.iconName} size="small"></lightning-icon>
+                                                </div>
+                                                <div class="attachment-details">
+                                                    <div class="attachment-name">{file.name}</div>
+                                                    <div class="attachment-size">{file.size}</div>
+                                                    <template if:true={file.isUploading}>
+                                                        <div class="upload-progress slds-m-top_xx-small">
+                                                            <div class="progress-bar" style={file.progressStyle}></div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                            <div class="attachment-actions">
+                                                <span class="attachment-status {file.statusBadgeClass}">
+                                                    {file.statusBadgeLabel}
+                                                </span>
+                                                <button class="remove-attachment-btn slds-button slds-button_icon slds-button_icon-border-filled" 
+                                                    title="Remove" 
+                                                    data-id={file.id}
+                                                    onclick={handleRemoveFile}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <template if:true={isUploading}>
+                                <div class="slds-m-top_small">
+                                    <lightning-spinner alternative-text="Uploading" size="small"></lightning-spinner>
+                                    <span class="slds-m-left_small">Uploading files...</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Action Options -->
+                    <label class="slds-form-element__label">Action</label>
+                    <div class="action-buttons">
+                        <lightning-button label="Next" variant="brand" onclick={handleProceedToPreview}
+                            disabled={isPreviewDisabled} class="action-button">
+                        </lightning-button>
+
+                        <lightning-button label="Cancel" variant="neutral" onclick={handleCancelCombinedAction}
+                            disabled={isLoading} class="cancel-button">
+                        </lightning-button>
+                    </div>
+
+                    <template if:true={showScheduleDateTime}>
+                        <lightning-input type="datetime" label="Schedule Date & Time" value={scheduledDateTime}
+                            onchange={handleScheduleDateTimeChange} required>
+                        </lightning-input>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Original Buttons (when communication section is hidden) -->
+        <template if:false={showCommunicationSection}>
+            <div class="button-row">
+                <lightning-button label="Save Assignments Only" variant="neutral" onclick={handleSaveAssignmentsOnly}
+                    disabled={isSaveOnlyDisabled}>
+                </lightning-button>
+
+                <div class="right-buttons">
+                    <lightning-button label="Save & Send Communication" variant="brand"
+                        onclick={handleSaveAndCommunicate} disabled={isSaveAndSendDisabled}>
+                    </lightning-button>
+                    <lightning-button label="Cancel" variant="neutral" onclick={handleCancel} disabled={isLoading}>
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Email Preview Screen -->
+    <template if:true={showPreviewScreen}>
+        <section role="dialog" tabindex="-1" aria-modal="true"
+            class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container" style="max-width: 600px; min-height: 80vh;">
+                <header class="slds-modal__header custom-header">
+                    <h2 class="slds-text-heading_medium">Email Preview</h2>
+                    <button class="slds-button slds-button_icon slds-modal__close custom-close-btn"
+                        title="Close" onclick={returnToComposeFromPreview}>
+                        <lightning-icon icon-name="utility:close" size="x-small"
+                            alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-m-bottom_large">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_1-of-2">
+                                <strong>Subject:</strong> {emailSubject}
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-m-top_small">
+                                <template if:true={emailCC}>
+                                    <strong>CC:</strong> {emailCC}
+                                </template>
+                                <template if:true={emailBCC}>
+                                    <span class="slds-m-left_medium">
+                                        <strong>BCC:</strong> {emailBCC}
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-container"
+                        style="border: 1px solid #dddbda; border-radius: 4px; padding: 0; background: white;">
+                        <!-- Loading Placeholder -->
+                        <template if:true={isPreviewLoading}>
+                            <div style="text-align: center; color: #706e6b; padding: 20px;">
+                                Loading preview...
+                            </div>
+                        </template>
+
+                        <!-- The Actual Preview Container -->
+                        <div class="email-preview-screen" lwc:dom="manual"
+                            style="min-height: 400px; overflow: auto; padding: 20px;">
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <div class="slds-col">
+                            <!-- Left side empty or for future use -->
+                        </div>
+                        <div class="slds-col">
+                            <lightning-button
+                                label="Test"
+                                variant="brand"
+                                data-action="test"
+                                onclick={handlePreviewAction}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Save as Draft"
+                                variant="brand"
+                                data-action="draft"
+                                class="slds-m-left_small"
+                                onclick={handlePreviewAction}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Submit"
+                                variant="brand"
+                                data-action="send"
+                                class="slds-m-left_small"
+                                onclick={handlePreviewAction}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Email Test Modal -->
+    <template if:true={showEmailTestModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true"
+            class="slds-modal slds-fade-in-open email-test-modal">
+            <div class="slds-modal__container email-test-container">
+                <div class="email-test-softbox">
+                    <!-- Close Button -->
+                    <button class="email-test-inner-close-btn" title="Close" onclick={closeEmailTestModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small"
+                            alternative-text="Close"></lightning-icon>
+                    </button>
+
+                    <!-- Header -->
+                    <header class="slds-modal__header email-test-header">
+                        <h2 class="slds-text-heading_small">Send Test Email</h2>
+                    </header>
+
+                    <!-- Body -->
+                    <div class="slds-modal__content slds-p-around_small email-test-body">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">
+                                <abbr class="slds-required" title="required">*</abbr> Send To
+                            </label>
+                            <div class="slds-form-element__control">
+                                <textarea class="slds-textarea" placeholder="test1@example.com, test2@example.com"
+                                    value={testEmailRecipients} onchange={handleTestEmailRecipientsChange}>
+                                </textarea>
+                            </div>
+                            <div class="slds-form-element__help">
+                                Enter emails separated by commas.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <footer class="slds-modal__footer email-test-footer">
+                        <lightning-button label="Cancel" variant="neutral"
+                            onclick={closeEmailTestModal}></lightning-button>
+                        <lightning-button label="Send Test Email" variant="brand" onclick={sendTestEmail}
+                            disabled={isLoading}>
+                            <span if:true={isLoading} slot="icon">
+                                <lightning-spinner alternative-text="Sending" size="small"></lightning-spinner>
+                            </span>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

@@ -1,0 +1,136 @@
+<messaging:emailTemplate subject="Payment Postponement Request for {!relatedTo.Name}" recipientType="User" relatedToType="ServiceRequest__c">
+    <messaging:htmlEmailBody >
+        <html>
+            <body style="font-family: Arial, sans-serif; font-size: 14px;">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <h2>Memorandum</h2>
+                    <p><b>Date:</b>
+                        <apex:outputText value="{0,date,dd MMM yyyy}">
+                            <apex:param value="{!TODAY()}" />
+                        </apex:outputText>
+                    </p>
+                    <p><b>Ref No.:</b> {!relatedTo.Name}</p>
+                    <p><b>Subject:</b> PE Request</p>
+
+                    <h3>CASE DESCRIPTION</h3>
+                    <p>
+                        Dear {!recipient.Name},<br /><br />
+                        {!relatedTo.SalesOrder__r.CustomerAccount__r.Name} is requesting Unit Consolidation for the following Units. 
+                        .According to the company policy, customers are allowed for Consolidation. 
+                        <br /><br />
+                    </p>
+
+                    <h3>FINANCIAL SUMMARY</h3>
+                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Equity Transfer</th>
+                            <th>Forefeture Amount</th>
+                            <th>Market Loss</th>
+                            <th>Total Amount Paid by for Customer</th>
+                            <th>Calculated Equity</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Equity_Transfer_Amount__c}" />
+                                </apex:outputText>
+                            </td>
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Forfeiture__c}" />
+                                </apex:outputText>
+                            </td>
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Market_Loss__c}" />
+                                </apex:outputText>
+                            </td>
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Total_Amount__c}" />
+                                </apex:outputText>
+                            </td>
+                             <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Payable_to_Customer__c}" />
+                                </apex:outputText>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h3>INSTALLMENTS PLAN</h3>
+                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Unit No</th>
+                            <th>Sales Order</th>
+                            <th>Cancelled</th>
+                            <th>Amount Transferred</th>
+                            <th>Amount Paid</th>
+                            <th>Secondary Market Value</th>
+                            <th>Transfer Amount</th>
+                        </tr>
+                        <apex:repeat var="inst" value="{!relatedTo.Unit_Consolidations__r}">
+                            <tr>
+                                 <td>
+                                  {!inst.Unit__r.Name}
+                                </td>
+                                <td>
+                                   {!inst.Sales_Order__r.Name}
+                                </td>
+                                 <td>
+                                    {!inst.IsConsolidated__c}
+                                </td>
+                                <td>
+                                    {!inst.Fund_Transfer__c}
+                                </td>
+                                <td>
+                                   <apex:outputText value="{0,number,#,##0.00}">
+                                        <apex:param value="{!inst.Amount_Paid__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td>
+                                    <apex:outputText value="{0,number,#,##0.00}">
+                                        <apex:param value="{!inst.Transfer_Amount__c}" />
+                                    </apex:outputText>
+                                </td>
+                                 <td>
+                                   <apex:outputText value="{0,number,#,##0.00}">
+                                        <apex:param value="{!inst.Secondary_Market_Value__c}" />
+                                    </apex:outputText>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                    </table>
+
+                    <h3>RECOMMENDATION</h3>
+                    <p>{!relatedTo.Description__c}</p>
+
+                    <p>Best Regards,</p>
+                    <table border="1" cellpadding="3" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Approver Name</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                        </tr>
+                        <apex:repeat var="pi" value="{!relatedTo.ProcessInstances}">
+                            <apex:repeat var="step" value="{!pi.Steps}">
+                                <apex:outputPanel rendered="{!step.StepStatus != 'Started'}">
+                                    <tr>
+                                        <td>{!step.Actor.Name}</td>
+                                        <td>{!step.Actor.Title}</td>
+                                        <td>{!step.StepStatus}</td>
+                                    </tr>
+                                </apex:outputPanel>
+                            </apex:repeat>
+                        </apex:repeat>
+                        <tr>
+                            <td>{!recipient.Name}</td>
+                            <td>{!recipient.Title}</td>
+                            <td>Pending</td>
+                        </tr>
+                    </table>
+                </div>
+            </body>
+        </html>
+    </messaging:htmlEmailBody>
+</messaging:emailTemplate>

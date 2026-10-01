@@ -1,0 +1,160 @@
+<template>
+    <!-- After approval: capture, generate, sign, re-check. Grey, minimal, no banner. -->
+    <template lwc:if={show}>
+        <section class="kycc">
+            <!-- 2.15: not repeated when the box above already says it -->
+            <template lwc:if={showStatus}>
+                <p class="kycc__status">{statusWord}</p>
+            </template>
+            <template lwc:if={body}>
+                <p class="kycc__body">{body}</p>
+            </template>
+
+            <!-- The gate's verdict: what is still missing before a form may be generated. 2.4: said
+                 plainly that Update KYC is where these get filled; Generate stays off until empty.
+                 2.7: FIELDS here. Each heading shows only with its own list, so a buyer short of
+                 nothing but a file is never sent to Update KYC. -->
+            <template lwc:if={hasMissing}>
+                <p class="kycc__notice">{labels.KYCC_MISSING_INTRO}</p>
+                <ul class="kycc__missing">
+                    <template for:each={missing} for:item="m">
+                        <li key={m}>{m}</li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- 2.7: FILES. Not part of Update KYC - they are uploaded onto the customer's
+                 document rows, which the checklist above offers whenever it is shown.
+                 2.9: and when that checklist IS shown it names these rows already, so this block
+                 stands down rather than printing them twice. Heading and list together, as 2.7. -->
+            <template lwc:if={showMissingFiles}>
+                <p class="kycc__notice">{labels.KYCC_MISSING_FILES_INTRO}</p>
+                <ul class="kycc__missing">
+                    <template for:each={missingFiles} for:item="f">
+                        <li key={f}>{f}</li>
+                    </template>
+                </ul>
+            </template>
+
+            <div class="kycc__actions">
+                <template lwc:if={canUpdate}>
+                    <button type="button" class="kycc__btn kycc__btn--update" onclick={handleOpenForm}
+                            disabled={updateDisabled}>{formToggleLabel}</button>
+                </template>
+                <!-- 2.0 - B8: offered to a person, disabled with the gate's sentence until it may run;
+                     2.4: reads "Generating…" while Nintex works; 2.13: "Regenerate" once a form exists,
+                     stepping aside while its question is open -->
+                <template lwc:if={showGenerateButton}>
+                    <button type="button" class="kycc__btn kycc__btn--go" data-generate="1"
+                            onclick={handleGenerate} disabled={generateDisabled}>{generateLabel}</button>
+                </template>
+                <button type="button" class="kycc__btn" onclick={handleRefresh}
+                        disabled={busy}>{labels.KYCC_REFRESH}</button>
+            </div>
+            <!-- 2.13 - the one question before a regeneration; grey, a hairline at the left -->
+            <template lwc:if={showConfirm}>
+                <div class="kycc__confirm" role="group" aria-label={regenAsk} onkeydown={handleConfirmKey}>
+                    <span class="kycc__confirm-q">{regenAsk}</span>
+                    <button type="button" class="kycc__btn" data-yes="1" onclick={handleRegenerateYes}
+                            disabled={generateDisabled}>{regenYes}</button>
+                    <button type="button" class="kycc__btn kycc__btn--quiet"
+                            onclick={handleRegenerateNo}>{labels.CTA_CANCEL}</button>
+                </div>
+            </template>
+            <template lwc:if={generateNote}>
+                <p class="kycc__notice">{generateNote}</p>
+            </template>
+
+            <!-- 2.1 - B4: the Update KYC dialog is hosted by c/mscBookingPage; this panel raises
+                 `openkyc` with the subject and is told to reload when it closes. -->
+
+            <!-- The console's own renderer of MODON's definition: retired behind
+                 LABELS.KYCC_INLINE_FORM, kept one release. -->
+            <template lwc:if={formOpen}>
+                <div class="kycc__form">
+                    <template for:each={sections} for:item="sec">
+                        <div key={sec.key} class="kycc__sec">
+                            <p class="kycc__seclabel">{sec.label}</p>
+
+                            <!-- MODON splits the villa number out of the street line; saveForm
+                                 expects it back as `villaNumber` and recombines it itself. -->
+                            <template lwc:if={sec.showVilla}>
+                                <div class="kycc__field">
+                                    <label class="kycc__label" for="villa">{sec.villaLabel}<span
+                                        class="kycc__req">{sec.villaMarker}</span></label>
+                                    <input id="villa" type="text" class="kycc__input"
+                                           value={sec.villaValue} onchange={handleVilla} />
+                                </div>
+                            </template>
+                            <template for:each={sec.fields} for:item="f">
+                                <div key={f.key} class="kycc__field">
+                                    <label class="kycc__label" for={f.key}>{f.label}<span
+                                        class="kycc__req">{f.marker}</span></label>
+
+                                    <template lwc:if={f.isPicklist}>
+                                        <select id={f.key} class="kycc__input" data-api={f.apiName}
+                                                data-target={f.target} onchange={handleValue}
+                                                disabled={f.readOnly} value={f.value}>
+                                            <option value=""></option>
+                                            <template for:each={f.options} for:item="o">
+                                                <option key={o.value} value={o.value}>{o.label}</option>
+                                            </template>
+                                        </select>
+                                    </template>
+
+                                    <template lwc:elseif={f.isTextarea}>
+                                        <textarea id={f.key} class="kycc__input kycc__area" rows="2"
+                                                  data-api={f.apiName} data-target={f.target}
+                                                  onchange={handleValue} disabled={f.readOnly}
+                                                  value={f.value}>{f.value}</textarea>
+                                    </template>
+
+                                    <template lwc:elseif={f.isCheckbox}>
+                                        <input id={f.key} type="checkbox" data-api={f.apiName}
+                                               data-target={f.target} onchange={handleValue}
+                                               disabled={f.readOnly} checked={f.checked} />
+                                    </template>
+
+                                    <template lwc:elseif={f.isDate}>
+                                        <input id={f.key} type="date" class="kycc__input"
+                                               data-api={f.apiName} data-target={f.target}
+                                               onchange={handleValue} disabled={f.readOnly}
+                                               value={f.value} />
+                                    </template>
+
+                                    <template lwc:else>
+                                        <input id={f.key} type="text" class="kycc__input"
+                                               data-api={f.apiName} data-target={f.target}
+                                               onchange={handleValue} disabled={f.readOnly}
+                                               value={f.value} />
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <div class="kycc__actions">
+                        <button type="button" class="kycc__btn kycc__btn--go" onclick={handleSave}
+                                disabled={busy}>{labels.KYCC_SAVE}</button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Option B: open the Salesforce file the console already knows about.
+                 2.15: after a regeneration, the earlier signed form until the new one is back. -->
+            <template lwc:if={signedFileUrl}>
+                <p class="kycc__notice">
+                    <a href={signedFileUrl} download rel="noopener"
+                       class="kycc__filelink">{labels.KYCC_VIEW_SIGNED}</a>
+                </p>
+            </template>
+
+            <template lwc:if={notice}>
+                <p class="kycc__notice">{notice}</p>
+            </template>
+            <template lwc:if={problem}>
+                <p class="kycc__problem">{problem}</p>
+            </template>
+        </section>
+    </template>
+</template>

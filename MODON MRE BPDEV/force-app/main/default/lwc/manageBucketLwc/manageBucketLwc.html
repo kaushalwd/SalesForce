@@ -1,0 +1,157 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="overlay">
+            <lightning-spinner alternative-text="Loading buckets..." size="medium"></lightning-spinner>
+        </div>
+    </template>
+
+    <article class="slds-card slds-p-horizontal_x-small">
+        <div class="slds-card__body slds-card_boundary">
+
+            <template if:true={isViewMode}>
+                <!-- Title -->
+                <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+                    <b>Buckets</b>
+                </div>
+
+                <!-- Buckets Table -->
+                <template if:true={hasBuckets}>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_small table-wrapper">
+                        <div class="table-scroll">
+                            <table class="slds-table slds-table_bordered slds-table_fixed-layout">
+                                <thead>
+                                    <tr>
+                                        <template lwc:if={showRadioOptions}>
+                                            <th scope="col" style="width: 10%;">Select</th>
+                                        </template>
+                                        <th scope="col">Bucket Name</th>
+                                        <th scope="col">Description</th>
+                                        <!-- <th scope="col">Is Active?</th> -->
+                                        <!-- <th scope="col">Units</th>
+                                        <th scope="col">Users</th> -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={rows} for:item="row">
+                                        <tr key={row.id}>
+                                            <template lwc:if={showRadioOptions}>
+                                                <td class="slds-truncate">
+                                                    <lightning-input type="radio" name="bucketSelect" value={row.id}
+                                                        checked={row.isSelected} onchange={handleRadioChange}>
+                                                    </lightning-input>
+                                                </td>
+                                            </template>
+                                            <td class="slds-truncate"><span title={row.name}>{row.name}</span></td>
+                                            <td class="slds-truncate"><span
+                                                    title={row.description}>{row.description}</span>
+                                            </td>
+                                            <!-- <td class="slds-truncate">{row.isActive}</td> -->
+                                            <!-- <td class="slds-truncate">{row.nou}</td>
+                                            <td class="slds-truncate">{row.numberOfUser}</td> -->
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Action Buttons -->
+            <template if:false={toggleManageInventory}>
+                <template if:true={showNewEditBtnSection}>
+                    <div class="slds-m-top_medium">
+                        <div class="slds-grid slds-grid_align-center">
+                            <div class="slds-col slds-m-around_small">
+                                <lightning-button name="CreateBucket" label="Create New Bucket"
+                                    onclick={handleButtonAction}></lightning-button>
+                            </div>
+                            <div class="slds-col slds-m-around_small">
+                                <lightning-button name="EditBucket" label="Edit Bucket" onclick={handleButtonAction}
+                                    disabled={disableEditButton}></lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- View Bucket Details -->
+            <template if:true={isViewMode}>
+                <template if:true={selectedBucket}>
+                    <div class="slds-card slds-card_boundary slds-m-around_small">
+                        <template lwc:if={toggleManageInventory}></template>
+                        <template lwc:else>
+                            <div class="slds-card__header">
+                                <h3 class="slds-card__header-title">Bucket Details</h3>
+                            </div>
+                        </template>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <template lwc:if={toggleManageInventory}></template>
+                            <template lwc:else>
+                                <lightning-layout multiple-rows>
+                                    <lightning-layout-item size="6"><lightning-input label="Bucket Name"
+                                            value={selectedBucket.name} read-only
+                                            variant="label-inline"></lightning-input></lightning-layout-item>
+                                    <lightning-layout-item size="6"><lightning-input label="Description"
+                                            value={selectedBucket.description} read-only
+                                            variant="label-inline"></lightning-input></lightning-layout-item>
+                                    <lightning-layout-item size="6"><lightning-input type="checkbox" label="Is Active?"
+                                            checked={selectedBucket.isActive} disabled
+                                            variant="label-inline"></lightning-input></lightning-layout-item>
+                                </lightning-layout>
+                            </template>
+                            <!-- Assignments -->
+                            <template if:true={hasAssignments}>
+                                <h3 class="slds-text-heading_small slds-m-top_small slds-m-bottom_small">Users</h3>
+                                <div class="table-scroll">
+                                    <table class="slds-table  slds-table_bordered slds-table_fixed-layout">
+                                        <thead>
+                                            <tr>
+                                                <th>User Name</th>
+                                                <th>Profile</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={selectedAssignments} for:item="a">
+                                                <tr key={a.id}>
+                                                    <td class="slds-truncate"><span title={a.Name}>{a.Name}</span>
+                                                    </td>
+                                                    <td class="slds-truncate"><span
+                                                            title={a.profileName}>{a.profileName}</span></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <template if:false={toggleManageInventory}>
+                                <template if:false={hasAssignments}>
+                                    <div class="slds-m-top_small">No assignments found for this bucket.</div>
+                                </template>
+                            </template>
+
+                        </div>
+                    </div>
+                    <template lwc:if={toggleManageInventory}>
+                        <footer class="slds-card__footer">
+                            <lightning-button class="slds-p-right_x-small" label={userVisibilityLabel} onclick={userVisibilityTable}></lightning-button>
+                            <lightning-button label={toggleManageInventoryBtnLabel} onclick={handleSelectBucket}></lightning-button>
+                        </footer>
+                    </template>
+                </template>
+            </template>
+
+            <!-- Create/Edit Forms -->
+            <template if:true={isCreateMode}>
+                <c-create-new-bucket onsavenewbucket={handleSaveBucket} oncancelnewbucket={handleCancelNewBucket}
+                    is-active="true"></c-create-new-bucket>
+            </template>
+
+            <template if:true={isEditMode}>
+                <c-create-new-bucket bucket-name={selectedBucket.name} bucket-description={selectedBucket.description}
+                    is-active={selectedBucket.isActive} selected-user-ids={selectedBuckerUserIds} is-edit-mode=true
+                    onsavenewbucket={handleSaveBucket} oncancelnewbucket={handleCancelNewBucket}></c-create-new-bucket>
+            </template>
+        </div>
+    </article>
+</template>

@@ -1,0 +1,296 @@
+/* shared primitives (inlined) */
+.glass {
+  border-radius: 16px;
+  background: rgba(15, 15, 15, 0.68);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.btn-dark {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    opacity 0.15s ease,
+    transform 0.05s ease;
+}
+.btn-dark:hover {
+  opacity: 0.85;
+}
+.btn-dark:active {
+  transform: scale(0.98);
+}
+.btn-dark:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* branded panel above the platform's sign-in form */
+/* 1.1: no longer a fixed full-viewport takeover, which painted over the platform's login form.
+   Only the backdrop is fixed (z-index -1); the rest is in normal flow. */
+:host {
+  display: block;
+  width: 100%;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+/* 1.3: pinned to the viewport. The theme layout adds header and footer regions, so
+   min-height:100vh pushed the card low. This covers anything else on the login page; if a
+   component is ever added to the view, go back to normal flow. z-index 1. */
+.app {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: var(--page-bg, #08090b);
+  /* .body owns the scrolling */
+  overflow: hidden;
+}
+/* MSC-184: a gradient, not a render. Login is always dark, so the fallbacks are the dark values. */
+.bg {
+  position: absolute;
+  inset: 0;
+  background-color: var(--page-bg, #08090b);
+  background-image: var(
+    --page-gradient,
+    linear-gradient(180deg, #1a1e24 0%, #08090b 100%)
+  );
+  background-size: cover;
+  background-position: center;
+}
+/* MSC-184: kept, but clear; the render is what it was darkening */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--page-overlay, transparent);
+}
+.shell {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* no app bar of its own, so the padding clears the notch and home indicator */
+  padding: max(44px, env(safe-area-inset-top))
+    max(24px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom))
+    max(24px, env(safe-area-inset-left));
+  /* short screens scroll the card */
+  overflow-y: auto;
+}
+
+/* login card (matches the console Sign-in screen) */
+.wrap {
+  width: 100%;
+  max-width: 384px;
+}
+.mark {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.mark-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.mark-bar {
+  color: rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.mark-brand {
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  font-size: 14px;
+}
+.sub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  margin: 0;
+}
+.card {
+  padding: 28px;
+}
+.title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+}
+.field {
+  margin-bottom: 14px;
+}
+.lbl {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #6b6b6b;
+  margin-bottom: 6px;
+}
+.lbl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+/* 12px with hit padding cancelled by a negative margin, so the target grows without the label moving */
+.forgot {
+  background: none;
+  border: none;
+  color: #6b6b6b;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 10px;
+  margin: -10px;
+}
+.forgot:hover {
+  color: #fff;
+}
+.input-wrap {
+  position: relative;
+}
+.input-ic {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  pointer-events: none;
+}
+.input {
+  width: 100%;
+  border-radius: 12px;
+  padding: 12px 14px 12px 36px;
+  color: #fff;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+/* 16px on phones so iOS does not zoom */
+@media (max-width: 767px) {
+  .input {
+    font-size: 16px;
+  }
+}
+/* autofilled fields: an inset box-shadow in --page-bg paints over the browser's own colours */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px #1a1a1a inset;
+  box-shadow: 0 0 0 1000px #1a1a1a inset;
+  caret-color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s;
+}
+.input.has-toggle {
+  padding-right: 40px;
+}
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+.input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+/* fills the 44px field */
+.toggle {
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+}
+.err {
+  font-size: 12px;
+  color: #f87171;
+  margin: 0 0 4px;
+}
+.signin {
+  margin-top: 4px;
+}
+.foot-note {
+  margin-top: 20px;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.note {
+  font-size: 11px;
+  color: #6b6b6b;
+  margin: 0;
+}
+
+/* "Already signed in? Continue", inside .foot-note */
+.alt {
+  margin-top: 8px;
+}
+.linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.linkish:hover {
+  color: #fff;
+}
+.linkish:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+
+/* hide scrollbars app-wide (scroll still works) */
+:host,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

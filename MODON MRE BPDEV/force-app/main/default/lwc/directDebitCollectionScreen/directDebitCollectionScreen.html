@@ -1,0 +1,136 @@
+<template>
+   <div style="background-color: white;">
+      <template if:true={isLoading}>
+         <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+         </lightning-spinner>
+      </template>
+      <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+         <thead>
+            <tr class="slds-line-height_reset">
+               <td scope="col">
+                  <div>
+                     <lightning-combobox name="projectName" value={projectName} label="Project Name" placeholder="Project Name"
+                        options={projectNamePickListValues} onchange={handleProjectChange} required>
+                     </lightning-combobox>
+                  </div>
+               </td>
+               <td scope="col">
+                  <div>
+                     <lightning-combobox name="phaseName" value={phaseName} label="Phase Name" 
+                        placeholder="Phase Name" options={phaseNamePickListValues} onchange={handlePhaseChange}>
+                     </lightning-combobox>
+                  </div>
+               </td>
+               <td scope="col">
+                  <div>
+                     <lightning-combobox name="saleOrderName" value={saleOrderName} label="Sale Order Name" 
+                        placeholder="Sale Order Name" options={saleOrderNamePickListValues} onchange={handleSaleOrderChange}>
+                     </lightning-combobox>
+                  </div>
+               </td>
+               <td scope="col">
+                  <div>
+                     <lightning-input type="date" name="maturityStartDate" value={maturityStartDate} label="Installment Start Date" 
+                        class="maturityStartDate"   placeholder="Installment Start Date"  onchange={handleMaturityDateChange} >
+                     </lightning-input>
+                  </div>
+               </td>
+               <td scope="col">
+                  <div>
+                     <lightning-input type="date" name="maturityEndDate" value={maturityEndDate} label="Installment End Date"  class="maturityEnddate"
+                        placeholder="Installment End Date"  onchange={handleMaturityDateChange} >
+                     </lightning-input>
+                  </div>
+               </td>
+               <td>
+                  <lightning-button variant="destructive" label="Reset" onclick={resetAll}></lightning-button>
+                  <lightning-button variant="brand" label="Search" onclick={handleSearchAll}></lightning-button>
+                  <lightning-button variant="neutral" label="DD Collection" title="Initiate Collection" 
+                     onclick={sendForDDCollections} class="slds-m-left_x-small" 
+                     disabled={disablesendForDD}></lightning-button>
+                  <lightning-helptext content="You must select atleast one installment line to send it for direct debit collections"></lightning-helptext>
+                  &nbsp;
+                  <template if:true={enableExcel}>
+                     <lightning-button-icon icon-name="doctype:excel"  alternative-text="Export as Excel" title="Export as Excel" onclick={exportAsExcel}></lightning-button-icon>
+                     <lightning-helptext content="Export as csv"></lightning-helptext>
+                  </template>
+               </td>
+            </tr>
+         </thead>
+      </table>
+      <div style="padding-left:20px;padding-top:5px;padding-bottom:5px;">
+         Search Result : <b>{totalInstallments}</b> Installment(s) &nbsp; <b>|</b> &nbsp;
+         Selected Number of row(s) :<b> {finalInstallmentCollectionCount} </b>
+         <template if:true={hasRowError}>
+            &nbsp; <b>|</b> &nbsp; 
+            <b>
+               <lightning-icon icon-name="utility:warning" alternative-text="Warning!" title="Warning" size="x-small" variant="error"> </lightning-icon>
+            </b>
+            &nbsp; Has Error(s),  Kindly revist all the page(s).
+         </template>
+      </div>
+      <!--Data table-->
+      <div style="height: 100%;padding-left:20px;padding-right:20px;">
+         <lightning-datatable
+            class="custom-table" 
+            key-field="Id" 
+            data={recordsToDisplay} 
+            columns={columns} 
+            onrowselection={handleRowAction} 
+            selected-rows={selectedDatatableRows} 
+            sorted-by={sortBy} 
+            sorted-direction={sortDirection}  
+            onsort={handleSortdata}  
+            draft-values={fldsItemValues} 
+            suppress-bottom-bar="true"
+            min-column-width="175"
+            oncellchange={handlecellchange}
+            errors={errors}>
+         </lightning-datatable>
+      </div>
+      <template if:true={isInitiateCollections}>
+         <template if:true={isLoadingModal}>
+            <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+            </lightning-spinner>
+         </template>
+         <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+               <!-- modal header start -->
+               <header class="slds-modal__header">
+                  <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
+                     <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                     <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Initiate Collection</h2>
+               </header>
+               <!-- modal body start -->
+               <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                  <p><b>{popupMessage}</b></p>
+                  <br/>
+               </div>
+               <!-- modal footer start-->
+               <footer class="slds-modal__footer">
+                  <lightning-button label="Cancel" title="Cancel" onclick={hideModalBox} class="slds-m-left_x-small" disabled={isfinalInstallmentwarning}></lightning-button>
+                  <lightning-button label="Send For Collection" title="Send For Collection" onclick={sendForCollection} class="slds-m-left_x-small" disabled={isfinalInstallmentwarning}></lightning-button>
+               </footer>
+            </div>
+         </section>
+         <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+      <!--Pagination-->
+      <template if:true={totalPages}>
+         <div class="slds-align_absolute-center" style="height:5rem">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+         </div>
+      </template>
+   </div>
+</template>

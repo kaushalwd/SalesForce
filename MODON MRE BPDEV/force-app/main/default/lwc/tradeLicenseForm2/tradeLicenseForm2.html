@@ -1,0 +1,205 @@
+<template>
+    <!-- Spinner with overlay -->
+    <template if:true={isLoading}>
+        <div class="spinner-overlay">
+            <div class="spinner-container">
+                <lightning-spinner alternative-text="Loading form..." size="medium"></lightning-spinner>
+            </div>
+        </div>
+    </template>
+
+    <lightning-messages></lightning-messages>
+    <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+        <!--<lightning-accordion-section name="Trade License Information" label="Trade License Information">-->
+        <div class="slds-content-align_center">
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <lightning-input
+                class="slds-p-around_x-small placeholder customSelect"
+                type="text" name="Licensing_Authority__c" label="Licensing Authority"
+                value={registrationRec.Licensing_Authority__c} onchange={handleFieldChange} disabled={isDisabled}
+                required message-when-value-missing="Please enter Licensing Authority">
+            </lightning-input>
+            <lightning-input
+                class="slds-p-around_x-small placeholder customSelect"
+                type="Date" name="Issuance_Date__c" label="Issuance Date" required
+                value={registrationRec.Issuance_Date__c} onchange={handleFieldChange} disabled={isDisabled}
+                message-when-value-missing="Please select Issuance Date">
+            </lightning-input>
+        </div>
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <lightning-input
+                class="slds-p-around_x-small placeholder customSelect"
+                type="textarea" label="Company Name as per Trade License" name="Company_Name_as_per_Trade_License__c"
+                value={registrationRec.Company_Name_as_per_Trade_License__c} required onchange={handleFieldChange}
+                disabled={isDisabled} message-when-value-missing="Please enter Company Name as per Trade License">
+            </lightning-input>
+            <lightning-input
+                class="slds-p-around_x-small placeholder customSelect"
+                type="Date" label="Expiry Date" name="Expiry_Date__c" required value={registrationRec.Expiry_Date__c}
+                onchange={handleFieldChange} disabled={isDisabled}
+                message-when-value-missing="Please select Expiry Date">
+            </lightning-input>
+        </div>
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <lightning-input class="slds-p-around_x-small placeholder customSelect"
+                type="text" name="Trade_License_Number__c" data-id="TradeLicense" label="Trade License Number"
+                value={registrationRec.Trade_License_Number__c} required onchange={handleFieldChange1}
+                disabled={isDisabled} pattern="[a-zA-Z0-9]*" inputmode="numeric" onblur={handleNumericInput}
+                message-when-pattern-mismatch="Please enter only letters and numbers"
+                message-when-value-missing="Please enter Trade License Number">
+            </lightning-input>
+
+            <lightning-combobox class="slds-p-around_x-small customSelect"
+                label="VAT Certificate Type" name="VAT_Certificate_Type__c" data-id="VatCertificte"
+                value={registrationRec.VAT_Certificate_Type__c} options={vatCertificateOptions}
+                onchange={handleVatCertificateTypeChange} disabled={isDisabled} required>
+            </lightning-combobox>
+
+
+
+            <template if:true={showVatRegNumber}>
+                <lightning-input class="slds-p-around_x-small customSelect" type="text"
+                    label="UAE VAT Registration Number" name="UAE_VAT_Registration_Number__c" data-id="VatCertificte"
+                    value={registrationRec.UAE_VAT_Registration_Number__c} onchange={handleVatNumberChange}
+                    disabled={isDisabled} required>
+                </lightning-input>
+
+
+            </template>
+        </div>
+
+        <template if:true={showDummyVatLink}>
+            <div class="slds-grid slds-wrap slds-grid_align-center slds-p-around_medium">
+                <div class="slds-box slds-theme_default slds-text-align_center">
+
+                    <!-- PDF Icon -->
+                    <lightning-icon icon-name="doctype:pdf" size="large" alternative-text="VAT PDF"
+                        class="slds-icon-text-default slds-m-bottom_small"></lightning-icon>
+
+                    <!-- Title -->
+                    <p class="slds-text-heading_small slds-m-bottom_x-small" style="font-weight: 600;">
+                        VAT Undertaking Certificate
+                    </p>
+
+                    <!-- Download Link -->
+                    <a onclick={downloadVAT} style="font-size: 14px; cursor: pointer; text-decoration: underline;">
+                        Download Template (PDF)
+                    </a>
+
+                    <!-- Instruction -->
+                    <p class="slds-m-top_small slds-text-color_weak" style="font-size: 13px;">
+                        Please download the VAT Undertaking certificate, sign it, and upload it under the VAT
+                        Undertaking Certificate section.
+                    </p>
+
+                </div>
+            </div>
+        </template>
+        <!--</lightning-accordion-section>-->
+
+        <!--<lightning-accordion-section name="Document Uploads" label="Document Uploads">-->
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <template if:false={isTradeLicenseUploaded}>
+                <lightning-input class="slds-p-around_x-small placeholder"
+                    type="file" label="Trade License Document" accept=".pdf,.jpg" required
+                    onchange={handleTradeLicenseChange} disabled={isDisabled}></lightning-input>
+            </template>
+            <template if:true={isTradeLicenseUploaded}>
+                <div class="slds-p-around_x-small">
+                    <p>
+                        <strong>Uploaded File:</strong> &nbsp;
+                        <a href="javascript:void(0);" onclick={openTradeLicensePreviewPopup}>{tradeLicenseFileName}</a>
+
+                        <lightning-icon icon-name="action:preview" size="xx-small"
+                            alternative-text="Preview Trade License Document" onclick={openTradeLicensePreviewPopup}
+                            class="slds-m-left_small lwc-icon-small"></lightning-icon>
+ <template if:true={showDeleteIcon}>
+                        <lightning-icon icon-name="action:delete" size="xx-small"
+                            alternative-text="Remove Trade License" onclick={handleRemoveTradeLicense}
+                            class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                            </template>
+                    </p>
+                </div>
+            </template>
+            <template if:false={isMoaUploaded}>
+                <lightning-input class="slds-p-around_x-small placeholder"
+                    type="file" label="MOA / Local Service Agent Appointment" accept=".pdf,.jpg" required
+                    onchange={handleMoaChange} disabled={isDisabled}></lightning-input>
+            </template>
+            <template if:true={isMoaUploaded}>
+                <div class="slds-p-around_x-small">
+                    <p>
+                        <strong>Uploaded File:</strong> &nbsp;
+                        <a href="javascript:void(0);" onclick={openMoaPreviewPopup}>{moaFileName}</a>
+
+                        <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview MOA"
+                            onclick={openMoaPreviewPopup} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+ <template if:true={showDeleteIcon}>
+                        <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove MOA"
+                            onclick={handleRemoveMoa} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                            </template>
+                    </p>
+                </div>
+            </template>
+
+
+            <template if:true={isShowAdmReraUpload}>
+                <template if:false={isAdmReraUploaded}>
+                    <lightning-input class="slds-p-around_x-small placeholder"
+                        type="file" label={admReraLabel} accept=".pdf,.jpg" onchange={handleAdmReraUpload}
+                        disabled={isDisabled} required></lightning-input>
+                </template>
+
+                <template if:true={isAdmReraUploaded}>
+                    <div class="slds-p-around_x-small">
+                        <p>
+                            <strong>Uploaded File:</strong> &nbsp;
+                            <a href="javascript:void(0);" onclick={openAdmReraPreviewPopup}>{admReraFileName}</a>
+
+                            <lightning-icon icon-name="action:preview" size="xx-small"
+                                alternative-text="Preview ADM/RERA" onclick={openAdmReraPreviewPopup}
+                                class="slds-m-left_small lwc-icon-small"></lightning-icon>
+ <template if:true={showDeleteIcon}>
+                            <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove ADM/RERA"
+                                onclick={handleRemoveAdmRera} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                                </template>
+                        </p>
+                    </div>
+                </template>
+            </template>
+
+
+
+            <!-- If VAT certificate not uploaded yet, show file input -->
+            <template if:false={showVatFileUpload}>
+                <lightning-input class="slds-p-around_x-small placeholder"
+                    type="file" label={vatUploadLabel} accept=".pdf,.jpg" required onchange={handleVatUploadChange}
+                    disabled={isDisabled}></lightning-input>
+            </template>
+
+            <!-- If VAT certificate is uploaded, show file name + preview/delete icons -->
+            <template if:true={showVatFileUpload}>
+                <div class="slds-p-around_x-small">
+                    <p>
+                        <strong>Uploaded File:</strong> &nbsp;
+                        <a href="javascript:void(0);" onclick={openVatPreviewPopup}>{vatFileName}</a>
+
+                        <lightning-icon icon-name="action:preview" size="xx-small"
+                            alternative-text="Preview VAT Certificate" onclick={openVatPreviewPopup}
+                            class="slds-m-left_small lwc-icon-small"></lightning-icon>
+ <template if:true={showDeleteIcon}>
+                        <lightning-icon icon-name="action:delete" size="xx-small"
+                            alternative-text="Remove VAT Certificate" onclick={handleRemoveVat}
+                            class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                            </template>
+                    </p>
+                </div>
+            </template>
+
+
+
+
+        </div></div>
+        <!--</lightning-accordion-section>-->
+    </lightning-accordion>
+</template>

@@ -1,0 +1,547 @@
+<template>
+    <template if:true={isMaintenanceMode}>
+        <section class="maintenance-card">
+            <div class="maintenance-icon">
+                <lightning-icon icon-name="utility:settings" size="medium" alternative-text="Updates"></lightning-icon>
+            </div>
+            <h2>Updates are going on</h2>
+            <p>The EOI journey is temporarily unavailable while enhancements are being applied.</p>
+        </section>
+    </template>
+
+    <template if:false={isMaintenanceMode}>
+        <section class="launcher" if:true={showLauncher}>
+            <button class="launch-button" onclick={handleOpenJourney}>
+                <lightning-icon icon-name="standard:contract_line_item" size="small" alternative-text="EOI"></lightning-icon>
+                <span>
+                    <strong>Create EOI</strong>
+                    <small>Lead, opportunity, and EOI in one journey</small>
+                </span>
+            </button>
+        </section>
+
+        <template if:true={showJourney}>
+            <section class="modal-backdrop" role="presentation">
+                <div class="modal-shell" role="dialog" aria-modal="true" aria-label="Create EOI Journey">
+                    <button class="modal-close" title="Close" onclick={handleCloseJourney}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+
+                <div class="journey">
+                    <div class="stepper">
+                        <div class={customerStepClass}>
+                            <span>1</span>
+                            <div>
+                                <strong>Identity</strong>
+                                <small>Verify Records</small>
+                            </div>
+                        </div>
+                        <i></i>
+                        <div class={verificationStepClass}>
+                            <span>2</span>
+                            <div>
+                                <strong>Verify</strong>
+                                <small>Security Code</small>
+                            </div>
+                        </div>
+                        <i></i>
+                        <div class={eoiStepClass}>
+                            <span>3</span>
+                            <div>
+                                <strong>Details</strong>
+                                <small>EOI Info</small>
+                            </div>
+                        </div>
+                        <i></i>
+                        <div class={receiptStepClass}>
+                            <span>4</span>
+                            <div>
+                                <strong>Complete</strong>
+                                <small>Confirmation</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <template if:true={errorMessage}>
+                        <div class="message error">{errorMessage}</div>
+                    </template>
+
+                    <template if:true={isStepCustomer}>
+                        <div class="identity-layout">
+                            <aside class="lookup-card">
+                                <div class="card-heading">
+                                    <lightning-icon icon-name="utility:search" size="small"></lightning-icon>
+                                    <h2>Identify User</h2>
+                                </div>
+                                <p>Select a project first to verify customer records.</p>
+                                <lightning-combobox label="Project Interest" value={selectedProjectId} options={projectOptions} onchange={handleProjectChange} disabled={projectInterestDisabled} required></lightning-combobox>
+                                <template if:true={projectAvailabilityError}>
+                                    <div class="project-closed-alert">
+                                        <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
+                                        <div>
+                                            <strong>EOI Submission Closed</strong>
+                                            <span>{projectAvailabilityError}</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <lightning-combobox label="Customer Type" value={customer.customerType} options={customerTypeOptions} onchange={handleCustomerTypeChange} disabled={identityInputsDisabled}></lightning-combobox>
+                                <template if:true={isIndividualCustomer}>
+                                <lightning-input label="Emirates ID" value={lookupCriteria.emiratesId} placeholder="784-1996-3434343-7" maxlength="18" pattern="[0-9]{3}-[0-9]{4}-[0-9]{7}-[0-9]{1}" message-when-pattern-mismatch="Use Emirates ID format 784-1996-3434343-7" data-lookup-field="emiratesId" data-lookup-emirates-id onchange={handleLookupChange} oninput={handleLookupChange} disabled={identityInputsDisabled}></lightning-input>
+                                <lightning-input label="Passport Number" value={lookupCriteria.passportNumber} pattern="[A-Za-z0-9]+" message-when-pattern-mismatch="Passport number must contain letters and numbers only." data-lookup-field="passportNumber" data-lookup-passport onchange={handleLookupChange} oninput={handleLookupChange} disabled={identityInputsDisabled}></lightning-input>
+                                <lightning-input label="Phone Number" type="tel" value={lookupCriteria.phone} pattern="^\+[0-9]{6,15}$" message-when-pattern-mismatch="Phone number must start with + and contain digits only (e.g. +971501234567)" data-lookup-field="phone" data-lookup-phone data-validation-key="lookupPhone" onchange={handleLookupChange} oninput={handleLookupChange} onblur={validatePhoneInput} disabled={identityInputsDisabled}></lightning-input>
+                                <template if:true={showLookupPhoneLoader}>
+                                    <div class="field-loader">
+                                        <lightning-spinner alternative-text="Validating phone" size="xx-small"></lightning-spinner>
+                                        <span>Validating phone...</span>
+                                    </div>
+                                </template>
+                                <lightning-input label="Email Address" type="email" value={lookupCriteria.email} data-lookup-field="email" data-lookup-email data-validation-key="lookupEmail" onchange={handleLookupChange} oninput={handleLookupChange} onblur={validateEmailInput} disabled={identityInputsDisabled}></lightning-input>
+                                <template if:true={showLookupEmailLoader}>
+                                    <div class="field-loader">
+                                        <lightning-spinner alternative-text="Validating email" size="xx-small"></lightning-spinner>
+                                        <span>Validating email...</span>
+                                    </div>
+                                </template>
+                                </template>
+                                <template if:true={isOrganizationCustomer}>
+                                    <lightning-input label="Company Name" value={lookupCriteria.companyName} data-lookup-field="companyName" data-lookup-company onchange={handleLookupChange} oninput={handleLookupChange} disabled={identityInputsDisabled}></lightning-input>
+                                    <lightning-input label="Trade License Number" value={lookupCriteria.tradeLicenseNumber} data-lookup-field="tradeLicenseNumber" data-lookup-trade-license onchange={handleLookupChange} oninput={handleLookupChange} disabled={identityInputsDisabled}></lightning-input>
+                                    <lightning-input label="Registered Phone" type="tel" value={lookupCriteria.registeredPhone} pattern="^\+[0-9]{6,15}$" message-when-pattern-mismatch="Phone number must start with + and contain digits only (e.g. +971501234567)" data-lookup-field="registeredPhone" data-lookup-registered-phone data-validation-key="lookupPhone" onchange={handleLookupChange} oninput={handleLookupChange} onblur={validatePhoneInput} disabled={identityInputsDisabled}></lightning-input>
+                                    <template if:true={showLookupPhoneLoader}>
+                                        <div class="field-loader">
+                                            <lightning-spinner alternative-text="Validating phone" size="xx-small"></lightning-spinner>
+                                            <span>Validating phone...</span>
+                                        </div>
+                                    </template>
+                                    <lightning-input label="Registered Email" type="email" value={lookupCriteria.registeredEmail} data-lookup-field="registeredEmail" data-lookup-registered-email data-validation-key="lookupEmail" onchange={handleLookupChange} oninput={handleLookupChange} onblur={validateEmailInput} disabled={identityInputsDisabled}></lightning-input>
+                                    <template if:true={showLookupEmailLoader}>
+                                        <div class="field-loader">
+                                            <lightning-spinner alternative-text="Validating email" size="xx-small"></lightning-spinner>
+                                            <span>Validating email...</span>
+                                        </div>
+                                    </template>
+                                </template>
+                                <template if:true={lookupIdentifierError}>
+                                    <div class="message error lookup-error">{lookupIdentifierError}</div>
+                                </template>
+                                <button class="primary-button full" onclick={handleFindCustomer} disabled={isVerifyIdentityDisabled}>
+                                    <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+                                    Verify Identity
+                                </button>
+                                <button class="secondary-button full clear-button" onclick={handleClearIdentity} disabled={isLoading}>
+                                    <lightning-icon icon-name="utility:refresh" size="x-small"></lightning-icon>
+                                    Clear
+                                </button>
+                            </aside>
+
+                            <main class="detail-card">
+                                <template if:true={showProjectGate}>
+                                    <div class="project-gate">
+                                        <div class="project-gate-icon">
+                                            <lightning-icon icon-name="utility:company" size="large"></lightning-icon>
+                                        </div>
+                                        <h2>{projectGateTitle}</h2>
+                                        <p>{projectGateText}</p>
+                                        <strong>{projectGateHint}</strong>
+                                    </div>
+                                </template>
+                                <template if:false={showProjectGate}>
+                                <div class="card-heading split">
+                                    <div>
+                                        <lightning-icon icon-name="standard:person_account" size="small"></lightning-icon>
+                                        <h2>Personal Details</h2>
+                                    </div>
+                                    <lightning-combobox variant="label-hidden" value={customer.residentStatus} data-field="residentStatus" options={residentOptions} onchange={handleCustomerChange} disabled={customerFieldsDisabled}></lightning-combobox>
+                                </div>
+
+                                <div class="notice">
+                                    <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                                    <div>
+                                        <strong>{identityNoticeTitle}</strong>
+                                        <span>{identityNoticeText}</span>
+                                    </div>
+                                </div>
+
+                                <template if:true={showMatchSelection}>
+                                    <section class="match-panel">
+                                        <div class="match-panel-title">
+                                            <h3>Matching Accounts</h3>
+                                            <span>Select one account to continue</span>
+                                        </div>
+                                        <div class="match-list">
+                                            <template for:each={customerMatches} for:item="match">
+                                                <article key={match.recordId} class="match-card">
+                                                    <div>
+                                                        <strong>{match.displayName}</strong>
+                                                        <span>{match.accountTypeLabel}</span>
+                                                        <span>{match.portalLabel}</span>
+                                                    </div>
+                                                    <div class="match-fields">
+                                                        <template for:each={match.displayFields} for:item="field">
+                                                            <span key={field.key}><b>{field.label}</b>{field.value}</span>
+                                                        </template>
+                                                    </div>
+                                                    <button class="secondary-button compact" data-record-id={match.recordId} onclick={handleSelectCustomerMatch}>
+                                                        Select Account
+                                                    </button>
+                                                </article>
+                                            </template>
+                                        </div>
+                                    </section>
+                                </template>
+
+                                <template if:true={isOrganizationCustomer}>
+                                    <div class="grid">
+                                        <lightning-input label="Company Name" value={customer.companyName} data-field="companyName" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={companyNameDisabled} required></lightning-input>
+                                        <lightning-input label="Trade License Number" value={customer.tradeLicenseNumber} data-field="tradeLicenseNumber" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={tradeLicenseNumberDisabled} required></lightning-input>
+                                        <lightning-input label="Trade License Expiry Date" type="date" value={customer.tradeLicenseExpiryDate} data-field="tradeLicenseExpiryDate" onchange={handleCustomerChange} disabled={tradeLicenseExpiryDateDisabled}></lightning-input>
+                                        <lightning-input label="Registered Email" type="email" value={customer.registeredEmail} data-field="registeredEmail" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={registeredEmailDisabled}></lightning-input>
+                                        <lightning-input label="Registered Phone" type="tel" value={customer.registeredPhone} pattern="^\+[0-9]{6,15}$" message-when-pattern-mismatch="Phone number must start with + and contain digits only (e.g. +971501234567)" data-field="registeredPhone" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={registeredPhoneDisabled}></lightning-input>
+                                        <template if:true={showEmiratesId}>
+                                            <lightning-input label="Emirates ID (Resident Only)" value={customer.emiratesId} placeholder="784-1996-3434343-7" maxlength="18" pattern="[0-9]{3}-[0-9]{4}-[0-9]{7}-[0-9]{1}" message-when-pattern-mismatch="Use Emirates ID format 784-1996-3434343-7" data-field="emiratesId" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={emiratesIdDisabled} required></lightning-input>
+                                        </template>
+                                        <lightning-input label="Passport Number" value={customer.passportNumber} pattern="[A-Za-z0-9]+" message-when-pattern-mismatch="Passport number must contain letters and numbers only." data-field="passportNumber" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={passportNumberDisabled} required={isPassportRequired}></lightning-input>
+                                        <lightning-input label="Authorized Contact First Name" value={customer.authorizedFirstName} data-field="authorizedFirstName" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={authorizedFirstNameDisabled} required></lightning-input>
+                                        <lightning-input label="Authorized Contact Last Name" value={customer.authorizedLastName} data-field="authorizedLastName" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={authorizedLastNameDisabled} required></lightning-input>
+                                        <div>
+                                            <lightning-input label="Authorized Contact Email" type="email" value={customer.authorizedEmail} data-field="authorizedEmail" data-validation-key="customerEmail" onchange={handleCustomerChange} oninput={handleCustomerChange} onblur={validateEmailInput} disabled={authorizedEmailDisabled} required></lightning-input>
+                                            <template if:true={showCustomerEmailLoader}>
+                                                <div class="field-loader">
+                                                    <lightning-spinner alternative-text="Validating email" size="xx-small"></lightning-spinner>
+                                                    <span>Validating email...</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div>
+                                            <lightning-input label="Authorized Contact Phone" type="tel" value={customer.authorizedPhone} pattern="^\+[0-9]{6,15}$" message-when-pattern-mismatch="Phone number must start with + and contain digits only (e.g. +971501234567)" data-field="authorizedPhone" data-validation-key="customerPhone" onchange={handleCustomerChange} oninput={handleCustomerChange} onblur={validatePhoneInput} disabled={authorizedPhoneDisabled} required></lightning-input>
+                                            <template if:true={showCustomerPhoneLoader}>
+                                                <div class="field-loader">
+                                                    <lightning-spinner alternative-text="Validating phone" size="xx-small"></lightning-spinner>
+                                                    <span>Validating phone...</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template if:true={isIndividualCustomer}>
+                                    <div class="grid">
+                                        <lightning-input label="First Name" value={customer.firstName} data-field="firstName" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={firstNameDisabled} required></lightning-input>
+                                        <lightning-input label="Last Name" value={customer.lastName} data-field="lastName" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={lastNameDisabled} required></lightning-input>
+                                        <div>
+                                            <lightning-input label="Email" type="email" value={customer.email} data-field="email" data-validation-key="customerEmail" onchange={handleCustomerChange} oninput={handleCustomerChange} onblur={validateEmailInput} disabled={emailDisabled} required></lightning-input>
+                                            <template if:true={showCustomerEmailLoader}>
+                                                <div class="field-loader">
+                                                    <lightning-spinner alternative-text="Validating email" size="xx-small"></lightning-spinner>
+                                                    <span>Validating email...</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div>
+                                            <lightning-input label="Phone Number" type="tel" value={customer.phone} pattern="^\+[0-9]{6,15}$" message-when-pattern-mismatch="Phone number must start with + and contain digits only (e.g. +971501234567)" data-field="phone" data-validation-key="customerPhone" onchange={handleCustomerChange} oninput={handleCustomerChange} onblur={validatePhoneInput} disabled={phoneDisabled} required></lightning-input>
+                                            <template if:true={showCustomerPhoneLoader}>
+                                                <div class="field-loader">
+                                                    <lightning-spinner alternative-text="Validating phone" size="xx-small"></lightning-spinner>
+                                                    <span>Validating phone...</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <template if:true={showEmiratesId}>
+                                            <lightning-input label="Emirates ID (Resident Only)" value={customer.emiratesId} placeholder="784-1996-3434343-7" maxlength="18" pattern="[0-9]{3}-[0-9]{4}-[0-9]{7}-[0-9]{1}" message-when-pattern-mismatch="Use Emirates ID format 784-1996-3434343-7" data-field="emiratesId" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={emiratesIdDisabled} required></lightning-input>
+                                        </template>
+                                        <lightning-input label="Passport Number" value={customer.passportNumber} pattern="[A-Za-z0-9]+" message-when-pattern-mismatch="Passport number must contain letters and numbers only." data-field="passportNumber" onchange={handleCustomerChange} oninput={handleCustomerChange} disabled={passportNumberDisabled} required={isPassportRequired}></lightning-input>
+                                        <lightning-combobox label="Nationality" value={customer.nationality} options={nationalityOptions} data-field="nationality" onchange={handleCustomerChange} disabled={nationalityDisabled} required></lightning-combobox>
+                                        <lightning-combobox label="Country of Residence" value={customer.countryOfResidence} options={countryOfResidenceOptions} data-field="countryOfResidence" onchange={handleCustomerChange} disabled={countryOfResidenceDisabled} required></lightning-combobox>
+                                    </div>
+                                </template>
+
+                                <div class="system-fields">
+                                    <p>System Managed Fields</p>
+                                    <div class="grid">
+                                        <div class="locked-field">
+                                            <span>Source</span>
+                                            <strong>{customerBadgeLabel}</strong>
+                                        </div>
+                                        <div class="locked-field">
+                                            <span>Project Interest</span>
+                                            <strong>{selectedProjectName}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                </template>
+                            </main>
+                        </div>
+
+                        <footer class="modal-actions">
+                            <div>
+                                <small>Step 1 of 5</small>
+                                <strong>{identityStepStatus}</strong>
+                            </div>
+                            <button class="primary-button" onclick={handleCustomerNext} disabled={isCustomerNextDisabled}>
+                                Continue to Verification
+                                <lightning-icon icon-name="utility:forward" size="x-small"></lightning-icon>
+                            </button>
+                        </footer>
+                    </template>
+
+                    <template if:true={isStepVerification}>
+                        <section class="verification-card">
+                            <h2>Verify Your Identity</h2>
+                            <p>Please select your preferred method to receive a verification code to ensure the security of your corporate account.</p>
+
+                            <div class="verification-options">
+                                <button class={whatsappVerificationClass} data-method="whatsapp" onclick={handleVerificationMethod} disabled={isWhatsappDisabled}>
+                                    <span class="verification-icon">
+                                        <lightning-icon icon-name="utility:sms" size="small" alternative-text="WhatsApp"></lightning-icon>
+                                    </span>
+                                    <span>
+                                        <strong>
+                                            WhatsApp Verification
+                                            <em>Recommended</em>
+                                        </strong>
+                                        <small>Coming soon</small>
+                                    </span>
+                                    <template if:true={isWhatsappVerificationSelected}>
+                                        <lightning-icon class="verification-check" icon-name="utility:check" size="x-small" alternative-text="Selected"></lightning-icon>
+                                    </template>
+                                </button>
+                                <button class={emailVerificationClass} data-method="email" onclick={handleVerificationMethod}>
+                                    <span class="verification-icon">
+                                        <lightning-icon icon-name="utility:email" size="small" alternative-text="Email"></lightning-icon>
+                                    </span>
+                                    <span>
+                                        <strong>Email Verification</strong>
+                                        <small>Sent to your registered official email</small>
+                                    </span>
+                                    <template if:true={showEmailVerificationLoader}>
+                                        <lightning-spinner class="verification-option-spinner" alternative-text="Sending email verification code" size="small"></lightning-spinner>
+                                    </template>
+                                    <template if:true={isEmailVerificationSelected}>
+                                        <lightning-icon class="verification-check" icon-name="utility:check" size="x-small" alternative-text="Selected"></lightning-icon>
+                                    </template>
+                                </button>
+                                <button class={smsVerificationClass} data-method="sms" onclick={handleVerificationMethod}>
+                                    <span class="verification-icon">
+                                        <lightning-icon icon-name="utility:phone_portrait" size="small" alternative-text="SMS"></lightning-icon>
+                                    </span>
+                                    <span>
+                                        <strong>SMS Verification</strong>
+                                        <small>Sent to the registered mobile number</small>
+                                    </span>
+                                    <template if:true={showSmsVerificationLoader}>
+                                        <lightning-spinner class="verification-option-spinner" alternative-text="Sending SMS verification code" size="small"></lightning-spinner>
+                                    </template>
+                                    <template if:true={isSmsVerificationSelected}>
+                                        <lightning-icon class="verification-check" icon-name="utility:check" size="x-small" alternative-text="Selected"></lightning-icon>
+                                    </template>
+                                </button>
+                            </div>
+
+                            <template if:true={showVerificationCode}>
+                                <div class="verification-code-section">
+                                    <h3>Enter Verification Code</h3>
+                                    <p>{verificationDestinationText}</p>
+                                    <div class="otp-inputs">
+                                        <template for:each={verificationDigits} for:item="digit">
+                                            <input key={digit.key} class="otp-input" value={digit.value} maxlength="1" inputmode="numeric" pattern="[0-9]" data-otp-index={digit.index} oninput={handleVerificationCodeInput} aria-label="Verification code digit" />
+                                        </template>
+                                    </div>
+                                    <p class="resend-text">
+                                        Didn't receive the code?
+                                        <template if:true={showResendAction}>
+                                            <button class="text-button" onclick={handleVerificationResend} disabled={isResendDisabled}>{resendButtonLabel}</button>
+                                        </template>
+                                    </p>
+                                    <template if:true={isSendingVerification}>
+                                        <div class="field-loader">
+                                            <lightning-spinner alternative-text="Sending verification code" size="xx-small"></lightning-spinner>
+                                            <span>Sending verification code...</span>
+                                        </div>
+                                    </template>
+                                    <template if:true={verificationMessage}>
+                                        <div class="message info">{verificationMessage}</div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <div class="verification-note">
+                                <div>
+                                    <lightning-icon icon-name="utility:info" size="x-small" alternative-text="Info"></lightning-icon>
+                                    <span>Verification codes are valid for 5 minutes.</span>
+                                </div>
+                                <div>
+                                    <lightning-icon icon-name="utility:help" size="x-small" alternative-text="Help"></lightning-icon>
+                                    <span>If you don't receive a code, please check your spam folder or contact system administration.</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <footer class="modal-actions verification-actions">
+                            <button class="secondary-button" onclick={handleBack} disabled={isBackDisabled}>Back</button>
+                            <button class="primary-button verification-continue" onclick={handleVerificationNext} disabled={isVerificationNextDisabled}>
+                                Verify & Continue
+                                <lightning-icon icon-name="utility:forward" size="x-small"></lightning-icon>
+                            </button>
+                        </footer>
+                    </template>
+
+                    <template if:true={isStepEoi}>
+                        <div class="details-layout portfolio-layout">
+                            <main>
+                                <section class="form-block unit-interests-block">
+                                    <div class="eoi-selection-header">
+                                        <div>
+                                            <h2>Unit Interests</h2>
+                                        </div>
+                                    </div>
+
+                                    <div class="eoi-selection-list">
+                                        <template if:true={hasActiveEoiSelection}>
+                                            <article class="eoi-selection-card">
+                                                <div class="eoi-selection-card-header">
+                                                    <button class="icon-button" title="Remove EOI" data-selection-key={activeEoiSelection.key} onclick={handleRemoveEoiSelection} disabled={isSingleEoiSelection}>
+                                                        <lightning-icon icon-name="utility:delete" size="x-small" alternative-text="Remove EOI"></lightning-icon>
+                                                    </button>
+                                                </div>
+                                                <div class="grid">
+                                                    <lightning-combobox label="Project Selection" value={selectedProjectId} options={projectOptions} onchange={handleProjectChange} disabled={projectSelectionDisabled} required></lightning-combobox>
+                                                    <template if:true={activeEoiSelection.showPhase}>
+                                                        <lightning-combobox label="Phase" value={activeEoiSelection.phaseId} options={phaseOptions} data-selection-key={activeEoiSelection.key} onchange={handleSelectionPhaseChange} disabled={activeEoiSelection.phaseDisabled} required></lightning-combobox>
+                                                    </template>
+                                                    <template if:true={activeEoiSelection.showUnitType}>
+                                                        <lightning-combobox label="Unit Type" value={activeEoiSelection.unitType} options={activeEoiSelection.unitTypeOptions} data-selection-key={activeEoiSelection.key} onchange={handleSelectionUnitTypeChange} disabled={activeEoiSelection.unitTypeDisabled} required></lightning-combobox>
+                                                    </template>
+                                                    <template if:true={activeEoiSelection.showBedrooms}>
+                                                        <lightning-combobox label="Number of Bedrooms" value={activeEoiSelection.bedrooms} options={activeEoiSelection.bedroomOptions} data-selection-key={activeEoiSelection.key} onchange={handleSelectionBedroomsChange} disabled={activeEoiSelection.bedroomsDisabled} required></lightning-combobox>
+                                                    </template>
+                                                    <template if:true={activeEoiSelection.showTypology}>
+                                                        <lightning-combobox label="Unit Typology" value={activeEoiSelection.unitTypology} options={activeEoiSelection.unitTypologyOptions} data-selection-key={activeEoiSelection.key} onchange={handleSelectionTypologyChange} disabled={activeEoiSelection.typologyDisabled} required></lightning-combobox>
+                                                    </template>
+                                                    <lightning-combobox label="Payment Type" value={selectedPaymentMethod} options={paymentTypeOptions} onchange={handlePaymentMethod} required disabled></lightning-combobox>
+                                                </div>
+                                                <div class="inline-amount">
+                                                    <span>Amount:</span>
+                                                    <strong>{activeEoiSelection.displayAmount}</strong>
+                                                </div>
+                                            </article>
+                                        </template>
+                                    </div>
+                                    <div class="add-unit-footer">
+                                        <button class="link-button" onclick={handleAddEoiSelection} disabled={isAddEoiDisabled}>
+                                            <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                                            Add Another Unit
+                                        </button>
+                                    </div>
+                                </section>
+                            </main>
+
+                            <aside class="selection-summary-panel">
+                                <section class="summary-panel-card">
+                                    <h3>Selection Summary</h3>
+                                    <div class="selection-summary-list">
+                                        <template for:each={eoiSelections} for:item="selection">
+                                            <article key={selection.key} class={selection.summaryClass} data-selection-key={selection.key} onclick={handleSelectEoiSelection}>
+                                                <div>
+                                                    <strong>{selection.summaryTitle}</strong>
+                                                    <span>{selection.summarySubtitle} (1 Unit)</span>
+                                                </div>
+                                                <b>{selection.displayAmount}</b>
+                                                <button class="icon-button" title="Remove EOI" data-selection-key={selection.key} onclick={handleRemoveEoiSelection} disabled={isSingleEoiSelection}>
+                                                    <lightning-icon icon-name="utility:delete" size="xx-small" alternative-text="Remove EOI"></lightning-icon>
+                                                </button>
+                                            </article>
+                                        </template>
+                                    </div>
+                                    <div class="portfolio-total">
+                                        <span>Total Portfolio Amount</span>
+                                        <b>{selectionCountLabel}</b>
+                                        <strong>{displayAmount}</strong>
+                                    </div>
+
+                                    <!-- Action area: Online = choose Checkout method + one toggling button; offline = Create EOI -->
+                                    <div class="summary-actions">
+                                        <template if:true={isOnlinePayment}>
+                                            <button class="primary-button full" onclick={handleCheckoutAction} disabled={isPaymentDisabled}>
+                                                {checkoutActionLabel}
+                                            </button>
+                                        </template>
+                                        <template if:false={isOnlinePayment}>
+                                            <button class="primary-button full" onclick={handleEoiDetailsNext} disabled={isEoiNextDisabled}>
+                                                Create EOI
+                                            </button>
+                                        </template>
+                                    </div>
+                                </section>
+                            </aside>
+                        </div>
+
+                        <footer class="modal-actions">
+                            <button class="secondary-button" onclick={handleBack} disabled={isBackDisabled}>Back</button>
+                        </footer>
+                    </template>
+
+                    <template if:true={isStepSuccess}>
+                        <div class="success-card">
+                            <div class="success-hero">
+                                <div class="success-icon-box">
+                                    <lightning-icon icon-name="utility:success" size="large"></lightning-icon>
+                                </div>
+                                <h2>{successTitle}</h2>
+                                <p>{successSubtitle}</p>
+                            </div>
+                            <div class="success-body single-column">
+                                <section>
+                                    <div class="success-summary-header">
+                                        <h3>Summary Details</h3>
+                                        <span class="status-pill">Active Status</span>
+                                    </div>
+                                    <div class="success-summary-grid">
+                                        <template if:true={hasCreatedEoi}>
+                                            <article class="summary-tile eoi-reference-tile">
+                                                <span>EOI Reference</span>
+                                                <template if:false={hasMultipleCreatedEois}>
+                                                    <strong>{eoiReferenceLabel}</strong>
+                                                </template>
+                                                <template if:true={hasMultipleCreatedEois}>
+                                                    <div class="eoi-reference-list">
+                                                        <template for:each={createdEoiReferences} for:item="reference">
+                                                            <strong key={reference}>{reference}</strong>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </article>
+                                        </template>
+                                        <div class="summary-stack">
+                                            <article class="summary-tile">
+                                                <span>Account</span>
+                                                <strong>{accountSummaryLabel}</strong>
+                                            </article>
+                                            <article class="summary-tile">
+                                                <span>Current Status</span>
+                                                <strong class="status-value">
+                                                    <lightning-icon icon-name="utility:success" size="xx-small"></lightning-icon>
+                                                    In Progress
+                                                </strong>
+                                            </article>
+                                        </div>
+                                    </div>
+                                    <div class="success-actions">
+                                        <button class="primary-button" onclick={handleReturnHome}>Return to Home</button>
+                                        <template if:true={hasCreatedEoi}>
+                                            <button class="secondary-button" onclick={handleViewEoi}>View EOI Record</button>
+                                        </template>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Processing" size="medium"></lightning-spinner>
+                    </template>
+                </div>
+            </div>
+        </section>
+        </template>
+    </template>
+</template>

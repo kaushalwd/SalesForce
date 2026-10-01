@@ -1,0 +1,173 @@
+<template>
+
+  <template if:true={isLoading}>
+    <lightning-layout>
+      <lightning-layout-item>
+        <lightning-spinner alternative-text={egyptConstants.FLEX_PLAN_SPINNER_ALT_CALCULATING}
+          size="medium"></lightning-spinner>
+      </lightning-layout-item>
+    </lightning-layout>
+  </template>
+
+  <lightning-layout multiple-rows="true" class="slds-p-bottom_medium slds-grid_pull-padded-small">
+
+    <lightning-layout-item size="12" medium-device-size="12" large-device-size="12"
+      class="slds-p-horizontal_small slds-p-bottom_small">
+      <lightning-radio-group name="calculationMethod" options={methodOptions} value={calculationMethod}
+        onchange={handleInputChange} type="button" variant="label-hidden" required>
+      </lightning-radio-group>
+    </lightning-layout-item>
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-combobox name="selectedCurrency" label={egyptConstants.FLEX_PLAN_LABEL_CURRENCY}
+        value={selectedCurrency} options={currencyOptions} onchange={handleInputChange} required>
+      </lightning-combobox>
+    </lightning-layout-item>
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-combobox name="selectedFrequency" label={egyptConstants.FLEX_PLAN_LABEL_INSTALLMENT_FREQUENCY}
+        value={selectedFrequency} options={frequencyOptions} onchange={handleInputChange} required>
+      </lightning-combobox>
+    </lightning-layout-item>
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-input type="date" max={todayDate} name="exactBookingDate" label={egyptConstants.FLEX_PLAN_LABEL_EXACT_BOOKING_DATE}
+        value={exactBookingDateValue} onchange={handleInputChange} disabled={isExactBookingDateReadOnly} required>
+      </lightning-input>
+    </lightning-layout-item>    
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-combobox name="downPaymentMode" label={egyptConstants.FLEX_PLAN_LABEL_DOWN_PAYMENT_MODE}
+        value={downPaymentMode} options={egyptConstants.FLEX_PLAN_DOWN_PAYMENT_MODE_OPTIONS} onchange={handleInputChange} required>
+      </lightning-combobox>
+    </lightning-layout-item>
+
+    <template if:true={isDownPaymentPercentMode}>
+      <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+        <lightning-input type="number" step="0.01" name="downPaymentPercent"
+          label={egyptConstants.FLEX_PLAN_LABEL_DOWN_PAYMENT_PERCENT} value={downPaymentPercent}
+          onchange={handleInputChange} formatter="percent-fixed" required minimum={minDownPaymentPercent} maximum={maxDownPaymentPercent}>
+        </lightning-input>
+      </lightning-layout-item>
+    </template>
+
+    <template if:true={isDownPaymentAmountMode}>
+      <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+        <lightning-input type="number" step="0.01" name="downPaymentAmount" label={downPaymentAmountLabel}
+          value={downPaymentAmount} onchange={handleInputChange} currency-code={selectedCurrency}
+          currency-display-as="code" required minimum={minDownPaymentAmount}>
+        </lightning-input>
+      </lightning-layout-item>
+    </template>
+
+    <template if:true={isAmountMethod}>
+      <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+        <lightning-input type="number" name="installmentAmount"
+          label={eachInstallmentAmountLabel} value={installmentAmount}
+          onchange={handleInputChange} currency-display-as="code" step="0.01" required>
+        </lightning-input>
+      </lightning-layout-item>
+    </template>
+
+    <template if:true={isYearsMethod}>
+      <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+        <lightning-input type="number" name="yearsNumber" label={egyptConstants.FLEX_PLAN_LABEL_TOTAL_NUMBER_OF_YEARS}
+          value={yearsNumber} onchange={handleInputChange} required>
+        </lightning-input>
+      </lightning-layout-item>
+    </template>
+
+    <template if:true={isInstallmentsMethod}>
+      <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+        <lightning-input type="number" name="InstallmentsNumber"
+          label={egyptConstants.FLEX_PLAN_LABEL_TOTAL_INSTALLMENT_COUNT} value={InstallmentsNumber}
+          onchange={handleInputChange} required>
+        </lightning-input>
+      </lightning-layout-item>
+    </template>
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-input type="number" step="1" name="maintenanceStartingInstallmentNumber"
+        label={egyptConstants.FLEX_PLAN_LABEL_MAINTENANCE_STARTING_INSTALLMENT} value={maintenanceStartingInstallmentNumber}
+        onchange={handleInputChange} min="1" maximum={maxMaintenanceStartingInstallment} required>
+      </lightning-input>
+    </lightning-layout-item>
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-input type="number" step="1" name="totalMaintenanceInstallmentCount"
+        label={egyptConstants.FLEX_PLAN_LABEL_TOTAL_MAINTENANCE_INSTALLMENT_COUNT} value={totalMaintenanceInstallmentCount}
+        onchange={handleInputChange} min="1" maximum={maxMaintenanceInstallmentCount} required>
+      </lightning-input>
+    </lightning-layout-item>
+
+    <lightning-layout-item size="12" medium-device-size="6" large-device-size="4" class="slds-p-horizontal_small">
+      <lightning-input type="number" step="0.01" name="selectedMaintenancePercentage"
+        label={egyptConstants.FLEX_PLAN_LABEL_MAINTENANCE_PERCENTAGE} value={selectedMaintenancePercentage} maximum="100" minimum="1"
+        onchange={handleInputChange} formatter="percent-fixed" disabled>
+      </lightning-input>
+    </lightning-layout-item>
+
+  </lightning-layout>
+
+  <lightning-layout class="slds-m-top_small slds-text-align_center slds-align_absolute-center">
+
+    <lightning-layout-item>
+      <lightning-button variant="brand" label={egyptConstants.FLEX_PLAN_BUTTON_LABEL_GENERATE}
+        onclick={handleGeneratePlan} disabled={hasCalculatedPlanDetails}></lightning-button>
+    </lightning-layout-item>
+
+  </lightning-layout>
+
+  <template if:true={hasCalculatedPlanDetails}>
+
+    <lightning-layout multiple-rows="true" class="slds-grid_pull-padded-small slds-m-top_medium slds-m-bottom_medium">
+
+      <lightning-layout-item size="12" medium-device-size="12" large-device-size="6"
+        class="slds-box slds-text-align_center slds-p-around_small slds-theme_default slds-height_full equal-height-card">
+        <p class="slds-text-title_caps slds-text-color_weak">{egyptConstants.FLEX_PLAN_CARD_TITLE_TOTAL_PAYABLE_AMOUNT}
+        </p>
+        <p class="slds-text-heading_small slds-text-color_success">{selectedCurrency} <lightning-formatted-number value={calculatedPlanDetails.totalPayableAmount} maximum-fraction-digits="2" minimum-fraction-digits="2"></lightning-formatted-number></p>
+      </lightning-layout-item>
+
+      <lightning-layout-item size="12" medium-device-size="12" large-device-size="6"
+        class="slds-box slds-text-align_center slds-p-around_small slds-theme_default slds-height_full equal-height-card">
+        <p class="slds-text-title_caps slds-text-color_weak">
+          {egyptConstants.FLEX_PLAN_CARD_TITLE_TOTAL_MAINTENANCE_AMOUNT}</p>
+        <p class="slds-text-heading_small">{selectedCurrency} <lightning-formatted-number value={calculatedPlanDetails.totalMaintenanceAmount} maximum-fraction-digits="2" minimum-fraction-digits="2"></lightning-formatted-number></p>
+      </lightning-layout-item>
+
+      <lightning-layout-item size="12" medium-device-size="12" large-device-size="4"
+        class="slds-box slds-text-align_center slds-p-around_small slds-theme_default slds-height_full equal-height-card">
+        <p class="slds-text-title_caps slds-text-color_weak">
+          {egyptConstants.FLEX_PLAN_CARD_TITLE_UNIT_BASE_PRICE_8_YEARS}</p>
+        <p class="slds-text-heading_small">{selectedCurrency} <lightning-formatted-number value={calculatedPlanDetails.unitBasePrice} maximum-fraction-digits="2" minimum-fraction-digits="2"></lightning-formatted-number></p>
+      </lightning-layout-item>
+
+      <lightning-layout-item size="12" medium-device-size="12" large-device-size="4"
+        class="slds-box slds-text-align_center slds-p-around_small slds-theme_default slds-height_full equal-height-card">
+        <p class="slds-text-title_caps slds-text-color_weak">{egyptConstants.FLEX_PLAN_CARD_TITLE_DISCOUNT_VS_8_YEAR}
+        </p>
+        <p class="slds-text-heading_small slds-text-color_success">{selectedCurrency} <lightning-formatted-number value={calculatedPlanDetails.discount} maximum-fraction-digits="2" minimum-fraction-digits="2"></lightning-formatted-number></p>
+      </lightning-layout-item>
+
+      <lightning-layout-item size="12" medium-device-size="12" large-device-size="4"
+        class="slds-box slds-text-align_center slds-p-around_small slds-theme_default slds-height_full equal-height-card">
+        <p class="slds-text-title_caps slds-text-color_weak">{egyptConstants.FLEX_PLAN_CARD_TITLE_PRESENT_VALUE}</p>
+        <p class="slds-text-heading_small">{selectedCurrency} <lightning-formatted-number value={calculatedPlanDetails.anchorPV} maximum-fraction-digits="2" minimum-fraction-digits="2"></lightning-formatted-number></p>
+      </lightning-layout-item>
+
+    </lightning-layout>
+
+    <lightning-layout multiple-rows="true" class="slds-p-top_large slds-scrollable">
+
+      <lightning-layout-item size="12">
+        <lightning-datatable class="slds-scrollable" key-field="id" data={calculatedPlanDetails.lineItems}
+          columns={flexiblePlanColumns} hide-checkbox-column>
+        </lightning-datatable>
+      </lightning-layout-item>
+
+    </lightning-layout>
+
+  </template>
+
+</template>

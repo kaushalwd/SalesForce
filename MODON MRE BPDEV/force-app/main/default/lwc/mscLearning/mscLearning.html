@@ -1,0 +1,56 @@
+<template>
+  <template lwc:if={errorMsg}>
+    <div class="err">{errorMsg}</div>
+  </template>
+
+  <div class="bar">
+    <input
+      class="input"
+      type="search"
+      placeholder="Search learning material"
+      value={search}
+      oninput={handleSearch}
+    />
+    <template lwc:if={hasSearch}>
+      <button class="link" onclick={clearSearch}>Clear</button>
+    </template>
+  </div>
+
+  <template lwc:if={loading}>
+    <p class="muted">Loading learning material…</p>
+  </template>
+
+  <template lwc:if={hasRows}>
+    <div class="rows">
+      <template for:each={rows} for:item="a">
+        <div key={a.key} class="glass row">
+          <div class="row__main">
+            <span class="row__ref">{a.title}</span>
+            <span class="row__sub">{a.summary}</span>
+          </div>
+          <div class="row__right">
+            <span class="row__date">{a.dateLabel}</span>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <template lwc:if={isEmpty}>
+    <div class="empty-state">
+      <c-modon-icon name="book-open" size="28" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+      <p class="empty-state__title">No learning material yet</p>
+      <p class="empty-state__body">
+        Articles appear here as soon as they are published to Knowledge.
+      </p>
+    </div>
+  </template>
+  <template lwc:if={noMatch}>
+    <p class="muted">Nothing matches that.</p>
+  </template>
+    <!-- The wait is shown and blocked: c-msc-loader covers the viewport, so a
+         second press cannot land while the first call is still running. -->
+    <template lwc:if={loading}>
+        <c-msc-loader></c-msc-loader>
+    </template>
+</template>

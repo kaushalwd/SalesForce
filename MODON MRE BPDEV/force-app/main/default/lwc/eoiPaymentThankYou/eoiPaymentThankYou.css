@@ -1,0 +1,212 @@
+/* eoiPaymentThankYou — Wadeem journey design system, single screen. @author Aurelix
+   Type tokens resolve to SuisseIntl exactly as eoiSplitPage declares them (MEOI-08).
+   Colour tokens read the --eoi-* tier first, so the ADIB site's stylesheet re-brands
+   this page for free; the fallbacks carry the live Wadeem dark (MEOI-COLOR, 9 Sep 2026:
+   the site's dark is #2B2940, not the original pine green). */
+
+@font-face {
+    font-family: 'SuisseIntl';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff') format('woff');
+}
+@font-face {
+    font-family: 'SuisseIntl';
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff') format('woff');
+}
+
+:host {
+    --pine: var(--eoi-pine, #2B2940);
+    --pine-2: var(--eoi-pine-2, #3B3856);
+    --abyss: var(--eoi-abyss, #1B1A2B);
+    --champagne: var(--eoi-champagne, #C9BC8F);
+    --cream: var(--eoi-cream, #F2EFE6);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: block;
+}
+
+/* Pinned to the viewport, like eoiHome and eoiSplitPage: the theme layout injects
+   phantom flow height (router-title line box, sub-desktop header band), which would
+   otherwise leave a scrollable gap under a full-screen page. */
+.page {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--abyss);
+    color: var(--cream);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.page__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 58%;
+}
+
+/* An even veil plus the site's own 160deg tint: no pool and no shape behind the
+   words, the render simply sits a stop darker. */
+/* MEOI-MODON (13 Sep 2026): MODON's logo top-left; the landing page's scrim instead of the pine layers */
+.page__modon { position: absolute; top: 34px; left: 44px; z-index: 3; display: block; height: 20px; width: auto; }
+.page__scrim--light { background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,.10) 60%, rgba(0,0,0,.55) 100%) !important; }
+.page__scrim--light ~ .page__contour { display: none; }
+@media (max-width: 699px) { .page__modon { top: 26px; left: 24px; } }
+.page__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(0deg, rgba(27, 26, 43, 0.5), rgba(27, 26, 43, 0.5)),
+        linear-gradient(
+            160deg,
+            var(--eoi-pine2-55, rgba(59, 56, 86, 0.3)) 0%,
+            var(--eoi-pine-38, rgba(43, 41, 64, 0.14)) 45%,
+            var(--eoi-abyss-72, rgba(27, 26, 43, 0.58)) 100%
+        );
+}
+
+.page__contour {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.22;
+    pointer-events: none;
+}
+
+/* the mark is centred at the top, above the centred message */
+.page__brand {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    line-height: 1;
+}
+
+.page__logo {
+    display: block;
+    width: var(--eoi-logo-w-lg, 160px); /* MEOI-LOGO: wide lockup 280; MEOI-BRAND (13 Sep): stacked lockup, as the hero (160) */
+    height: auto;
+    filter: drop-shadow(0 1px 10px rgba(27, 26, 43, 0.5));
+}
+
+.page__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+}
+
+.page__msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 46ch;
+    text-shadow: 0 1px 3px rgba(27, 26, 43, 0.55);
+}
+
+.page__eyebrow {
+    margin: 0 0 18px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--champagne);
+}
+
+.page__h1 {
+    font-weight: 400;
+    font-size: 46px;
+    line-height: 1.08;
+    letter-spacing: 0.004em;
+    margin: 0 0 16px;
+    color: var(--cream);
+    text-wrap: balance;
+}
+
+.page__sub {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--eoi-cream-86, rgba(242, 239, 230, 0.86));
+    margin: 0;
+    max-width: 40ch;
+}
+
+.page__foot {
+    position: absolute;
+    left: 44px;
+    right: 44px;
+    bottom: 30px;
+    display: flex;
+    justify-content: center;
+    font-size: 12px;
+    color: rgba(242, 239, 230, 0.42);
+}
+
+/* ---------- tablet and phone ---------- */
+@media (max-width: 999px) {
+    .page__logo {
+        width: var(--eoi-logo-w-md, 140px); /* MEOI-BRAND */
+    }
+    .page__h1 {
+        font-size: 40px;
+    }
+}
+
+@media (max-width: 699px) {
+    .page__brand {
+        top: 30px;
+    }
+    .page__logo {
+        width: var(--eoi-logo-w, 120px); /* MEOI-LOGO2; MEOI-BRAND: stacked lockup, as the hero on phones */
+    }
+    .page__stage {
+        padding: 32px 22px;
+    }
+    .page__h1 {
+        font-size: 36px;
+    }
+    .page__sub {
+        font-size: 15px;
+    }
+    .page__foot {
+        left: 22px;
+        right: 22px;
+        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* Short landscape phones: keep the mark clear of the message. */
+@media (max-height: 520px) {
+    .page__brand {
+        top: 18px;
+    }
+    .page__logo {
+        width: 100px; /* MEOI-BRAND: short viewports */
+    }
+    .page__h1 {
+        font-size: 30px;
+        margin-bottom: 10px;
+    }
+    .page__eyebrow {
+        margin-bottom: 12px;
+    }
+    .page__foot {
+        bottom: 14px;
+    }
+}

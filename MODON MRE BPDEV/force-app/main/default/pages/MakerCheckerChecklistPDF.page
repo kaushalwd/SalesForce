@@ -1,0 +1,75 @@
+<apex:page renderAs="pdf" controller="MakerCheckerChecklistToPdfController" contentType="application/pdf">
+    <div style="font-size: 16px; font-weight: bold; font-family: Tahoma, sans-serif; margin-bottom: 0px; text-align: center;">
+        {!makChkName} - {!unitNumber}
+    </div>
+    <br/>
+    <table style="width: 100%; font-family: Tahoma, sans-serif; font-size: 14px; margin-bottom: 5px;">
+        <tr>
+            <td><strong>Business Process Number:</strong> {!bpNumber}</td>
+        </tr>
+        <tr>
+            <td><strong>Booking Number:</strong> {!bookingNumber}</td>
+        </tr>
+        <tr>
+            <td><strong>Unit Number:</strong> {!unitNumber}</td>
+        </tr>
+        <tr>
+            <td><strong>Maker Name:</strong> {!makerName}</td>
+        </tr>
+        <tr>
+            <td><strong>Checker Name:</strong> {!checkerName}</td>
+        </tr>
+    </table>
+    
+    <apex:variable var="count" value="{!0}" />
+    
+    <apex:repeat value="{!checklistItems}" var="item">
+        <apex:variable var="count" value="{!count + 1}" />
+        <div style="page-break-inside: avoid;">
+            <div style="font-size: 11px; font-weight: bold; font-family: Tahoma, sans-serif; margin-bottom: 5px;">
+                <!--<apex:outputText value="{!count & '.'}" />-->
+                <apex:outputText value="{!item.Checklist_Name__c}" escape="false"/>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-family: Tahoma, sans-serif; font-size: 12px; margin-bottom:15px">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid black; padding: 6px; text-align: left; font-weight: normal;">Maker</th>
+                        <th style="border: 1px solid black; padding: 6px; text-align: left; font-weight: normal;">Maker Comments</th>
+                        <th style="border: 1px solid black; padding: 6px; text-align: left; font-weight: normal;">Checker</th>
+                        <th style="border: 1px solid black; padding: 6px; text-align: left; font-weight: normal;">Checker Comments</th>
+                        <th style="border: 1px solid black; padding: 6px; text-align: left; font-weight: normal;">Rejection Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid black; padding: 6px; text-align: left;">{!item.Maker_Action__c}</td>
+                        <td style="border: 1px solid black; padding: 6px; text-align: left;">{!item.Maker_Comments__c}</td>
+                        <td style="border: 1px solid black; padding: 6px; text-align: left;">{!item.Checker_Action__c}</td>
+                        <td style="border: 1px solid black; padding: 6px; text-align: left;">{!item.Checker_Comments__c}</td>
+                        <td style="border: 1px solid black; padding: 6px; text-align: left;">{!item.Checker_Rejection_Reasons__c}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </apex:repeat>
+    <br/>
+    <!--
+    <table style="width: 100%; font-family: Tahoma, sans-serif; font-size: 12px; margin-top: 30px; margin-bottom: 10px; font-weight: bold;">
+        <tr>
+            <td style="width: 33%;"><strong>Maker:</strong> (Name and signature)</td>
+            <td style="width: 33%;"><strong>Checker:</strong> (Name and signature)</td>
+            <td style="width: 33%;"><strong>Manager:</strong></td>
+        </tr>
+    </table-->
+    <!--
+    <div style="font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; margin-top: 20px;">
+        Important Notes:
+    </div>
+    <ol style="font-family: Tahoma, sans-serif; font-size: 12px; padding-left: 20px; font-weight: bold;">
+        <li>Applicant details should match in both English and Arabic in SPA Particulars. (Check on blanks and update)</li>
+        <li>Floor plan to be checked with SPA particulars.</li>
+        <li>Material specifications to match the type of the unit enclosed.</li>
+        <li>RM to download the SPA from SF and check the downloaded SPA on basis of the checklist and booking form. TL to recheck the SPA.</li>
+        <li>IT to ensure that there are no further changes once the SPA is downloaded and uploaded in SF.</li>
+    </ol-->
+</apex:page>

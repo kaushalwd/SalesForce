@@ -1,0 +1,347 @@
+<template>
+    <lightning-layout class="spinner">
+        <template if:true={isScreenLoading}>
+            <lightning-layout-item>
+                <lightning-spinner alternative-text={egyptConstants.UNIT_SEARCH_SPINNER_ALT_LOADING} variant="brand"
+                    size="large">
+                </lightning-spinner>
+            </lightning-layout-item>
+        </template>
+    </lightning-layout>
+
+    <lightning-layout multiple-rows="true">
+
+        <lightning-layout-item size="4" class="slds-m-bottom_medium">
+            <lightning-icon icon-name="standard:groups" size="medium"
+                alternative-text={egyptConstants.UNIT_SEARCH_ICON_ALT_UNIT_SEARCH}>
+            </lightning-icon>
+            <span class="slds-text-heading_medium slds-p-left_small"
+                style="font-weight: 600;">{egyptConstants.UNIT_SEARCH_TITLE_UNIT_SEARCH}</span>
+        </lightning-layout-item>
+
+        <template if:false={disablePath}>
+            <lightning-layout-item size="8" class="slds-m-bottom_medium slds-grid slds-grid_align-end">
+                <lightning-button class="slds-m-around_xx-small" name={egyptConstants.UNIT_SEARCH_BUTTON_NAME_BACK}
+                    label={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_BACK} icon-name="utility:back" disabled={disableBack}
+                    onclick={handleMenuAction}>
+                </lightning-button>
+                <lightning-button class="slds-m-around_xx-small" name={egyptConstants.UNIT_SEARCH_BUTTON_NAME_FORWARD}
+                    label={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_PROCEED} icon-name="utility:forward"
+                    icon-position="right" disabled={disableProceed} onclick={handleMenuAction}>
+                </lightning-button>
+            </lightning-layout-item>
+        </template>
+
+        <template if:true={disablePath}>
+            <lightning-layout-item size="8" class="slds-m-bottom_medium slds-grid slds-grid_align-end">
+                <lightning-button class="slds-m-around_xx-small" name={egyptConstants.UNIT_SEARCH_BUTTON_NAME_BOOKING}
+                    label={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_BOOK_UNITS} icon-name="utility:entitlement"
+                    variant="brand-outline" onclick={handleMenuAction} disabled={hasNoSelectedUnits}></lightning-button>
+                <lightning-button class="slds-m-around_xx-small"
+                    name={egyptConstants.UNIT_SEARCH_BUTTON_NAME_BLOCK_REQUEST_EGYPT}
+                    label={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_REQUEST_BLOCK} icon-name="utility:entitlement"
+                    variant="brand-outline" onclick={handleMenuAction} disabled={hasNoSelectedUnits}></lightning-button>
+                <lightning-button class="slds-m-around_xx-small"
+                    name={egyptConstants.UNIT_SEARCH_BUTTON_NAME_BLOCK_REQUEST_WITH_FEES}
+                    label={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_REQUEST_BLOCK_WITH_FEES}
+                    icon-name="utility:entitlement" variant="brand-outline" onclick={handleMenuAction}
+                    disabled={hasNoSelectedUnits}></lightning-button>
+                <lightning-button-icon class="slds-m-around_xx-small" icon-name="utility:refresh"
+                    alternative-text={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_REFRESH}
+                    title={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_REFRESH} variant="brand-outline"
+                    onclick={handleRefresh}>
+                </lightning-button-icon>
+            </lightning-layout-item>
+        </template>
+
+        <template if:false={disablePath}>
+            <lightning-layout-item size="12">
+                <lightning-progress-indicator current-step={pageNumber} type="path" variant="base">
+                    <template for:each={steps} for:item="step">
+                        <lightning-progress-step label={step.label} value={step.value} key={step.label}>
+                        </lightning-progress-step>
+                    </template>
+                </lightning-progress-indicator>
+            </lightning-layout-item>
+        </template>
+
+        <!-- PAGE 1 -->
+        <template if:true={showPage1}>
+            <lightning-layout-item size="12" class="slds-card__body">
+                <lightning-layout multiple-rows="true" vertical-align="end" class="slds-gutters slds-m-vertical_small">
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_PROJECTS}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_PROJECTS} value={selectedProject}
+                            options={projectList} onchange={handleProjectChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_PHASE}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_PHASE} value={selectedPhase}
+                            options={phaseList} onchange={handlePhaseChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_UNIT_TYPE}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_UNIT_TYPE} value={selectedUnitType}
+                            options={unitTypeList} onchange={handleUnitTypeChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_QUALITY_TYPE}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_QUALITY_TYPE} value={selectQuality}
+                            options={qualityTypeList} onchange={handleQualityTypeChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_NUMBER_OF_BEDROOMS}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_NUMBER_OF_BEDROOMS}
+                            value={selectedNoOfBedrooms} options={bedroomsList} onchange={handleBedroomChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto" name={egyptConstants.UNIT_SEARCH_FILTER_NAME_GFA}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_GFA} value={selectedFloorArea}
+                            options={areaList} onchange={handleAreaChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_FLOOR}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_FLOOR} value={selectedFloor}
+                            options={floorList} onchange={handleFloorChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-input label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_UNIT_NAME} value={unitCode}
+                            placeholder={egyptConstants.UNIT_SEARCH_FILTER_PLACEHOLDER_UNIT_NAME}
+                            onchange={handleUnitCodeChange}></lightning-input>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="6" large-device-size="3"
+                        class="filter-col slds-p-horizontal_small">
+                        <lightning-combobox dropdown-alignment="auto"
+                            name={egyptConstants.UNIT_SEARCH_FILTER_NAME_CURRENCY}
+                            label={egyptConstants.UNIT_SEARCH_FILTER_LABEL_CURRENCY} value={filterCurrencyIsoCode}
+                            options={currencyIsoCodeList} onchange={handleCurrencyChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" medium-device-size="12" large-device-size="12"
+                        class="filter-col slds-p-around_small">
+                        <lightning-datatable class="slds-scrollable" key-field="Id" data={unitLst}
+                            columns={unitListColumns} is-loading={isScreenLoading} onrowselection={handleRowSelect}
+                            selected-rows={selectedUnitIds}>
+                        </lightning-datatable>
+                    </lightning-layout-item>
+
+                </lightning-layout>
+
+            </lightning-layout-item>
+        </template>
+
+        <!-- PAGE 2 -->
+        <template if:true={showPage2}>
+            <lightning-layout-item size="12" class="filter-col slds-card__body">
+                <lightning-tabset variant="scoped">
+                    <template for:each={selectedUnitList} for:item="item">
+                        <lightning-tab key={item.unitId} label={item.unitName} value={item.unitId}
+                            onactive={handlePaymentUnitSelect}>
+                            <c-egypt-payment-plan-manager unit={item}
+                                is-modon-operation-profile={isModonOperationProfile} exact-booking-date={todayDate}
+                                onstandardplanready={handleStandardPlanReady}
+                                payment-installments={paymentInstallments} ontypechange={handlePlanTypeToggle}
+                                onflexibleplanready={handleFlexiblePlanReady}
+                                ondisableproceedbuttonevent={handleDisableProceedBtn}>
+                            </c-egypt-payment-plan-manager>
+                        </lightning-tab>
+                    </template>
+                </lightning-tabset>
+            </lightning-layout-item>
+        </template>
+
+        <!-- PAGE 3 -->
+        <template if:true={showPage3}>
+            <lightning-layout-item size="12" class="slds-card__body">
+                <lightning-layout multiple-rows="true" vertical-align="start">
+
+                    <lightning-layout-item size="12" class="filter-col">
+                        <lightning-layout multiple-rows="true">
+
+                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium slds-p-bottom_medium">
+                                <lightning-input type="checkbox" required="true" class="confirmationCheckbox"
+                                    label={egyptConstants.UNIT_SEARCH_CONFIRM_CHECKBOX_LABEL} value={confirmation}
+                                    onchange={updateConfirmation}></lightning-input>
+                            </lightning-layout-item>
+
+                            <lightning-layout-item size="6" class="filter-col">&nbsp;</lightning-layout-item>
+
+                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium slds-p-bottom_medium">
+                                <lightning-button style="float: right;"
+                                    name={egyptConstants.UNIT_SEARCH_BUTTON_NAME_SALES_ORDER}
+                                    label={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_GENERATE_SALES_ORDER}
+                                    onclick={generateSalesOrder}></lightning-button>
+                            </lightning-layout-item>
+
+                        </lightning-layout>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12" class="filter-col">
+                        <lightning-tabset variant="scoped">
+                            <template for:each={selectedUnitList} for:item="item" for:index="indexVar">
+                                <lightning-tab key={item.unitId} label={item.unitName}
+                                    data-target-type={egyptConstants.UNIT_SEARCH_TAB_DATA_TARGET_TYPE}
+                                    data-unit-id={item.unitId} value={item.unitId} onactive={handleBookingUnitActive}>
+                                    <lightning-card variant={egyptConstants.UNIT_SEARCH_LIGHTNING_CARD_VARIANT_NARROW}
+                                        title={egyptConstants.UNIT_SEARCH_CARD_TITLE_SALES_ORDER_DETAILS}>
+
+                                        <lightning-layout multiple-rows="true">
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {egyptConstants.UNIT_SEARCH_LABEL_UNIT_NAME_COLON}
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {item.unitName}
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {egyptConstants.UNIT_SEARCH_LABEL_PHASE_NAME_COLON}
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {item.phaseName}
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {egyptConstants.UNIT_SEARCH_LABEL_PROJECT_NAME_COLON}
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {item.projectName}
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {egyptConstants.UNIT_SEARCH_LABEL_PRICE_COLON}
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                <lightning-formatted-number format-style="currency"
+                                                    currency-code={item.selectedPPCurrency} currency-display-as="code"
+                                                    class="table-input" value={item.basePriceFromMapping}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="2"></lightning-formatted-number>
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                <b>{egyptConstants.UNIT_SEARCH_LABEL_SELECTED_PAYMENT_PLAN_BOLD}</b>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {paymentTypeName}
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                {egyptConstants.UNIT_SEARCH_LABEL_MAINTENANCE_FEES_COLON}
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                <lightning-formatted-number format-style="currency"
+                                                    currency-code={item.maintenanceCurrency} currency-display-as="code"
+                                                    class="table-input" value={item.totalMaintenanceFees}
+                                                    minimum-fraction-digits="2" maximum-fraction-digits="2">
+                                                </lightning-formatted-number>
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                <b>{egyptConstants.UNIT_SEARCH_LABEL_EXACT_BOOKING_DATE_BOLD}</b>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="filter-col slds-p-top_medium">
+                                                <lightning-formatted-date-time year="numeric" month="numeric"
+                                                    day="numeric"
+                                                    value={item.exactBookingDate}></lightning-formatted-date-time>
+                                            </lightning-layout-item>
+
+                                        </lightning-layout>
+
+                                        <lightning-layout multiple-rows="true" class="slds-p-top_large slds-scrollable">
+                                            <lightning-layout-item size="12">
+                                                <lightning-datatable class="slds-scrollable" key-field="id"
+                                                    data={paymentInstallments} is-loading={isScreenLoading}
+                                                    columns={paymentInstallmentsColumns} hide-checkbox-column>
+                                                </lightning-datatable>
+                                            </lightning-layout-item>
+                                        </lightning-layout>
+
+                                    </lightning-card>
+                                </lightning-tab>
+                            </template>
+                        </lightning-tabset>
+                    </lightning-layout-item>
+
+                </lightning-layout>
+            </lightning-layout-item>
+        </template>
+
+        <!-- BLOCK REQUEST EGYPT MODAL -->
+        <template if:true={showBlockRequestEgyptModal}>
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title={egyptConstants.UNIT_SEARCH_BUTTON_LABEL_CLOSE} onclick={hideModalBox}>
+                            <lightning-icon icon-name="utility:close"
+                                alternative-text={egyptConstants.UNIT_SEARCH_ICON_ALT_CLOSE} variant="inverse"
+                                size="small"></lightning-icon>
+                            <span class="slds-assistive-text">{egyptConstants.UNIT_SEARCH_BUTTON_LABEL_CLOSE}</span>
+                        </button>
+                        <h2 id="modal-heading-011" class="slds-text-heading_medium slds-hyphenate">
+                            {egyptConstants.UNIT_SEARCH_MODAL_TITLE_BLOCK_UNIT_DETAILS}
+                        </h2>
+                    </header>
+
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-11">
+                        <div class="slds-card__body">
+                            <lightning-layout vertical-align="start">
+                                <lightning-layout-item size="7" class="slds-p-around_medium"
+                                    style="padding-left: unset;">
+                                    <label data-main-label="true"
+                                        class="slds-form-element__label"><span>{egyptConstants.UNIT_SEARCH_MODAL_LABEL_COMMENT}</span></label>
+                                    <lightning-textarea label={egyptConstants.UNIT_SEARCH_MODAL_LABEL_COMMENT}
+                                        required="true" type="text-area" class="customer-name-input blockDetails"
+                                        data-target-type="input" variant="label-hidden" value={commentValue}
+                                        onchange={updateCommentValue}></lightning-textarea>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                        </div>
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_brand"
+                            onclick={validDocumentUploaded}>{egyptConstants.UNIT_SEARCH_BUTTON_LABEL_SAVE}</button>
+                        <button class="slds-button slds-button_neutral"
+                            onclick={hideModalBox}>{egyptConstants.UNIT_SEARCH_BUTTON_LABEL_CANCEL}</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </lightning-layout>
+</template>

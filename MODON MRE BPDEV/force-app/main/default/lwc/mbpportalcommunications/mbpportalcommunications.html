@@ -1,0 +1,255 @@
+<template>
+    <div class="communications-container">
+        <!-- Communication List -->
+        <div class="list-panel">
+            <div class="search-section">
+                <div class="search-container">
+                    <input
+                        type="text"
+                        class="search-input"
+                        placeholder="Search communications..."
+                        value={searchTerm}
+                        oninput={handleSearch}
+                    />
+                </div>
+            </div>
+
+            <div class="communications-list">
+                <template for:each={filteredCommunications} for:item="comm">
+                    <div key={comm.id} data-id={comm.id} class="comm-card" onclick={handleCommunicationClick}>
+                        <div class="comm-item-content">
+                            <div class="comm-subject">{comm.subject}</div>
+                            <div class="comm-date">
+                                {comm.displayDate} - {comm.timeAgo}
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template if:true={noCommunications}>
+                    <div class="empty-state">
+                        <p>No communications found.</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <template if:true={selectedCommunication}>
+                <div class="preview-header">
+                    <h1 class="preview-title">{selectedCommunication.subject}</h1>
+
+                    <div class="preview-meta">
+                        <div class="meta-row">
+                            <span class="meta-label">From:</span>
+                            <span class="meta-value">{selectedCommunication.fromText}</span>
+                        </div>
+                        <template if:true={selectedCommunication.ccAddresses}>
+                            <div class="meta-row">
+                                <span class="meta-label">Cc:</span>
+                                <span class="meta-value">{selectedCommunication.ccAddresses}</span>
+                            </div>
+                        </template>
+
+                        <template if:true={selectedCommunication.bccAddresses}>
+                            <div class="meta-row">
+                                <span class="meta-label">Bcc:</span>
+                                <span class="meta-value">{selectedCommunication.bccAddresses}</span>
+                            </div>
+                        </template>
+
+                        <div class="meta-row">
+                            <span class="meta-label">Sent:</span>
+                            <span class="meta-value">
+                                {selectedCommunication.formattedDate},
+                                {selectedCommunication.formattedTime}
+                            </span>
+                        </div>
+
+                        <!-- Downloadable Attachments Section -->
+                        <template if:true={selectedCommunication.hasAttachments}>
+                            <div class="attachments-section">
+                                <div class="meta-label">Attachments:</div>
+                                <div class="attachments-list">
+                                    <template for:each={selectedCommunication.attachments} for:item="att">
+                                        <div key={att.id} class="attachment-item">
+                                            <div class="attachment-info">
+                                                <span class="attachment-icon">📎</span>
+                                                <span class="attachment-name">{att.name}</span>
+                                                <span class="attachment-size">
+                                                    ({att.formattedSize})
+                                                </span>
+                                            </div>
+                                            <button 
+                                                class="download-btn"
+                                                onclick={handleDownload}
+                                                data-url={att.downloadUrl}
+                                                data-name={att.name}
+                                                title="Download"
+                                            >
+                                                ⬇️
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="preview-content">
+                    <div class="email-container">
+                        <template if:true={selectedCommunication}>
+                            <div class="email-body" lwc:dom="manual" data-id="emailBody">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <template if:false={selectedCommunication}>
+                <div class="empty-preview">
+                    <p>Select a communication to view details</p>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <template if:true={isMobile}>
+
+        <!-- Mobile Search Bar -->
+        <div class="mobile-search-bar">
+            <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input
+                type="text"
+                class="mobile-search-input"
+                placeholder="Search communications..."
+                value={searchTerm}
+                oninput={handleSearch}
+            />
+        </div>
+
+        <!-- Mobile Collapsible Cards List -->
+        <div class="mobile-comm-list">
+            <template for:each={filteredCommunications} for:item="comm">
+                <div key={comm.id} class="mobile-comm-card">
+
+                    <!-- Card Header - always visible, click to expand/collapse -->
+                    <div class="mobile-card-header" data-id={comm.id} onclick={handleMobileCardToggle}>
+                        <div class="mobile-card-left">
+                            <!-- Unread dot indicator -->
+                            <template if:true={comm.isUnread}>
+                                <span class="mobile-unread-dot"></span>
+                            </template>
+                            <div class="mobile-card-info">
+                                <span class="mobile-card-subject">{comm.subject}</span>
+                                <span class="mobile-card-date">{comm.displayDate} · {comm.timeAgo}</span>
+                            </div>
+                        </div>
+                        <!-- Black down arrow on the right -->
+                        <span class={comm.mobileArrowClass}>&#9660;</span>
+                    </div>
+
+                    <!-- Expanded Body - hidden by default, shown on toggle -->
+                    <div class={comm.mobileBodyClass}>
+
+                        <!-- Meta information section -->
+                        <div class="mobile-meta-section">
+                            <div class="mobile-meta-row">
+                                <span class="mobile-meta-label">From:</span>
+                                <span class="mobile-meta-value">{comm.fromText}</span>
+                            </div>
+                            <template if:true={comm.ccAddresses}>
+                                <div class="mobile-meta-row">
+                                    <span class="mobile-meta-label">Cc:</span>
+                                    <span class="mobile-meta-value">{comm.ccAddresses}</span>
+                                </div>
+                            </template>
+                            <template if:true={comm.bccAddresses}>
+                                <div class="mobile-meta-row">
+                                    <span class="mobile-meta-label">Bcc:</span>
+                                    <span class="mobile-meta-value">{comm.bccAddresses}</span>
+                                </div>
+                            </template>
+                            <div class="mobile-meta-row">
+                                <span class="mobile-meta-label">Sent:</span>
+                                <span class="mobile-meta-value">{comm.formattedDate}, {comm.formattedTime}</span>
+                            </div>
+
+                            <!-- Downloadable Attachments - same as desktop, handles images and files -->
+                            <template if:true={comm.hasAttachments}>
+                                <div class="mobile-attachments-section">
+                                    <div class="mobile-meta-label mobile-attachments-title">Attachments:</div>
+                                    <div class="mobile-attachments-list">
+                                        <template for:each={comm.attachments} for:item="att">
+                                            <div key={att.id} class="mobile-attachment-item">
+                                                <div class="mobile-attachment-info">
+                                                    <span class="attachment-icon">📎</span>
+                                                    <span class="attachment-name">{att.name}</span>
+                                                    <span class="attachment-size">({att.formattedSize})</span>
+                                                </div>
+                                                <button
+                                                    class="download-btn"
+                                                    onclick={handleDownload}
+                                                    data-url={att.downloadUrl}
+                                                    data-name={att.name}
+                                                    title="Download"
+                                                >
+                                                    ⬇️
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Email HTML body injected via renderedCallback same as desktop -->
+                        <!-- All images inside htmlBody (inline or via src) render automatically -->
+                        <div class="mobile-email-body-wrapper">
+                            <div class="mobile-email-body"
+                                 lwc:dom="manual"
+                                 data-bodyid={comm.id}>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- end mobile-card-body -->
+
+                </div>
+                <!-- end mobile-comm-card -->
+            </template>
+
+            <template if:true={noCommunications}>
+                <div class="mobile-empty-state">
+                    <p>No communications found.</p>
+                </div>
+            </template>
+        </div>
+        <!-- end mobile-comm-list -->
+
+    <div class="mobile-pagination">
+
+        <button onclick={handlePrevPage} disabled={isFirstPage}>
+            ◀ Prev
+        </button>
+
+        <span class="page-info">
+            Page {currentPage} of {totalPages}
+        </span>
+
+        <button onclick={handleNextPage} disabled={isLastPage}>
+            Next ▶
+        </button>
+
+    </div>
+
+    </template>
+    <!-- ==================== END MOBILE VIEW ==================== -->
+
+</template>

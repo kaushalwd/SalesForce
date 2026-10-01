@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nationality_and_UAE_Resident_are_mandato</fullName>
+    <active>true</active>
+    <description>Nationality and UAE Resident are mandatory before converting the Lead.</description>
+    <errorConditionFormula>AND(
+    IsConverted,
+
+    OR(
+        CONTAINS($UserRole.DeveloperName, &apos;Sales_Associate&apos;),
+        CONTAINS($UserRole.DeveloperName, &apos;Senior_Operations_Associate&apos;),
+        CONTAINS($UserRole.DeveloperName, &apos;Sales_Manager&apos;),
+        CONTAINS($UserRole.DeveloperName, &apos;Sales_Director&apos;)
+    ),
+
+    NOT(ISPICKVAL(Source_Entity__c, &quot;Modon - Egypt&quot;)),
+
+    OR(
+        ISBLANK(TEXT(Nationality__c)),
+        ISBLANK(TEXT(UAEResidentStatus__c))
+    )
+)</errorConditionFormula>
+    <errorMessage>Nationality and UAE Resident are mandatory before converting the Lead.</errorMessage>
+</ValidationRule>

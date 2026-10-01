@@ -1,0 +1,286 @@
+<template>
+  <template lwc:if={errorMsg}>
+    <div class="banner banner--error" role="alert">{errorMsg}</div>
+  </template>
+
+  <!-- 1.2: the journey takes the sheet over; the list is re-read when it exits -->
+  <template lwc:if={creating}>
+    <c-msc-eoi-journey
+      class="journey"
+      payment-return-result={paymentReturnResult}
+      payment-return-ref={paymentReturnRef}
+      oncreated={handleCreated}
+      onexit={cancelCreate}
+    ></c-msc-eoi-journey>
+  </template>
+
+  <template lwc:else>
+    <!-- TOOLBAR: find, narrow, order, create -->
+    <div class="toolbar">
+      <div class={searchClass}>
+        <c-modon-icon
+          name="search"
+          size="14"
+          color="currentColor"
+          class="search__icon"
+        ></c-modon-icon>
+        <input
+          type="text"
+          placeholder={searchPlaceholder}
+          value={search}
+          oninput={handleSearch}
+          aria-label="Search expressions of interest"
+        />
+        <!-- 2.1: Ctrl K off a Mac -->
+        <span class="kbd" aria-hidden="true"><span>{kbdMod}</span><span>K</span></span>
+        <template lwc:if={hasSearch}>
+          <button class="clr" onclick={clearSearch}>Clear</button>
+        </template>
+      </div>
+
+      <div class="seg" role="group" aria-label="Status">
+        <template for:each={segments} for:item="f">
+          <button
+            key={f.key}
+            data-key={f.key}
+            aria-pressed={f.pressed}
+            onclick={setFilter}
+          >
+            {f.label}<em>{f.count}</em>
+          </button>
+        </template>
+      </div>
+
+      <label class="sort">
+        <span>Sort</span>
+        <select onchange={setSort} aria-label="Sort expressions of interest">
+          <template for:each={sortOptions} for:item="o">
+            <option key={o.value} value={o.value} selected={o.selected}>
+              {o.label}
+            </option>
+          </template>
+        </select>
+        <c-modon-icon
+          name="chevron-down"
+          size="12"
+          color="currentColor"
+          class="sort__chev"
+        ></c-modon-icon>
+      </label>
+
+      <!-- 1.2: the journey runs here. 1.6: New EOI restored at the business's ask (MSC-183). -->
+      <button class="btn btn-primary btn-new" onclick={startCreate}>
+        <c-modon-icon name="plus" size="14" color="currentColor"></c-modon-icon>
+        <span>New EOI</span>
+      </button>
+    </div>
+
+    <!-- THE GRID: one field per column -->
+    <div class={gridScrollClass}>
+      <template lwc:if={showHead}>
+        <div class="list-head">
+          <span>EOI</span>
+          <span class="h-cust">Customer</span>
+          <span>Project</span>
+          <span class="h-amt">Amount</span>
+          <span>Status</span>
+          <span>Created</span>
+          <span></span>
+        </div>
+      </template>
+
+      <!-- MSC-229: the open payment links. No EOI exists for these yet - pay-first. -->
+      <template lwc:if={showAwaitHead}>
+        <template lwc:if={checkedLabel}>
+          <div class="checkedline">{checkedLabel}</div>
+        </template>
+        <div class="list-head">
+          <span>Payment reference</span>
+          <span class="h-cust">Customer</span>
+          <span>Project</span>
+          <span class="h-amt">Amount</span>
+          <span>Status</span>
+          <span>Expires</span>
+          <span></span>
+        </div>
+      </template>
+
+      <div class="list" aria-live="polite">
+        <template lwc:if={loading}>
+          <div class="sk"></div>
+          <div class="sk"></div>
+          <div class="sk"></div>
+        </template>
+
+        <template lwc:if={isAwaiting}>
+          <template for:each={paged} for:item="a">
+            <article key={a.id} class="row">
+              <div class="row-main row-main--static">
+                <span class="cell ref ckref" title={a.reference}>{a.reference}</span>
+                <div class="cell cell-cust" data-label="Customer">
+                  <span class="name">{a.customerName}</span>
+                </div>
+                <span class="cell dim" data-label="Project" title={a.projectText}>{a.projectText}</span>
+                <span class="cell amt" data-label="Amount">{a.amountText}</span>
+                <span class="cell cell-status">
+                  <span class={a.chipClass}><i></i>{a.statusText}</span>
+                </span>
+                <span class="cell mono" data-label="Expires">
+                  {a.expiresText}<small>{a.expiresAgeText}</small>
+                </span>
+                <span class="cell cell-act">
+                  <template lwc:if={a.canResend}>
+                    <button class="btn-resend" type="button" data-id={a.id} disabled={a.resendBusy} onclick={handleResend}>
+                      <c-modon-icon name="send" size="13" color="currentColor"></c-modon-icon>
+                      <span>Resend link</span>
+                    </button>
+                  </template>
+                  <template lwc:if={a.resent}>
+                    <span class="btn-resend btn-resend--sent">
+                      <c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon>
+                      <span>Sent</span>
+                    </span>
+                  </template>
+                  <button class={a.checkClass} type="button" data-id={a.id} disabled={a.checkBusy} onclick={handleCheck} title="Check payment" aria-label="Check payment">
+                    <c-modon-icon name="refresh-cw" size="13" color="currentColor"></c-modon-icon>
+                  </button>
+                </span>
+              </div>
+            </article>
+          </template>
+        </template>
+        <template lwc:else>
+          <template for:each={paged} for:item="e">
+            <article key={e.id} class="row">
+              <div class="row-main">
+                <span class="cell ref">{e.name}<small>{e.eoiNumber}</small></span>
+                <div class="cell cell-cust" data-label="Customer">
+                  <span class="name">{e.customerName}</span>
+                </div>
+                <span class="cell" data-label="Project" title={e.projectText}>{e.projectText}</span>
+                <span class="cell amt" data-label="Amount">{e.amountText}</span>
+                <span class="cell cell-status">
+                  <span class={e.chipClass}><i></i>{e.statusText}</span>
+                </span>
+                <span class="cell mono" data-label="Created">
+                  {e.createdText}<small>{e.ageText}</small>
+                </span>
+                <!-- MSC-231: the Book unit door - shown only on rows the org engine lists as eligible -->
+                <span class="cell cell-act">
+                  <template lwc:if={e.canBook}>
+                    <button class="btn-book" type="button" data-id={e.id} onclick={handleBook}>
+                      <c-modon-icon name="home" size="13" color="currentColor"></c-modon-icon>
+                      <span>Book unit</span>
+                    </button>
+                  </template>
+                </span>
+              </div>
+            </article>
+          </template>
+        </template>
+      </div>
+    </div>
+
+    <!-- EMPTY / NO MATCH -->
+    <template lwc:if={isEmpty}>
+      <div class="empty">
+        <div class="ring">
+          <c-modon-icon name="file-text" size="22" color="currentColor"></c-modon-icon>
+        </div>
+        <h3>No expressions of interest yet</h3>
+        <p>EOIs raised on your opportunities appear here.</p>
+        <button class="btn btn-primary btn-sm empty__cta" onclick={startCreate}>
+          New EOI
+        </button>
+      </div>
+    </template>
+
+    <template lwc:if={noMatch}>
+      <div class="empty">
+        <div class="ring">
+          <c-modon-icon name="file-text" size="22" color="currentColor"></c-modon-icon>
+        </div>
+        <h3>Nothing matches</h3>
+        <p>
+          No EOI matches that search or filter.
+          <a href="#" class="empty__link" onclick={clearFilters}>Clear filters</a>
+        </p>
+      </div>
+    </template>
+
+    <template lwc:if={awaitingEmpty}>
+      <div class="empty">
+        <div class="ring">
+          <c-modon-icon name="banknote" size="22" color="currentColor"></c-modon-icon>
+        </div>
+        <h3>No payments awaiting</h3>
+        <p>Payment links you send appear here until the customer pays.</p>
+      </div>
+    </template>
+    <template lwc:if={awaitingNoMatch}>
+      <div class="empty">
+        <div class="ring">
+          <c-modon-icon name="banknote" size="22" color="currentColor"></c-modon-icon>
+        </div>
+        <h3>Nothing matches</h3>
+        <p>No open payment link matches that search.</p>
+      </div>
+    </template>
+
+    <!-- MSC-229: only the manual check speaks; the background poller never pops messages -->
+    <template lwc:if={toast}>
+      <div class="toast" role="status">
+        <c-modon-icon name="check-circle" size="15" color="var(--chip-green, #4ade80)"></c-modon-icon>
+        <span>Payment received · <b>{toast.eoiName}</b> created</span>
+      </div>
+    </template>
+
+    <!-- PAGER (MSC-057): pinned to the bottom; page size fitted to the visible height -->
+    <template lwc:if={showPager}>
+      <nav class="pager" aria-label="Pages">
+        <span class="pager__info">Showing {pageInfoText}</span>
+        <div class="pager__nav">
+          <button
+            class="pager__btn pager__arrow"
+            type="button"
+            data-page="prev"
+            disabled={isFirstPage}
+            onclick={goPage}
+            aria-label="Previous page"
+          >
+            <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+          </button>
+          <template for:each={pageItems} for:item="p">
+            <template lwc:if={p.gap}>
+              <span key={p.key} class="pager__gap" aria-hidden="true">…</span>
+            </template>
+            <template lwc:else>
+              <button
+                key={p.key}
+                class={p.cls}
+                type="button"
+                data-page={p.n}
+                aria-current={p.current}
+                aria-label={p.label}
+                onclick={goPage}
+              >
+                {p.n}
+              </button>
+            </template>
+          </template>
+          <span class="pager__compact">{pageCompact}</span>
+          <button
+            class="pager__btn pager__arrow"
+            type="button"
+            data-page="next"
+            disabled={isLastPage}
+            onclick={goPage}
+            aria-label="Next page"
+          >
+            <c-modon-icon name="chevron-right" size="14" color="currentColor"></c-modon-icon>
+          </button>
+        </div>
+      </nav>
+    </template>
+  </template>
+</template>

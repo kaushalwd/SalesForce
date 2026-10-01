@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Exclude_Admin_Fee_Changes_Validation</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+    AND(
+        PRIORVALUE(Exclude_Admin_Fee__c) &lt;&gt; Exclude_Admin_Fee__c,
+        Current_Step_Name__c &lt;&gt; &quot;CRM Request Verification&quot;
+    ),
+ 
+    
+    AND(Exclude_Admin_Fee__c, ISBLANK(Exclude_Admin_Fee_Reason__c)),        
+    AND(NOT(Exclude_Admin_Fee__c), NOT(ISBLANK(Exclude_Admin_Fee_Reason__c)))
+)</errorConditionFormula>
+    <errorMessage>If Exclude Admin Fee is true, Exclude Admin Fee Reason cannot be blank (and vice versa).</errorMessage>
+</ValidationRule>

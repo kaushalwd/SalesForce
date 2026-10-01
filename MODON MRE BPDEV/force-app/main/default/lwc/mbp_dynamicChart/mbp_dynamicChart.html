@@ -1,0 +1,45 @@
+<template>
+  <div class="panel-card">
+    <template if:true={chartTitle}>
+      <h3 class="commission-title">{chartTitle}</h3>
+    </template>
+
+    <div class="circle-wrapper" style="position:relative; height:250px;">
+      <canvas class="commission-chart"></canvas>
+    </div>
+
+    <button class="expand-btn" onclick={handleExpand}>
+      ⤢
+    </button>
+
+    <template if:true={isModalOpen}>
+      <section class="popup-backdrop" onclick={handleClose}>
+        <div class="popup-card" onclick={stopBubble}>
+          <header class="popup-header">
+            <h2>{chartTitle} Details</h2>
+            <button class="close-btn" onclick={handleClose} aria-label="Close">✕</button>
+          </header>
+
+          <div class="popup-content">
+            <div class="popup-chart-wrapper">
+              <canvas class="popup-chart"></canvas>
+            </div>
+
+            <div class="popup-details">
+              <template for:each={details} for:item="detail">
+                <div key={detail.label} class="detail-item">
+                  <span style={detail.dotStyle}></span>
+                  <span class="currency-icon">{detail.label}:</span>
+                  <template if:true={detail.showIcon}>
+                    <img src={dirhamIcon} class="currency-icon"/>
+                  </template>
+                  <span class="currency-icon">{detail.value}</span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+  </div>
+</template>

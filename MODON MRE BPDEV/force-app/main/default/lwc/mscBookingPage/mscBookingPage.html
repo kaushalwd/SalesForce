@@ -1,0 +1,973 @@
+<template>
+    <div class={pageClass} style={hostStyleAttr}>
+        <!-- renderless: paints tokens on :root. Standalone only; embedded, mscShell has already painted them. -->
+        <template lwc:if={showOwnChrome}>
+            <c-msc-token-host theme={resolvedTheme} accent-color={accentColor}></c-msc-token-host>
+        </template>
+
+        <!-- 1.4: the sheet supplies these when embedded -->
+        <template lwc:if={showOwnChrome}>
+        <header class="topbar">
+            <span class="brand">Modon</span>
+            <span class="brand__sep">·</span>
+            <span class="brand__sub">Sales Console</span>
+            <span class="spacer"></span>
+            <template lwc:if={bookingReference}>
+                <span class="chip">{labels.BOOKING_REFERENCE} {bookingReference}</span>
+            </template>
+        </header>
+        </template>
+
+        <!-- only where the summary rail is not on screen; see showProgressNav -->
+        <template lwc:if={showProgressNav}>
+            <div class="navbar">
+                <!-- 1.52: onjumpto is back; the tape only makes a completed segment clickable -->
+                <!-- MSC-104: floor-key names the earliest step still open; feeds previousKey and handleJump too -->
+                <c-msc-progress-nav
+                    sections={navSections}
+                    active-key={activeKey}
+                    floor-key={navFloorKey}
+                    floor-reason={navFloorReason}
+                    onjumpto={handleJump}
+                ></c-msc-progress-nav>
+            </div>
+        </template>
+
+        <!-- 1.103 / MSC-163: dismissible -->
+        <template lwc:if={hasError}>
+            <div class="banner banner--error page__error">
+                <c-modon-icon name="alert-circle" size="15" color="var(--chip-red, #f87171)"></c-modon-icon>
+                <span>{errorMsg}</span>
+                <button
+                    class="banner__close"
+                    type="button"
+                    title={labels.BANNER_DISMISS}
+                    aria-label={labels.BANNER_DISMISS}
+                    onclick={handleDismissError}
+                >&times;</button>
+            </div>
+        </template>
+
+        <!-- 1.43: this booking cannot be completed; the reason is the server's own words -->
+        <template lwc:if={isOpenBlocked}>
+            <div class="banner banner--warn page__error">
+                <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #d97706)"></c-modon-icon>
+                <span>{openBlockReason}</span>
+            </div>
+        </template>
+
+        <!-- 1.104 / MSC-166: dismissible, like the error banner -->
+        <template lwc:if={kycLinkMsg}>
+            <div class="banner banner--ok page__error">
+                <c-modon-icon name="send" size="15" color="var(--step-done, #16a34a)"></c-modon-icon>
+                <span>{kycLinkMsg}</span>
+                <button
+                    class="banner__close"
+                    type="button"
+                    title={labels.BANNER_DISMISS}
+                    aria-label={labels.BANNER_DISMISS}
+                    onclick={handleDismissKycLink}
+                >&times;</button>
+            </div>
+        </template>
+
+        <!-- MSC-231: the engine WILL refuse this phase without an EOI and this customer has
+             none it accepts - said once, up front, in the server's own words -->
+        <template lwc:if={eoiGateMsg}>
+            <div class="banner banner--warn page__error">
+                <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #d97706)"></c-modon-icon>
+                <span>{eoiGateMsg}</span>
+            </div>
+        </template>
+
+        <!-- advisory only: a confirmed booking with nothing submitted yet is the expected state -->
+        <template lwc:if={complianceWarning}>
+            <div class="banner banner--warn page__error">
+                <c-modon-icon name="shield-check" size="15" color="var(--chip-amber, #d97706)"></c-modon-icon>
+                <span>{complianceWarning}</span>
+                <button
+                    class="banner__close"
+                    type="button"
+                    title={labels.BANNER_DISMISS}
+                    aria-label={labels.BANNER_DISMISS}
+                    onclick={handleDismissComplianceWarning}
+                >&times;</button>
+            </div>
+        </template>
+
+        <div class={bodyClass}>
+            <div class="column">
+                <!-- 1.15: only the open step renders; the step nav carries the shape of the journey -->
+                <template lwc:if={unitOpen}>
+                <div data-anchor="unit">
+                    <!-- 1.17: no eyebrow or heading, the stepper above already names the only card in step 1 -->
+                    <!-- bare: this card fills an already framed pane -->
+                    <c-msc-section-card
+                        section-key="unit" state={unitSectionState}
+                        summary-line={unitSummaryLine}
+                        bare
+                    >
+                        <!-- 1.8: the grid gets the whole column; the walkthrough moved to the rail -->
+                        <c-msc-unit-select
+                            project-options={projects} phase-options={phases} units={units}
+                            selected-unit-ids={selectedUnitIds}
+                            selected-project-id={selectedProjectId}
+                            selected-phase-id={selectedPhaseId}
+                            eoi-preset={eoiFilterPreset}
+                            busy={busyUnits}
+                            tour-available={showRailTour}
+                            show-facts={showCardFacts}
+                            onprojectchange={handleProjectChange}
+                            onphasechange={handlePhaseChange}
+                            onunitselect={handleUnitSelect}
+                        ></c-msc-unit-select>
+
+                        <!-- below 1280px there is no rail, so the walkthrough falls back to here, collapsed -->
+                        <template lwc:if={showInlineTour}>
+                            <div class="inline-tour">
+                                <c-msc-unit-tour
+                                    unit-name={focusedUnitName}
+                                    tour-url={focusedUnitTourUrl}
+                                    mode="accordion"
+                                ></c-msc-unit-tour>
+                            </div>
+                        </template>
+                    </c-msc-section-card>
+                </div>
+                </template>
+
+                <!-- step 2: customer details and the payment plan, side by side -->
+                <template lwc:if={customerOpen}>
+                <div class="pair">
+                    <div data-anchor="customer" class={customerCellClass}>
+                        <!-- 1.62 scroll-body: the two cards scroll inside their own height (see .pair in the CSS) -->
+                        <c-msc-section-card
+                            heading={labels.SECTION_CUSTOMER}
+                            section-key="customer" state={customerSectionState}
+                            aside-text={customerAside} summary-line={customerSummaryLine}
+                            scroll-body="true"
+                            fill={customerCardFill}
+                        >
+                            <!-- 1.58: Change customer in the header, through the aside slot. Hidden once the booking is committed. -->
+                            <template lwc:if={canChangeCustomer}>
+                                <button
+                                    slot="aside"
+                                    class="btn btn-ghost btn-sm customer-swap__btn"
+                                    type="button"
+                                    onclick={handleChangeCustomer}
+                                >
+                                    <c-modon-icon name="chevron-left" size="13" color="currentColor"></c-modon-icon>
+                                    <span>Change customer</span>
+                                </button>
+                            </template>
+
+                            <!-- MSC-152: who the booking is for, beside the heading. Drawn here because slotted content comes from the card's consumer; only while the picker is up. -->
+                            <!-- MSC-214: and not while a lead seed is live - the seeded panel ignores it -->
+                            <template lwc:if={showBuyerTypeSwitch}>
+                                <div
+                                    slot="aside"
+                                    class="buyer-type"
+                                    role="group"
+                                    aria-label={labels.BUYER_TYPE}
+                                >
+                                    <template for:each={buyerTypeSegments} for:item="b">
+                                        <button
+                                            key={b.key}
+                                            class={b.cls}
+                                            type="button"
+                                            data-value={b.key}
+                                            aria-pressed={b.pressed}
+                                            onclick={handleBuyerType}
+                                        >{b.label}</button>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- 1.5: unit first, customer second, the order modonJourney uses -->
+                            <template lwc:if={needsCustomer}>
+                                <!-- MSC-212: seed-lead is the lead a "Book a unit" journey was opened from -->
+                                <!-- MSC-214: Back off the seeded panel abandons the seed -->
+                                <c-msc-console
+                                    project-interest={selectedProjectName}
+                                    buyer-type={buyerType}
+                                    seed-lead={leadSeed}
+                                    onopportunityselect={handleCustomerPicked}
+                                    onseedcancel={handleSeedCancel}
+                                ></c-msc-console>
+                            </template>
+                            <template lwc:else>
+                            <!-- 1.30: the eligibility block, next to the fields it is about -->
+                            <!-- 1.55: the verification gate, only while it holds the journey here; carries the way out -->
+                            <template lwc:if={showVerifyGate}>
+                                <c-msc-verify-gate
+                                    state={compliance}
+                                    customer-name={customerDisplayName}
+                                    busy={busyVerification}
+                                    refreshing={busyComplianceRefresh}
+                                    onrefresh={handleVerifyRefresh}
+                                    onresend={handleVerifyResend}
+                                    oninbranch={handleVerifyInBranch}
+                                ></c-msc-verify-gate>
+                            </template>
+
+                            <!-- Signzy Phase 2: the PRE-booking KYC state, beside the customer
+                                 fields it is about (design section 5b, placement option A). Read-only:
+                                 it reports the server's verdict and blocks nothing. Absent, not empty,
+                                 when there is no verdict yet. -->
+                            <template lwc:if={opportunityId}>
+                                <!-- 1.113: the panel is interactive from Phase 3. primary-unit-id
+                                     is passed so sendCustomerVerification can stamp the unit on
+                                     the customer's form BEFORE the send; without it the form
+                                     still goes, just without the unit named. -->
+                                <c-msc-kyc-gate
+                                    opportunity-id={opportunityId}
+                                    primary-unit-id={primaryUnitId}
+                                    onkycstate={handleKycState}
+                                    onopenkyc={handleOpenKyc}
+                                ></c-msc-kyc-gate>
+                            </template>
+
+                            <!-- 1.59: the standing eligibility banner is gone; the Continue button raises the sentence and jumps to the first blank field -->
+
+                            <!-- 1.61: collapsed on arrival only on the new-customer journey -->
+                            <!-- 1.91: no locked= any more; the edit policy travels in customer.lockReasons -->
+                            <c-msc-customer-info
+                                customer={summaryCustomer}
+                                nationality-options={nationalityOptions}
+                                legal-structure-options={legalStructureOptions}
+                                country-options={countryOptions}
+                                collapsed-on-arrival={isNewCustomerJourney}
+                                saving={busyCustomer}
+                                ondirty={handleCustomerDirty}
+                                onresidencychange={handleResidencyChange}
+                                oneditaddress={handleEditAddress}
+                                onsave={handleCustomerSave}
+                            ></c-msc-customer-info>
+
+                            <!-- The address block (c/mscAddress, 1.30) is unmounted. Modon's Sales App
+                                 captures the address in ONE place - the Update Account Manual quick
+                                 action, which is the form this console hosts as Update KYC - and since
+                                 that form arrived the console had two, writing the same five fields in
+                                 two shapes. Update KYC owns it now (20 Sep); handleEditAddress
+                                 opens that dialog. The component is left deployed but unused, so the
+                                 decision is one line to reverse. -->
+
+                            <!-- 1.93: the Company details section is unmounted; verification mounts c/mscOrganisation -->
+                            </template>
+                        </c-msc-section-card>
+                    </div>
+
+                    <!-- 1.27: not until there is a customer to book for (needsCustomer = no opportunity yet) -->
+                    <template lwc:if={hasCustomerPicked}>
+                    <div data-anchor="plan" class="pair__cell">
+                        <c-msc-section-card
+                            heading={labels.SECTION_PLAN}
+                            section-key="plan" state={planSectionState}
+                            aside-text={planAside} summary-line={planSummaryLine}
+                            scroll-body="true"
+                            fill="true"
+                        >
+                            <!-- MSC-175: Preview offer in the card's heading row through the aside slot, instead of below the milestone table. Disabled, never hidden; the sentence became the tooltip. -->
+                            <!-- B10: hidden behind LABELS.OFFER_ENABLED; the code stays. -->
+                            <template lwc:if={offerEnabled}>
+                            <button
+                                slot="aside"
+                                class="btn btn-ghost offer-open__btn"
+                                type="button"
+                                disabled={offerDisabled}
+                                title={offerButtonTitle}
+                                onclick={handleOpenOffer}
+                            >
+                                <c-modon-icon name="file-text" size="14" color="currentColor"></c-modon-icon>
+                                <span>{labels.OFFER_OPEN}</span>
+                            </button>
+                            </template>
+                            <div class="plancol">
+                            <!-- 1.2: a basket needs a plan per unit; saveSalesOrder takes a distinct plan per row -->
+                            <!-- 1.65: the basket is this card, one unit at a time; the tabs follow focusedUnitId and c/mscPlanSelect is unchanged -->
+                            <template lwc:if={isMultiUnit}>
+                                <p class="field__label">{labels.MULTI_PLAN_PER_UNIT}</p>
+
+                                <!-- 1.66: a tab bar, not a second row of pills; tabs move between units, pills pick a value -->
+                                <div class="plantabs" role="tablist">
+                                    <template for:each={unitPlanTabs} for:item="t">
+                                        <button
+                                            key={t.id}
+                                            class={t.cls}
+                                            type="button"
+                                            role="tab"
+                                            data-id={t.id}
+                                            title={t.title}
+                                            aria-selected={t.selected}
+                                            onclick={handleFocusUnit}
+                                        >
+                                            <span class={t.dotCls}></span>
+                                            <span>{t.name}</span>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <!-- data-unit-id so handleUnitPlanChange files the choice against the right unit -->
+                                <c-msc-plan-select
+                                    plans={focusedUnitPlans}
+                                    selected-plan-id={focusedUnitPlanId}
+                                    rows={focusedUnitPlanRows}
+                                    locked={planLocked}
+                                    busy={planPaneBusy}
+                                    data-unit-id={focusedUnitId}
+                                    onplanchange={handleUnitPlanChange}
+                                ></c-msc-plan-select>
+                            </template>
+
+                            <template lwc:else>
+                                <!-- 1.58: busy is the card's own wait, see planPaneBusy -->
+                                <c-msc-plan-select
+                                    plans={plans} selected-plan-id={selectedPlanId}
+                                    rows={planRows} locked={planLocked}
+                                    busy={planPaneBusy}
+                                    onplanchange={handlePlanChange}
+                                ></c-msc-plan-select>
+                            </template>
+
+                            <!-- 1.x+11: facade style and pre-approval number, as the Sales App asks for them -->
+                            <template lwc:if={planUnitExtras}>
+                                <div class="bookx">
+                                    <!-- 1.x+16: the EOI for this unit, where the phase takes one (Sales App page 2) -->
+                                    <template lwc:if={planUnitExtras.eoiPicker}>
+                                        <div class="bookx__field">
+                                            <label class="bookx__label" for="book-eoi">{labels.BOOK_EOI}</label>
+                                            <select
+                                                id="book-eoi"
+                                                class="bookx__input"
+                                                data-unit-id={planUnitExtras.unitId}
+                                                disabled={planLocked}
+                                                onchange={handleEoiPick}
+                                            >
+                                                <template lwc:if={planUnitExtras.eoiBlank}>
+                                                    <option value="">{labels.BOOK_EOI_PICK}</option>
+                                                </template>
+                                                <template for:each={planUnitExtras.eoiRows} for:item="o">
+                                                    <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </template>
+                                    <!-- 1.x+13: the unit option, where the unit or its phase has any (Sales App parity) -->
+                                    <template lwc:if={planUnitExtras.optionRequired}>
+                                        <div class="bookx__field">
+                                            <label class="bookx__label" for="book-option">{labels.BOOK_OPTION}</label>
+                                            <select
+                                                id="book-option"
+                                                class="bookx__input"
+                                                data-unit-id={planUnitExtras.unitId}
+                                                disabled={planLocked}
+                                                onchange={handleUnitOptionChange}
+                                            >
+                                                <template lwc:if={planUnitExtras.optionBlank}>
+                                                    <option value="">{labels.BOOK_OPTION_PICK}</option>
+                                                </template>
+                                                <template for:each={planUnitExtras.optionRows} for:item="o">
+                                                    <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </template>
+                                    <template lwc:if={planUnitExtras.facadeRequired}>
+                                        <div class="bookx__field">
+                                            <label class="bookx__label" for="book-facade">{labels.BOOK_FACADE}</label>
+                                            <template lwc:if={planUnitExtras.facadeNone}>
+                                                <p class="bookx__warn">{labels.BOOK_FACADE_NONE}</p>
+                                            </template>
+                                            <template lwc:else>
+                                                <select
+                                                    id="book-facade"
+                                                    class="bookx__input"
+                                                    data-unit-id={planUnitExtras.unitId}
+                                                    disabled={planLocked}
+                                                    onchange={handleFacadeChange}
+                                                >
+                                                    <option value="">{labels.BOOK_FACADE_PICK}</option>
+                                                    <template for:each={planUnitExtras.facadeRows} for:item="o">
+                                                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                                    </template>
+                                                </select>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template lwc:if={planUnitExtras.preApprovalPlan}>
+                                        <div class="bookx__field">
+                                            <label class="bookx__label" for="book-preapproval">{labels.BOOK_PREAPPROVAL}</label>
+                                            <template lwc:if={planUnitExtras.showTyped}>
+                                                <input
+                                                    id="book-preapproval"
+                                                    class="bookx__input"
+                                                    type="text"
+                                                    maxlength="80"
+                                                    autocomplete="off"
+                                                    value={planUnitExtras.typedNumber}
+                                                    data-unit-id={planUnitExtras.unitId}
+                                                    disabled={planLocked}
+                                                    oninput={handlePreApprovalInput}
+                                                />
+                                            </template>
+                                            <template lwc:else>
+                                                <p class="bookx__value">{planUnitExtras.eoiNumber} <span class="bookx__note">{labels.BOOK_PREAPPROVAL_FROM_EOI}</span></p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- 1.43: what is payable before the booking can be made; empty for a basket by design -->
+                            <template lwc:if={showPlanFees}>
+                                <div class="planfees">
+                                    <template for:each={planFeeRows} for:item="r">
+                                        <div key={r.key} class="planfees__row">
+                                            <span class="planfees__label">{r.label}</span>
+                                            <span class="planfees__value">{r.value}</span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- 1.45: quote it instead of booking it. 1.63: the button is here, the drawer is a child of .page (backdrop-filter re-anchors position:fixed). 1.65: outside the single/multi branch. 1.67: pinned to the card's floor. -->
+                            </div>
+                        </c-msc-section-card>
+                    </div>
+                    </template>
+                </div>
+                </template>
+
+                <!-- 3. PAYMENT & CONFIRM. 1.70: one card, one job, in the order the work happens: the figure, what changes it, confirm, collect. Named SECTION_SETTLE like the step. -->
+                <template lwc:if={paymentOpen}>
+                <div data-anchor="settlement">
+                    <c-msc-section-card
+                        heading={labels.SECTION_SETTLE}
+                        section-key="settlement" state={settlementSectionState}
+                        aside-text={settlementAside}
+                        summary-line={settlementSummaryLine}
+                    >
+                        <!-- MSC-177: refresh the payment summary, in the heading row through the aside slot. Re-reads buckets and settlement; c/mscObligations untouched. See paymentRefreshDisabled. -->
+                        <template lwc:if={showPaymentRefresh}>
+                            <button
+                                slot="aside"
+                                class={paymentRefreshClass}
+                                type="button"
+                                disabled={paymentRefreshDisabled}
+                                title={labels.PAY_REFRESH_HINT}
+                                onclick={handleRefreshPayments}
+                            >
+                                <c-modon-icon name="refresh-cw" size="13" color="currentColor"></c-modon-icon>
+                                <span>{paymentRefreshLabel}</span>
+                            </button>
+                        </template>
+                        <!-- the arrival point: one number and the two legs of SalesTeamVoidCheck__c; previewed before any Sales Order exists -->
+                        <!-- 1.75: the booking reference is the first line of the card -->
+                        <!-- MSC-231: the EOI deposits ride with the rest of the money -->
+                        <!-- 1.x+12: no-fee says so, rather than "Payable to confirm" -->
+                        <c-msc-settlement-header
+                            settlement={settlement}
+                            booking-reference={bookingReference}
+                            draft-unit-count={draftUnitCount}
+                            closing-rows={closingLedgerRows}
+                            advance={bookingIsCommitted}
+                            deposits={eoiDepositRows}
+                            no-fee={settlementNoFee}
+                            link-live={linkLive}
+                            sale-closed={saleClosed}
+                            finalising={ledgerFinalising}
+                            ondepositchange={handleDepositChange}
+                            onadvance={handleAdvanceToVerify}
+                        ></c-msc-settlement-header>
+
+                        <!-- 1.79: what is still attached to this booking, under the figure. No primary button of its own. -->
+                        <template lwc:if={hasStillToDo}>
+                            <c-msc-still-to-do
+                                items={stillToDo}
+                                ontodojump={handleStillToDoJump}
+                            ></c-msc-still-to-do>
+                            <hr class="divider" />
+                        </template>
+
+                        <!-- 1.44: the approved offers, below the figure they change; shown, never applied quietly -->
+                        <template lwc:if={hasOffers}>
+                            <div class="offers">
+                                <p class="offers__head">Offers applied</p>
+                                <!-- 1.46: grouped by unit -->
+                                <template for:each={offerGroups} for:item="g">
+                                    <div key={g.key} class="offers__group">
+                                        <template lwc:if={g.showHeading}>
+                                            <p class="offers__unit">{g.unitName}</p>
+                                        </template>
+                                        <template for:each={g.rows} for:item="o">
+                                            <label key={o.key} class="offers__row">
+                                                <input
+                                                    type="checkbox"
+                                                    data-id={o.id}
+                                                    data-unit={o.unitId}
+                                                    checked={o.checked}
+                                                    disabled={bookingIsCommitted}
+                                                    onchange={handleOfferToggle}
+                                                />
+                                                <span class="offers__main">
+                                                    <span class="offers__name">{o.name}</span>
+                                                    <span class="offers__sub">{o.sub}</span>
+                                                </span>
+                                                <span class="offers__value">{o.value}</span>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </template>
+                                <!-- 1.x+17: every eligible offer is ticked, as the Sales App saves them all -->
+                                <p class="offers__note">Only pre-approved offers appear here.</p>
+                            </div>
+                        </template>
+
+                        <!-- 1.x+13: what the Sales App's review page lists before Confirm -->
+                        <template lwc:if={hasReviewExtras}>
+                            <dl class="bookx-review">
+                                <template for:each={reviewExtras} for:item="r">
+                                    <div key={r.key} class="bookx-review__row">
+                                        <dt class="bookx-review__label">{r.label}</dt>
+                                        <dd class="bookx-review__value">{r.value}</dd>
+                                    </div>
+                                </template>
+                            </dl>
+                        </template>
+                        <!-- 1.70: rows and due-now are gone; what is left is the fee panel, the hold, the blockers and Confirm -->
+                        <c-msc-review-confirm
+                            blockers={blockers}
+                            busy={busyConfirm} confirmed={bookingIsCommitted}
+                            fee-status={feeStatus}
+                            payment-required={paymentRequired}
+                            fee-covered-by-eoi={feeCoveredByEoi}
+                            awaiting-payment={awaitingPayment}
+                            busy-pay={busyPayStart}
+                            hold-minutes={holdMinutes}
+                            unit-name={focusedUnitName}
+                            refreshing={busyFeeRefresh}
+                            watch-stopped={watchStopped}
+                            hold-seconds-left={holdSecondsLeft}
+                            has-collected={hasCollected}
+                            cancelling-hold={busyHoldCancel}
+                            link-mode={linkMode}
+                            fee-links={feeLinkRows}
+                            link-live={linkLive}
+                            busy-resend={busyLinkResend}
+                            onresendlink={handleResendLink}
+                            onrefreshfees={handleRefreshFees}
+                            oncancelhold={handleCancelHold}
+                            onpay={handleTakePayment}
+                            booking-reference={bookingReference}
+                            unit-count={selectedUnitCount}
+                            onconfirm={handleConfirm}
+                        ></c-msc-review-confirm>
+
+                        <!-- 1.36: only once there is something to collect. 1.70: a region of this card. 1.82: not while awaiting the fee receipt. 1.86 / MSC-098b: no separating rule. -->
+                        <template lwc:if={showPaymentSection}>
+                        <!-- 1.84: Your checklist (c-msc-docs-required) is off for now, by request; the code stays -->
+
+                        <!-- 1.71: the ledger. One line per payment, grouped by whether paying it closes the booking; one form open at a time. -->
+                        <template lwc:if={hasBuckets}>
+                            <!-- 1.78: the hold's state comes down here too; the clock stays with the actions above -->
+                            <c-msc-obligations
+                                rows={ledgerRows}
+                                settlement={settlement}
+                                multi-unit={isMultiUnit}
+                                booked-units={bookedUnits}
+                                hold-seconds-left={holdSecondsLeft}
+                                has-collected={hasCollected}
+                                resumed={resumed}
+                                open-row-id={pendingRowId}
+                                onrowopened={handleRowOpened}
+                                busy={busyPayment}
+                                confirmed={bookingIsCommitted}
+                                finalising={ledgerFinalising}
+                                batch={milestoneBatch}
+                                proof-result={proofResult}
+                                onmanagemilestones={handleManageMilestones}
+                                onopenmilestones={handleOpenMilestones}
+                                onopenpayment={handleOpenPayment}
+                                onrequestslot={handleRequestSlot}
+                                onrefreshledger={handleLedgerRefresh}
+                                onproofuploaded={handleProofUploaded}
+                                oncaptureproof={handleCaptureProof}
+                                onproofremoved={handleProofRemoved}
+                                onsubmitproof={handleSubmitProof}
+                            ></c-msc-obligations>
+                        </template>
+
+                        <!-- 1.83: the Direct Debit box is gone from the foot, by request; the component and handlers stay -->
+                        </template><!-- /showPaymentSection -->
+                    </c-msc-section-card>
+                </div>
+                </template><!-- /paymentOpen -->
+
+                <!-- 4. VERIFICATION. KYC and compliance after the booking; the agent starts it and it never blocks. -->
+                <!-- MSC-090: no section card on this step, c/mscVerifyList draws its own. The anchor stays on the div. -->
+                <template lwc:if={verifyOpen}>
+                <div data-anchor="verify">
+                        <!-- MSC-088: one list, every track named. Each person carries their own four stages; the buyer's detail comes from ComplianceStateDTO as buyer-detail; ownership drops to a strip at the foot. Same handlers as before; the drawers are mounted below .page. -->
+                        <template lwc:if={owners}>
+                            <c-msc-verify-list
+                                state={owners}
+                                opportunity-id={opportunityId}
+                                ondocumentschanged={handleOwnerDocumentsChanged}
+                                busy={ownersBusy}
+                                sending-account-id={ownersSendingAccountId}
+                                refreshing={busyComplianceRefresh}
+                                buyer-detail={compliance}
+                                variant="journey"
+                                next-step={verifyNextStep}
+                                next-busy={verifyNextBusy}
+                                onnextaction={handleVerifyNextAction}
+                                onaddowner={handleAddOwner}
+                                onaddtouncovered={handleAddToUncovered}
+                                onsendverification={handleSendOwnerVerification}
+                                onfixdetails={handleFixOwnerDetails}
+                                oncheckcompliance={handleCheckOwnerCompliance}
+                                onrefreshcompliance={handleRefreshCompliance}
+                            ></c-msc-verify-list>
+                        </template>
+                </div>
+                </template>
+
+                <!-- Booking Summary inline below 1024px, after the step it recaps (UI-07) -->
+                <template lwc:if={showInlineSummary}>
+                    <div data-anchor="summary">
+                        <c-msc-booking-summary
+                            summary={summary} mode="strip"
+                            customer-dirty={customerDirty}
+                            active-key={activeKey}
+                            lines={summaryLines}
+                            totals={summaryTotals}
+                            headline={summaryHeadline}
+                            focus-line={summaryFocus}
+                            payments={summaryPayments}
+                            booked-units={bookedUnits}
+                            sibling-units={siblingUnits}
+                            onjumpto={handleJump}
+                            onopensibling={handleOpenSibling}
+                        ></c-msc-booking-summary>
+                    </div>
+                </template>
+            </div>
+
+            <!-- the persistent rail: sticky, not fixed, so it stays inside the grid track -->
+            <!-- data-anchor lives on the summary inside the rail: a sticky element always intersects -->
+            <template lwc:if={showRail}>
+                <div class="rail">
+                    <!-- 1.23: one occupant, chosen by the step -->
+                    <template lwc:if={showRailTour}>
+                        <!-- a basket has no one unit to walk through, so the agent names which -->
+                        <template lwc:if={isMultiUnit}>
+                            <div class="tour-chips">
+                                <template for:each={tourUnitChips} for:item="c">
+                                    <button
+                                        key={c.id} class={c.cls} type="button"
+                                        data-id={c.id} onclick={handleTourUnit}
+                                    >{c.name}</button>
+                                </template>
+                            </div>
+                        </template>
+                        <div class="rail-tour">
+                            <c-msc-unit-tour
+                                unit-name={focusedUnitName}
+                                tour-url={focusedUnitTourUrl}
+                                mode="inline"
+                            ></c-msc-unit-tour>
+                        </div>
+
+                        <!-- 1.47: Modon's own figures for the unit in the frame; the walkthrough's own panel reads TBC -->
+                        <template lwc:if={showUnitFacts}>
+                            <dl class="unit-facts">
+                                <template for:each={focusedUnitFacts} for:item="f">
+                                    <div key={f.key} class="unit-facts__cell">
+                                        <dt>{f.label}</dt>
+                                        <dd>{f.value}</dd>
+                                    </div>
+                                </template>
+                            </dl>
+                        </template>
+                    </template>
+
+                    <!-- 1.34: one summary for one unit or many -->
+                    <template lwc:if={showRailSummary}>
+                        <div data-anchor="summary">
+                            <c-msc-booking-summary
+                                summary={summary} mode="rail"
+                                customer-dirty={customerDirty}
+                                active-key={activeKey}
+                                lines={summaryLines}
+                                totals={summaryTotals}
+                                headline={summaryHeadline}
+                                focus-line={summaryFocus}
+                                payments={summaryPayments}
+                            booked-units={bookedUnits}
+                                sibling-units={siblingUnits}
+                                onjumpto={handleJump}
+                                onopensibling={handleOpenSibling}
+                            ></c-msc-booking-summary>
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+        </div>
+
+        <!-- 1.10: the forward action, sticky as the last child of .page -->
+        <template lwc:if={showActionBar}>
+            <div class="actionbar">
+                <!-- 1.40: phone only; tapping it opens the whole summary -->
+                <template lwc:if={showBarSummary}>
+                    <button
+                        class="actionbar__summary"
+                        type="button"
+                        aria-haspopup="dialog"
+                        onclick={openSummarySheet}
+                    >
+                        <span class="actionbar__summary-text">{barContext}</span>
+                        <c-modon-icon name="chevron-up" size="14" color="currentColor"></c-modon-icon>
+                    </button>
+                </template>
+                <div class="actionbar__inner">
+                    <template lwc:if={showBack}>
+                        <button
+                            class="btn btn-ghost actionbar__back"
+                            type="button"
+                            title={backLabel}
+                            onclick={handleBarBack}
+                        >
+                            <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                            <span class="actionbar__back-label">Back</span>
+                        </button>
+                    </template>
+                    <!-- 1.24: the hint is gone from the bar; the disabled button and the section aside carry the reason -->
+                    <!-- 1.53: the context line is gone from the bar; the deal tape carries it. Survives on a phone via .actionbar__summary. -->
+                    <!-- 1.26: only the forward button is conditional; both ends still need Back -->
+                    <!-- 1.59: what the press found missing, beside the press; derived from live state -->
+                    <template lwc:if={showCustomerGap}>
+                        <p class="actionbar__gap" role="alert">
+                            <c-modon-icon name="alert-circle" size="14" color="var(--chip-amber, #fbbf24)"></c-modon-icon>
+                            <span>{customerGapMessage}</span>
+                        </p>
+                    </template>
+                    <template lwc:if={showNext}>
+                        <button
+                            class="btn btn-primary actionbar__btn"
+                            type="button"
+                            disabled={barDisabled}
+                            title={barBlockedReason}
+                            onclick={handleBarNext}
+                        >
+                            <span>{barLabel}</span>
+                            <c-modon-icon name="arrow-right" size="14" color="currentColor"></c-modon-icon>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- 1.55: the verification dialog, last child of .page, absolute not fixed (the sheet's transform). Stays open after the link is sent. -->
+        <!-- 1.63: the offer drawer at .page level; see c/mscDrawer's header -->
+        <template lwc:if={offerEnabled}>
+        <c-msc-offer
+            open={offerOpen}
+            opportunity-id={opportunityId}
+            unit-id={offerUnitId}
+            unit-name={focusedUnitName}
+            project-name={offerProjectName}
+            plan-id={offerPlanId}
+            customer-name={customerDisplayName}
+            customer-mobile={customerMobile}
+            org-url={orgUrl}
+            site-prefix={sitePrefix}
+            busy={busyOffer}
+            sent-to={offerSentTo}
+            onsendoffer={handleSendOffer}
+            oncloseoffer={handleCloseOffer}
+        ></c-msc-offer>
+        </template>
+
+        <!-- B4: the Update KYC dialog (MODON's form) at .page level, like the verification
+             dialog, so the sheet's transform cannot trap it inside a card. -->
+        <c-msc-kyc-capture-modal
+            open={kycModalOpen}
+            subject-id={kycModalSubjectId}
+            subject-name={kycModalSubjectName}
+            onclose={handleKycModalClose}
+        ></c-msc-kyc-capture-modal>
+
+        <template lwc:if={showVerifyDialog}>
+            <c-msc-verify-choice
+                customer-name={verifyCustomerName}
+                can-send={verifyCanSend}
+                blocked-reason={verifyBlockedReason}
+                busy={busyVerification}
+                refreshing={busyComplianceRefresh}
+                state={compliance}
+                onchoose={handleVerifyChoice}
+                onrefresh={handleVerifyRefresh}
+                onresend={handleVerifyResend}
+                oninbranch={handleVerifyInBranch}
+            ></c-msc-verify-choice>
+        </template>
+
+        <!-- 1.40: the summary over the page on a phone, via c-modon-sheet -->
+        <template lwc:if={summarySheetMounted}>
+            <c-modon-sheet
+                open={summaryOpen}
+                title={labels.SECTION_SUMMARY}
+                oncloserequest={requestSummaryClose}
+                onclosed={handleSummarySheetClosed}
+            >
+                <div class="summary-sheet">
+                    <c-msc-booking-summary
+                        summary={summary} mode="strip"
+                        customer-dirty={customerDirty}
+                        active-key={activeKey}
+                        lines={summaryLines}
+                        totals={summaryTotals}
+                        headline={summaryHeadline}
+                        focus-line={summaryFocus}
+                        payments={summaryPayments}
+                            booked-units={bookedUnits}
+                            sibling-units={siblingUnits}
+                        onjumpto={handleSummaryJump}
+                        onopensibling={handleOpenSibling}
+                    ></c-msc-booking-summary>
+                </div>
+            </c-modon-sheet>
+        </template>
+
+        <!-- MSC-069: the compliance check over the page; a card's body would clip it -->
+        <template lwc:if={complianceCheckOpen}>
+            <c-msc-compliance-check
+                open={complianceCheckOpen}
+                state={complianceCheck}
+                parties={complianceParties}
+                active-account-id={complianceActiveAccountId}
+                onswitchparty={handleSwitchComplianceParty}
+                loading={busyComplianceCheck}
+                saving={busyComplianceSave}
+                submitting={busyComplianceSubmit}
+                error-message={complianceCheckError}
+                onrefreshcheck={handleRefreshComplianceCheck}
+                onclosecheck={handleCloseComplianceCheck}
+                onsavedetails={handleSaveComplianceDetails}
+                onsubmitcompliance={handleSubmitCompliance}
+            ></c-msc-compliance-check>
+        </template>
+
+        <!-- MSC-081: the joint-owner drawer and the leaving-the-step question. mounted here, never inside a card: every card runs backdrop-filter, which would become the containing block for position: fixed. No lwc:if on the drawer: it owns its exit animation. -->
+        <!-- MSC-097: the milestone payments modal, mounted here for the same reason; no lwc:if -->
+        <c-msc-milestone-modal
+            open={milestoneModalOpen}
+            rows={milestoneModalRows}
+            batch={milestoneBatch}
+            booked-units={bookedUnits}
+            multi-unit={isMultiUnit}
+            busy={busyPayment}
+            cheque-result={chequeResult}
+            cheque-error={chequeError}
+            focus-sales-order-id={milestoneModalFocusSo}
+            focus-row-id={milestoneModalFocusRow}
+            onchequesubmit={handleChequeSubmit}
+            onddcreate={handleDirectDebitCreate}
+            onddchanged={handleDdChanged}
+            onclose={handleMilestoneModalClose}
+        ></c-msc-milestone-modal>
+
+        <!-- 1.87 / MSC-099: one payment, one surface. Mounted beside the other overlays; fed the row by id (paymentModalRow) so a reload redraws it. -->
+        <c-msc-payment-modal
+            open={paymentModalOpen}
+            row={paymentModalRow}
+            booked-units={bookedUnits}
+            busy={busyPayment}
+            proof-result={proofResult}
+            onrequestslot={handleRequestSlot}
+            onproofuploaded={handleProofUploaded}
+            oncaptureproof={handleCaptureProof}
+            onproofremoved={handleProofRemoved}
+            onsubmitproof={handleSubmitProof}
+            onclose={handlePaymentModalClose}
+        ></c-msc-payment-modal>
+
+        <!-- MSC-231: the deposit swap sheet - the one optional control. One tap swaps, it closes. -->
+        <template lwc:if={eoiSwapOpen}>
+            <div class="eoiswap__scrim" onclick={closeEoiSwap}></div>
+            <section class="eoiswap" role="dialog" aria-label="Change EOI deposit">
+                <header class="eoiswap__hd">
+                    <p class="eoiswap__title">Deposit for {eoiSwapUnitName}</p>
+                    <p class="eoiswap__sub">Eligible EOIs on this opportunity</p>
+                </header>
+                <template for:each={eoiSwapRows} for:item="r">
+                    <button key={r.id} class={r.cls} type="button" data-id={r.id} onclick={handleEoiSwapPick}>
+                        <span class="eoiswap__name">{r.name}</span>
+                        <span class="eoiswap__amt">{r.figure}</span>
+                        <span class={r.chipClass}>{r.chipLabel}</span>
+                    </button>
+                </template>
+            </section>
+        </template>
+
+        <!-- MSC-146/148: the company's verification workspace, mounted here like every overlay; no lwc:if -->
+        <c-msc-org-details
+            open={orgDetailsOpen}
+            company-name={orgDetailsCompanyName}
+            booking-ref={orgDetailsBookingRef}
+            details={orgDetails}
+            loading={busyOrgDetails}
+            saving={busyOrgSave}
+            submitting={busyOrgSubmit}
+            uploading={busyOrgUpload}
+            error-message={orgDetailsError}
+            onclose={handleOrgDetailsClose}
+            onsavedetails={handleSaveOrgDetails}
+            sending-link={busyOrgSendLink}
+            next-step={verifyNextStep}
+            onchecksignatory={handleCheckSignatory}
+            onassignsignatory={handleAssignSignatory}
+            oncreatesignatory={handleCreateSignatory}
+            onsendverification={handleSendLinkFromWorkspace}
+            onuploadlicence={handleUploadLicence}
+            onuploadfailed={handleLicenceUnreadable}
+            onsubmitcompliance={handleSubmitOrgCompliance}
+        ></c-msc-org-details>
+
+        <c-msc-owners-drawer
+            open={ownersDrawerOpen}
+            mode={ownersDrawerMode}
+            state={owners}
+            person={ownersPerson}
+            search-status={ownersSearchStatus}
+            saving={busyOwnersSave}
+            error-message={ownersError}
+            preselected-order-ids={ownersPreselected}
+            edit-account-id={ownersEditAccountId}
+            onfindperson={handleFindOwnerPerson}
+            onresetsearch={handleResetOwnerSearch}
+            onpersonfound={handleOwnerPersonFound}
+            onsaveowner={handleSaveOwner}
+            onclosedrawer={handleCloseOwnersDrawer}
+        ></c-msc-owners-drawer>
+
+        <template lwc:if={ownersGateOpen}>
+            <c-msc-owners-gate
+                open={ownersGateOpen}
+                units={ownersUncovered}
+                primary-name={ownersPrimaryName}
+                ongateadd={handleOwnersGateAdd}
+                ongateconfirm={handleOwnersGateConfirm}
+            ></c-msc-owners-gate>
+        </template>
+
+        <!-- 1.38: every wait; c-msc-loader carries the overlay -->
+        <template lwc:if={isBusy}>
+            <c-msc-loader label={busyLabel}></c-msc-loader>
+        </template>
+
+        <!-- 1.94: last in the page and fixed, one instance -->
+        <c-msc-toast></c-msc-toast>
+    </div>
+</template>

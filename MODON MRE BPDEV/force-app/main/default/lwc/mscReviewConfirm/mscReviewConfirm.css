@@ -1,0 +1,540 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+/* 1.8 - the .recap rules are gone with the markup they styled. The rail states
+   the booking; this component states what is owed and what is stopping Confirm. */
+
+.blockers {
+    margin-top: 16px;
+}
+
+.blockers__list {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+/* 1.9 - flex-end does what an empty <span> in a space-between row was doing. */
+.confirm__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+    margin-top: 22px;
+}
+
+/* 1.16 - the hold's pill and, when needed, its one-line note, at the button's left. */
+.confirm__hold-wrap {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-right: auto;
+    min-width: 0;
+}
+
+.confirm__hold-note {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* 1.18 - the EOI covers the booking fee: quiet text at the button's left */
+.confirm__eoi-note {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    margin-right: auto;
+}
+
+.btn-confirm {
+    padding: 11px 26px;
+    font-size: 15px;
+}
+
+/* 1.20 - "Confirm all selection": quiet text and a plain box at the button's left */
+.confirm__tick {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim, #d4d4d4);
+    cursor: pointer;
+    min-height: 32px;
+}
+
+.confirm__tick input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* ── 1.9  the fee ROW LIST is gone ──────────────────────────────────────────
+   .fees, .fees__row, .fees__type, .fees__amt and .fees__totals styled a list of
+   ADM + Dari and Down Payment that the settlement header states above and the
+   ledger states below. Three copies of two obligations; this was the third. */
+
+/* 1.9 - a column: the note explains the action, so it sits above it, and the
+   buttons keep a clean right edge instead of being pushed around by the length
+   of a sentence. */
+.fees__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+/* Full width so it wraps as prose rather than as a narrow ragged column beside
+   the buttons, and left-aligned because it is a sentence. */
+.fees__note {
+    width: 100%;
+    margin: 0;
+    text-align: left;
+    line-height: 1.5;
+}
+
+/* 1.3 - the hold confirmation and the reason a disabled Confirm is waiting.
+   Neutral, not banner--warn: holding a unit to take a payment is the normal thing to
+   be doing here, and amber made a routine step read as a hazard. The base .banner
+   carries no background of its own, so this supplies one. */
+.fees__confirm {
+    margin-top: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+}
+
+/* 1.9 - left, like every other sentence on this screen. It was right-aligned to
+   sit under a right-aligned button that is no longer there, and a lone
+   right-ragged line under left-ragged content reads as a mistake. */
+.fees__blocker {
+    margin: 10px 0 0;
+    text-align: left;
+}
+
+/* ── 1.5  phones ────────────────────────────────────────────────────────────
+   .row-between does not wrap, so at 360px the hold confirmation's Cancel and
+   "Hold and take payment" squeeze rather than stack, and the terminal note
+   crushes the Take payment button beside it. */
+@media (max-width: 767px) {
+    .fees__actions,
+    .confirm__actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Full width and stacked: on a phone these are the actions of the step, not
+       a trailing detail. 1.6 - .fees__buttons wraps them now, so it has to stack
+       too or the two buttons stay side by side inside a full-width parent. */
+    .fees__actions .btn,
+    .confirm__actions .btn,
+    .fees__buttons {
+        flex: 1 1 100%;
+    }
+
+    /* 1.20 - its own line above the full-width button */
+    .confirm__tick {
+        flex: 1 1 100%;
+    }
+
+    .fees__buttons {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+}
+
+/*** 1.6 - checking whether the payment landed ******************************/
+
+/* Groups the check and the pay action so the note keeps the other end of the row. */
+.fees__buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fees__refresh {
+    display: flex;
+}
+
+.fees__refresh--spin {
+    animation: mscSpin 1s linear infinite;
+}
+
+
+/* A spinner is decoration here - the disabled button already says work is in
+   flight - and for anyone who asked for less motion it is the first thing to go. */
+@media (prefers-reduced-motion: reduce) {
+    .fees__refresh--spin {
+        animation: none;
+    }
+}
+
+/*** 1.7 - the hold clock ****************************************************/
+
+.hold__row {
+    margin-top: 12px;
+    gap: 12px;
+}
+
+.hold {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Running: amber, the console's "in progress". Not a warning - a held unit is the
+   normal state here, and red would make the happy path read as a fault. */
+.hold--live {
+    color: var(--chip-amber, #d97706);
+}
+
+/* Gone: red, because the unit is genuinely at risk of being taken. */
+.hold--out {
+    color: var(--chip-red, #f87171);
+}
+
+/* 1.14 - gone, but the unit is NOT at risk: money has been collected against it and
+   journey 07 says that, not the hold, is what secures it. Red here told the agent
+   their customer was about to lose a unit that was never in danger. */
+/* UI-08: quiet text; the clock icon beside it is the mark */
+.hold--safe {
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* 1.14 - the size and tone moved here from `t-xs t-dim` in the markup, because the
+   note now picks its own class and a utility pair in the template could no longer
+   travel with it. */
+.hold__note {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* Reassurance reads as reassurance. Same weight as the warning, different colour -
+   this is not more important than the note it replaces, only different in kind. */
+.hold__note--safe {
+    color: var(--text-muted, #a3a3a3);
+}
+/* ── 1.10  the pay decision, as one object ──────────────────────────────────
+   The confirmation used to be a banner with two buttons floating below it, and
+   the buttons inherited .fees__actions' column layout from 1.9 - so Cancel and
+   the primary stacked vertically, right-aligned, with the original pair still
+   rendered underneath. One bordered block, one row of actions, and the states
+   are mutually exclusive now, so nothing sits beneath it. */
+.payprompt {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
+    border-radius: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.04));
+}
+
+.payprompt__lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text, #fafafa);
+}
+
+.payprompt__lead c-modon-icon {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    display: inline-flex;
+}
+
+.payprompt__note {
+    margin: 6px 0 0 24px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* 1.15 - the prompt lives inside .fees__actions now, which is a right-aligned
+   column: it has to claim the full width, and the column's own top margin already
+   provides the gap the block used to carry itself. */
+.fees__prompt {
+    width: 100%;
+    margin-top: 0;
+}
+
+/* Secondary left, primary right, on one line - the order the decision is read in.
+   Not .row-between: with two buttons that pushes them to opposite edges of the
+   block, which reads as two unrelated actions rather than a choice.
+   1.15 - the secondary is Check payment now, not Cancel. */
+.payprompt__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+@media (max-width: 767px) {
+    .payprompt__actions {
+        flex-wrap: wrap;
+    }
+
+    .payprompt__actions .btn {
+        flex: 1 1 100%;
+    }
+
+    /* Primary first on a phone: it is the thing being asked for, and the thumb
+       reaches the lower button more easily. */
+    .payprompt__actions .btn-primary {
+        order: -1;
+    }
+}
+
+/* ── 1.11  waiting, as one object ───────────────────────────────────────────
+   The same block the prompt uses, because they are the two halves of one
+   decision - ask for the money, then wait for it - and an agent should see the
+   second replace the first in place rather than the card rearranging itself
+   into four loose bands.
+   Amber-tinted rather than neutral: this is the one state on the step where
+   something is genuinely in flight and the unit is on a clock. */
+.paywait {
+    margin-top: 14px;
+    padding: 14px 16px;
+    /* Literal amber, the same 217/119/6 .banner--warn composites - the console
+       defines no --chip-amber custom property, every use carries a fallback. */
+    border: 1px solid rgba(217, 119, 6, 0.32);
+    border-radius: 10px;
+    background: rgba(217, 119, 6, 0.08);
+}
+
+/* Title left, clock right - the subject and its deadline, on one line. */
+.paywait__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.paywait__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+
+/* The live indicator. A pulse rather than a spinner: nothing is loading, the
+   screen is listening, and a spinner in a card that is not blocked reads as a
+   stuck request. */
+.paywait__dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--chip-amber, #d97706);
+    animation: paywait-pulse 1.8s ease-in-out infinite;
+}
+
+/* Checking has stopped, so the indicator stops with it. */
+.paywait__dot--off {
+    animation: none;
+    background: var(--text-dim, #8a8a8a);
+}
+
+@keyframes paywait-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.45);
+    }
+    50% {
+        opacity: 0.55;
+        box-shadow: 0 0 0 5px rgba(217, 119, 6, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .paywait__dot {
+        animation: none;
+    }
+}
+
+/* Indented to the title's text, not the dot - the sentence belongs to the
+   heading above it, and a full-bleed paragraph breaks that reading. */
+.paywait__body {
+    margin: 7px 0 0 17px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* 1.19 - the one question before Release unit: grey, a hairline at the left, as the
+   KYC checklist's "Replace the current file?" line. Wraps on a phone. */
+.release {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: 10px 0 0;
+    padding: 2px 0 2px 10px;
+    border-left: 2px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+.release__q {
+    flex: 1 1 220px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* Release unit at the far left, the two that move the booking forward at the
+   right. .paywait__gap does the separating so the row does not depend on
+   Release unit being rendered - it is not, once the hold has lapsed. */
+.paywait__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.paywait__gap {
+    flex: 1 1 auto;
+}
+
+/* The one thing the button cannot say itself, because its label is fixed. */
+.paywait__hint {
+    margin: 8px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: right;
+    color: var(--text-dim, #8a8a8a);
+}
+
+@media (max-width: 767px) {
+    .paywait__actions {
+        flex-wrap: wrap;
+    }
+
+    .paywait__gap {
+        display: none;
+    }
+
+    .paywait__actions .btn-ghost,
+    .paywait__actions .btn-primary {
+        flex: 1 1 100%;
+    }
+
+    /* Primary first, then the check, then Release unit last - the order of how
+       likely each is to be wanted, which on a phone is also reach order. */
+    .paywait__actions .btn-primary {
+        order: -2;
+    }
+
+    .paywait__actions .btn-ghost {
+        order: -1;
+    }
+
+    .paywait__hint {
+        text-align: left;
+    }
+}
+
+/* ── 1.17 / MSC-098b  where the booking goes next: moved ────────────────────
+   .confirm__actions--next, .confirm__next-note and their media rule left with
+   the strip they dressed (1.12): the advance button rides beside the settlement
+   header's figure now (c-msc-settlement-header .settle__adv). */
+/* 1.21 - the payment links, one quiet row per fee (SCW-242). Grey, a hairline between rows, the status in
+   the muted chip colours the rest of the step uses; wraps to two lines on a phone. */
+.links {
+    list-style: none;
+    margin: 10px 0 0 17px;
+    padding: 0;
+}
+
+.links__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding: 6px 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.links__row + .links__row {
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+}
+
+.links__fee {
+    flex: 1 1 140px;
+    color: var(--text, #fafafa);
+}
+
+.links__amt {
+    font-variant-numeric: tabular-nums;
+}
+
+.links__status {
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.links__status--live {
+    color: var(--chip-amber, #d97706);
+}
+
+/* UI-08: a paid link reads in the text colour */
+.links__status--paid {
+    color: var(--text-muted, #a3a3a3);
+}
+
+.links__until {
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.links__wait {
+    margin: 8px 0 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+@media (max-width: 767px) {
+    .links {
+        margin-left: 0;
+    }
+
+    .links__fee {
+        flex-basis: 100%;
+    }
+}
+
+/* UI-08: the hold chip beside Confirm as quiet text with a small mark (the shared chips are bright) */
+.chip--paid,
+.chip--due {
+    gap: 6px;
+    color: var(--text-muted, #a3a3a3);
+    background: none;
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.chip--paid::before,
+.chip--due::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--step-done, #16a34a);
+    opacity: 0.85;
+}
+.chip--due::before {
+    background: var(--chip-amber, #fbbf24);
+    opacity: 0.7;
+}

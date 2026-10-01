@@ -1,0 +1,198 @@
+<template>
+    <div class="dd-screen">
+
+        <template lwc:if={loading}>
+            <lightning-spinner alternative-text="Working" size="small"></lightning-spinner>
+        </template>
+
+        <!-- One live mandate per Sales Order. Offer the existing one rather than a second. -->
+        <template lwc:if={showExisting}>
+            <div class="dd-body">
+                <p class="dd-para">
+                    {salesOrderName} already has a live UAEDDS mandate. A Sales Order can only carry
+                    one at a time, so open that one rather than raising another.
+                </p>
+                <lightning-button variant="brand" label="Open the mandate"
+                    onclick={handleOpenExisting}></lightning-button>
+            </div>
+        </template>
+
+        <template lwc:if={showCapture}>
+
+            <div class="dd-hero">
+                <div class="dd-hero-name">{accountName}</div>
+                <div class="dd-hero-sub">{salesOrderName} &middot; goes to the bank when you save</div>
+            </div>
+
+            <div class="dd-body">
+
+                <!--
+                    The bank title leads, because it is the name the bank matches against its own
+                    record. Read back, never asked for: it is the customer name under another
+                    heading, and it is corrected by correcting the name below.
+                -->
+                <div class="dd-top">
+                    <div class="dd-line">
+                        <span class="dd-key">{bankTitle.label}</span>
+                        <span class="dd-value">{bankTitle.value}</span>
+                    </div>
+                    <template lwc:if={bankTitle.problem}>
+                        <div class="dd-err">{bankTitle.problem}</div>
+                    </template>
+                </div>
+
+                <template lwc:if={switchedOff}>
+                    <div class="dd-note dd-note_warn">
+                        Mandate creation is switched off. This can be saved now, but it will not
+                        reach the bank until somebody turns it on.
+                    </div>
+                </template>
+
+                <!--
+                    Each line stands where it belongs rather than being pulled out into a list of
+                    corrections. A value the account can only guess at - the ID, the IBAN, the
+                    mobile - is a box; one it knows is typeset, and turns into a box the moment it
+                    is blank or fails its rule. The name is typeset with a pencil beside it: usually
+                    right, occasionally misspelt, and never something to retype from scratch.
+                -->
+                <template for:each={sections} for:item="section">
+                    <div key={section.label} class="dd-read">
+                        <p class="dd-read-label">{section.label}</p>
+                        <template for:each={section.lines} for:item="line">
+                            <div key={line.field} class={line.rowClass}>
+                                <template lwc:if={line.isPicklist}>
+                                    <lightning-combobox label={line.label} value={line.value}
+                                        options={line.options} placeholder={line.placeholder}
+                                        required={line.required} data-field={line.field}
+                                        onchange={handleChoice}></lightning-combobox>
+                                </template>
+                                <template lwc:elseif={line.editable}>
+                                    <lightning-input type={line.type} label={line.label}
+                                        value={line.value} max-length={line.maxLength}
+                                        data-field={line.field}
+                                        onchange={handleChoice}></lightning-input>
+                                </template>
+                                <template lwc:else>
+                                    <div class="dd-line">
+                                        <span class="dd-key">{line.label}</span>
+                                        <span class="dd-value">{line.value}</span>
+                                        <!-- Read back, but still the customer's to correct. -->
+                                        <template lwc:if={line.revealable}>
+                                            <lightning-button-icon icon-name="utility:edit"
+                                                variant="bare" size="small" class="dd-pencil"
+                                                alternative-text="Edit" title="Edit"
+                                                data-field={line.field}
+                                                onclick={handleReveal}></lightning-button-icon>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template lwc:if={line.problem}>
+                                    <div class="dd-err">{line.problem}</div>
+                                </template>
+                                <template lwc:elseif={line.hint}>
+                                    <div class="dd-echo">{line.hint}</div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Amount type is shown but not offered: every mandate raised here is Variable. -->
+                <div class="dd-decide">
+                    <p class="dd-decide-label">To set</p>
+                    <lightning-combobox label="Account type" value={accountType}
+                        options={accountTypeOptions} placeholder="Savings or Current"
+                        data-field="Customer_Bank_Account_Type__c" onchange={handleChoice}>
+                    </lightning-combobox>
+                    <template lwc:if={accountTypeProblem}>
+                        <div class="dd-err">{accountTypeProblem}</div>
+                    </template>
+                    <lightning-input label="Amount type" value={amountType} read-only
+                        class="dd-second"></lightning-input>
+                </div>
+
+                <!-- The Sales Order has no instalments to read the terms from, so they are asked for. -->
+                <template lwc:if={askForTerms}>
+                    <div class="dd-decide">
+                        <p class="dd-decide-label">This Sales Order has no instalments, so set the terms</p>
+                        <lightning-input type="date" label="Starts" data-field="Commences_On__c"
+                            onchange={handleChoice}></lightning-input>
+                        <lightning-input type="date" label="Ends" data-field="Expires_On__c"
+                            onchange={handleChoice} class="dd-second"></lightning-input>
+                        <lightning-input type="number" formatter="currency" step="0.01"
+                            label="Maximum per collection" data-field="Maximum_Amount__c"
+                            onchange={handleChoice} class="dd-second"></lightning-input>
+                    </div>
+                </template>
+
+                <!-- The sentence somebody should read before saving. -->
+                <template lwc:if={authorises}>
+                    <div class="dd-auth">
+                        <p class="dd-read-label">What this authorises the bank to do</p>
+                        <div class="dd-auth-big">
+                            Up to
+                            <b><lightning-formatted-number value={authorises.maximum}
+                                format-style="currency" currency-code="AED"
+                                currency-display-as="code"></lightning-formatted-number></b>
+                            per collection
+                        </div>
+                        <div class="dd-auth-line">
+                            between
+                            <b><lightning-formatted-date-time value={authorises.from} year="numeric"
+                                month="short" day="2-digit" time-zone="UTC">
+                            </lightning-formatted-date-time></b>
+                            and
+                            <b><lightning-formatted-date-time value={authorises.to} year="numeric"
+                                month="short" day="2-digit" time-zone="UTC">
+                            </lightning-formatted-date-time></b>
+                        </div>
+                        <div class="dd-auth-meta">{authorises.meta}</div>
+                    </div>
+                </template>
+
+                <!-- Why Save is greyed out, when the reason belongs to no field on screen. -->
+                <template lwc:if={hasBlockingNotes}>
+                    <div class="dd-note dd-note_warn">
+                        <template for:each={blockingNotes} for:item="note">
+                            <p key={note}>{note}</p>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <div class="dd-foot">
+                <lightning-button label="Cancel" onclick={handleClose}></lightning-button>
+                <lightning-button variant="brand" label="Save mandate" onclick={handleSave}
+                    disabled={cannotSave}></lightning-button>
+            </div>
+        </template>
+
+        <!-- Saved, but something stops it reaching the bank. Every problem at once. -->
+        <template lwc:if={showProblems}>
+            <div class="dd-body">
+                <p class="dd-heading">{mandateName} cannot go to the bank yet</p>
+                <ul class="dd-problems">
+                    <template for:each={problems} for:item="problem">
+                        <li key={problem}>{problem}</li>
+                    </template>
+                </ul>
+                <p class="dd-para">
+                    The mandate is saved. Correct these on the record, then use Direct Debit Actions
+                    to send it.
+                </p>
+                <lightning-button variant="brand" label="Open the mandate"
+                    onclick={handleOpenSaved}></lightning-button>
+            </div>
+        </template>
+
+        <template lwc:if={showSent}>
+            <div class="dd-body">
+                <p class="dd-heading">{mandateName}</p>
+                <p class="dd-para">{sentMessage}</p>
+                <lightning-button variant="brand" label="Open the mandate"
+                    onclick={handleOpenSaved}></lightning-button>
+            </div>
+        </template>
+
+    </div>
+</template>

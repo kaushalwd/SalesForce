@@ -1,0 +1,588 @@
+<template>
+    <!-- `mounted`, not `open`: it stays true for the length of the exit so the
+         panel can animate out. See the accessor in the JS. -->
+    <template lwc:if={mounted}>
+        <!-- The layer is the click target; the panel stops the event so a click
+             inside it does not close the workspace. -->
+        <div class={layerClass} onclick={handleClose}>
+            <div class="scrim"></div>
+            <section
+                class="od"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="od-title"
+                onclick={handlePanelClick}
+                onkeydown={handleKeydown}
+            >
+                <!-- ── head ───────────────────────────────────────────────── -->
+                <header class="od__head">
+                    <div class="od__headings">
+                        <h2 id="od-title" class="od__title">{labels.ORGD_TITLE}</h2>
+                        <template lwc:if={hasSubline}>
+                            <p class="od__sub">{subline}</p>
+                        </template>
+                    </div>
+                    <button
+                        class="od__x"
+                        type="button"
+                        onclick={handleClose}
+                        aria-label="Close"
+                        title="Close"
+                    >
+                        <c-modon-icon name="x" size="16" color="currentColor"></c-modon-icon>
+                    </button>
+                </header>
+
+                <template lwc:if={showLoading}>
+                    <div class="od__state">
+                        <c-msc-loader label={labels.ORGD_LOADING} contained></c-msc-loader>
+                    </div>
+                </template>
+
+                <template lwc:elseif={showBlocked}>
+                    <div class="od__state">
+                        <div class="od__blocked">
+                            <c-modon-icon name="info" size="15" color="currentColor"></c-modon-icon>
+                            <span>{blockedReason}</span>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:else>
+                    <div class="od__body">
+                        <!-- ── the rail: the count, and the way to each group ──
+                             A GROUP, NOT A TABLIST. These switch the pane rather
+                             than scrolling to it, which is what keeps the whole
+                             workspace off a scrollbar. -->
+                        <aside class="od__rail">
+                            <div>
+                                <div class="od__ready">
+                                    <span>{labels.COMPLIANCE_READY}</span>
+                                    <span class="od__ready-n">{readyText}</span>
+                                </div>
+                                <div class="od__meter">
+                                    <i class={meterClass} style={meterStyle}></i>
+                                </div>
+                            </div>
+
+                            <div class="od__rail-list" role="group" aria-label={labels.ORGD_TITLE}>
+                                <template for:each={railRows} for:item="r">
+                                    <button
+                                        key={r.key}
+                                        class={r.cls}
+                                        type="button"
+                                        data-key={r.key}
+                                        aria-current={r.current}
+                                        onclick={handleJump}
+                                    >
+                                        <span class="od__rl-top">
+                                            <span class="od__rl-dot"></span>
+                                            <span class="od__rl-name">{r.label}</span>
+                                            <template lwc:if={r.counted}>
+                                                <span class="od__rl-n">{r.count}</span>
+                                            </template>
+                                        </span>
+                                        <template lwc:if={r.counted}>
+                                            <span class="od__microbar"><i style={r.barStyle}></i></span>
+                                        </template>
+                                    </button>
+                                </template>
+                            </div>
+                        </aside>
+
+                        <!-- ── the pane: one group at a time ───────────────── -->
+                        <div class="od__pane">
+                            <div class="od__pane-head">
+                                <span class="od__pane-t">{paneTitle}</span>
+                                <template lwc:if={showPaneCount}>
+                                    <span class={paneCountClass}>{paneCount}</span>
+                                </template>
+                            </div>
+
+                            <!-- ── MSC-181 · the Power of Attorney ─────────────
+                                 A Salesforce-standard lookup over the company's own
+                                 contacts, then ONE card for the chosen person. -->
+                            <template lwc:if={onSignatory}>
+                                <!-- the New Contact form: exactly sendKYCForm's set -->
+                                <template lwc:if={showSigAdd}>
+                                    <div class="od__block">
+                                        <span class="od__mark"></span>
+                                        <div class="od__block-text">
+                                            <p class="od__block-t">{labels.ORGD_POA_NEW_HEAD}</p>
+                                            <p class="od__block-s">{labels.ORGD_POA_NEW_NOTE}</p>
+                                        </div>
+                                        <button
+                                            class="btn btn-ghost btn-sm od__block-go"
+                                            type="button"
+                                            disabled={isBusy}
+                                            onclick={handleCancelAdd}
+                                        >{labels.ORGD_POA_BACK}</button>
+                                    </div>
+                                    <div class="od__cells">
+                                        <div class="od__cell od__cell--wide">
+                                            <label class="od__fl" for="poa-name">
+                                                <span>{labels.ORGD_POA_F_NAME}</span>
+                                            </label>
+                                            <input
+                                                id="poa-name"
+                                                class="od__control"
+                                                data-d="name"
+                                                type="text"
+                                                value={draftName}
+                                                placeholder={labels.ORGD_POA_F_NAME_HINT}
+                                                autocomplete="off"
+                                                disabled={isBusy}
+                                                oninput={handleDraft}
+                                            />
+                                        </div>
+                                        <template for:each={addFields} for:item="f">
+                                            <div key={f.key} class="od__cell">
+                                                <label class="od__fl" for={f.key}>
+                                                    <span>{f.label}</span>
+                                                </label>
+                                                <template lwc:if={f.isPicklist}>
+                                                    <select
+                                                        id={f.key}
+                                                        class="od__control"
+                                                        data-d={f.key}
+                                                        disabled={isBusy}
+                                                        onchange={handleDraft}
+                                                    >
+                                                        <option value="">Select…</option>
+                                                        <template for:each={f.options} for:item="o">
+                                                            <option key={o.value} value={o.value} selected={o.selected}>
+                                                                {o.label}
+                                                            </option>
+                                                        </template>
+                                                    </select>
+                                                </template>
+                                                <template lwc:else>
+                                                    <input
+                                                        id={f.key}
+                                                        class="od__control"
+                                                        data-d={f.key}
+                                                        type={f.inputType}
+                                                        value={f.value}
+                                                        autocomplete="off"
+                                                        disabled={isBusy}
+                                                        oninput={handleDraft}
+                                                    />
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="poa__acts">
+                                        <button
+                                            class="btn btn-ghost btn-sm"
+                                            type="button"
+                                            disabled={isBusy}
+                                            onclick={handleCancelAdd}
+                                        >{labels.CTA_CANCEL}</button>
+                                        <button
+                                            class="btn btn-primary btn-sm"
+                                            type="button"
+                                            disabled={createDisabled}
+                                            onclick={handleCreate}
+                                        >{createLabel}</button>
+                                    </div>
+                                    <p class="od__hold">{labels.ORGD_POA_CREATE_NOTE}</p>
+                                </template>
+
+                                <!-- the chosen person: ONE card that says everything -->
+                                <template lwc:elseif={showSigCard}>
+                                    <div class="sg">
+                                        <div class="sg__head">
+                                            <span class="eicon" aria-hidden="true">
+                                                <c-modon-icon name="user" size="18" color="#ffffff"></c-modon-icon>
+                                            </span>
+                                            <span class="sg__id">
+                                                <span class="sg__n">{cardName}</span>
+                                                <span class="sg__r">{cardRole}</span>
+                                            </span>
+                                            <button
+                                                class="sg__x"
+                                                type="button"
+                                                disabled={changeDisabled}
+                                                onclick={handleChange}
+                                                aria-label={labels.ORGD_POA_CHANGE}
+                                            >
+                                                <c-modon-icon name="x" size="14" color="currentColor"></c-modon-icon>
+                                            </button>
+                                        </div>
+                                        <div class={cardState.cls}>
+                                            <span class={cardState.dot}></span>
+                                            <p class="sg__status-t">{cardState.text}</p>
+                                            <template lwc:if={cardState.when}>
+                                                <span class="sg__status-when">{cardState.when}</span>
+                                            </template>
+                                            <template lwc:if={cardState.showAssign}>
+                                                <button
+                                                    class="btn btn-primary btn-sm"
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onclick={handleAssign}
+                                                >{assignLabel}</button>
+                                            </template>
+                                            <template lwc:if={cardState.showFill}>
+                                                <button
+                                                    class="btn btn-primary btn-sm"
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onclick={handleOpenFill}
+                                                >{labels.ORGD_POA_FILL}</button>
+                                            </template>
+                                            <template lwc:if={cardState.showSend}>
+                                                <button
+                                                    class="btn btn-primary btn-sm"
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onclick={handleCardSend}
+                                                >{cardSendLabel}</button>
+                                            </template>
+                                            <template lwc:if={cardState.showResend}>
+                                                <button
+                                                    class="btn btn-ghost btn-sm"
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onclick={handleCardSend}
+                                                >{cardResendLabel}</button>
+                                            </template>
+                                        </div>
+                                        <template lwc:if={showCardForm}>
+                                            <div class="sg__zone">
+                                                <div class="od__cells">
+                                                    <template for:each={cardFormCells} for:item="c">
+                                                        <div key={c.key} class={c.cellCls}>
+                                                            <label class="od__fl" for={c.key}>
+                                                                <span>{c.label}</span>
+                                                            </label>
+                                                            <template lwc:if={c.isPicklist}>
+                                                                <select
+                                                                    id={c.key}
+                                                                    class="od__control"
+                                                                    data-key={c.key}
+                                                                    disabled={isBusy}
+                                                                    onchange={handleEdit}
+                                                                >
+                                                                    <option value="">Select…</option>
+                                                                    <template for:each={c.options} for:item="o">
+                                                                        <option key={o.value} value={o.value} selected={o.selected}>
+                                                                            {o.label}
+                                                                        </option>
+                                                                    </template>
+                                                                </select>
+                                                            </template>
+                                                            <!-- 2.3 - UI-13: dd/mm/yyyy through the console's picker -->
+                                                            <template lwc:elseif={c.isDate}>
+                                                                <c-msc-date-picker
+                                                                    data-key={c.key}
+                                                                    label={c.label}
+                                                                    value={c.value}
+                                                                    size="small"
+                                                                    disabled={isBusy}
+                                                                    onchange={handleEdit}
+                                                                ></c-msc-date-picker>
+                                                            </template>
+                                                            <template lwc:else>
+                                                                <input
+                                                                    id={c.key}
+                                                                    class="od__control"
+                                                                    data-key={c.key}
+                                                                    type={c.inputType}
+                                                                    value={c.value}
+                                                                    autocomplete="off"
+                                                                    disabled={isBusy}
+                                                                    onchange={handleEdit}
+                                                                />
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <div class="poa__acts">
+                                                    <button
+                                                        class="btn btn-ghost btn-sm"
+                                                        type="button"
+                                                        disabled={isBusy}
+                                                        onclick={handleCancelFill}
+                                                    >{labels.CTA_CANCEL}</button>
+                                                    <button
+                                                        class="btn btn-primary btn-sm"
+                                                        type="button"
+                                                        disabled={cardSaveDisabled}
+                                                        onclick={handleSave}
+                                                    >{cardSaveLabel}</button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template lwc:else>
+                                            <div class="sg__zone">
+                                                <div class="sg__facts">
+                                                    <template for:each={cardFacts} for:item="f">
+                                                        <div key={f.key}>
+                                                            <p class="sg__fk">{f.label}</p>
+                                                            <p class={f.cls}>{f.display}</p>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- the lookup: one field, results floating beneath -->
+                                <template lwc:else>
+                                    <div class="lk">
+                                        <div class="lk__combo">
+                                            <div class="lk__field">
+                                                <input
+                                                    class="lk__input"
+                                                    type="text"
+                                                    autocomplete="off"
+                                                    placeholder={labels.ORGD_POA_SEARCH_PH}
+                                                    value={sigQuery}
+                                                    role="combobox"
+                                                    aria-expanded={sigOpenAria}
+                                                    aria-label={labels.ORGD_POA_LABEL}
+                                                    disabled={isBusy}
+                                                    onfocus={handleSigFocus}
+                                                    oninput={handleSigInput}
+                                                    onkeydown={handleSigKeydown}
+                                                />
+                                                <span class="lk__icon" aria-hidden="true">
+                                                    <c-modon-icon name="search" size="14" color="currentColor"></c-modon-icon>
+                                                </span>
+                                            </div>
+                                            <template lwc:if={sigOpen}>
+                                                <div class="lk__drop">
+                                                    <template lwc:if={hasLookupRows}>
+                                                        <div class="lk__scroll" role="listbox">
+                                                            <template for:each={lookupRows} for:item="r">
+                                                                <div
+                                                                    key={r.contactId}
+                                                                    class={r.cls}
+                                                                    role="option"
+                                                                    aria-selected={r.selected}
+                                                                    data-contact={r.contactId}
+                                                                    data-row={r.index}
+                                                                    onclick={handleRowPick}
+                                                                    onmouseenter={handleRowHover}
+                                                                >
+                                                                    <span class="eicon" aria-hidden="true">
+                                                                        <c-modon-icon name="user" size="18" color="#ffffff"></c-modon-icon>
+                                                                    </span>
+                                                                    <span class="pr__text">
+                                                                        <span class="pr__n">{r.name.pre}<template lwc:if={r.name.has}><mark class="lkm">{r.name.hit}</mark></template>{r.name.post}</span>
+                                                                        <span class="pr__role">{r.role.pre}<template lwc:if={r.role.has}><mark class="lkm">{r.role.hit}</mark></template>{r.role.post}</span>
+                                                                        <template lwc:if={r.hasReach}>
+                                                                            <span class="pr__s">{r.reach.pre}<template lwc:if={r.reach.has}><mark class="lkm">{r.reach.hit}</mark></template>{r.reach.post}</span>
+                                                                        </template>
+                                                                        <template lwc:if={r.hasMissing}>
+                                                                            <span class="pr__gap">{r.missing}</span>
+                                                                        </template>
+                                                                    </span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <div class="lk__empty">{emptyLine}</div>
+                                                    </template>
+                                                    <button class="lk__add" type="button" disabled={isBusy} onclick={handleOpenAdd}>
+                                                        <span class="eicon eicon--new" aria-hidden="true">
+                                                            <c-modon-icon name="plus" size="16" color="currentColor"></c-modon-icon>
+                                                        </span>
+                                                        <span>
+                                                            <span class="lk__add-t">{newContactLabel}</span>
+                                                            <span class="lk__add-s">{labels.ORGD_POA_NEW_SUB}</span>
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="lk__meter">
+                                            <span>{meterLine}</span>
+                                            <span class="lk__meter-hint">{labels.ORGD_POA_SEARCH_BY}</span>
+                                        </div>
+                                        <p class="lk__hint"><kbd>↑</kbd> <kbd>↓</kbd> {labels.ORGD_POA_KEYS_MOVE} · <kbd>Enter</kbd> {labels.ORGD_POA_KEYS_PICK} · <kbd>Esc</kbd> {labels.ORGD_POA_KEYS_CLOSE}</p>
+                                    </div>
+                                </template>
+                            </template>
+
+                            <!-- the licence: one upload, six fields -->
+                            <template lwc:if={onCompany}>
+                                <div class="od__block">
+                                    <span class={licenceMarkClass}></span>
+                                    <div class="od__block-text">
+                                        <p class="od__block-t">{licenceName}</p>
+                                        <p class="od__block-w">{labels.ORGD_LIC_FILLS}</p>
+                                        <template lwc:if={pickedFileName}>
+                                            <p class="od__block-f">{pickedFileName}</p>
+                                        </template>
+                                    </div>
+                                    <span class={licenceChipClass}>{licenceStatus}</span>
+                                    <input
+                                        id="od-licence"
+                                        class="od__file"
+                                        type="file"
+                                        accept=".pdf,.png,.jpg,.jpeg"
+                                        disabled={isBusy}
+                                        onchange={handleFile}
+                                    />
+                                    <label class="btn btn-ghost btn-sm od__choose" for="od-licence">
+                                        <c-modon-icon name="upload" size="14" color="currentColor"></c-modon-icon>
+                                        <span>{licenceCta}</span>
+                                    </label>
+                                </div>
+                            </template>
+
+                            <!-- the group's own fields: a fact where the server owns
+                                 the value, a control where the rep does. The Power of
+                                 Attorney pane draws its fields on the card instead. -->
+                            <template lwc:if={showCells}>
+                                <div class="od__cells">
+                                    <template for:each={cells} for:item="c">
+                                        <div key={c.key} class={c.cellCls}>
+                                            <template lwc:if={c.isFact}>
+                                                <div class="od__fk">{c.label}</div>
+                                                <div class={c.valueCls}>{c.display}</div>
+                                            </template>
+                                            <template lwc:else>
+                                                <label class="od__fl" for={c.key}>
+                                                    <span>{c.label}</span>
+                                                    <template lwc:if={c.optional}>
+                                                        <span class="od__opt">{labels.ORGD_OPTIONAL}</span>
+                                                    </template>
+                                                </label>
+                                                <template lwc:if={c.isPicklist}>
+                                                    <select
+                                                        id={c.key}
+                                                        class="od__control"
+                                                        data-key={c.key}
+                                                        disabled={isBusy}
+                                                        onchange={handleEdit}
+                                                    >
+                                                        <option value="">Select…</option>
+                                                        <template for:each={c.options} for:item="o">
+                                                            <option key={o.value} value={o.value} selected={o.selected}>
+                                                                {o.label}
+                                                            </option>
+                                                        </template>
+                                                    </select>
+                                                </template>
+                                                <template lwc:elseif={c.isTextarea}>
+                                                    <textarea
+                                                        id={c.key}
+                                                        class="od__control"
+                                                        data-key={c.key}
+                                                        rows="2"
+                                                        disabled={isBusy}
+                                                        onchange={handleEdit}
+                                                    >{c.value}</textarea>
+                                                </template>
+                                                <!-- 2.3 - UI-13: dd/mm/yyyy through the console's picker -->
+                                                <template lwc:elseif={c.isDate}>
+                                                    <c-msc-date-picker
+                                                        data-key={c.key}
+                                                        label={c.label}
+                                                        value={c.value}
+                                                        size="small"
+                                                        disabled={isBusy}
+                                                        onchange={handleEdit}
+                                                    ></c-msc-date-picker>
+                                                </template>
+                                                <template lwc:else>
+                                                    <input
+                                                        id={c.key}
+                                                        class="od__control"
+                                                        data-key={c.key}
+                                                        type={c.inputType}
+                                                        value={c.value}
+                                                        autocomplete="off"
+                                                        disabled={isBusy}
+                                                        onchange={handleEdit}
+                                                    />
+                                                </template>
+                                            </template>
+                                            <template lwc:if={c.hasNote}>
+                                                <p class="od__fn">{c.note}</p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- documents: status and date, never the file -->
+                            <template lwc:if={onDocuments}>
+                                <div class="od__docs">
+                                    <template for:each={docRows} for:item="d">
+                                        <div key={d.key} class={d.cls}>
+                                            <span class="od__doc-n">{d.name}</span>
+                                            <span class="od__doc-s">{d.status}</span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <p class="od__hold">{labels.ORGD_DOCS_NOTE}</p>
+                            </template>
+
+                            <!-- the link's own refusal, under the group it belongs to -->
+                            <template lwc:if={onSignatory}>
+                                <template lwc:if={showLinkNote}>
+                                    <p class="od__hold od__hold--warn">{linkNote}</p>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- ── foot: one sentence, and the two writes ──────────── -->
+                    <footer class="od__foot">
+                        <template lwc:if={showFootText}>
+                            <span class={footClass}>
+                                <span class="od__note-dot"></span>{footText}
+                            </span>
+                        </template>
+                        <template lwc:else>
+                            <span></span>
+                        </template>
+
+                        <div class="od__acts">
+                            <button class="btn btn-ghost btn-sm" type="button" onclick={handleClose}>
+                                {labels.CTA_CLOSE}
+                            </button>
+                            <template lwc:if={showActions}>
+                                <!-- the reason rides on the wrapper: a browser will not
+                                     show a title on a button it has disabled -->
+                                <span class="od__act" title={saveHint}>
+                                    <button
+                                        class="btn btn-sm"
+                                        type="button"
+                                        disabled={saveDisabled}
+                                        onclick={handleSave}
+                                    >{saveLabel}</button>
+                                </span>
+                                <!-- MSC-155 - the server's next step, in the one place
+                                     every pane can see. The submit case is the button
+                                     that was always here, with the gate it always had;
+                                     the other two are the actions that used to be
+                                     reachable only from a pane the rep had been moved
+                                     off. -->
+                                <template lwc:if={showFootAction}>
+                                    <span class="od__act" title={footActionHint}>
+                                        <button
+                                            class="btn btn-primary btn-sm"
+                                            type="button"
+                                            disabled={footActionDisabled}
+                                            onclick={handleFootAction}
+                                        >
+                                            <c-modon-icon name="shield-check" size="14" color="currentColor"></c-modon-icon>
+                                            <span>{footActionLabel}</span>
+                                        </button>
+                                    </span>
+                                </template>
+                            </template>
+                        </div>
+                    </footer>
+                </template>
+            </section>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CaseClose_DepartmentAction</fullName>
+    <active>false</active>
+    <description>Department Action cases should be Closed with Resolution status.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+ISPICKVAL(CaseCategory__c, &apos;Department Action&apos;),
+NOT(ISPICKVAL(Status,&apos;New&apos;)),
+NOT(ISPICKVAL(Status,&apos;In Progress&apos;)),
+ISBLANK(ParentId),
+NOT(ISPICKVAL(Status,&apos;Closed with Resolution&apos;))
+)
+)</errorConditionFormula>
+    <errorDisplayField>Status</errorDisplayField>
+    <errorMessage>Department Action cases should be Closed with Resolution status.</errorMessage>
+</ValidationRule>

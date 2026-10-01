@@ -1,0 +1,122 @@
+<template>
+  <!-- 1.4: ported verbatim from modonSiteLogin; 1.2 had drifted. The one difference is the Continue row. -->
+  <div class="app" style={rootStyle}>
+    <div class="bg"></div>
+    <div class="overlay"></div>
+
+    <div class="shell">
+      <div class="body">
+        <div class="wrap">
+          <!-- brand sits above the card -->
+          <div class="mark">
+            <div class="mark-row">
+              <c-msc-logo height="22"></c-msc-logo>
+              <span class="mark-bar">|</span>
+              <span class="mark-brand">{brandLabel}</span>
+            </div>
+            <p class="sub">Sign in to access the sales console</p>
+          </div>
+
+          <div class="glass card">
+            <h2 class="title">Sign in</h2>
+
+            <div class="field">
+              <label class="lbl" for="username">Username</label>
+              <div class="input-wrap">
+                <span class="input-ic">
+                  <c-modon-icon
+                    name="at-sign"
+                    size="14"
+                    color="rgba(255,255,255,0.25)"
+                  ></c-modon-icon>
+                </span>
+                <input
+                  id="username"
+                  class="input"
+                  type="text"
+                  value={username}
+                  oninput={handleUsername}
+                  onkeyup={handleKey}
+                  placeholder="your.username"
+                  autocomplete="username"
+                  autocapitalize="none"
+                  spellcheck="false"
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="lbl-row">
+                <label class="lbl" for="password">Password</label>
+                <button class="forgot" type="button" onclick={handleForgot}>
+                  Forgot password?
+                </button>
+              </div>
+              <div class="input-wrap">
+                <span class="input-ic">
+                  <c-modon-icon
+                    name="lock"
+                    size="14"
+                    color="rgba(255,255,255,0.25)"
+                  ></c-modon-icon>
+                </span>
+                <input
+                  id="password"
+                  class="input has-toggle"
+                  type={passwordType}
+                  value={password}
+                  oninput={handlePassword}
+                  onkeyup={handleKey}
+                  placeholder="••••••••"
+                  autocomplete="current-password"
+                />
+                <button
+                  class="toggle"
+                  type="button"
+                  onclick={togglePassword}
+                  aria-label={toggleLabel}
+                >
+                  <c-modon-icon
+                    name={toggleIcon}
+                    size="14"
+                    color="rgba(255,255,255,0.25)"
+                  ></c-modon-icon>
+                </button>
+              </div>
+            </div>
+
+            <template lwc:if={errorMsg}>
+              <p class="err" role="alert">{errorMsg}</p>
+            </template>
+
+            <button
+              class="btn-dark signin"
+              type="button"
+              onclick={handleLogin}
+              disabled={busy}
+            >
+              {signInLabel}
+            </button>
+
+            <div class="foot-note">
+              <p class="note">Access restricted to authorised Modon personnel.</p>
+              <!-- the addition to the PoC screen: a colleague with a session skips the password -->
+              <p class="note alt">
+                Already signed in?
+                <button class="linkish" type="button" onclick={handleContinue}>
+                  Continue
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <c-msc-footer></c-msc-footer>
+    </div>
+  </div>
+    <!-- the wait is shown and blocked: c-msc-loader covers the viewport -->
+    <template lwc:if={busy}>
+        <c-msc-loader></c-msc-loader>
+    </template>
+</template>

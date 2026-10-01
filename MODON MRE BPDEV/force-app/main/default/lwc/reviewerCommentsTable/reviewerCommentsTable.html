@@ -1,0 +1,278 @@
+<template>
+    <div class="comments-manager">
+        <!-- Existing Comments Section -->
+        <template if:true={hasExistingComments}>
+            <lightning-card title="Existing Reviewer Comments" class="slds-m-bottom_medium">
+                <div class="slds-p-around_medium table-container">
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered existing-comments-table">
+                        <thead>
+                            <tr>
+                                <template if:true={remarkOptions}>
+                                    <th>Remarks</th>
+                                </template>
+                                <th>Notes / Comments</th>
+                                <th>Actioned To</th>
+                                <th>File Upload</th>
+                                <th>Review Status</th>
+                                <th>Uploaded Files</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={existingCommentsWithFiles} for:item="comment">
+                                <tr key={comment.commentId} class="existing-comment-row">
+                                    <template if:true={remarkOptions}>
+                                        <td>
+                                            <template if:true={comment.isEditing}>
+                                                <lightning-combobox 
+                                                    value={comment.editableRemarks} 
+                                                    options={remarkOptions} 
+                                                    onchange={handleExistingRemarkChange}
+                                                    data-id={comment.commentId}>
+                                                </lightning-combobox>
+                                            </template>
+                                            <template if:false={comment.isEditing}>
+                                                {comment.remarks}
+                                            </template>
+                                        </td>
+                                    </template> 
+                                    <td>
+                                        <template if:true={comment.isEditing}>
+                                            <lightning-textarea
+                                                value={comment.editableNotes}
+                                                required
+                                                onchange={handleExistingNotesChange}
+                                                data-id={comment.commentId}>
+                                            </lightning-textarea>
+                                        </template>
+                                        <template if:false={comment.isEditing}>
+                                            {comment.notes}
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <template if:true={comment.isEditing}>
+                                            <lightning-combobox
+                                                value={comment.editableActionedTo}
+                                                options={actionedToOptions}
+                                                onchange={handleExistingActionedToChange}
+                                                data-id={comment.commentId}>
+                                            </lightning-combobox>
+                                        </template>
+                                        <template if:false={comment.isEditing}>
+                                            {comment.actionedTo}
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <template if:true={comment.isEditing}>
+                                            <lightning-file-upload
+                                                name="existingFileUploader"
+                                                data-id={comment.commentId}
+                                                multiple=false
+                                                record-id={placeholderRecordId}
+                                                onuploadfinished={handleExistingFileUpload}>
+                                            </lightning-file-upload>
+                                        </template>
+                                        <template if:false={comment.isEditing}>
+                                            <!-- File upload not available in view mode -->
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <template if:true={comment.isEditing}>
+                                            <lightning-combobox
+                                                value={comment.editableReviewStatus}
+                                                options={reviewStatusOptions}
+                                                onchange={handleExistingReviewStatusChange}
+                                                data-id={comment.commentId}>
+                                            </lightning-combobox>
+                                        </template>
+                                        <template if:false={comment.isEditing}>
+                                            {comment.reviewStatus}
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <div class="slds-grid slds-wrap">
+                                            <template for:each={comment.processedFileDetails} for:item="file">
+                                                <div key={file.documentId} class="slds-col slds-size_1-of-1 slds-m-bottom_xx-small">
+                                                    <lightning-button-icon 
+                                                        icon-name="utility:preview" 
+                                                        variant="border-filled"
+                                                        alternative-text="View File" 
+                                                        title="View File"
+                                                        data-id={file.documentId}
+                                                        onclick={navigateToFile}
+                                                        class="slds-m-left_xx-small">
+                                                    </lightning-button-icon>
+                                                    <!--<template if:true={comment.isEditing}>
+                                                        <lightning-button-icon 
+                                                            icon-name="utility:delete" 
+                                                            variant="destructive"
+                                                            alternative-text="Remove File" 
+                                                            title="Remove File"
+                                                            data-comment-id={comment.commentId}
+                                                            data-file-id={file.documentId}
+                                                            onclick={handleRemoveExistingFile}
+                                                            class="slds-m-left_xx-small">
+                                                        </lightning-button-icon>
+                                                    </template> -->
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <template if:true={comment.isEditing}>
+                                            <lightning-button-icon
+                                                icon-name="utility:save"
+                                                variant="brand"
+                                                alternative-text="Save"
+                                                title="Save"
+                                                data-id={comment.commentId}
+                                                onclick={handleSaveExistingComment}
+                                                class="slds-m-right_xx-small">
+                                            </lightning-button-icon>
+
+                                            <lightning-button-icon
+                                                icon-name="utility:close"
+                                                variant="neutral"
+                                                alternative-text="Cancel"
+                                                title="Cancel"
+                                                data-id={comment.commentId}
+                                                onclick={handleCancelEdit}>
+                                            </lightning-button-icon>
+                                        </template>
+
+                                        <template if:false={comment.isEditing}>
+                                            <lightning-button-icon
+                                                icon-name="utility:edit"
+                                                variant="brand"
+                                                alternative-text="Edit"
+                                                title="Edit"
+                                                data-id={comment.commentId}
+                                                onclick={handleEditExistingComment}
+                                                disabled={isAnyRowEditing}
+                                                class="slds-m-right_xx-small">
+                                            </lightning-button-icon>
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                variant="destructive"
+                                                alternative-text="Delete"
+                                                title="Delete"
+                                                data-id={comment.commentId}
+                                                disabled={isAnyRowEditing} 
+                                                onclick={handleDeleteExistingComment}>
+                                            </lightning-button-icon>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </lightning-card>
+        </template>
+
+        <!-- New Comments Input Section -->
+        <div class="slds-p-around_medium table-container">
+            <lightning-card title="Add New Reviewer Comments">
+                <template if:true={commentRows}>
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                        <thead>
+                            <tr>
+                                <template if:true={remarkOptions}>
+                                    <th>Remarks</th>
+                                </template>
+                                <th>Notes / Comments</th>
+                                <th>Actioned To</th>
+                                <th>File Upload</th>
+                                <th>Review Status</th>
+                                <th>Uploaded Files</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={commentRows} for:item="row">
+                                <tr key={row.id}>
+                                    <template if:true={remarkOptions}>
+                                        <td>
+                                            <lightning-combobox 
+                                                data-id={row.id} 
+                                                value={row.remarks} 
+                                                name="Remark" 
+                                                options={remarkOptions} 
+                                                onchange={handleRemarkChange}>
+                                            </lightning-combobox>
+                                        </td>
+                                    </template> 
+                                    <td>
+                                        <lightning-textarea
+                                            value={row.notes}
+                                            data-id={row.id}
+                                            required
+                                            onchange={handleNotesChange}>
+                                        </lightning-textarea>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox
+                                            data-id={row.id}
+                                            value={row.actionedTo}
+                                            options={actionedToOptions}
+                                            onchange={handleActionedToChange}>
+                                        </lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-file-upload
+                                            name="fileUploader"
+                                            data-id={row.id}
+                                            multiple=false
+                                            record-id={placeholderRecordId}
+                                            onuploadfinished={handleFileUpload}>
+                                        </lightning-file-upload>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox
+                                            data-id={row.id}
+                                            value={row.reviewStatus}
+                                            options={reviewStatusOptions}
+                                            onchange={handlereviewStatusChange}>
+                                        </lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <div class="slds-grid slds-wrap">
+                                            <template for:each={row.fileDetails} for:item="file">
+                                                <div key={file.documentId} class="slds-col slds-size_1-of-1 slds-m-bottom_xx-small">
+                                                    <lightning-button-icon 
+                                                        icon-name="utility:preview" 
+                                                        variant="border-filled"
+                                                        alternative-text="View File" 
+                                                        title="View File"
+                                                        data-id={file.documentId}
+                                                        onclick={navigateToFile}
+                                                        class="slds-m-left_xx-small">
+                                                    </lightning-button-icon>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <lightning-button-icon
+                                            icon-name="utility:delete"
+                                            variant="destructive"
+                                            alternative-text="Delete Row"
+                                            title="Delete Row"
+                                            data-id={row.id}
+                                            onclick={deleteRow}>
+                                        </lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+
+                <div class="slds-m-top_medium button-container">
+                    <lightning-button label="Add Comment" icon-name="utility:add" onclick={addRow}></lightning-button>
+                    <lightning-button label="Save" variant="brand" class="slds-m-left_small" onclick={handleSave}></lightning-button>
+                </div>
+            </lightning-card>
+        </div>
+    </div>
+</template>

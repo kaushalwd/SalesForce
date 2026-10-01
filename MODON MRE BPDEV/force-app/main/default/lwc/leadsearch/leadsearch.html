@@ -1,0 +1,298 @@
+<template>
+    <lightning-card>
+        <div class="lsc-container">
+
+            <!-- ═══════════════════════════════════════════════════
+                 TAB NAVIGATION
+            ═══════════════════════════════════════════════════ -->
+            <div class="lsc-tab-bar" role="tablist">
+                <button class={leadTabClass}
+                        role="tab"
+                        aria-selected={isLeadTab}
+                        onclick={handleLeadTab}>
+                    <lightning-icon icon-name="standard:lead"
+                                    size="x-small"
+                                    class="lsc-tab-icon">
+                    </lightning-icon>
+                    <span>Lead Search</span>
+                </button>
+
+                <button class={eoiTabClass}
+                        role="tab"
+                        aria-selected={isEOITab}
+                        onclick={handleEOITab}>
+                    <lightning-icon icon-name="standard:document"
+                                    size="x-small"
+                                    class="lsc-tab-icon">
+                    </lightning-icon>
+                    <span>EOI Search</span>
+                </button>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 TAB 1 — LEAD SEARCH  (existing, unchanged)
+            ═══════════════════════════════════════════════════ -->
+            <template if:true={isLeadTab}>
+                <div class="lsc-tab-content" role="tabpanel">
+
+                    <!-- Search row -->
+                    <div class="lsc-search-row">
+                        <div class="lsc-input-wrapper">
+                            <lightning-input
+                                type="text"
+                                label="Enter Lead Number"
+                                value={searchKey}
+                                onchange={handleInput}
+                                placeholder="e.g. L-00123">
+                            </lightning-input>
+                        </div>
+                        <div class="lsc-btn-wrapper">
+                            <lightning-button
+                                label="Search"
+                                variant="brand"
+                                onclick={searchLeads}>
+                            </lightning-button>
+                        </div>
+                    </div>
+
+                    <!-- Initial prompt -->
+                    <template if:true={showInitialMessage}>
+                        <div class="lsc-empty-state">
+                            <lightning-icon icon-name="utility:info" size="small" class="lsc-icon-info"></lightning-icon>
+                            <p class="lsc-empty-sub">Please enter a Lead Number and click Search.</p>
+                        </div>
+                    </template>
+
+                    <!-- Lead results -->
+                    <template if:true={leads}>
+                        <template for:each={leads} for:item="ld">
+                            <div key={ld.Id} class="lsc-result-card lsc-card--lead">
+
+                                <div class="lsc-card-header">
+                                    <lightning-icon icon-name="standard:lead" size="small"></lightning-icon>
+                                    <h2 class="lsc-card-title">{ld.FirstName} {ld.LastName}</h2>
+                                    <span class="lsc-badge lsc-badge--info">{ld.Status}</span>
+                                </div>
+
+                                <div class="lsc-field-grid">
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">First Name</span>
+                                        <span class="lsc-field-value">{ld.FirstName}</span>
+                                    </div>
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">Last Name</span>
+                                        <span class="lsc-field-value">{ld.LastName}</span>
+                                    </div>
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">Broker Agency</span>
+                                        <span class="lsc-field-value">{ld.BrokerAgency_Name__c}</span>
+                                    </div>
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">Broker Agent</span>
+                                        <span class="lsc-field-value">{ld.BrokerAgentName__c}</span>
+                                    </div>
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">Project Interest</span>
+                                        <span class="lsc-field-value">{ld.ProjectInterest__c}</span>
+                                    </div>
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">Created By</span>
+                                        <span class="lsc-field-value">{ld.CreatedBy.Name}</span>
+                                    </div>
+                                    <div class="lsc-field">
+                                        <span class="lsc-field-label">Created Date</span>
+                                        <span class="lsc-field-value">{ld.CreatedDate}</span>
+                                    </div>
+                                </div>
+
+                                <div class="lsc-card-actions">
+                                    <lightning-button
+                                        label="Assign to Me"
+                                        variant="brand"
+                                        data-id={ld.Id}
+                                        onclick={assignToMe}>
+                                    </lightning-button>
+                                    <lightning-button
+                                        label="Cancel"
+                                        variant="neutral"
+                                        onclick={handleCancel}>
+                                    </lightning-button>
+                                </div>
+
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- No lead found -->
+                    <template if:true={noRecords}>
+                        <div class="lsc-empty-state">
+                            <lightning-icon icon-name="utility:warning" size="small" class="lsc-icon-warn"></lightning-icon>
+                            <p class="lsc-empty-title">No Lead Found</p>
+                            <p class="lsc-empty-sub">Please check the Lead Number and try again.</p>
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
+            <!-- ═══════════════════════════════════════════════════
+                 TAB 2 — EOI SEARCH  (new)
+            ═══════════════════════════════════════════════════ -->
+            <template if:true={isEOITab}>
+                <div class="lsc-tab-content" role="tabpanel">
+
+                    <!-- Search row -->
+                    <div class="lsc-search-row">
+                        <div class="lsc-input-wrapper">
+                            <lightning-input
+                                type="text"
+                                label="Enter EOI ID or Name"
+                                value={eoiSearchKey}
+                                onchange={handleEOIInput}
+                                placeholder="e.g. EOI-00456 or EOI name">
+                            </lightning-input>
+                        </div>
+                        <div class="lsc-btn-wrapper">
+                            <lightning-button
+                                label="Search"
+                                variant="brand"
+                                onclick={searchEOI}>
+                            </lightning-button>
+                        </div>
+                    </div>
+
+                    <!-- Initial EOI prompt -->
+                    <template if:true={showEOIInitialMessage}>
+                        <div class="lsc-empty-state">
+                            <lightning-icon icon-name="utility:info" size="small" class="lsc-icon-info"></lightning-icon>
+                            <p class="lsc-empty-sub">Please enter an EOI ID or Name and click Search.</p>
+                        </div>
+                    </template>
+
+                    <!-- EOI Not Found -->
+                    <template if:true={eoiNotFound}>
+                        <div class="lsc-empty-state">
+                            <lightning-icon icon-name="utility:warning" size="small" class="lsc-icon-warn"></lightning-icon>
+                            <p class="lsc-empty-title">No EOI Found</p>
+                            <p class="lsc-empty-sub">Please check the EOI ID or Name and try again.</p>
+                        </div>
+                    </template>
+
+                    <!-- EOI Result Card -->
+                    <template if:true={eoiResult}>
+                        <div class={eoiCardClass}>
+
+                            <!-- Card header -->
+                            <div class="lsc-card-header">
+                                <lightning-icon icon-name="standard:document" size="small"></lightning-icon>
+                                <h2 class="lsc-card-title">{eoiResult.eoiName}</h2>
+                                <template if:true={eoiResult.eoiCustomId}>
+                                    <span class="lsc-eoi-id-badge">{eoiResult.eoiCustomId}</span>
+                                </template>
+                                <template if:true={eoiResult.status}>
+                                    <span class="lsc-badge lsc-badge--info">{eoiResult.status}</span>
+                                </template>
+                            </div>
+
+                            <!-- EOI fields -->
+                            <div class="lsc-field-grid">
+                                <div class="lsc-field">
+                                    <span class="lsc-field-label">Opportunity Owner</span>
+                                    <span class="lsc-field-value">{eoiResult.ownerName}</span>
+                                </div>
+                                <div class="lsc-field">
+                                    <span class="lsc-field-label">EOI Status</span>
+                                    <span class="lsc-field-value">{eoiResult.status}</span>
+                                </div>
+                                <div class="lsc-field">
+                                    <span class="lsc-field-label">Related Opportunity</span>
+                                    <template if:true={eoiResult.opportunityName}>
+                                        <span class="lsc-field-value lsc-field-link">{eoiResult.opportunityName}</span>
+                                    </template>
+                                    <template if:false={eoiResult.opportunityName}>
+                                        <span class="lsc-field-value lsc-field-muted">No Opportunity linked</span>
+                                    </template>
+                                </div>
+                                <div class="lsc-field">
+                                    <span class="lsc-field-label">Sales Order</span>
+                                    <template if:true={eoiResult.hasSalesOrder}>
+                                        <span class="lsc-field-value lsc-field-warn">Sales Order exists</span>
+                                    </template>
+                                    <template if:false={eoiResult.hasSalesOrder}>
+                                        <span class="lsc-field-value lsc-field-ok">None — booking available</span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Sales Order warning banner -->
+                            <template if:true={eoiResult.hasSalesOrder}>
+                                <div class="lsc-alert lsc-alert--warning">
+                                    <lightning-icon icon-name="utility:warning" size="x-small"></lightning-icon>
+                                    <span>A Sales Order exists on the related Opportunity. Owner cannot be changed.</span>
+                                </div>
+                            </template>
+
+                            <!-- Assignment state banners -->
+                            <template if:true={isAssignedOther}>
+                                <div class="lsc-alert lsc-alert--error">
+                                    <lightning-icon icon-name="utility:lock" size="x-small"></lightning-icon>
+                                    <span>This EOI is already assigned to <strong>{eoiResult.ownerName}</strong>. You cannot reassign it.</span>
+                                </div>
+                            </template>
+
+                            <template if:true={isAlreadyMine}>
+                                <div class="lsc-alert lsc-alert--success">
+                                    <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                    <span>This EOI is already assigned to you.</span>
+                                </div>
+                            </template>
+
+                            <template if:true={isNoOpportunity}>
+                                <div class="lsc-alert lsc-alert--warning">
+                                    <lightning-icon icon-name="utility:warning" size="x-small"></lightning-icon>
+                                    <span>No Opportunity is linked to this EOI. Owner cannot be assigned.</span>
+                                </div>
+                            </template>
+
+                            <!-- Action buttons -->
+                            <div class="lsc-card-actions">
+                                <template if:true={showAssignButton}>
+                                    <lightning-button
+                                        label="Assign to Me &amp; Open Opportunity"
+                                        variant="success"
+                                        data-id={eoiResult.eoiId}
+                                        onclick={assignEOI}>
+                                    </lightning-button>
+                                </template>
+                                <lightning-button
+                                    label="Cancel"
+                                    variant="neutral"
+                                    onclick={handleEOICancel}>
+                                </lightning-button>
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <!-- Last Accessed EOI -->
+                    <template if:true={lastAccessedEOI}>
+                        <div class="lsc-last-accessed">
+                            <span class="lsc-last-accessed-label">
+                                <lightning-icon icon-name="utility:history" size="x-small"></lightning-icon>
+                                Last accessed
+                            </span>
+                            <div class="lsc-last-accessed-body">
+                                <span class="lsc-last-eoi-id">{lastAccessedEOI.eoiCustomId}</span>
+                                <span class="lsc-last-sep">—</span>
+                                <span class="lsc-last-opp">{lastAccessedEOI.opportunityName}</span>
+                                <span class="lsc-badge lsc-badge--success lsc-last-badge">Assigned</span>
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

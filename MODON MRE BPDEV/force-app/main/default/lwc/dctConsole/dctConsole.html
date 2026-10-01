@@ -1,0 +1,361 @@
+<template>
+    <div class="mobile-bar">
+        <span class="mb-title">DCT Console</span>
+        <button class="burger" onclick={toggleMenu} title="Menu">☰</button>
+    </div>
+    <div class={navClass}>
+        <template for:each={tabs} for:item="tab">
+            <button key={tab.id} class={tab.cssClass} data-id={tab.id} onclick={handleTab}>{tab.label}</button>
+        </template>
+    </div>
+
+    <div class="page">
+        <!-- DASHBOARD -->
+        <template lwc:if={isDashboard}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Development Control Team</div>
+                    <h1>DCT Console</h1>
+                    <div class="page-subtitle">Operational overview</div>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <template for:each={stats} for:item="s">
+                    <div key={s.id} class="stat-card">
+                        <div class={s.cls}>{s.icon}</div>
+                        <div>
+                            <div class="stat-value">{s.value}</div>
+                            <div class="stat-label">{s.label}</div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="card mt">
+                <div class="card-header">
+                    <h3>Recent Service Requests</h3>
+                    <span class="count">3 records</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Service</th>
+                                <th>Submitter</th>
+                                <th>Plot</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={recentRequests} for:item="r">
+                                <tr key={r.id}>
+                                    <td data-label="Tracking #"><span class="cell-link">{r.tracking}</span></td>
+                                    <td data-label="Service">{r.service}</td>
+                                    <td data-label="Submitter">{r.submitter}</td>
+                                    <td data-label="Plot">{r.plot}</td>
+                                    <td data-label="Status"><span class={r.statusClass}>{r.status}</span></td>
+                                    <td data-label="Submitted">{r.submitted}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- OWNER REGISTRATIONS -->
+        <template lwc:if={isOwnerRegs}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Registrations</div>
+                    <h1>Owner Registrations</h1>
+                    <div class="page-subtitle">Review and approve property owner registration requests</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Owner Registration Requests</h3>
+                    <span class="count">2 records</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Company</th>
+                                <th>Plot #</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={ownerRegs} for:item="o">
+                                <tr key={o.id}>
+                                    <td data-label="Name">{o.name}</td>
+                                    <td data-label="Email">{o.email}</td>
+                                    <td data-label="Company">{o.company}</td>
+                                    <td data-label="Plot #">{o.plot}</td>
+                                    <td data-label="Submitted">{o.submitted}</td>
+                                    <td data-label="Status"><span class={o.statusClass}>{o.status}</span></td>
+                                    <td data-label="Actions">
+                                        <div class="row-actions">
+                                            <template lwc:if={o.pending}>
+                                                <button class="btn btn-success btn-sm" onclick={handleNoop}>Approve</button>
+                                                <button class="btn btn-outline btn-sm" onclick={handleNoop}>Reject</button>
+                                            </template>
+                                            <template lwc:else>
+                                                <button class="btn btn-outline btn-sm" onclick={handleNoop}>View</button>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- SP REGISTRATIONS -->
+        <template lwc:if={isSpRegs}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Registrations</div>
+                    <h1>SP Registrations</h1>
+                    <div class="page-subtitle">Review and approve service provider registration requests</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Service Provider Registration Requests</h3>
+                    <span class="count">1 record</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Contact Email</th>
+                                <th>TRN</th>
+                                <th>Plot #</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={spRegs} for:item="s">
+                                <tr key={s.id}>
+                                    <td data-label="Company">{s.company}</td>
+                                    <td data-label="Contact Email">{s.email}</td>
+                                    <td data-label="TRN">{s.trn}</td>
+                                    <td data-label="Plot #">{s.plot}</td>
+                                    <td data-label="Submitted">{s.submitted}</td>
+                                    <td data-label="Status"><span class={s.statusClass}>{s.status}</span></td>
+                                    <td data-label="Actions">
+                                        <div class="row-actions">
+                                            <button class="btn btn-success btn-sm" onclick={handleNoop}>Approve</button>
+                                            <button class="btn btn-outline btn-sm" onclick={handleNoop}>Reject</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- SERVICE REQUESTS -->
+        <template lwc:if={isRequests}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Operations</div>
+                    <h1>Service Requests</h1>
+                    <div class="page-subtitle">All submitted DCT service requests across owners and providers</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Service Requests</h3>
+                    <span class="count">4 records</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Service</th>
+                                <th>Submitter</th>
+                                <th>Plot</th>
+                                <th>Status</th>
+                                <th class="num">Fee</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={serviceRequests} for:item="r">
+                                <tr key={r.id}>
+                                    <td data-label="Tracking #"><span class="cell-link">{r.tracking}</span></td>
+                                    <td data-label="Service">{r.service}</td>
+                                    <td data-label="Submitter">{r.submitter}</td>
+                                    <td data-label="Plot">{r.plot}</td>
+                                    <td data-label="Status"><span class={r.statusClass}>{r.status}</span></td>
+                                    <td data-label="Fee" class="num">{r.fee}</td>
+                                    <td data-label="Actions">
+                                        <div class="row-actions">
+                                            <button class="btn btn-outline btn-sm" onclick={handleNoop}>Review</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- ASSIGNMENTS -->
+        <template lwc:if={isAssignments}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Operations</div>
+                    <h1>Assignments</h1>
+                    <div class="page-subtitle">Service provider to plot assignment requests awaiting approval</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Assignment Requests</h3>
+                    <span class="count">1 record</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Plot</th>
+                                <th>Service Provider</th>
+                                <th>Owner</th>
+                                <th>Requested</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={assignments} for:item="a">
+                                <tr key={a.id}>
+                                    <td data-label="Plot">{a.plot}</td>
+                                    <td data-label="Service Provider">{a.provider}</td>
+                                    <td data-label="Owner">{a.owner}</td>
+                                    <td data-label="Requested">{a.requested}</td>
+                                    <td data-label="Status"><span class={a.statusClass}>{a.status}</span></td>
+                                    <td data-label="Actions">
+                                        <div class="row-actions">
+                                            <button class="btn btn-success btn-sm" onclick={handleNoop}>Approve</button>
+                                            <button class="btn btn-outline btn-sm" onclick={handleNoop}>Reject</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- PLOTS -->
+        <template lwc:if={isPlots}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Registry</div>
+                    <h1>Plots</h1>
+                    <div class="page-subtitle">Registered development plots and their current status</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Plot Registry</h3>
+                    <span class="count">2 records</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Plot Number</th>
+                                <th>Owner</th>
+                                <th>Location</th>
+                                <th class="num">Area (m²)</th>
+                                <th>Usage</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={plots} for:item="p">
+                                <tr key={p.id}>
+                                    <td data-label="Plot Number"><span class="cell-link">{p.plot}</span></td>
+                                    <td data-label="Owner">{p.owner}</td>
+                                    <td data-label="Location">{p.location}</td>
+                                    <td data-label="Area (m²)" class="num">{p.area}</td>
+                                    <td data-label="Usage">{p.usage}</td>
+                                    <td data-label="Status"><span class={p.statusClass}>{p.status}</span></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- USERS -->
+        <template lwc:if={isUsers}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Administration</div>
+                    <h1>Users</h1>
+                    <div class="page-subtitle">Portal accounts and access roles</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Portal Users</h3>
+                    <span class="count">3 records</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={users} for:item="u">
+                                <tr key={u.id}>
+                                    <td data-label="Name">{u.name}</td>
+                                    <td data-label="Email">{u.email}</td>
+                                    <td data-label="Role"><span class="badge badge-blue">{u.role}</span></td>
+                                    <td data-label="Status"><span class={u.statusClass}>{u.status}</span></td>
+                                    <td data-label="Created">{u.created}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Email_To_Case_Owner</name>
+        <label>Email To Case Owner</label>
+        <locationX>50</locationX>
+        <locationY>647</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <connector>
+            <targetReference>SendNotificationtoOwner</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.New_Owner_Email__c</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+                <stringValue>noreply@modon.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>SubjectLine_CaseOwner</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>EmailBody_Internal_Notification</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>SendNotificationtoOwner</name>
+        <label>SendNotificationtoOwner</label>
+        <locationX>50</locationX>
+        <locationY>755</locationY>
+        <actionName>customNotificationAction</actionName>
+        <actionType>customNotificationAction</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>customNotifTypeId</name>
+            <value>
+                <elementReference>GetNotification.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientIds</name>
+            <value>
+                <elementReference>Recipients</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>title</name>
+            <value>
+                <elementReference>NotificationTitle_Owner</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>body</name>
+            <value>
+                <elementReference>CaseCreated</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>targetId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>customNotificationAction</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>62.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>AsssignOwners</name>
+        <label>AsssignOwners</label>
+        <locationX>50</locationX>
+        <locationY>539</locationY>
+        <assignmentItems>
+            <assignToReference>Recipients</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Record.New_Owner__c</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Email_To_Case_Owner</targetReference>
+        </connector>
+    </assignments>
+    <constants>
+        <name>SenderEmailAddress</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>&quot;MODON SALES&quot; &lt;Sales@Modon.ae&gt;</stringValue>
+        </value>
+    </constants>
+    <decisions>
+        <name>IsOwnerAssigned</name>
+        <label>IsOwnerAssigned</label>
+        <locationX>182</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Assigned</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.New_Owner__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>GetNotification</targetReference>
+            </connector>
+            <label>Assigned</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>EmailAddress_Customer</name>
+        <dataType>String</dataType>
+        <expression>{!$Record.Customer_Email__c}</expression>
+    </formulas>
+    <formulas>
+        <name>EmailAddress_New_Owner</name>
+        <dataType>String</dataType>
+        <expression>{!$Record.New_Owner_Email__c}</expression>
+    </formulas>
+    <formulas>
+        <name>EmailAddress_Owner</name>
+        <dataType>String</dataType>
+        <expression>{!$Record.Owner_Email__c}</expression>
+    </formulas>
+    <formulas>
+        <name>NotificationTitle_Owner</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; is created and assigned to you.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>NotificationTitle_PrimaryOwner</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; created on the account &apos;  + {!$Record.Account_Name__c} + &apos; you handle.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_CaseOwner</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; created and assigned to you.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_CaseOwner_DuplicateCase</name>
+        <dataType>String</dataType>
+        <expression>&apos;A duplicate case &apos; + {!$Record.CaseNumber} + &apos; is created and closed.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_Customer</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; created regarding your concern.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_PrimaryOwner</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; created on the account you handle.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_PrimaryOwner_DuplicateCase</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; created on the account you handle. This is a duplicate case having parent case number &apos; + {!$Record.ParentId}</expression>
+    </formulas>
+    <interviewLabel>Case Creation Notification - Final {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Case Creation Notification - Final</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>GetNotification</name>
+        <label>GetNotification</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>AsssignOwners</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Case_Created</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CustomNotificationType</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>IsOwnerAssigned</targetReference>
+        </connector>
+        <filterLogic>or</filterLogic>
+        <filters>
+            <field>RunningTestClass__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>Case</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>CaseCreated</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>New Case is Created with Case No: {!$Record.CaseNumber}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>EmailBody_Customer_DuplicateCase</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!$Record.Customer_Name__c},
+
+Thank you for reaching Modon Services regarding the issue you are facing. We have created case {!$Record.CaseNumber} to address your concern. However, we are closing this case as we already have an open case {!$Record.Parent.CaseNumber} for the same concern.
+
+We are actively working on your open case and we assure your case will be addressed at the earliest with prompt resolution.
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <textTemplates>
+        <name>EmailBody_Customer_Notification</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!$Record.Customer_Name__c},
+
+Thank you for reaching Modon Services regarding the issue you are facing. We have created a case to address your concern.
+
+Account Name       :  {!$Record.Account_Name__c}
+Issue Description    :  {!$Record.Description}
+Case Number         :  {!$Record.CaseNumber}
+Category                :  {!$Record.CaseCategory__c}
+Sub Category         :  {!$Record.CaseSubCategory__c}
+Primary Owner       :  {!$Record.Primary_Owner_Name__c}
+Parent Case            :  {!$Record.ParentId}
+Date Created          :  {!$Record.CreatedDate}
+
+Your case will be addressed at the earliest with prompt resolution.
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <textTemplates>
+        <name>EmailBody_Customer_Outside_BHours</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!$Record.Customer_Name__c},
+
+Thank you for reaching Modon Services regarding the issue you are facing. We have created a case to address your concern. Please note that your case is received outside our business hours and will be taken up during the next immediate working hours.
+
+Case Number       :  {!$Record.CaseNumber}
+Issue Description  :  {!$Record.Description}
+Category               :  {!$Record.CaseCategory__c}
+Sub Category       :  {!$Record.CaseSubCategory__c}
+Date Created        :  {!$Record.CreatedDate}
+
+Your case will be addressed at the earliest with prompt resolution.
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <textTemplates>
+        <name>EmailBody_Internal_Notification</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!$Record.New_Owner_Name__c},
+
+A new case has been created with below details:
+
+Case Number       :  {!$Record.CaseNumber}
+Current Status      :  {!$Record.Status}
+Case Type             :  {!$Record.CaseType__c}
+Sub Vertical          :   {!$Record.Sub_Vertical__c}
+Category              :  {!$Record.CaseCategory__c}
+Subject                 :   {!$Record.Subject}
+Account Name     :  {!$Record.Account_Name__c}
+Visitor Name        :  {!$Record.Visitor_First_Name__c}
+Date Created        :  {!$Record.CreatedDate}
+
+Please review the case and take the necessary actions to resolve it promptly.
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <variables>
+        <name>HolidayCount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+    <variables>
+        <name>Notificationforowner</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>PrimaryOwners</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>Recipients</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

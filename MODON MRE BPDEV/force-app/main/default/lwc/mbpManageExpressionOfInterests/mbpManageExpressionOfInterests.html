@@ -1,0 +1,1472 @@
+<template>
+
+    <!-- Main Card -->
+    <div class="mainWrapper">
+<div class="headerSection">
+
+    <div class="headerButton slds-p-bottom_medium">
+        <template if:true={showAddEOIButton}>
+         <div class="add-lead-button-container">
+                                    <button class="slds-button slds-button_brand" onclick={openModal}>Add Expression Of Interest</button>
+                                    <button class="slds-button slds-button_brand" onclick={handleExport}><i
+                                            class="fa fa-download"></i> Export EOIs </button>
+                            </div>
+                            </template>
+    </div>
+
+</div>
+
+<!-- EOI TABLE -->
+
+<div class="tableWrapper">
+
+  <div class="responsiveWrapper">
+
+    <!-- HEADER -->
+
+   <div class="desktopHeader">
+
+    <div>S.No</div>
+
+    <div>EOI Name</div>
+
+    <div>Customer Name</div>
+
+
+    <div>Project</div>
+
+
+    <div>Unit Type</div>
+
+    <div>Bedrooms</div>
+
+
+
+    <div>Status</div>
+
+    <div>Timer</div>
+    <div>View</div>
+     <div>Action</div>
+
+</div>
+
+    <!-- ROWS -->
+
+<template
+    for:each={paginatedRecords}
+    for:item="item">
+
+    <div
+        key={item.Id}
+        class="responsiveRow">
+
+
+
+            <div class="col serial">
+
+    <label>S.No</label>
+
+    <span class="serialText">
+        {item.serialNumber}
+    </span>
+
+</div>
+  <div class="col eoi">
+                <label>EOI Name</label>
+
+                <span class="eoiText">
+                    {item.EOIId__c}
+                </span>
+            </div>
+
+<div class="col">
+
+    <label>Customer Name</label>
+
+    <span>
+        {item.CustomerName}
+    </span>
+
+</div>
+
+
+
+
+          
+       
+
+            <div class="col">
+
+                <label>Project</label>
+
+                <span>
+                    {item.ProjectName}
+                </span>
+
+            </div>
+
+          
+
+            <div class="col">
+
+                <label>Unit Type</label>
+
+                <span>
+                    {item.UnitType__c}
+                </span>
+
+            </div>
+
+            <div class="col">
+
+                <label>Bedrooms</label>
+
+                <span>
+                    {item.NumberofBedrooms__c}
+                </span>
+
+            </div>
+
+            <div class="col">
+
+                <label>Status</label>
+
+                <span class={item.statusBadgeClass}>
+                    {item.Status__c}
+                </span>
+
+            </div>
+
+            <div class="col">
+
+                <label>Timer</label>
+
+                <span class={item.timerBadgeClass}>
+                    {item.BrokerTimer}
+                </span>
+
+            </div>
+
+          <div class="col actionCol">
+
+    <label>Action</label>
+
+    <button
+        class="viewButton"
+        data-id={item.Id}
+        onclick={handleViewEOI}>
+
+        <lightning-icon
+            icon-name="utility:preview"
+            size="x-small">
+        </lightning-icon>
+
+    </button>
+
+</div>
+
+<div class="col actionCol">
+
+    <label>Void</label>
+
+  <button
+    class={item.voidButtonClass}
+    data-id={item.Id}
+    onclick={openVoidModal}
+    disabled={item.isVoidDisabled}>
+
+    Void EOI
+
+</button>
+
+</div>
+
+        </div>
+
+    </template>
+
+    <div class="paginationWrapper">
+
+    <button
+        class="pageButton"
+        onclick={handlePreviousPage}
+        disabled={disablePrevious}>
+
+        Previous
+
+    </button>
+
+    <div class="pageInfo">
+
+        Page
+        {currentPage}
+        of
+        {totalPages}
+
+    </div>
+
+    <button
+        class="pageButton"
+        onclick={handleNextPage}
+        disabled={disableNext}>
+
+        Next
+
+    </button>
+
+</div>
+
+</div>
+
+
+                    <!--div class="datatable-wrapper slds-text-body_medium slds-truncate">
+                                <lightning-tree-grid columns={columns} data={treeGridData} key-field="Id"
+                                    onrowaction={handleRowAction} onrowselection={handleRowSelection}
+                                    selected-rows={selectedLeads} class="responsive-datatable" expanded-rows=[]>
+                                </lightning-tree-grid>
+                            </div-->
+
+</div>
+
+
+
+
+<template if:true={showVoidModal}>
+
+<section
+    role="dialog"
+    tabindex="-1"
+    class="slds-modal slds-fade-in-open cleanVoidModal">
+
+    <div class="cleanVoidContainer">
+
+        <!-- CLOSE -->
+
+        <button
+            class="simpleCloseBtn"
+            onclick={closeVoidModal}>
+
+            ✕
+
+        </button>
+
+        <!-- ICON -->
+
+        <div class="voidIconWrap">
+
+            <div class="voidIcon">
+                !
+            </div>
+
+        </div>
+
+        <!-- TITLE -->
+
+        <div class="voidTitle">
+
+            Void EOI
+
+        </div>
+
+        <!-- SUB TEXT -->
+
+        <div class="voidSubText">
+
+            Please enter the reason before continuing.
+
+        </div>
+
+        <!-- TEXTAREA -->
+
+        <textarea
+            class="cleanTextarea"
+            placeholder="Enter void reason..."
+            value={voidReason}
+            onchange={handleVoidReason}
+            maxlength="500">
+        </textarea>
+
+        <!-- INFO CARD -->
+
+        <div class="mildInfoCard">
+
+            <div>
+                EOI will become inactive after confirmation.
+            </div>
+
+           
+
+        </div>
+
+        <!-- ACTIONS -->
+
+        <div class="voidActions">
+
+            <button
+                class="lightCancelBtn"
+                onclick={closeVoidModal}>
+
+                Cancel
+
+            </button>
+
+            <button
+                class="dangerVoidBtn"
+                onclick={handleVoidEOI}>
+
+                Confirm Void
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+<div class="cleanBackdrop"></div>
+
+</template>
+
+
+
+
+
+
+
+
+<template if:true={showEOIDetailModal}>
+
+<section
+    role="dialog"
+    tabindex="-1"
+    class="slds-modal slds-fade-in-open cleanDetailModal">
+
+    <div class="cleanDetailContainer">
+
+        <!-- CLOSE -->
+
+        <button
+            class="minimalCloseBtn"
+            onclick={closeEOIDetailModal}>
+
+            ✕
+
+        </button>
+
+        <!-- TOP -->
+
+        <div class="detailTopSection">
+
+            <div class="detailMainTitle">
+
+                Expression Of Interest
+
+            </div>
+
+            <div class="detailSubTitle">
+
+                Customer and EOI information overview
+
+            </div>
+
+        </div>
+
+        <!-- LEAD CARD -->
+
+        <div class="modernDetailCard">
+
+            <div class="modernCardTitle">
+
+                Customer  Information
+
+            </div>
+
+            <div class="modernGrid">
+
+                <div class="infoBox">
+
+                    <label>
+                        Customer Name
+                    </label>
+
+                    <span>
+                        {selectedEOI.CustomerName}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Mobile
+                    </label>
+
+                    <span>
+                        {selectedEOI.CustomerPhone}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Email
+                    </label>
+
+                    <span>
+                        {selectedEOI.CustomerEmail}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- EOI CARD -->
+
+        <div class="modernDetailCard">
+
+            <div class="cardHeaderRow">
+
+                <div class="modernCardTitle">
+
+                    EOI Information
+
+                </div>
+
+
+            </div>
+
+            <div class="modernGrid">
+
+                <div class="infoBox">
+
+                    <label>
+                        EOI Number
+                    </label>
+
+                    <span>
+                        {selectedEOI.EOIId__c}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Project
+                    </label>
+
+                    <span>
+                        {selectedEOI.ProjectName}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Phase
+                    </label>
+
+                    <span>
+                        {selectedEOI.PhaseName}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Unit Type
+                    </label>
+
+                    <span>
+                        {selectedEOI.UnitType__c}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Bedrooms
+                    </label>
+
+                    <span>
+                        {selectedEOI.NumberofBedrooms__c}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        Status
+                    </label>
+
+                    <span class={selectedEOI.statusBadgeClass}>
+                        {selectedEOI.Status__c}
+                    </span>
+
+                </div>
+
+                <div class="infoBox">
+
+                    <label>
+                        EOI Amount
+                    </label>
+
+                    <span>
+                        AED {selectedEOI.EOI_Amount_AED__c}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<div class="detailBackdrop"></div>
+
+</template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Draft / Created Records -->
+        <template if:true={records.length}>
+
+            <div class="recordGrid">
+
+                <template for:each={records} for:item="rec">
+
+                    <div
+                        key={rec.id}
+                        class="recordCard">
+
+                        <div class="recordHeader">
+
+                            <h2>
+                                {rec.name}
+                            </h2>
+
+                            <span class={rec.statusClass}>
+                                {rec.status}
+                            </span>
+
+                        </div>
+
+                        <p>
+                            Current Step :
+                            <strong>
+                                Step {rec.currentStep}
+                            </strong>
+                        </p>
+
+                        <div class="buttonSection">
+
+                            <lightning-button
+                                label="Edit"
+                                variant="brand-outline"
+                                data-id={rec.id}
+                                onclick={editRecord}>
+                            </lightning-button>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </template>
+
+    </div>
+
+ <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+
+    <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+    <!-- Modal -->
+    <template if:true={showModal}>
+
+        <section
+            role="dialog"
+            tabindex="-1"
+            class="slds-modal slds-fade-in-open customModal">
+
+            <div class="slds-modal__container modalContainer">
+
+
+
+ <!-- SALESFORCE STYLE PROGRESS BAR -->
+
+<template if:false={isMobileView}>
+
+<div class="sfProgressWrapper">
+
+    <!-- CLOSE -->
+
+
+    <div class="sfProgressBar">
+
+        <!-- LEAD -->
+
+        <div class={leadProgressClass}>
+
+            <div class="sfStepLabel">
+                Customer
+            </div>
+
+        </div>
+
+        <!-- OTP -->
+
+        <div class={otpProgressClass}>
+
+            <div class="sfStepLabel">
+                OTP
+            </div>
+
+        </div>
+
+        <!-- EOI -->
+
+        <div class={eoiProgressClass}>
+
+            <div class="sfStepLabel">
+                EOI
+            </div>
+
+        </div>
+
+        <!-- PAYMENT -->
+
+        <div class={paymentProgressClass}>
+
+            <div class="sfStepLabel">
+                Payment
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</template>
+
+                <!-- Body -->
+                <div class="modalBody">
+
+                    <!-- STEP 1 -->
+                   <!-- STEP 1 -->
+
+
+  <template if:true={isStep1}>
+
+    <div class="stepContent">
+
+        <div class="stepHeader">
+
+            <h2>
+                Customer Information
+            </h2>
+
+            
+
+        </div>
+
+        <div class="formGrid">
+
+            <!-- TYPE -->
+
+            <lightning-combobox
+                label="Type"
+                value={leadType}
+                options={typeOptions}
+                onchange={handleChange}
+                data-field="leadType"
+                required
+                message-when-value-missing="Please select Type">
+            </lightning-combobox>
+
+            <!-- TITLE -->
+
+            <lightning-combobox
+                label="Title"
+                value={title}
+                options={titleOptions}
+                onchange={handleChange}
+                data-field="title"
+                required
+                message-when-value-missing="Please select Title">
+            </lightning-combobox>
+
+            <!-- ORGANIZATION -->
+
+            <template if:true={isOrganization}>
+
+                <lightning-input
+                    label="Organization Name"
+                    value={company}
+                    onchange={handleChange}
+                    data-field="company"
+                    required={isOrganization}
+                    message-when-value-missing="Please enter Organization Name">
+                </lightning-input>
+
+            </template>
+
+            <!-- FIRST NAME -->
+
+            <lightning-input
+                label="First Name"
+                value={firstName}
+                onchange={handleChange}
+                data-field="firstName"
+                required
+                message-when-value-missing="Please enter First Name">
+            </lightning-input>
+
+            <!-- LAST NAME -->
+
+            <lightning-input
+                label="Last Name"
+                value={lastName}
+                onchange={handleChange}
+                data-field="lastName"
+                required
+                message-when-value-missing="Please enter Last Name">
+            </lightning-input>
+
+            <!-- EMAIL -->
+
+            <lightning-input
+                type="email"
+                label="Email"
+                value={email}
+                onchange={handleChange}
+                data-field="email"
+                required
+                placeholder="example@gmail.com"
+                message-when-value-missing="Please enter Email"
+                message-when-type-mismatch="Please enter valid Email">
+            </lightning-input>
+
+          <!-- MOBILE -->
+
+<lightning-input
+    type="tel"
+    label="Mobile"
+    value={mobile}
+    onchange={handleChange}
+    data-field="mobile"
+    required
+    placeholder="+971 56XXXXXXXX"
+    pattern="^\+[1-9]{1}[0-9]{6,14}$"
+    message-when-value-missing="Please enter Mobile Number"
+    message-when-pattern-mismatch="Enter valid mobile number with country code">
+</lightning-input>
+
+            <!-- RESIDENT STATUS -->
+
+            <lightning-combobox
+                label="UAE Resident Status"
+                value={residentStatus}
+                options={residentOptions}
+                onchange={handleResidentChange}
+                required
+                message-when-value-missing="Please select UAE Resident Status">
+            </lightning-combobox>
+
+            <!-- COUNTRY -->
+
+            <lightning-combobox
+                label="Country Of Residence"
+                value={country}
+                options={countryOptions}
+                onchange={handleChange}
+                data-field="country"
+                required
+                message-when-value-missing="Please select Country">
+            </lightning-combobox>
+
+            <!-- NATIONALITY -->
+
+            <lightning-combobox
+                label="Nationality"
+                value={nationality}
+                options={nationalityOptions}
+                onchange={handleChange}
+                data-field="nationality"
+                required
+                message-when-value-missing="Please select Nationality">
+            </lightning-combobox>
+
+               <template if:true={isResident}>
+
+          
+
+             
+
+                <lightning-input
+    label="Emirates ID"
+    value={emiratesId}
+    onchange={handleChange}
+    data-field="emiratesId"
+    required={isResident}
+    placeholder="784-XXXX-XXXXXXX-X"
+    pattern="^784-[0-9]{4}-[0-9]{7}-[0-9]{1}$"
+    message-when-value-missing="Please enter Emirates ID"
+    message-when-pattern-mismatch="Enter valid Emirates ID format like 784-XXXX-XXXXXXX-X">
+</lightning-input>
+
+                    <!-- EMIRATES EXPIRY -->
+
+                
+
+          
+
+
+        </template>
+
+        <!-- NON RESIDENT -->
+
+        <template if:true={isNonResident}>
+
+      
+
+                    <!-- PASSPORT NUMBER -->
+
+                    <lightning-input
+                        label="Passport Number"
+                        value={passportNumber}
+                        onchange={handleChange}
+                        data-field="passportNumber"
+                        required={isNonResident}
+                        message-when-value-missing="Please enter Passport Number">
+                    </lightning-input>
+
+                    <!-- PASSPORT EXPIRY -->
+
+                 
+
+               
+
+        </template>
+
+
+
+
+
+  <template if:true={isOrganization}>
+
+           
+
+                    <lightning-input
+                        label="Trade License Number"
+                        value={tradeLicenseNumber}
+                        onchange={handleChange}
+                        data-field="tradeLicenseNumber"
+                        required={isOrganization}
+                        message-when-value-missing="Please enter Trade License Number">
+                    </lightning-input>
+
+                   
+              
+
+        </template>
+
+
+
+
+
+
+
+        </div>
+
+       
+
+     
+
+    </div>
+
+</template>
+
+<!-- STEP 2 -->
+<template if:true={isStep2}>
+    <section class="verification-card">
+                            <h2>Verify Your Identity</h2>
+                            <p>Please select your preferred method to receive a verification code to ensure the security of your corporate account.</p>
+
+                            <div class="verification-options">
+                             
+                                <button class={emailVerificationClass} data-method="email" onclick={handleVerificationMethod}>
+                                    <span class="verification-icon">
+                                        <lightning-icon icon-name="utility:email" size="small" alternative-text="Email"></lightning-icon>
+                                    </span>
+                                    <span>
+                                        <strong>Email Verification</strong>
+                                        <small>Sent to your registered official email</small>
+                                    </span>
+                                
+                                    <template if:true={showEmailVerificationLoader}>
+                                        <lightning-spinner class="verification-option-spinner" alternative-text="Sending email verification code" size="small"></lightning-spinner>
+                                    </template>
+                                    <template if:true={isEmailVerificationSelected}>
+                                        <lightning-icon class="verification-check" icon-name="utility:check" size="x-small" alternative-text="Selected"></lightning-icon>
+                                    </template>
+                                </button>
+                                <button class={smsVerificationClass} data-method="sms" onclick={handleVerificationMethod}>
+                                    <span class="verification-icon">
+                                        <lightning-icon icon-name="utility:phone_portrait" size="small" alternative-text="SMS"></lightning-icon>
+                                    </span>
+                                    <span>
+                                        <strong>SMS Verification</strong>
+                                        <small>Sent to the registered mobile number</small>
+                                    </span>
+                                    <template if:true={showSmsVerificationLoader}>
+                                        <lightning-spinner class="verification-option-spinner" alternative-text="Sending SMS verification code" size="small"></lightning-spinner>
+                                    </template>
+                                    <template if:true={isSmsVerificationSelected}>
+                                        <lightning-icon class="verification-check" icon-name="utility:check" size="x-small" alternative-text="Selected"></lightning-icon>
+                                    </template>
+                                </button>
+                            </div>
+
+                            <template if:true={showVerificationCode}>
+                                <div class="verification-code-section">
+                                    <h3>Enter Verification Code</h3>
+                                    <p>{verificationDestinationText}</p>
+                                  
+                                    <div class="otp-inputs">
+                                        <template for:each={verificationDigits} for:item="digit">
+                                            <input key={digit.key} class="otp-input" value={digit.value} maxlength="1" inputmode="numeric" pattern="[0-9]" data-otp-index={digit.index} oninput={handleVerificationCodeInput} aria-label="Verification code digit" />
+                                        </template>
+                                    </div>
+                                    <p class="resend-text">
+                                        Didn't receive the code?
+                                        <template if:true={showResendAction}>
+                                            <button class="text-button" onclick={handleVerificationResend} disabled={isResendDisabled}>{resendButtonLabel}</button>
+                                        </template>
+                                    </p>
+                                    <template if:true={isSendingVerification}>
+                                        <div class="field-loader">
+                                            <lightning-spinner alternative-text="Sending verification code" size="xx-small"></lightning-spinner>
+                                            <span>Sending verification code...</span>
+                                        </div>
+                                    </template>
+                                    <template if:true={verificationMessage}>
+                                        <div class="message info">{verificationMessage}</div>
+                                    </template>
+                                    <template if:true={errorMessage}>
+                                        <div class="message error">{errorMessage}</div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <div class="verification-note">
+                                <div>
+                                    <lightning-icon icon-name="utility:info" size="x-small" alternative-text="Info"></lightning-icon>
+                                    <span>Verification codes are valid for 5 minutes.</span>
+                                </div>
+                                <div>
+                                    <lightning-icon icon-name="utility:help" size="x-small" alternative-text="Help"></lightning-icon>
+                                    <span>If you don't receive a code, please check your spam folder or contact system administration.</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!--footer class="modal-actions verification-actions">
+                            <button class="secondary-button" onclick={handleBack} disabled={isBackDisabled}>Back</button>
+                            <button class="primary-button verification-continue" onclick={handleVerificationNext} disabled={isVerificationNextDisabled}>
+                                Verify & Continue
+                                <lightning-icon icon-name="utility:forward" size="x-small"></lightning-icon>
+                            </button>
+                        </footer-->
+</template>
+
+                  <!-- STEP 3 -->
+<template if:true={isStep3}>
+
+    <div class="eoi-wrap">
+
+     
+        <template
+            for:each={eoiList}
+            for:item="eoi"
+            for:index="index">
+
+            <div
+                key={eoi.key}
+                class="form-card slds-m-bottom_large">
+              <div class="form-card-header">
+
+                    <div class="header-left">
+
+                        <div class="header-icon">
+
+                            <lightning-icon
+                                icon-name="standard:document"
+                                size="x-small">
+                            </lightning-icon>
+
+                        </div>
+
+                        <div>
+
+                            <div class="h-title">
+                                Expression Of Interest #{eoi.key}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="form-body">
+                    <div class="section-row">
+                        <span class="section-label">
+                            EOI Range
+                        </span>
+
+                        <div class="section-line"></div>
+
+                    </div>
+
+                    <div class="field-grid">
+
+                        <div class="field-group">
+
+                            <label class="field-label">
+                                Project
+                                <abbr class="req">*</abbr>
+                            </label>
+
+                            <div class="select-wrap">
+
+                                <select
+                                    class="eoi-select"
+                                    data-index={index}
+                                    data-field="selectedProjectId"
+                                    value={eoi.selectedProjectId}
+                                    oninput={handleEOIFieldChange}>
+
+                                    <option value="">
+                                        Select Project
+                                    </option>
+
+                                    <template
+                                        for:each={projectOptions}
+                                        for:item="opt">
+
+                                        <option
+                                            key={opt.value}
+                                            value={opt.value}>
+
+                                            {opt.label}
+
+                                        </option>
+
+                                    </template>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+                        <div class="field-group">
+
+                            <label class="field-label">
+                                Phase
+                                <abbr class="req">*</abbr>
+                            </label>
+
+                            <div class="select-wrap">
+                                <select
+                                    class="eoi-select"
+                                    data-index={index}
+                                    data-field="selectedPhaseId"
+                                    value={eoi.selectedPhaseId}
+                                   oninput={handleEOIFieldChange}>
+
+                                    <option value="">
+                                        Select Phase
+                                    </option>
+                                    <template
+                                        for:each={eoi.phaseOptions}
+                                        for:item="opt">
+                                        <option
+                                            key={opt.value}
+                                            value={opt.value}>
+                                            {opt.label}  </option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">
+                                Unit Type
+                                <abbr class="req">*</abbr>
+                            </label>
+                            <div class="select-wrap">
+
+                                <select
+                                    class="eoi-select"
+                                    data-index={index}
+                                    data-field="selectedUnitType"
+                                    value={eoi.selectedUnitType}
+                                    oninput={handleEOIFieldChange}>
+
+                                    <option value="">
+                                        Select Unit Type
+                                    </option>
+
+                                    <template
+                                        for:each={eoi.unitTypeOptions}
+                                        for:item="opt">
+
+                                        <option
+                                            key={opt}
+                                            value={opt}>
+
+                                            {opt}
+
+                                        </option>
+
+                                    </template>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">
+                                Bedrooms
+                                <abbr class="req">*</abbr>
+                            </label>
+                            <div class="select-wrap">
+                                <select
+                                    class="eoi-select"
+                                    data-index={index}
+                                    data-field="selectedBedrooms"
+                                    value={eoi.selectedBedrooms}
+                                    oninput={handleEOIFieldChange}>
+
+                                    <option value="">
+                                        Select Bedrooms
+                                    </option>
+
+                                    <template
+                                        for:each={eoi.bedroomOptions}
+                                        for:item="opt">
+
+                                        <option
+                                            key={opt}
+                                            value={opt}>
+
+                                            {opt}
+
+                                        </option>
+
+                                    </template>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+                      <div class="field-group">
+
+    <label class="field-label">
+        Unit Typology
+        <abbr class="req">*</abbr>
+    </label>
+
+    <div class="select-wrap">
+
+        <select
+            class="eoi-select"
+            data-index={index}
+            data-field="selectedUnitTypology"
+            onchange={handleEOIFieldChange}>
+
+            <option value="">
+                Select Unit Typology
+            </option>
+
+            <template
+                for:each={eoi.unitTypologyOptions}
+                for:item="opt">
+
+                <option
+                    key={opt.value}
+                    value={opt.value}>
+
+                    {opt.label}
+
+                </option>
+
+            </template>
+
+        </select>
+
+    </div>
+
+</div>
+<div class="field-group">
+
+    <label class="field-label">
+        Payment Type
+        <abbr class="req">*</abbr>
+    </label>
+
+    <div class="select-wrap">
+
+        <select
+            class="eoi-select"
+            value={paymentType}
+            onchange={handlePaymentChange}>
+
+            <option value="">
+                Select Payment Type
+            </option>
+
+            <template
+                for:each={paymentTypeOptions}
+                for:item="opt">
+
+                <option
+                    key={opt.value}
+                    value={opt.value}>
+
+                    {opt.label}
+
+                </option>
+
+            </template>
+
+        </select>
+
+    </div>
+
+</div>
+
+
+
+                    </div>
+                        <div class="section-row">
+                        <span class="section-label">
+                            Unit Interest
+                        </span>
+                        <div class="section-line"></div>
+                    </div>
+
+                    <div class="field-grid">
+                    <div class="field-group">
+
+                            <label class="field-label">
+                                Number Of Units
+                            </label>
+                <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    class="eoi-input"
+                    data-index={index}
+                    data-field="numberOfUnits"
+                    value={eoi.numberOfUnits}
+                    placeholder="1"
+                    oninput={handleEOIFieldChange}
+                    disabled />
+
+                        </div>
+
+                        <!-- EOI AMOUNT -->
+
+                        <div class="field-group">
+
+                            <label class="field-label">
+                                EOI Amount (AED)
+                            </label>
+
+                            <div class="amountBoxClass">
+
+                                <span class="amount-value">
+                                    {eoi.eoiAmount}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- REMARKS -->
+
+                    <div class="section-row">
+                        <span class="section-label">
+                            Remarks
+                        </span>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="field-group">
+<textarea
+    rows="3"
+    class="eoi-input eoi-textarea"
+    placeholder="Enter remarks"
+    data-index={index}
+    data-field="remarks"
+    value={eoi.remarks}
+    oninput={handleEOIFieldChange}>
+</textarea>
+
+                    </div>
+<template if:true={index}>
+
+                        <div class="slds-m-top_medium slds-text-align_right">
+
+                            <lightning-button
+                                label="Remove"
+                                variant="destructive"
+                                data-index={index}
+                                onclick={handleRemoveEOI}>
+                            </lightning-button>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+            </div>
+
+        </template>
+        <div class="slds-m-bottom_medium slds-text-align_right">
+
+
+<!--div class="signatureSection">
+
+    <lightning-button
+        label="Send For Signature"
+        variant="brand"
+        icon-name="utility:signature"
+        onclick={handleSendForSignature}>
+    </lightning-button>
+
+</div-->
+            <lightning-button
+                label="Add More EOI"
+                variant="brand"
+                onclick={handleAddMoreEOI}>
+            </lightning-button>
+
+        </div>
+
+    </div>
+
+</template>
+<template if:true={isStep4}>
+
+    <div class="successScreen">
+
+        <div class="successTitle">
+            Thank You
+        </div>
+
+        <div class="successSubTitle">
+            Your Expression Of Interest has been submitted successfully.
+        </div>
+
+        <div class="paymentCard">
+
+            <div class="paymentBadge">
+                IMPORTANT
+            </div>
+
+           
+
+            <div class="paymentText">
+
+               {companyName}
+
+            </div>
+
+            <div class="paymentWarning">
+
+              {eoiSubmitMessage}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</template>
+</div>
+
+            <div class="mbpActionWrap">
+
+    <!-- HIDE CANCEL BUTTON IN STEP 1 & STEP 4 -->
+  <template if:true={isStep1}>
+
+        <lightning-button
+            label="Cancel"
+            onclick={closeModal}>
+        </lightning-button>
+
+    </template>
+
+    <template if:true={isStep2}>
+
+        <lightning-button
+            label="Cancel"
+            onclick={closeModal}>
+        </lightning-button>
+
+    </template>
+
+    <template if:true={isStep3}>
+
+        <lightning-button
+            label="Cancel"
+            onclick={closeModal}>
+        </lightning-button>
+
+    </template>
+
+    <!-- NEXT / FINISH BUTTON -->
+
+    <lightning-button
+        class="mbpNextActionBtn"
+        variant="brand"
+        label={buttonLabel}
+        onclick={handleSubmit}>
+    </lightning-button>
+
+</div>
+</div>
+</section>
+<div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

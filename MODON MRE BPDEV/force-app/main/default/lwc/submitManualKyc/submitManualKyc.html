@@ -1,0 +1,131 @@
+<template>
+    <!--
+    **********************************************************************************************************************
+    * Name               : submitManualKyc.html
+    * Description        : HTML template for the Manual KYC Quick Action LWC.
+    * Usage              : LWC
+    * Created By         : Rushi Patel - Horizontal Digital
+    * --------------------------------------------------------------------------------------------------------------------
+    * Version       Author                      Date            Comment
+    * 1.0           Rushi Patel                 27 Aug 2026     Initial draft
+    * 1.1           Arvind                      17 Sep 2026     Made supporting document upload optional: marked Step 2
+    *                                                           as optional, added Clear selection button for existing
+    *                                                           file selection
+    **********************************************************************************************************************
+    -->
+    <lightning-quick-action-panel title="Submit for Manual KYC">
+        
+        <template if:true={showSpinner}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+        
+        <div class={containerClass}>
+            
+            <!-- SECTION 1: KYC Details -->
+            <div class="slds-section slds-is-open slds-m-bottom_small">
+                <h3 class="slds-section__title slds-theme_shade">
+                    <span class="slds-truncate slds-p-horizontal_small" title="Step 1: KYC Details">Step 1: KYC Details</span>
+                </h3>
+                <div class="slds-section__content slds-p-horizontal_small slds-p-top_x-small">
+                    <lightning-record-edit-form object-api-name={objectApiName} record-id={recordId} onload={handleFormLoad}>
+                        <lightning-layout multiple-rows>
+                            
+                            <lightning-layout-item size="12" class="slds-m-bottom_medium">
+                                <label class="slds-form-element__label" for="reasonField">
+                                    <abbr class="slds-required" title="required">* </abbr>Why is manual KYC required?
+                                </label>
+                                <lightning-input-field 
+                                    id="reasonField"
+                                    field-name="KYC_Manual_Reason__c" 
+                                    required 
+                                    variant="label-hidden"
+                                    onchange={handleReasonChange}>
+                                </lightning-input-field>
+                            </lightning-layout-item>
+                            
+                            <lightning-layout-item size="12">
+                                <label class="slds-form-element__label" for="commentField">
+                                    <abbr class="slds-required" title="required">* </abbr>Please provide additional details or comments for the approver.
+                                </label>
+                                <lightning-input-field 
+                                    id="commentField"
+                                    field-name="Manual_KYC_Comment__c" 
+                                    required 
+                                    variant="label-hidden"
+                                    onchange={handleCommentChange}>
+                                </lightning-input-field>
+                            </lightning-layout-item>
+                            
+                        </lightning-layout>
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+            
+            <!-- SECTION 2: Supporting Document (v1.1 - now optional) -->
+            <div class="slds-section slds-is-open">
+                <h3 class="slds-section__title slds-theme_shade">
+                    <span class="slds-truncate slds-p-horizontal_small" title="Step 2: Supporting Document (Optional)">Step 2: Supporting Document (Optional)</span>
+                </h3>
+                <div class="slds-section__content slds-p-horizontal_small slds-p-top_x-small">
+                    
+                    <!-- State A: A new file was just uploaded -->
+                    <template if:true={isNewlyUploaded}>
+                        <div class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="border: 1px solid #c9c9c9; border-radius: 0.25rem;">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <div class="slds-p-around_xx-small slds-m-right_small slds-theme_default" style="border-radius: 0.25rem; border: 1px solid #e5e5e5;">
+                                    <lightning-icon icon-name="doctype:attachment" size="medium"></lightning-icon>
+                                </div>
+                                <div>
+                                    <p class="slds-text-title_bold slds-text-color_default">{newlyUploadedFileName}</p>
+                                    <p class="slds-text-body_small slds-text-color_success">Ready for submission</p>
+                                </div>
+                            </div>
+                            <lightning-button-icon icon-name="utility:clear" alternative-text="Remove File" variant="bare" size="medium" class="slds-m-right_xx-small" onclick={clearSelection}></lightning-button-icon>
+                        </div>
+                    </template>
+                    
+                    <!-- State B: No new file is uploaded right now -->
+                    <template if:false={isNewlyUploaded}>
+                        <template if:true={hasExistingFiles}>
+                            <lightning-radio-group 
+                                name="existingFilesGroup"
+                                label="Select a previously uploaded document:"
+                                options={existingFiles}
+                                value={selectedFileId}
+                                onchange={handleFileSelection}
+                                type="radio"
+                                class="slds-m-bottom_medium">
+                            </lightning-radio-group>
+                            
+                            <div class="slds-text-title slds-m-bottom_x-small">Or upload a new document:</div>
+                        </template>
+                        
+                        <lightning-file-upload
+                            label={fileUploadLabel}
+                            name="fileUploader"
+                            accept={acceptedFormats}
+                            record-id={recordId}
+                            onuploadfinished={handleUploadFinished}>
+                        </lightning-file-upload>
+                    </template>
+                    
+                    <!-- Success Indicator for Existing Selection (v1.1 - added Clear selection button) -->
+                    <template if:true={isExistingSelected}>
+                        <div class="slds-text-color_success slds-m-top_medium slds-grid slds-grid_vertical-align-center">
+                            <lightning-icon icon-name="utility:success" alternative-text="Success" size="small" variant="success" class="slds-m-right_x-small"></lightning-icon>
+                            <span class="slds-text-heading_small">Document attached and ready for submission.</span>
+                            <lightning-button variant="base" label="Clear selection" class="slds-m-left_small" onclick={clearSelection}></lightning-button>
+                        </div>
+                    </template>
+                    
+                </div>
+            </div>
+            
+        </div>
+
+        <div slot="footer">
+            <lightning-button label="Cancel" onclick={closeAction} class="slds-m-right_small"></lightning-button>
+            <lightning-button variant="brand" label="Submit for Approval" onclick={handleSubmit} disabled={isSubmitDisabled}></lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>

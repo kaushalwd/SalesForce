@@ -1,0 +1,117 @@
+<apex:page renderAs="pdf" standardController="ServiceRequest__c" extensions="PreUnitCancellationPDFController">
+
+    <html>
+        <body style="font-family: Arial, sans-serif; font-size: 14px;">
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                
+                <!-- HEADER -->
+                <h2>Memorandum</h2>
+
+                <p>
+                    <b>Date:</b> 
+                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                        <apex:param value="{!TODAY()}" />
+                    </apex:outputText>
+                </p>
+
+                <p><b>Ref No.:</b> {!serviceRequest.Name}</p>
+                <p><b>Subject:</b> Pre Unit Cancellation Request</p>
+
+                <!-- CASE DESCRIPTION -->
+                <h3>CASE DESCRIPTION</h3>
+                <p>
+                    Dear {!currentUser.Name},<br/><br/>
+                    {!serviceRequest.SalesOrder__r.CustomerAccount__r.Name} has requested 
+                    cancellation of the unit associated with Sales Order 
+                    <b>{!serviceRequest.SalesOrder__r.Name}</b>.<br/><br/>
+                    
+                    Below are the financial implications and approval details for your review.
+                </p>
+
+                <!-- FINANCIAL SUMMARY -->
+                <h3>FINANCIAL SUMMARY</h3>
+                
+                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                    
+                    <tr style="background-color: #000000; color: #ffffff;">
+                        <th>Total Paid Amount</th>
+                        <th>ADM Paid Amount</th>
+                        <th>Forfeiture</th>
+                        <th>Market Loss</th>
+                        <th>Payable to Customer</th>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <apex:outputText value="{0,number,#,##0.00}">
+                                <apex:param value="{!serviceRequest.Total_Paid_Amount__c}" />
+                            </apex:outputText>
+                        </td>
+
+                        <td>
+                            <apex:outputText value="{0,number,#,##0.00}">
+                                <apex:param value="{!serviceRequest.ADM_Paid_Amount__c}" />
+                            </apex:outputText>
+                        </td>
+
+                        <td>
+                            <apex:outputText value="{0,number,#,##0.00}">
+                                <apex:param value="{!serviceRequest.Forfeiture__c}" />
+                            </apex:outputText>
+                        </td>
+
+                        <td>
+                            <apex:outputText value="{0,number,#,##0.00}">
+                                <apex:param value="{!serviceRequest.Market_Loss__c}" />
+                            </apex:outputText>
+                        </td>
+
+                        <td>
+                            <apex:outputText value="{0,number,#,##0.00}">
+                                <apex:param value="{!serviceRequest.Payable_to_Customer__c}" />
+                            </apex:outputText>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <!-- ADDITIONAL DETAILS -->
+                <h3>REQUEST DETAILS</h3>
+                <p>
+                    {!serviceRequest.Description__c}
+                </p>
+
+                <!-- APPROVAL HISTORY -->
+                <h3>APPROVAL HISTORY</h3>
+
+                <table border="1" cellpadding="3" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                    
+                    <tr style="background-color: #000000; color: #ffffff;">
+                        <th>Approver Name</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                    </tr>
+
+                    <apex:repeat var="step" value="{!approvalSteps}">
+                        <tr>
+                            <td>{!step.ApproverName}</td>
+                            <td>{!step.Title}</td>
+                            <td>{!step.Status}</td>
+                        </tr>
+                    </apex:repeat>
+
+                    <!-- CURRENT USER (PENDING) -->
+                    <tr>
+                        <td>{!currentUser.Name}</td>
+                        <td>{!currentUser.Title}</td>
+                        <td>Pending</td>
+                    </tr>
+
+                </table>
+
+            </div>
+        </body>
+    </html>
+
+</apex:page>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>E_sync_Receipt_Amount_Date_Not_Allowed</fullName>
+    <active>true</active>
+    <description>If the record is already synced to Oracle (OraclePartyId__c is not blank), then Receipt Amount, Transaction Date, and Transaction Number must not be changed.</description>
+    <errorConditionFormula>AND(
+    NOT(ISNEW()),
+    ISPICKVAL(SalesOrder__r.Unit__r.Phase__r.CurrencyIsoCode, &quot;AED&quot;),
+    $Profile.Name &lt;&gt; &quot;System Administrator&quot;, 
+NOT(
+        ISPICKVAL(SalesOrder__r.Source_Entity__c, &quot;Modon - Egypt&quot;)
+    ),
+   
+    OR(
+        NOT(ISBLANK(PRIORVALUE(OraclePartyId__c))),
+        NOT(ISBLANK(PRIORVALUE(Oracle_Id_Temporary__c)))
+    ),
+    OR(
+        ISCHANGED(OraclePartyId__c),
+        ISCHANGED(Oracle_Id_Temporary__c),
+        ISCHANGED(Receipt_Amount__c),
+        ISCHANGED(TransactionDate__c),
+        ISCHANGED(ChequeDate__c),
+        ISCHANGED(TransactionNumber__c),
+        ISCHANGED(TotalAmount__c),
+        ISCHANGED(ReceiptDate__c)
+    )
+)</errorConditionFormula>
+    <errorMessage>This Receipt has already been synced to Oracle. Receipt Amount, Receipt Date, Transaction Date, and Transaction Number cannot be modified. Please cancel and recreate the receipt if changes are required.</errorMessage>
+</ValidationRule>

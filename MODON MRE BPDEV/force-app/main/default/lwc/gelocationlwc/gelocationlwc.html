@@ -1,0 +1,135 @@
+<template>
+    <div class="address-card">
+
+        <template if:true={isLoading}>
+            <div class="loading-wrap">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+
+            <div class="card-header">
+                <lightning-icon icon-name="utility:location" size="small" class="header-icon"></lightning-icon>
+                <div>
+                    <p class="card-title">Address details</p>
+                    <p class="card-subtitle">
+                        <template if:true={isPersonAccount}>Person account · mailing and billing information</template>
+                        <template if:true={isOrgAccount}>Organization account · billing information</template>
+                    </p>
+                </div>
+            </div>
+
+            <!-- ===================== PERSON ACCOUNT ===================== -->
+            <template if:true={isPersonAccount}>
+
+                <div class="address-grid">
+                    <lightning-combobox label="Nationality" required value={nationality} options={nationalityOptions} onchange={handleNationalityChange}></lightning-combobox>
+                    <lightning-combobox label="UAE resident" required value={uaeResident} options={uaeResidentOptions} onchange={handleUaeResidentChange}></lightning-combobox>
+                </div>
+
+                <p class="section-label">Mailing address</p>
+
+                <div class="geo-search-wrap">
+                    <lightning-input
+                        label="Search location"
+                        placeholder="Type an address, area, or landmark"
+                        value={mailingSearchText}
+                        onchange={handleMailingSearchChange}>
+                    </lightning-input>
+                    <template if:true={isMailingSearching}>
+                        <lightning-spinner alternative-text="Searching" size="x-small" class="search-spinner"></lightning-spinner>
+                    </template>
+                    <template if:true={showMailingSearchResults}>
+                        <ul class="geo-results">
+                            <template for:each={mailingSearchResults} for:item="loc">
+                                <li key={loc.placeId} data-lat={loc.lat} data-lon={loc.lon} data-label={loc.label} onclick={handleMailingLocationSelect}>
+                                    {loc.label}
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                </div>
+
+                <div class="address-grid">
+                    <lightning-input label="Villa / building number" required value={villaNumber} onchange={handleVillaNumberChange}></lightning-input>
+                    <lightning-input label="Street" required value={mailingStreetDisplayValue} onchange={handleMailingStreetChange}></lightning-input>
+                    <lightning-input label="City" required value={mailingCity} onchange={handleMailingCityChange}></lightning-input>
+                    <lightning-input label="State / province" required value={mailingState} onchange={handleMailingStateChange}></lightning-input>
+                    <lightning-input label="Country" required value={mailingCountry} onchange={handleMailingCountryChange}></lightning-input>
+                    <lightning-input label="Postal code" required value={mailingPostalCode} onchange={handleMailingPostalChange}></lightning-input>
+                </div>
+
+                <label class="same-as-checkbox">
+                    <input type="checkbox" checked={billingSameAsMailing} onchange={handleBillingSameToggle} />
+                    Billing address is same as mailing address
+                </label>
+
+                <p class="section-label">Billing address</p>
+                <div class={billingSectionDisabledClass}>
+                    <lightning-input label="Street" required value={billingStreet} disabled={billingReadOnly} onchange={handleBillingStreetChange}></lightning-input>
+                    <lightning-input label="City" required value={billingCity} disabled={billingReadOnly} onchange={handleBillingCityChange}></lightning-input>
+                    <lightning-input label="State / province" required value={billingState} disabled={billingReadOnly} onchange={handleBillingStateChange}></lightning-input>
+                    <lightning-input label="Country" required value={billingCountry} disabled={billingReadOnly} onchange={handleBillingCountryChange}></lightning-input>
+                    <lightning-input label="Postal code" required value={billingPostalCode} disabled={billingReadOnly} onchange={handleBillingPostalChange}></lightning-input>
+                </div>
+            </template>
+
+            <!-- ===================== ORGANIZATION ACCOUNT ===================== -->
+            <template if:true={isOrgAccount}>
+
+                <!-- Arvind (11/08/2026) - added two new mandatory fields for Org accounts:
+                     Trade license number and UAE VAT register number, alongside Unified number -->
+                <!-- Arvind (12/08/2026) - added a third new mandatory field: Trade name -->
+                <div class="address-grid">
+                    <lightning-input label="Unified number" required value={unifiedNumber} onchange={handleUnifiedNumberChange}></lightning-input>
+                    <lightning-input label="Trade name" required value={tradeName} onchange={handleTradeNameChange}></lightning-input>
+                    <lightning-input label="Trade license number" required value={tradeLicenseNumber} onchange={handleTradeLicenseNumberChange}></lightning-input>
+                    <lightning-input label="UAE VAT register number" required value={uaeVatRegisterNumber} onchange={handleUaeVatRegisterNumberChange}></lightning-input>
+                    <lightning-combobox label="Nationality" required value={nationality} options={nationalityOptions} onchange={handleNationalityChange}></lightning-combobox>
+                    <lightning-combobox label="UAE resident" required value={uaeResident} options={uaeResidentOptions} onchange={handleUaeResidentChange}></lightning-combobox>
+                </div>
+
+                <p class="section-label">Billing address</p>
+
+                <div class="geo-search-wrap">
+                    <lightning-input
+                        label="Search location"
+                        placeholder="Type an address, area, or landmark"
+                        value={billingSearchText}
+                        onchange={handleBillingSearchChange}>
+                    </lightning-input>
+                    <template if:true={isBillingSearching}>
+                        <lightning-spinner alternative-text="Searching" size="x-small" class="search-spinner"></lightning-spinner>
+                    </template>
+                    <template if:true={showBillingSearchResults}>
+                        <ul class="geo-results">
+                            <template for:each={billingSearchResults} for:item="loc">
+                                <li key={loc.placeId} data-lat={loc.lat} data-lon={loc.lon} data-label={loc.label} onclick={handleBillingLocationSelect}>
+                                    {loc.label}
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                </div>
+
+                <div class="address-grid">
+                    <lightning-input label="Street" required value={billingStreet} onchange={handleBillingStreetChange}></lightning-input>
+                    <lightning-input label="City" required value={billingCity} onchange={handleBillingCityChange}></lightning-input>
+                    <lightning-input label="State / province" required value={billingState} onchange={handleBillingStateChange}></lightning-input>
+                    <lightning-input label="Country" required value={billingCountry} onchange={handleBillingCountryChange}></lightning-input>
+                    <lightning-input label="Postal code" required value={billingPostalCode} onchange={handleBillingPostalChange}></lightning-input>
+                </div>
+            </template>
+
+            <div class="footer-actions">
+                <button class="btn-cancel" onclick={handleCancel}>Cancel</button>
+                <button class="btn-save" onclick={handleSave} disabled={isSaving}>
+                    <lightning-icon icon-name="utility:check" size="x-small" class="btn-icon"></lightning-icon>
+                    {saveButtonLabel}
+                </button>
+            </div>
+
+        </template>
+    </div>
+</template>

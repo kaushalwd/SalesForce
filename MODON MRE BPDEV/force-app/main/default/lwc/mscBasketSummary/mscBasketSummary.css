@@ -1,0 +1,189 @@
+@import "c/mscStyles";
+
+/* .summary, .eyebrow, .chip and .banner all come from mscStyles - only what is
+   specific to a basket lives here. */
+
+:host {
+    display: block;
+}
+
+.basket__head {
+    margin-bottom: 12px;
+}
+
+.basket__count {
+    margin-left: auto;
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.basket__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* A basket has no cap - unitSearchLwc never imposed one - so this scrolls
+       inside the panel rather than pushing the total off the rail. */
+    max-height: 320px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.basket-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    width: 100%;
+    padding: 9px 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+.basket-row:last-child {
+    border-bottom: none;
+}
+.basket-row:hover .basket-row__name {
+    text-decoration: underline;
+}
+.basket-row:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+.basket-row__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+}
+
+.basket-row__name {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.basket-row__price {
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--text-muted, #a3a3a3);
+    white-space: nowrap;
+}
+
+.basket__total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.basket__total-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.basket__total-value {
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text, #fafafa);
+}
+
+.basket__note {
+    margin-top: 14px;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.basket__empty {
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* Scrollbars are suppressed app-wide, matching the console's chromeless look. */
+:host,
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* ── one scroller per screen (Aurelix IT 09 Aug 2026) ────────────────────
+   .basket__rows is capped and scrolls inside itself, which works on a desktop but not
+   on a phone: scrollbars are suppressed app-wide, so a nested scroll region has
+   no affordance at all - the list simply looks truncated. Below 768 the cap is
+   released and the pane that hosts this owns the single scroll. */
+@media (max-width: 767px) {
+    .basket__rows {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* ── 1.1  per-unit detail ───────────────────────────────────────────────────
+   A basket row used to be a name, a price and a plan chip. That is less than the
+   single-unit summary shows for the same booking, which made a multi-unit recap
+   the thinner record of the larger commitment. */
+.basket-row__meta {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.basket-row__sched {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+/* minmax(0, …) on the elastic track: a long milestone description must truncate
+   rather than push the amount out of the 300px rail. */
+.basket-mile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.basket-mile__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.basket-mile__pct {
+    white-space: nowrap;
+}
+
+.basket-mile__amt {
+    white-space: nowrap;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+}

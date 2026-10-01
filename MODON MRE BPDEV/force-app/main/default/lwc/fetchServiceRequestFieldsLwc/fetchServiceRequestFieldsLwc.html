@@ -1,0 +1,32 @@
+<template>
+    <template if:true={isPopUp}>
+       
+                    <lightning-record-edit-form 
+                        object-api-name="ServiceRequest__c" 
+                        onsuccess={handleSuccess}
+                        onsubmit={handleSubmit}
+                        onerror={handleError} 
+                        record-type-id={selectedrt} 
+                        >
+
+                        <lightning-input-field field-name="CaseId__c" value={currentrecid} disabled></lightning-input-field>
+                        <lightning-input-field field-name="AccountId__c" value={accountId} disabled></lightning-input-field>
+                        <lightning-input-field field-name="UnitId__c" value={unitId} disabled></lightning-input-field>
+                      <!--  <lightning-input-field field-name="SalesOrder__c" value={selectedSalesOrder} filter={soFilter} onchange={handleSalesOrderChange} required></lightning-input-field>
+    -->
+                        <template for:each={srRequiredFieldMap} for:item="colReq">
+                            <lightning-input-field key={colReq.key} field-name={colReq.key} required></lightning-input-field>
+                        </template>
+
+                        <template for:each={srOptionalFieldMap} for:item="colOpt">
+                            <lightning-input-field key={colOpt.key} field-name={colOpt.key}></lightning-input-field>
+                        </template>
+                    <!-- Centering the buttons -->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center slds-m-top_medium">
+                        <lightning-button label="Cancel" variant="neutral" onclick={handleClose}></lightning-button>
+                        <lightning-button label="Save" variant="brand" type="submit" class="slds-m-left_small"></lightning-button>
+                    </div>
+                    </lightning-record-edit-form>
+                
+    </template>
+</template>

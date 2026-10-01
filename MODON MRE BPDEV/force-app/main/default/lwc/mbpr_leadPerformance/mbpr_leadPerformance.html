@@ -1,0 +1,448 @@
+<template>
+    <template lwc:if={isInitializing}>
+        <c-mbpr_loader label="Loading performance"></c-mbpr_loader>
+    </template>
+
+    <template lwc:elseif={showLoadError}>
+        <div class="perf-state">
+            <c-mbpr_empty-state
+                compact
+                kicker="Performance"
+                title="Performance unavailable"
+                message={loadError}
+                tone="error"
+                primary-label="Try again"
+                onprimary={retryLoad}
+            ></c-mbpr_empty-state>
+        </div>
+    </template>
+
+    <template lwc:else>
+        <div class={contentClass} aria-busy={isRefreshing}>
+            <!-- ============================= Toolbar ============================= -->
+            <div class="perf-toolbar">
+                <template lwc:if={showAgentPicker}>
+                    <div class="perf-agent-picker">
+                        <span class="perf-agent-picker__kicker" id="perf-agent-kicker">Agent</span>
+                        <input
+                            class="perf-agent-picker__input"
+                            type="text"
+                            role="combobox"
+                            autocomplete="off"
+                            aria-label="Focus on one agent"
+                            aria-autocomplete="list"
+                            aria-expanded={agentPickerExpanded}
+                            aria-controls="perf-agent-list"
+                            placeholder="Search agent"
+                            value={agentInputValue}
+                            onfocus={handleAgentFocus}
+                            oninput={handleAgentInput}
+                            onkeydown={handleAgentKeydown}
+                            onblur={handleAgentBlur}
+                        />
+                        <span class="perf-agent-picker__caret" aria-hidden="true"></span>
+                        <template lwc:if={isAgentPickerOpen}>
+                            <div id="perf-agent-list" class="perf-agent-menu" role="listbox" aria-label="Agents">
+                                <template lwc:if={hasAgentOptions}>
+                                    <template for:each={filteredAgentOptions} for:item="option">
+                                        <button
+                                            key={option.key}
+                                            class={option.className}
+                                            type="button"
+                                            role="option"
+                                            aria-selected={option.selected}
+                                            data-value={option.pickValue}
+                                            onmousedown={handleAgentOptionMouseDown}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    </template>
+                                </template>
+                                <template lwc:else>
+                                    <p class="perf-agent-menu__empty">No agents match your search.</p>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <button
+                    class={filterTriggerClass}
+                    type="button"
+                    aria-expanded={filterTriggerExpanded}
+                    onclick={toggleFilterPanel}
+                >
+                    <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                    <span>Filters</span>
+                    <span class="perf-filter-chip">{activeFilterLabel}</span>
+                </button>
+
+                <template lwc:if={isFilterOpen}>
+                    <div class="perf-scrim" aria-hidden="true" onclick={closeFilterPanel}></div>
+                    <div class="perf-pop" role="dialog" aria-label="Filter performance" style={filterPopStyle} onkeydown={handleFilterKeydown}>
+                        <div class="perf-pop__head">
+                            <b>Filters</b>
+                            <button
+                                class="perf-pop__close"
+                                type="button"
+                                title="Close"
+                                aria-label="Close filters"
+                                onclick={closeFilterPanel}
+                            >
+                                &#10005;
+                            </button>
+                        </div>
+
+                        <label class="perf-cell">
+                            <span>Period</span>
+                            <select onchange={handleDraftFilterChange}>
+                                <template for:each={filterOptions} for:item="option">
+                                    <option key={option.value} value={option.value} selected={option.selected}>
+                                        {option.label}
+                                    </option>
+                                </template>
+                            </select>
+                        </label>
+
+                        <template lwc:if={showCustomDates}>
+                            <div class="perf-pop__dates">
+                                <label class="perf-cell">
+                                    <span>Start date</span>
+                                    <input type="date" value={draftStartDate} onchange={handleDraftStartChange} />
+                                </label>
+                                <label class="perf-cell">
+                                    <span>End date</span>
+                                    <input type="date" value={draftEndDate} onchange={handleDraftEndChange} />
+                                </label>
+                            </div>
+                            <template lwc:if={customRangeHint}>
+                                <p class="perf-pop__hint">{customRangeHint}</p>
+                            </template>
+                        </template>
+
+                        <div class="perf-pop__actions">
+                            <button class="perf-button perf-button--ghost" type="button" onclick={resetFilters}>
+                                Reset
+                            </button>
+                            <button class="perf-button" type="button" disabled={isApplyDisabled} onclick={applyFilters}>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- ============================= Hero ============================= -->
+            <section class="perf-hero" aria-label="Lead totals">
+                <div class="perf-hero__aura perf-hero__aura--a" aria-hidden="true"></div>
+                <div class="perf-hero__aura perf-hero__aura--b" aria-hidden="true"></div>
+                <div class="perf-hero__grid">
+                    <div class="perf-hero__pair">
+                        <div class="perf-hero__main">
+                            <p class="perf-kicker">Total Leads</p>
+                            <p class="perf-hero__value">{heroTotalDisplay}</p>
+                            <p class="perf-hero__scope">{heroScopeLine}</p>
+                            <div class="perf-chips">
+                                <template for:each={heroChips} for:item="chip">
+                                    <span key={chip.key} class="perf-chip">
+                                        <span class={chip.dotClass} aria-hidden="true"></span>
+                                        <span class="perf-chip__label">{chip.label}</span>
+                                        <span class="perf-chip__value">{chip.value}</span>
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="perf-gauge" role="img" aria-label={gaugeAriaLabel}>
+                            <svg class="perf-gauge__svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                                <circle class="perf-gauge__track" cx="18" cy="18" r="15.9155"></circle>
+                                <template for:each={statusRing} for:item="seg">
+                                    <circle
+                                        key={seg.key}
+                                        class={seg.className}
+                                        cx="18"
+                                        cy="18"
+                                        r="15.9155"
+                                        style={seg.style}
+                                        data-index={seg.index}
+                                        onpointerenter={handleRingEnter}
+                                        onpointermove={handleRingMove}
+                                        onpointerleave={handleRingLeave}
+                                    ></circle>
+                                </template>
+                            </svg>
+                            <div class="perf-gauge__center" aria-hidden="true">
+                                <b class="perf-gauge__pct">{gaugePctDisplay}<span>%</span></b>
+                                <small>Converted</small>
+                            </div>
+                        </div>
+                        <button
+                            class="perf-gauge-expand"
+                            type="button"
+                            title="Enlarge"
+                            aria-label="Enlarge lead status distribution"
+                            onclick={handleRingExpand}
+                        >
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <template lwc:if={showLeaderboard}>
+                        <section class="perf-board" aria-label="Leads per Agent">
+                            <header class="perf-board__head">
+                                <div class="perf-board__topline">
+                                    <h3 class="perf-board__title">Leads per Agent</h3>
+                                    <button
+                                        class="perf-board__expand"
+                                        type="button"
+                                        title="Enlarge"
+                                        aria-label="Enlarge Leads per Agent"
+                                        onclick={handleBoardExpand}
+                                    >
+                                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                            <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <ul class="perf-board__legend">
+                                    <template for:each={boardLegend} for:item="item">
+                                        <li key={item.key}>
+                                            <span class={item.dotClass} aria-hidden="true"></span>
+                                            {item.label}
+                                        </li>
+                                    </template>
+                                </ul>
+                            </header>
+                            <template lwc:if={hasLeaderboardRows}>
+                                <ul class="perf-board__list">
+                                    <template for:each={leaderboardRows} for:item="row">
+                                        <li key={row.key} style={row.rowStyle}>
+                                            <div class="perf-row">
+                                                <span class="perf-row__rank">{row.rank}</span>
+                                                <span class="perf-row__name">
+                                                    <span class={row.statusDotClass} aria-hidden="true"></span>
+                                                    {row.name}
+                                                </span>
+                                                <span class="perf-row__track" aria-hidden="true">
+                                                    <template for:each={row.segments} for:item="seg">
+                                                        <span
+                                                            key={seg.key}
+                                                            class="perf-row__seg"
+                                                            style={seg.style}
+                                                            data-label={seg.label}
+                                                            data-value={seg.count}
+                                                            data-pct={seg.pct}
+                                                            data-tone={seg.tone}
+                                                            onpointerenter={handleBarEnter}
+                                                            onpointermove={handleRingMove}
+                                                            onpointerleave={handleRingLeave}
+                                                        ></span>
+                                                    </template>
+                                                </span>
+                                                <span class="perf-row__count">{row.countDisplay}</span>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:else>
+                                <c-mbpr_empty-state
+                                    compact
+                                    title="No agent activity"
+                                    message="No leads were recorded in this period."
+                                ></c-mbpr_empty-state>
+                            </template>
+                        </section>
+                    </template>
+                </div>
+
+                <template lwc:if={heroTipRow}>
+                    <div class={ringTipClass} style={ringTipStyle} aria-hidden="true">
+                        <div class="perf-tip__row">
+                            <span class="perf-tip__swatch" style={ringTipRow.swatchStyle}></span>
+                            <span class="perf-tip__label">{ringTipRow.label}</span>
+                            <span class="perf-tip__value">{ringTipRow.value}</span>
+                            <span class="perf-tip__pct">{ringTipRow.pct}</span>
+                        </div>
+                    </div>
+                </template>
+            </section>
+
+            <!-- ============================= Charts row: trend + breakdowns ============================= -->
+            <div class="perf-charts-row">
+                <c-mbpr_chart
+                    variant="columns"
+                    mode="count"
+                    header="Leads by Month"
+                    class="perf-trend-chart"
+                    columns={trendColumns}
+                    expandable
+                    data-chart="trend"
+                    onexpand={handleChartExpand}
+                    empty-message="No leads to display for this period."
+                ></c-mbpr_chart>
+                <c-mbpr_chart
+                    variant="donut"
+                    mode="count"
+                    header="Leads by Project"
+                    center-caption="Leads"
+                    segments={projectDonutSegments}
+                    expandable
+                    hide-legend
+                    data-chart="project"
+                    onexpand={handleChartExpand}
+                    empty-message="No leads to display for this period."
+                ></c-mbpr_chart>
+                <c-mbpr_chart
+                    variant="donut"
+                    mode="count"
+                    header="Leads by Origin"
+                    center-caption="Leads"
+                    segments={originDonutSegments}
+                    expandable
+                    hide-legend
+                    data-chart="origin"
+                    onexpand={handleChartExpand}
+                    empty-message="No leads to display for this period."
+                ></c-mbpr_chart>
+            </div>
+
+            <!-- ============================= Chart enlarge lightbox ============================= -->
+            <c-mbpr_chart-lightbox
+                open={isLightboxOpen}
+                title={lightboxTitle}
+                eyebrow="Performance"
+                subtitle={heroScopeLine}
+                onclose={handleLightboxClose}
+            >
+                <template lwc:if={isTrendExpanded}>
+                    <c-mbpr_chart
+                        variant="columns"
+                        mode="count"
+                        class="perf-trend-chart"
+                        columns={trendColumns}
+                        empty-message="No leads to display for this period."
+                    ></c-mbpr_chart>
+                </template>
+                <template lwc:elseif={isProjectExpanded}>
+                    <c-mbpr_chart
+                        variant="donut"
+                        mode="count"
+                        center-caption="Leads"
+                        segments={projectDonutSegments}
+                        empty-message="No leads to display for this period."
+                    ></c-mbpr_chart>
+                </template>
+                <template lwc:elseif={isOriginExpanded}>
+                    <c-mbpr_chart
+                        variant="donut"
+                        mode="count"
+                        center-caption="Leads"
+                        segments={originDonutSegments}
+                        empty-message="No leads to display for this period."
+                    ></c-mbpr_chart>
+                </template>
+                <template lwc:elseif={isRingExpanded}>
+                    <div class="perf-xl">
+                        <div class="perf-gauge perf-gauge--xl" role="img" aria-label={gaugeAriaLabel}>
+                            <svg class="perf-gauge__svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                                <circle class="perf-gauge__track" cx="18" cy="18" r="15.9155"></circle>
+                                <template for:each={statusRing} for:item="seg">
+                                    <circle
+                                        key={seg.key}
+                                        class={seg.className}
+                                        cx="18"
+                                        cy="18"
+                                        r="15.9155"
+                                        style={seg.style}
+                                        data-index={seg.index}
+                                        onpointerenter={handleRingEnter}
+                                        onpointermove={handleRingMove}
+                                        onpointerleave={handleRingLeave}
+                                    ></circle>
+                                </template>
+                            </svg>
+                            <div class="perf-gauge__center" aria-hidden="true">
+                                <b class="perf-gauge__pct">{gaugePctDisplay}<span>%</span></b>
+                                <small>Converted</small>
+                            </div>
+                        </div>
+                        <ul class="perf-xl__rows">
+                            <template for:each={ringDetailRows} for:item="row">
+                                <li key={row.key} class="perf-xl__row">
+                                    <span class="perf-xl__swatch" style={row.swatchStyle} aria-hidden="true"></span>
+                                    <span class="perf-xl__label">{row.label}</span>
+                                    <span class="perf-xl__value">{row.value}</span>
+                                    <span class="perf-xl__pct">{row.pct}</span>
+                                </li>
+                            </template>
+                        </ul>
+                        <template lwc:if={xlTipRow}>
+                            <div class={ringTipClass} style={ringTipStyle} aria-hidden="true">
+                                <div class="perf-tip__row">
+                                    <span class="perf-tip__swatch" style={ringTipRow.swatchStyle}></span>
+                                    <span class="perf-tip__label">{ringTipRow.label}</span>
+                                    <span class="perf-tip__value">{ringTipRow.value}</span>
+                                    <span class="perf-tip__pct">{ringTipRow.pct}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:elseif={isBoardExpanded}>
+                    <div class="perf-xl">
+                        <ul class="perf-board__legend perf-board__legend--xl">
+                            <template for:each={boardLegend} for:item="item">
+                                <li key={item.key}>
+                                    <span class={item.dotClass} aria-hidden="true"></span>
+                                    {item.label}
+                                </li>
+                            </template>
+                        </ul>
+                        <ul class="perf-board__list perf-board__list--xl">
+                            <template for:each={leaderboardRows} for:item="row">
+                                <li key={row.key} style={row.rowStyle}>
+                                    <div class="perf-row">
+                                        <span class="perf-row__rank">{row.rank}</span>
+                                        <span class="perf-row__name">
+                                            <span class={row.statusDotClass} aria-hidden="true"></span>
+                                            {row.name}
+                                        </span>
+                                        <span class="perf-row__track" aria-hidden="true">
+                                            <template for:each={row.segments} for:item="seg">
+                                                <span
+                                                    key={seg.key}
+                                                    class="perf-row__seg"
+                                                    style={seg.style}
+                                                    data-label={seg.label}
+                                                    data-value={seg.count}
+                                                    data-pct={seg.pct}
+                                                    data-tone={seg.tone}
+                                                    onpointerenter={handleBarEnter}
+                                                    onpointermove={handleRingMove}
+                                                    onpointerleave={handleRingLeave}
+                                                ></span>
+                                            </template>
+                                        </span>
+                                        <span class="perf-row__count">{row.countDisplay}</span>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                        <template lwc:if={xlTipRow}>
+                            <div class={ringTipClass} style={ringTipStyle} aria-hidden="true">
+                                <div class="perf-tip__row">
+                                    <span class="perf-tip__swatch" style={ringTipRow.swatchStyle}></span>
+                                    <span class="perf-tip__label">{ringTipRow.label}</span>
+                                    <span class="perf-tip__value">{ringTipRow.value}</span>
+                                    <span class="perf-tip__pct">{ringTipRow.pct}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </c-mbpr_chart-lightbox>
+        </div>
+    </template>
+</template>

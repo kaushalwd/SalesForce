@@ -1,0 +1,1102 @@
+@import "c/mscStyles";
+
+/* a flex column, so embedded inside c-modon-sheet the page can own a scroll region */
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.page {
+    /* the containing block for c-msc-verify-choice's overlay */
+    position: relative;
+    /* dvh tracks the iOS URL bar; two declarations, not @supports. background-attachment: fixed
+       dropped (iOS Safari ignores it and rescales on scroll). */
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* --msc-backdrop is set only when a background image is configured */
+    background: var(
+        --msc-backdrop,
+        var(--backdrop, radial-gradient(120% 80% at 50% 0%, #141414 0%, #000 60%))
+    );
+    background-size: cover;
+    color: var(--text, #fafafa);
+    font-family: inherit;
+}
+
+/* chrome */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* min-height, not height: the safe-area inset on a notched iPhone */
+    min-height: 56px;
+    padding: env(safe-area-inset-top) 24px 0;
+    background: var(--bar, #111);
+    border-bottom: 1px solid var(--bar-border, rgba(255, 255, 255, 0.12));
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.brand {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.brand__sep,
+.brand__sub {
+    color: var(--text-muted, #a3a3a3);
+    font-size: 13px;
+}
+
+/* coupled to .topbar's height; c/mscToast repeats the same 56px (MSC-131) */
+.navbar {
+    position: sticky;
+    top: calc(56px + env(safe-area-inset-top));
+    z-index: 19;
+    padding: 0 24px;
+    background: var(--bar, #111);
+    border-bottom: 1px solid var(--bar-border, rgba(255, 255, 255, 0.12));
+}
+
+.page__error {
+    margin: 16px 24px 0;
+}
+
+/* MSC-163: .banner is a flex row, so margin-left:auto places the close control; scoped here, not
+   in c/mscStyles' shared .banner */
+.page__error .banner__close {
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: flex-start;
+    background: none;
+    border: 0;
+    padding: 0 2px;
+    line-height: 1;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-dim, #8a8a8a);
+    border-radius: 4px;
+}
+.page__error .banner__close:hover {
+    color: var(--text, #ededed);
+}
+.page__error .banner__close:focus-visible {
+    outline: 2px solid var(--focus, #60a5fa);
+    outline-offset: 2px;
+}
+
+/* hosted inside c-modon-sheet: the sheet owns the surface, height and scroll region */
+/* The fixed shell (from the PoC's modonJourney): .navbar and .actionbar pinned by structure,
+   .body the one scroll region. Not `sticky`: it only pins while content extends past it.
+   min-height: 0 is load-bearing at every level or the sheet grows instead of the pane scrolling. */
+.page--embedded {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    /* the pane scrolls, not the page */
+    overflow: hidden;
+    background: none;
+    background-attachment: initial;
+}
+
+.page--embedded .navbar,
+.page--embedded .page__error,
+.page--embedded .actionbar {
+    flex-shrink: 0;
+}
+
+.page--embedded .body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* the bar is outside this scroller now */
+    padding-bottom: 16px;
+}
+
+/* structure holds these; `sticky` would reintroduce the drift */
+.page--embedded .navbar,
+.page--embedded .actionbar {
+    position: static;
+}
+
+/* the embedded rail override is gone with the cap */
+
+/* body */
+
+.body {
+    padding: 20px 24px 64px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* do not cap the measure twice: modonSheet already caps its panel; embedded, the content fills it */
+.page:not(.page--embedded) .column {
+    max-width: 760px;
+    margin: 0 auto;
+}
+.page:not(.page--embedded) .body--rail {
+    max-width: 1360px;
+    margin: 0 auto;
+}
+
+/* the two rail layouts, both at 1024 (RAIL_MIN_WIDTH); `showRail` gates the element, `bodyClass` the classes */
+.body--rail {
+    display: grid;
+    gap: 24px;
+    align-items: start;
+}
+
+/* the track owns the width */
+.body--rail .column {
+    margin: 0;
+    max-width: none;
+}
+
+/* choosing a unit: the walkthrough takes two thirds (a tour at a third is a thumbnail) */
+.body--rail-tour {
+    grid-template-columns: minmax(300px, 34fr) minmax(0, 66fr);
+}
+
+/* recapping a booking: a fixed 300px, on the right (the same column holds the tour first, so a
+   left rail would jump sides mid-journey) */
+.body--rail-summary {
+    grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+/* the nav is hidden when this rail is rendered */
+/* the rail is static, not sticky, so its top lines up with the cards; max-height and overflow-y
+   went with the pinning. Restoring sticky is this rule plus a `top`. */
+.rail {
+    /* both grid items start on the same line */
+    align-self: start;
+}
+
+/* Customer and Plan side by side once there is room */
+.pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* step 2 fits on one screen: 1024, with the rail. minmax(0, 1fr), not a bare 1fr. */
+@media (min-width: 1024px) {
+    .pair {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: start;
+    }
+}
+
+/* each card scrolls inside itself. The height is the sheet's own arithmetic: panel min(1000px,
+   100vh - 80px) less sheet header (64), navbar (66), action bar (64), body padding (36), card
+   head and padding (~110). Applied to the card element: --section-body-max is read inside
+   mscSectionCard's shadow root. 1024+ and embedded only. */
+/* the pair ends on one line: the height is chosen from the sheet's arithmetic, not inherited from
+   the taller card. Two-column state only. The rail is deliberately not in this. */
+@media (min-width: 1024px) {
+    .page--embedded .pair {
+        --pair-h: clamp(430px, calc(min(1000px, 100vh - 80px) - 230px), 730px);
+    }
+    .page--embedded .pair__cell:not(.pair__cell--wide) {
+        /* height, not min-height: an internal scroller needs a definite height at the top of the chain */
+        height: var(--pair-h);
+        display: flex;
+        flex-direction: column;
+    }
+    .page--embedded .pair__cell:not(.pair__cell--wide) > c-msc-section-card {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    /* the customer card alone keeps the capped body */
+    .page--embedded .pair__cell--wide c-msc-section-card {
+        --section-body-max: clamp(320px, calc(min(1000px, 100vh - 80px) - 340px), 620px);
+    }
+
+    /* the rail scrolls inside itself too: bounded, not filled; the subtraction adds ~180 for the
+       masthead and focus line */
+    .rail c-msc-booking-summary {
+        --summary-scroll-max: clamp(240px, calc(100vh - 300px), 640px);
+    }
+    .page--embedded .rail c-msc-booking-summary {
+        --summary-scroll-max: clamp(240px, calc(min(1000px, 100vh - 80px) - 410px), 560px);
+    }
+}
+
+.pair__cell {
+    min-width: 0;
+}
+
+/* the two cards on step 2 carry the same border: a token override on the pair, so every other
+   step keeps `.section--active`'s brighter frame */
+.pair c-msc-section-card {
+    --section-active-border: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+/* spans the pair while section 2 is still asking who the booking is for */
+@media (min-width: 1024px) {
+    .pair__cell--wide {
+        grid-column: 1 / -1;
+    }
+}
+
+
+.dd-slot {
+    margin-top: 16px;
+}
+
+/* overlay */
+
+/* .overlay deleted; c-msc-loader carries the treatment */
+
+/* the rail's two occupants */
+
+/* .rail-tabs and .rail-tab deleted */
+
+/* which unit the walkthrough is showing; basket only */
+.tour-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.tour-chip {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-muted, #a3a3a3);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tour-chip--on {
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.tour-chip:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+/* the basket's unit selector as a tab bar on a rule (tabs move between units, the pills under
+   them choose a value). Scrolls rather than wraps. */
+.plantabs {
+    display: flex;
+    gap: 2px;
+    margin: 0 0 16px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.plantabs::-webkit-scrollbar {
+    height: 0;
+    display: none;
+}
+
+.plantab {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px 9px;
+    border: 0;
+    /* transparent, not absent, so the underline does not shift the row */
+    border-bottom: 2px solid transparent;
+    /* sits on the bar's own rule */
+    margin-bottom: -1px;
+    background: none;
+    color: var(--text-dim, #8a8a8a);
+    font: inherit;
+    font-size: 12.5px;
+    line-height: 1.3;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.plantab:hover {
+    color: var(--text-muted, #a3a3a3);
+}
+.plantab--on {
+    color: var(--text, #fafafa);
+    border-bottom-color: var(--text, #fafafa);
+}
+.plantab:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+    border-radius: 4px 4px 0 0;
+}
+
+/* which units still need a plan; colour is never the only difference */
+.plantab__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+.plantab__dot--ok {
+    background: var(--step-done, #16a34a);
+}
+.plantab__dot--no {
+    background: var(--chip-amber, #fbbf24);
+}
+
+/* .planunit is gone; the lit tab names the unit and the rail carries the price */
+
+/* the plan card's floor: a column at least as tall as the body, so margin-top: auto has room */
+/* MSC-175: the footer is gone; `fill="true"` asks the card to match its neighbour and
+   min-height:100% makes the content occupy it */
+.plancol {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+/* the frame needs real height */
+.rail-tour {
+    display: flex;
+    flex-direction: column;
+    height: 520px;
+}
+
+/* the tour fits inside the sheet: sized from the sheet's arithmetic (panel less header 64, navbar
+   66, action bar 64, padding 36), clamped. The height must stay definite: max-height alone leaves
+   the iframe's 100% with nothing to resolve against. Tour layout only. */
+/* 264, not 230: clearance from the action bar */
+.page--embedded .body--rail-tour {
+    --tour-space: clamp(240px, calc(min(1000px, 100vh - 80px) - 264px), 640px);
+}
+.page--embedded .body--rail-tour .rail {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: var(--tour-space);
+}
+.page--embedded .body--rail-tour .tour-chips {
+    flex-shrink: 0;
+    /* the chips are the first thing in this column */
+    margin-top: 0;
+}
+
+/* the rail is static in the tour layout: it is shorter than the unit list, and sticky left
+   blank space above the chips. Standalone keeps sticky. */
+.page--embedded .body--rail-tour .rail {
+    position: static;
+    /* the rail no longer scrolls as a unit; chaining is handled on .rail-tour */
+    overflow: visible;
+}
+
+/* one height for both panes: the list scrolls inside the same budget as the rail;
+   overscroll-behavior keeps a flick from moving the tour */
+/* the panes fill the pane: a single minmax(0, 1fr) row makes the grid row exactly the space
+   available. --tour-space stays as the floor for .rail-tour. */
+/* height: 100% states outright that the grid is .body's content box */
+.page--embedded .body--rail-tour {
+    align-items: stretch;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+}
+/* the rail is allowed to fill the row: `.rail` carries align-self: start, which beats the
+   container's align-items, so align-self: stretch here is the fix; `start` stays correct elsewhere */
+.page--embedded .body--rail-tour .column,
+.page--embedded .body--rail-tour .rail {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* the grid row is the bound now */
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.page--embedded .body--rail-tour .column {
+    /* clears the scrollbar */
+    padding-right: 4px;
+}
+/* auto, not visible: on a very short sheet the facts stay reachable */
+.page--embedded .body--rail-tour .rail {
+    overflow-y: auto;
+}
+/* height gives the chain its definite value; flex lets the rail claw back the chips' height */
+/* the frame takes what is left after the facts grid; --tour-space is a floor */
+/* basis 0, not auto: with basis auto the frame asked for its 520/600px height and pushed the
+   facts grid out of the pane. The chips and facts take their height first; the frame grows into
+   what is left. */
+.page--embedded .body--rail-tour .rail-tour {
+    flex: 1 1 0;
+    min-height: min(var(--tour-space), 240px);
+}
+
+/* scroll stops at the frame: overscroll-behavior: contain on .rail-tour (the box that owns the
+   scroll port); the iframe carries it too for Safari (mscUnitTour.css) */
+.rail-tour {
+    overscroll-behavior: contain;
+    overflow: hidden;
+}
+
+/* the key fields under the walkthrough: bordered tiles, three up. flex-shrink: 0 so the frame
+   gives up height first. */
+.unit-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 10px 0 0;
+    flex-shrink: 0;
+}
+
+.unit-facts__cell {
+    min-width: 0;
+    padding: 7px 9px;
+    border-radius: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+.unit-facts dt {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.unit-facts dd {
+    margin: 3px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+    /* the price lines up with the schedule and the rail */
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* two up below the rail's comfortable width */
+@media (max-width: 1200px) {
+    .unit-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* .rail-hint and .rail-hint__copy deleted */
+
+/* the verification step's lede */
+.verify-note {
+    margin: 0 0 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* below the rail breakpoint the walkthrough falls back under the unit grid, collapsed */
+.inline-tour {
+    margin-top: 16px;
+}
+
+
+
+/* small screens */
+
+@media (max-width: 767px) {
+    .topbar,
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .body {
+        padding: 16px 16px 64px;
+    }
+
+    .page__error {
+        margin: 12px 16px 0;
+    }
+}
+
+/* the action bar */
+
+/* sticky, not fixed: fixed would escape the sheet */
+.actionbar {
+    position: sticky;
+    bottom: 0;
+    z-index: 18;
+    background: var(--bar, #111);
+    border-top: 1px solid var(--bar-border, rgba(255, 255, 255, 0.12));
+    padding: 12px max(24px, env(safe-area-inset-right))
+        calc(12px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+}
+
+.actionbar__inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* tracks .body--rail so the button lines up with the rail's right edge.
+   UI-16: the rail is only capped when the page is not embedded; the bar was capped
+   always, so inside the sheet at 1920 the button sat ~95px left of the unit list. */
+.page:not(.page--embedded) .actionbar__inner {
+    max-width: 1360px;
+    margin: 0 auto;
+}
+
+/* .actionbar__context is gone; the forward button stays hard right via its own margin-left */
+
+/* left of the button, so the reason is read before the control */
+.actionbar__hint {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actionbar__back {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* what the forward press found missing: amber text, no box, ellipsised */
+.actionbar__gap {
+    /* grows, so the button stays on the right edge */
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    /* right-aligned inside the slack */
+    justify-content: flex-end;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--chip-amber, #fbbf24);
+}
+.actionbar__gap span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actionbar__btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    /* hard right at every width; the old `.actionbar__gap + .actionbar__btn` override is gone */
+    margin-left: auto;
+}
+.actionbar__btn:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+    .actionbar {
+        padding: 10px max(16px, env(safe-area-inset-right))
+            calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    .actionbar__btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        /* reset the auto margin, or the button keeps its intrinsic width at 390px */
+        margin-left: 0;
+    }
+    /* Back drops to the chevron so Continue takes the width */
+    .actionbar__back-label {
+        display: none;
+    }
+    .actionbar__back {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+/* the 1280 and 1600 steps are gone; the 34fr / 66fr ratio holds by itself */
+@media (min-width: 1280px) {
+    .body--rail-tour .rail-tour {
+        height: 600px;
+    }
+}
+
+/* change customer, above the customer detail (mscSectionCard has no actions slot) */
+/* in the card header now, sized like the other header control */
+.customer-swap__btn {
+    gap: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* MSC-152: the buyer-type switch in the Customer card's heading row. 36px overall to match
+   .btn-sm (c/mscStyles' floor for a control inside a card header). Every colour is a token. */
+.buyer-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+}
+
+.buyer-type__seg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 4px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease;
+}
+.buyer-type__seg:hover:not(.buyer-type__seg--on) {
+    color: var(--text, #fafafa);
+}
+.buyer-type__seg--on {
+    background: var(--pill-fg, #fafafa);
+    color: var(--text-inverse, #111);
+}
+
+/* the heading row wraps before it squeezes */
+@media (max-width: 560px) {
+    .buyer-type {
+        width: 100%;
+    }
+    .buyer-type__seg {
+        flex: 1 1 0;
+    }
+}
+
+/* the eligibility block */
+/* .cust__eligibility removed with the banner */
+
+/* the running total on a phone: a full-width row above the buttons */
+.actionbar__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 0 10px;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    cursor: pointer;
+    text-align: left;
+}
+
+/* the unit code matters more than the price if one has to go */
+.actionbar__summary-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.actionbar__summary:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+/* the scroll region inside modonSheet's panel */
+.summary-sheet {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 16px calc(16px + env(safe-area-inset-bottom));
+}
+
+/* 1.x+11: facade style and pre-approval number under the plan; quiet, like .planfees */
+.bookx {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+}
+
+.bookx__field {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.bookx__label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.bookx__input {
+    width: 100%;
+    max-width: 360px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text, #fafafa);
+    font-size: 12px;
+    line-height: 1.4;
+    /* the list of a native select follows color-scheme, not the colours above */
+    color-scheme: var(--control-scheme, dark);
+}
+
+.bookx__input option {
+    background: var(--page-bg, #0f0f0f);
+    color: var(--text, #fafafa);
+}
+
+.bookx__value {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+}
+
+.bookx__note {
+    margin-left: 6px;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* 1.x+13: the choices listed on Payment & Confirm, before Confirm; quiet label/value rows */
+.bookx-review {
+    margin: 0 0 12px;
+    padding: 8px 0 0;
+}
+
+.bookx-review__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+}
+
+.bookx-review__label {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted, #a3a3a3);
+    min-width: 0;
+}
+
+.bookx-review__value {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text, #fafafa);
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+/* grey text with a subtle amber edge, the console's quiet warning */
+.bookx__warn {
+    margin: 0;
+    padding-left: 8px;
+    border-left: 2px solid var(--chip-amber, #fbbf24);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* payable before booking, on the plan step: a quiet block, not a banner */
+.planfees {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+}
+
+.planfees__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 13px;
+}
+
+.planfees__label {
+    color: var(--text-dim, #8a8a8a);
+}
+
+.planfees__value {
+    font-variant-numeric: tabular-nums;
+    color: var(--text, #fafafa);
+}
+
+/* the total carries the weight */
+.planfees__row:last-child .planfees__label,
+.planfees__row:last-child .planfees__value {
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+
+/* offers and discounts: plain rows, not chips */
+.offers {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: var(--row-bg, rgba(255, 255, 255, 0.04));
+}
+
+.offers__head {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.offers__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    cursor: pointer;
+}
+
+.offers__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.offers__name {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+}
+
+.offers__sub {
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* UI-08: the offer's figure in the text colour, not green */
+.offers__value {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: var(--text, #fafafa);
+}
+
+.offers__note {
+    margin: 8px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+
+/* offers grouped per unit */
+.offers__group + .offers__group {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+}
+
+.offers__unit {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+/* the offer opener: reason left, button hard right (margin-left: auto) */
+/* MSC-175: .offer-open and .offer-open__why went with the card footer; the button keeps its
+   class and metrics (mscAddress matches it) and sits in the heading row */
+.offer-open__btn {
+    flex: 0 0 auto;
+    margin-left: auto;
+    min-height: 38px;
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* MSC-177: refresh the payment summary, same box as .offer-open__btn */
+.pay-refresh {
+    flex: 0 0 auto;
+    margin-left: auto;
+    min-height: 38px;
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* the glyph turns while the read is out; the label changes too, so reduced-motion is safe */
+.pay-refresh--busy c-modon-icon {
+    display: inline-flex;
+    animation: pay-refresh-spin 0.9s linear infinite;
+}
+
+@keyframes pay-refresh-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pay-refresh--busy c-modon-icon {
+        animation: none;
+    }
+}
+
+/* .paygroup / .paygroup__head / .blocks removed; c-msc-obligations owns the ledger's layout */
+
+/* the settlement card's rhythm: four regions in one card (figure -> what changes it -> confirm
+   -> collect), spaced by the [data-anchor] wrapper this template owns */
+[data-anchor="settlement"] c-msc-settlement-header {
+    display: block;
+    margin-bottom: 18px;
+}
+
+/* the offers box sits under the figure it changes */
+[data-anchor="settlement"] c-msc-settlement-header + .offers {
+    margin-top: 2px;
+}
+
+/* the gap comes from here, whichever branch renders */
+[data-anchor="settlement"] c-msc-review-confirm {
+    display: block;
+    margin-top: 4px;
+}
+
+/* the collect region; the rule between confirm and ledger is gone (MSC-098b) */
+[data-anchor="settlement"] c-msc-obligations {
+    display: block;
+    margin-top: 30px;
+}
+
+/* ── MSC-231: the EOI deposit swap sheet ── */
+.eoiswap__scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 60;
+}
+.eoiswap {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(430px, calc(100vw - 32px));
+    background: var(--surface-bg, #101010);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 20px;
+    overflow: hidden;
+    z-index: 61;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+.eoiswap__hd {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.13));
+}
+.eoiswap__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+.eoiswap__sub {
+    margin: 3px 0 0;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+.eoiswap__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 0 20px;
+    min-height: 52px;
+    border: 0;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.13));
+    background: transparent;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--text, #fafafa);
+    cursor: pointer;
+    text-align: left;
+}
+.eoiswap__row:last-child {
+    border-bottom: 0;
+}
+.eoiswap__row:hover {
+    background: var(--row-bg, rgba(255, 255, 255, 0.04));
+}
+.eoiswap__row--on {
+    background: var(--row-bg, rgba(255, 255, 255, 0.04));
+    box-shadow: inset 3px 0 0 var(--accent, #60a5fa);
+}
+.eoiswap__name {
+    font-weight: 600;
+}
+.eoiswap__amt {
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+}
+.eoiswap__row .chip {
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+/* UI-06: a short screen (a phone turned sideways, 956x440). The step bar, the banners and the
+   step scroll together so the content gets the height; only the action bar stays pinned. */
+@media (max-width: 1023px) and (max-height: 520px) {
+    /* static here: the Update KYC dialog (position: absolute) then covers the sheet's panel
+       rather than the top of a page that may be scrolled away */
+    .page--embedded {
+        position: static;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .page--embedded .body {
+        flex: 1 0 auto;
+        min-height: auto;
+        overflow: visible;
+        padding-top: 12px;
+    }
+    .page--embedded .actionbar {
+        position: sticky;
+        bottom: 0;
+        padding-top: 6px;
+        padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    }
+    .page__error {
+        margin-top: 8px;
+    }
+}

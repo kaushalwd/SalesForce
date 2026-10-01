@@ -1,0 +1,335 @@
+/* eoiSplitPage — Wadeem journey design system shell (EOI-UI-9). @author Aurelix
+   Source of truth: the approved journey-redesign artifact. Breakpoints map the
+   artifact's container queries: >=700px tablet, >=1000px desktop.
+
+   v1.1  MEOI-08  8 Sep 2026 — typography aligned to the West Baniyas microsite,
+         which MODON set as the branding reference. Both type tokens now resolve to
+         SuisseIntl: baniyas carries no display serif, so Marcellus is no longer
+         referenced. The SuisseIntl Medium face is declared 500..700 exactly as
+         baniyas declares it — one file covers medium, semibold and bold, because
+         Microsite_Fonts ships no separate bold. The Marcellus and Instrument Sans
+         @font-face rules are deliberately LEFT IN PLACE but unreferenced, so a
+         revert is a two-line change to the tokens below.
+         Both tokens gained an --eoi- override tier, matching every colour token,
+         so a future brand (ADIB) can vary type per site with no code change.
+         Palette deliberately UNCHANGED — MODON asked for the font treatment only. */
+
+/* display face */
+@font-face {
+    font-family: 'Marcellus';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Wadeem_Assets/Marcellus.woff2') format('woff2');
+}
+/* body face (variable) */
+@font-face {
+    font-family: 'Instrument Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Wadeem_Assets/InstrumentSans.woff2') format('woff2');
+}
+/* kept: other microsite pages resolve SuisseIntl through this declaration */
+@font-face {
+    font-family: 'SuisseIntl';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff') format('woff');
+}
+@font-face {
+    font-family: 'SuisseIntl';
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff') format('woff');
+}
+
+/* MEOI-COLOR (9 Sep 2026, MODON): the site's dark is #2B2940, not the pine green. Set
+   once on each page root; every eoi* component reads its --pine / --pine-2 / --abyss
+   through these --eoi-* overrides, so buttons, the path, chips, the footer and the
+   brand-panel tint all follow. Text ink (#182420) is unchanged. */
+:host {
+    --eoi-pine: #2B2940;
+    --eoi-pine-2: #3B3856;
+    --eoi-abyss: #1B1A2B;
+    --eoi-footer-bg: #1B1A2B;
+    --eoi-pine-38: rgba(43, 41, 64, 0.38);
+    --eoi-pine2-55: rgba(59, 56, 86, 0.55);
+    --eoi-abyss-40: rgba(27, 26, 43, 0.4);
+    --eoi-abyss-72: rgba(27, 26, 43, 0.72);
+    /* MEOI-LAND7 (11 Sep 2026, Mridul): the journey's ground is white, like the Wadeem
+       Gardens landing page, instead of the cream shell. Every eoi* component reads
+       --shell through this override (panel, review/registration surfaces, tile placeholders). */
+    --eoi-shell: #FFFFFF;
+    --eoi-shell-94: rgba(255, 255, 255, 0.94);
+    /* MEOI-LAND9: the remaining warm tints (sand strips, hairlines) become modon.com's neutral
+       greys, so the journey reads white like the corporate site; champagne stays on the buttons. */
+    --eoi-sand: #F4F2F0;
+    --eoi-line: #DEDEDE;
+    --eoi-line-soft: #ECECEC;
+    /* MEOI-LOGO (11 Sep 2026): the wide lockup (694 x 211) needed 160/230/280px.
+       MEOI-BRAND (13 Sep 2026, Mridul): the panel now carries the same stacked lockup as the hero
+       (160 x 108 viewBox) and the same line "Where everything aligns", so both pages read alike;
+       the stacked mark is narrower, so 96/120/150px (the hero uses 120 on phones, 160 on desktop). */
+    --eoi-logo-w: 96px;
+    --eoi-logo-w-md: 120px;
+    --eoi-logo-w-lg: 150px;
+}
+
+:host {
+    --pine: var(--eoi-pine, #0D2B21);
+    --pine-2: var(--eoi-pine-2, #123A2C);
+    --abyss: var(--eoi-abyss, #071E16);
+    --champagne: var(--eoi-champagne, #C9BC8F);
+    --champ-40: var(--eoi-champ-40, rgba(201, 188, 143, 0.4));
+    --champ-18: var(--eoi-champ-18, rgba(201, 188, 143, 0.18));
+    --sand: var(--eoi-sand, #EFEAE0);
+    --shell: var(--eoi-shell, #FAF8F2);
+    --card: var(--eoi-card, #FFFFFF);
+    --ink: var(--eoi-ink, #182420);
+    --stone: var(--eoi-stone, #877F6C);
+    --line: var(--eoi-line, #DAD3C2);
+    --line-soft: var(--eoi-line-soft, #E7E2D6);
+    --amber: #8A6D1D;
+    --red: #A34433;
+    --serif: var(--eoi-serif, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: block;
+}
+
+/* pinned to the viewport: the theme layout injects phantom flow height
+   (router-title line box, sub-desktop header band), same as eoiHome */
+.page {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--shell);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.shellwrap {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* brand: mobile top bar -> tablet band -> desktop 60% side panel */
+.brand {
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    background:
+        linear-gradient(160deg, var(--pine-2) 0%, var(--pine) 55%, var(--abyss) 100%);
+    color: var(--eoi-cream, #F2EFE6);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 20px;
+}
+
+.brand__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 60%;
+}
+
+/* MEOI-MODON (13 Sep 2026, Mridul / MODON): the MODON logo on the panel, and no overlay on the
+   render. Phones: MODON left, the lockup + line right. Tablet/desktop: MODON above the lockup. */
+.brand__modon { position: relative; display: block; height: 20px; width: auto; flex: 0 0 auto;
+    filter: drop-shadow(0 1px 8px var(--eoi-abyss-40, rgba(7, 30, 22, 0.4))); }
+.brand--modon .brand__tint, .brand--modon .contour { display: none; }
+.brand--modon .brand__word { margin-left: auto; align-items: flex-end; }
+.brand--modon .brand__line { text-align: right; text-indent: 0; }
+
+/* pine tint keeps the panel in the journey's tonality and the type legible */
+.brand__tint {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        160deg,
+        var(--eoi-pine2-55, rgba(18, 58, 44, 0.55)) 0%,
+        var(--eoi-pine-38, rgba(13, 43, 33, 0.38)) 45%,
+        var(--eoi-abyss-72, rgba(7, 30, 22, 0.72)) 100%
+    );
+}
+
+.contour {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.28;
+    pointer-events: none;
+}
+
+.brand__word {
+    position: relative;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* MEOI-BRAND: 14 -> 10, the phone top bar now carries the line under the logo */
+}
+
+.brand__logo {
+    display: block;
+    width: var(--eoi-logo-w, 92px);
+    height: auto;
+    filter: drop-shadow(0 1px 8px var(--eoi-abyss-40, rgba(7, 30, 22, 0.4)));
+}
+
+.brand__wordtext {
+    font-family: var(--serif);
+    font-size: 17px;
+    letter-spacing: 0.34em;
+}
+
+.brand__wordtext small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.42em;
+    color: var(--champagne);
+    margin-top: 5px;
+}
+
+/* MSC-251: the line under the logo now reads exactly as it does on the home
+   hero (eoiHero .tagline) - same face, size, colour and shadow - so the two
+   pages carry the brand line the same way. Left-aligned here because the
+   lockup is left-aligned; the hero centres it because the hero is centred.
+   MEOI-BRAND (13 Sep 2026): shown on phones too (it was hidden below 700px), smaller. */
+.brand__line {
+    position: relative;
+    display: block;
+    font-size: 0.72rem;
+    font-family: var(--sans);
+    font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-indent: 0.32em;
+    text-align: center;
+    line-height: 1.35;
+    max-width: 26ch;
+    margin: 0;
+    color: var(--eoi-cream-92, rgba(244, 239, 228, 0.92));
+    text-shadow: 0 1px 10px rgba(27, 26, 43, 0.5);
+}
+
+.brand__trust {
+    position: relative;
+    display: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--eoi-cream-66, rgba(242, 239, 230, 0.66));
+    margin: 0;
+}
+
+/* content column */
+.body {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+.inner {
+    width: 100%;
+    max-width: 660px;
+    padding: 26px 20px 40px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- tablet (>=700px) ---------- */
+@media (min-width: 700px) {
+    .brand {
+        padding: 22px 30px;
+        min-height: 132px;
+        align-items: flex-end;
+        gap: 26px;
+    }
+    .brand__logo {
+        width: var(--eoi-logo-w-md, 116px);
+    }
+    .brand__line {
+        display: block;
+        font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+    }
+    /* MEOI-MODON3 (13 Sep): tablet band and landscape phones (700-999px) - one row, vertically centred:
+       MODON left, the trust line in the middle-right, the lockup + line on the right (as on phones) */
+    .brand--modon { align-items: center; }
+    .brand--modon .brand__word { margin-left: auto; align-items: flex-end; order: 2; }
+    .brand--modon .brand__line { text-align: right; text-indent: 0; }
+    .brand--modon .brand__trust { margin-left: auto; order: 1; }
+    .brand--modon .brand__modon { order: 0; }
+    .brand__trust {
+        display: block;
+        margin-left: auto;
+        text-align: right;
+    }
+    .inner {
+        padding: 36px 44px 52px;
+    }
+}
+
+/* ---------- desktop (>=1000px) ---------- */
+@media (min-width: 1000px) {
+    .shellwrap {
+        flex-direction: row;
+    }
+    .brand {
+        width: 60%;
+        min-height: 0;
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 30px;
+        padding: 44px 44px 34px;
+    }
+    .brand__logo {
+        width: var(--eoi-logo-w-lg, 150px);
+    }
+    /* MEOI-MODON4 (13 Sep, MODON via Mridul): desktop only - everything on the LEFT like the landing
+       page: MODON top-left, the lockup + line left-aligned at mid-height, the trust line bottom-left.
+       Phone/tablet rules above unchanged. */
+    .brand--modon { justify-content: flex-start; align-items: flex-start; }
+    .brand--modon .brand__word { margin: auto 0; align-self: flex-start; align-items: flex-start; order: 1; }
+    .brand--modon .brand__line { text-align: left; text-indent: 0; }
+    .brand--modon .brand__trust { order: 2; margin-left: 0; }
+    .brand--modon .brand__line { text-align: center; text-indent: 0.32em; }
+    .brand--modon .brand__trust { margin-top: 0; }
+    .brand__wordtext {
+        font-size: 22px;
+    }
+    .brand__line {
+        max-width: 24ch;
+    }
+    .brand__trust {
+        margin-left: 0;
+        text-align: left;
+    }
+    .body {
+        width: 40%;
+    }
+    .inner {
+        padding: 44px 40px 52px;
+        max-width: 540px;
+    }
+}

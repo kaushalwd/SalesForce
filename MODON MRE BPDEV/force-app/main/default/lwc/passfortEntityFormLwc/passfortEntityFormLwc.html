@@ -1,0 +1,265 @@
+<template>
+    <template if:true={isSpinner}>
+        <div class="slds-is-relative" style="min-height: 50vh" if:true={isSpinner}>
+            <lightning-spinner alternative-text="Loading" 
+                               size="medium">
+            </lightning-spinner>
+        </div>
+    </template>
+
+    <template if:false={isSpinner}>
+        <lightning-modal-header 
+                    label="Entity Details">
+        </lightning-modal-header>
+        <lightning-modal-body>
+            <!--Added for Individual entity type enhancements by Arvind-07/07/2026 - Version 5.0 - KYC reminder banner-->
+            <template if:true={isIndividualEntity}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_info slds-m-bottom_small" role="alert">
+                    <span class="slds-assistive-text">info</span>
+                    <lightning-icon icon-name="utility:info" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                    <span>Please make sure you have completed the Signzy KYC before submitting to the compliance team.</span>
+                </div>
+            </template>
+            <!--Added for Individual entity type enhancements by Arvind-07/07/2026 - Version 5.0 - KYC not-completed warning, only when opened from a Sales Order and KYC isn't Active yet-->
+            <template if:true={showKYCWarning}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning slds-m-bottom_small" role="alert">
+                    <span class="slds-assistive-text">warning</span>
+                    <lightning-icon icon-name="utility:warning" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                    <span>Signzy KYC is not completed yet for this customer.</span>
+                </div>
+            </template>
+            <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+                <lightning-accordion-section name="Details" label="Details">
+                     <!--Added by Arvind-07/07/2026 - Version 5.2 - onsuccess/onerror now surface the real save outcome instead of a hardcoded success toast-->
+                     <lightning-record-edit-form
+                        object-api-name="Contact"
+                        record-id={content.EntityRecordId}
+                        onsubmit={onSubmit}
+                        onsuccess={handleSuccess}
+                        onerror={handleError}
+                        onload={handleOnLoad}
+                    >
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-output-field
+                                field-name="Name"
+                                name="Name"
+                                required
+                            ></lightning-output-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Birthdate"
+                                name="Birthdate"
+                            ></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="GenderIdentity"
+                                name="GenderIdentity"  
+                            ></lightning-input-field>
+                        </div>                        
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Nationality__c"
+                                name="Nationality__c"  
+                            ></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="UAE_Resident_Status__c"
+                                name="UAE_Resident_Status__c"
+                                value={UAEResidentStatus}
+                                onchange={handleChangeUAEResidentStatus}   
+                            ></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="IdentityProof__c"
+                                name="IdentityProof__c"
+                                value={IdentityProof}
+                                onchange={handleChangeIdentityProof}
+                            ></lightning-input-field>
+                        </div>
+                        <template if:true={isNotPrimaryContact}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <template if:true={isResident}>
+                                    <lightning-input-field
+                                        field-name="EIDNumber__c"
+                                        name="EIDNumber__c"  
+                                    ></lightning-input-field>
+                                </template>
+                            
+                                <template if:false={isResident}>
+                                    <lightning-input-field
+                                        field-name="PassportNumber__c"
+                                        name="PassportNumber__c"  
+                                    ></lightning-input-field>
+                                </template>
+                            </div>
+                        </template>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="MobilePhone"
+                                name="MobilePhone" 
+                            ></lightning-input-field>
+                        </div>
+                        <template if:true={isNotPrimaryContact}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="Occupation__c"
+                                    name="Occupation__c" 
+                                ></lightning-input-field>
+                            </div>
+                        </template>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="EmployerBusinessName__c"
+                                name="EmployerBusinessName__c"
+                            ></lightning-input-field>
+                        </div>
+                        
+                            <template if:true={isNotPrimaryContact}>
+                                <div class="slds-col slds-size_1-of-2">
+                                <!--Added by Arvind-07/07/2026 - Version 5.0 - default Payment Method from Sales Order's Modeofpayment__c when applicable (all Entity Types), still editable-->
+                                <lightning-input-field
+                                    field-name="PaymentMethod__c"
+                                    name="PaymentMethod__c"
+                                    value={PaymentMethodDefault}
+                                ></lightning-input-field>
+                                </div>
+                            </template>
+                            <template if:true={isNotPrimaryContact}>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="PurposeOfTransaction__c"
+                                    name="PurposeOfTransaction__c"
+                                ></lightning-input-field>
+                                </div>
+                            </template>
+                            <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Email"
+                                name="Email"
+                            ></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="AreYouPoliticallyExposedPersonPEP__c"
+                                name="AreYouPoliticallyExposedPersonPEP__c" 
+                            ></lightning-input-field>
+                            </div>
+                            <!--Added flag for commertial-->
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element slds-form-element_horizontal">
+                                        <span class="slds-form-element__label">Is Commercial Project</span>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                checked={isCommercialProject}
+                                                onchange={handleCommercialChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                </div>
+                            <!--Added flag for secondary market-->
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element slds-form-element_horizontal">
+                                        <span class="slds-form-element__label">Is Secondary Market</span>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                checked={isSecondaryMarket}
+                                                onchange={handleSecondaryMarketChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                </div>
+                            <template if:true={isNotPrimaryContact}>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="SourceOfIncome__c"
+                                    name="SourceOfIncome__c"  
+                                    onchange={handleChangeSourceOfIncome} 
+                                ></lightning-input-field>
+                                </div>
+                               
+                                <div class="slds-col slds-size_1-of-2">
+                                <!--Added by Arvind-07/07/2026 - Version 5.0 - default Delivery Channel to 'Face to face interaction' (all Entity Types), still editable-->
+                                <lightning-input-field
+                                    field-name="DeliveryChannel__c"
+                                    name="DeliveryChannel__c"
+                                    value={DeliveryChannelDefault}
+                                ></lightning-input-field>
+                                </div>
+                                </template>
+                                 <template if:true={isOtherIncome}>
+                                    <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input-field
+                                        field-name="OtherSourceOfIncome__c"
+                                        name="OtherSourceOfIncome__c"
+                                    ></lightning-input-field>
+                                    </div>
+                                </template>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="NoOfPropertyPurchasedWithModon__c"
+                                    name="NoOfPropertyPurchasedWithModon__c"
+                                ></lightning-input-field>
+                                </div>
+                                <div class="slds-col slds-size_2-of-2">
+                                    <lightning-input-field
+                                        field-name="MailingAddress"
+                                        name="MailingAddress"
+                                    ></lightning-input-field>
+                                </div>
+                            </div>
+                    <!--This button is hidden, it is being clicked in the js, not directly from UI.-->
+                    <div class="slds-align_absolute-center slds-m-top_small slds-m-bottom_medium">
+                        <lightning-button
+                            class="slds-hidden slds-m-left_x-small submitButton"
+                            variant="brand"
+                            type="submit"
+                            name="submitButton"
+                            label="submitButton"
+                        ></lightning-button>
+                    </div>
+                </lightning-record-edit-form>
+            </lightning-accordion-section>
+            <lightning-accordion-section name="Documents" label="Documents">
+                <c-passfort-document-upload-lwc record-id={recordId}></c-passfort-document-upload-lwc>
+            </lightning-accordion-section>
+        </lightning-accordion>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <div class="slds-align_absolute-center slds-m-top_small slds-m-bottom_medium">
+            <lightning-button
+                class="slds-m-left_x-small"
+                label="Cancel"
+                onclick={handleClose}
+            ></lightning-button>
+            <lightning-button
+                class="slds-m-left_x-small"
+                variant="brand"
+                id="SaveAsDraft"
+                onclick={handleSubmit}
+                name="SaveAsDraft"
+                label="Save as Draft"
+            ></lightning-button>
+            <template if:true={showSubmitForCompliance}>
+                <lightning-button
+                    class="slds-m-left_x-small"
+                    variant="brand"
+                    onclick={handleSubmitForCompliance}
+                    disabled={isButtonDisabled}
+                    name="SubmitForCompliance"
+                    label="Submit for Compliance"
+                ></lightning-button>
+            </template>
+        </div>
+    </lightning-modal-footer>
+    </template>
+    
+</template>

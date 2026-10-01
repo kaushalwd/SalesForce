@@ -1,0 +1,476 @@
+<template>
+    <!-- MEOI-CLOSED. While EOI_Site_Closed is true the whole journey is replaced by the
+         closed page - nothing below renders. Decided only once the config has loaded, so
+         an open site never flashes the closed page and a closed site never flashes the form. -->
+    <template lwc:if={siteClosed}>
+        <c-eoi-site-closed contact-url={contactUrl}></c-eoi-site-closed>
+    </template>
+    <template lwc:else>
+        <!-- MEOI-SPIN. One blocking overlay for both cases. The EOI number is issued
+             asynchronously after capture, so the receipt would otherwise render with an empty
+             space where the number belongs; the page is held until it lands. Released either
+             when the number arrives or when the poll gives up (~88s), so this can never trap
+             the customer on a blocked screen. -->
+        <template lwc:if={showBlockingLoader}>
+            <c-eoi-loader label={blockingLabel}></c-eoi-loader>
+        </template>
+
+        <!-- SIGN IN (MSC-247): the code before the form -->
+        <template lwc:if={showSignIn}>
+            <div class="m-steps">
+                <span class="m-steps__sr">{stepMobBold} — {stepMobLabel}</span>
+                <div class="m-steps__rail" aria-hidden="true">
+                    <template for:each={railSteps} for:item="s">
+                        <div key={s.label} class={s.cls}>
+                            <span class="m-step__num">
+                                <template lwc:if={s.isDone}>
+                                    <svg class="m-step__ck" viewBox="0 0 12 12" focusable="false">
+                                        <path d="M2 6.4L4.8 9.2L10 3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"></path>
+                                    </svg>
+                                </template>
+                                <template lwc:else>{s.num}</template>
+                            </span>
+                            <span class="m-step__lab">{s.label}</span>
+                            <template lwc:if={s.hasLine}><span class="m-step__line"></span></template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <h1 class="m-h1">Sign in to register your interest</h1>
+            <p class="m-sub">Enter your email or mobile number. We will send you a verification code.</p>
+
+            <template lwc:if={errorMessage}>
+                <p class="error" role="alert">{errorMessage}</p>
+            </template>
+
+            <p class="m-reslabel m-reslabel--top">Send my code by</p>
+            <div class="m-seg" role="group" aria-label="Verification channel">
+                <button class={signInEmailClass} data-value="Email" onclick={selectSignInChannel} type="button" aria-pressed={signInEmailSelected} disabled={isBusy}>Email</button>
+                <button class={signInSmsClass} data-value="SMS" onclick={selectSignInChannel} type="button" aria-pressed={signInSmsSelected} disabled={isBusy}>SMS</button>
+            </div>
+
+            <div class="m-field">
+                <template lwc:if={signInByEmail}>
+                    <label for="si-email">Email address</label>
+                    <div class="m-inpwrap">
+                        <svg class="m-inpicon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.5" y="4.5" width="15" height="11" stroke="currentColor" stroke-width="1.4"/><path d="M3 5.5l7 5.5 7-5.5" stroke="currentColor" stroke-width="1.4"/></svg>
+                        <input id="si-email" class="m-input m-input--icon" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value={signInValue} oninput={handleSignInValue} onkeydown={handleSignInKeydown} disabled={isBusy} />
+                    </div>
+                </template>
+                <template lwc:else>
+                    <label for="si-sms">Mobile number</label>
+                    <div class="m-inpwrap">
+                        <svg class="m-inpicon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="6" y="2.5" width="8" height="15" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M9 15h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        <input id="si-sms" class="m-input m-input--icon" type="tel" inputmode="tel" autocomplete="tel" placeholder="+971 5x xxx xxxx" value={signInValue} oninput={handleSignInValue} onkeydown={handleSignInKeydown} disabled={isBusy} />
+                    </div>
+                </template>
+            </div>
+            <button class="m-btn submit" type="button" onclick={sendSignInCode} disabled={isBusy}>Send code <span class="arr" aria-hidden="true">&#10230;</span></button>
+            <template lwc:if={recaptchaEnabled}>
+                <p class="m-note m-note--rc">This site is protected by reCAPTCHA and the Google <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms of Service</a> apply.</p>
+            </template>
+
+            <template lwc:if={showUaePass}>
+                <div class="m-or" aria-hidden="true"><span>or</span></div>
+                <button class="uae-btn uae-btn--wide" type="button" onclick={startUaePass} disabled={isBusy} aria-label="Continue with UAE PASS">
+                    <img src={uaePassButtonImage} alt="Continue with UAE PASS" />
+                </button>
+                <p class="m-note"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg>{uaePassNote}</p>
+            </template>
+        </template>
+
+        <!-- IDENTITY: three doors, one threshold -->
+        <template lwc:if={showChooser}>
+            <div class="m-steps">
+                <span class="m-steps__sr">{stepMobBold} — {stepMobLabel}</span>
+                <div class="m-steps__rail" aria-hidden="true">
+                    <template for:each={railSteps} for:item="s">
+                        <div key={s.label} class={s.cls}>
+                            <span class="m-step__num">
+                                <template lwc:if={s.isDone}>
+                                    <svg class="m-step__ck" viewBox="0 0 12 12" focusable="false">
+                                        <path d="M2 6.4L4.8 9.2L10 3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"></path>
+                                    </svg>
+                                </template>
+                                <template lwc:else>{s.num}</template>
+                            </span>
+                            <span class="m-step__lab">{s.label}</span>
+                            <template lwc:if={s.hasLine}><span class="m-step__line"></span></template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <h1 class="m-h1">{heading}</h1>
+            <p class="m-sub">{identitySub}</p>
+
+            <template lwc:if={errorMessage}>
+                <p class="error" role="alert">{errorMessage}</p>
+            </template>
+
+            <div class="m-tabs" role="tablist" aria-label="Registration type">
+                <button class="tab" role="tab" data-tab="Ind" aria-selected={indSelected} onclick={selectTab} type="button" disabled={indTabDisabled}>Individual</button>
+                <button class="tab" role="tab" data-tab="Org" aria-selected={orgSelected} onclick={selectTab} type="button" disabled={orgTabDisabled}>Organisation</button>
+            </div>
+            <template lwc:if={typeLockNote}>
+                <p class="m-note m-note--lock"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg>{typeLockNote}</p>
+            </template>
+
+            <div class="stage">
+                <!-- INDIVIDUAL. One pane, not two: the customer gives their details, then says
+                     whether they are a UAE resident, and only the identity document changes -
+                     Emirates ID for a resident, passport for a non-resident. When UAE Pass is
+                     switched on, a resident authenticates through it instead of typing an ID. -->
+                <div class={indPaneClass} aria-hidden={indHidden}>
+                    <template lwc:if={configLoaded}>
+                        <div class="m-grid2" onfocusin={handleFormFocusIn} onfocusout={handleFormFocusOut}>
+                            <div class="m-field"><label for="ifn">First name</label><input id="ifn" class="m-input" value={form.firstName} data-field="firstName" oninput={handleField} placeholder="First name" autocomplete="given-name" /></div>
+                            <div class="m-field"><label for="iln">Last name</label><input id="iln" class="m-input" value={form.lastName} data-field="lastName" oninput={handleField} placeholder="Last name" autocomplete="family-name" /></div>
+                            <div class="m-field m-span2">
+                                <template lwc:if={isEmailLocked}>
+                                    <label for="iem-locked">Email</label><div class="m-lockwrap"><input id="iem-locked" class="m-input m-input--locked" type="email" value={signInTarget} readonly aria-readonly="true" autocomplete="email" /><svg class="m-lock" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg></div>
+                                </template>
+                                <template lwc:else>
+                                    <label for="iem">Email</label><input id="iem" class="m-input" value={form.email} type="email" data-field="email" oninput={handleField} placeholder="name@example.com" autocomplete="email" />
+                                </template>
+                            </div>
+                            <div class="m-field m-span2">
+                                <template lwc:if={isMobileLocked}>
+                                    <label for="imb-locked">Mobile number</label><div class="m-lockwrap"><input id="imb-locked" class="m-input m-input--locked" type="tel" value={signInTarget} readonly aria-readonly="true" autocomplete="tel" /><svg class="m-lock" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg></div>
+                                </template>
+                                <template lwc:else>
+                                    <label for="imb">Mobile number</label><input id="imb" class="m-input" value={form.mobile} type="tel" data-field="mobile" oninput={handleField} placeholder="+971 5x xxx xxxx" autocomplete="tel" />
+                                </template>
+                            </div>
+                        </div>
+
+                        <p class="m-reslabel">Are you a UAE resident?</p>
+                        <div class="m-seg" role="group" aria-label="Residency">
+                            <button class={residentClass} data-res="Resident" onclick={selectResidency} type="button" aria-pressed={residentSelected}>Resident</button>
+                            <button class={nonResidentClass} data-res="Non-Resident" onclick={selectResidency} type="button" aria-pressed={nonResidentSelected}>Non-Resident</button>
+                        </div>
+
+                        <template lwc:if={showUaePassForResident}>
+                            <button class="uae-btn" type="button" onclick={startUaePass} disabled={isBusy} aria-label="Continue with UAE PASS">
+                                <img src={uaePassButtonImage} alt="Continue with UAE PASS" />
+                            </button>
+                            <p class="m-note"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg>{uaePassNote}</p>
+                        </template>
+                        <template lwc:else>
+                            <div class="m-grid2" onfocusin={handleFormFocusIn} onfocusout={handleFormFocusOut}>
+                                <template lwc:if={isResident}>
+                                    <div class="m-field m-span2"><label for="iei">Emirates ID</label><input id="iei" class="m-input" value={form.emiratesId} data-field="emiratesId" oninput={handleEmiratesId} placeholder="784-XXXX-XXXXXXX-X" inputmode="numeric" maxlength="18" /></div>
+                                </template>
+                                <template lwc:else>
+                                    <div class="m-field m-span2"><label for="ipp">Passport number</label><input id="ipp" class="m-input" value={form.passportNumber} data-field="passportNumber" oninput={handleField} placeholder="Passport number" /></div>
+                                </template>
+                            </div>
+                            <button class="m-btn submit" type="button" onclick={submitIndividual} disabled={isBusy}>Continue <span class="arr" aria-hidden="true">&#10230;</span></button>
+                        </template>
+                    </template>
+                </div>
+
+                <!-- ORGANISATION -->
+                <div class={orgPaneClass} aria-hidden={orgHidden}>
+                    <div class="m-grid2" onfocusin={handleFormFocusIn} onfocusout={handleFormFocusOut}>
+                        <div class="m-field m-span2"><label for="cn">Company name</label><input id="cn" class="m-input" value={form.companyName} data-field="companyName" oninput={handleField} placeholder="Registered company name" autocomplete="organization" /></div>
+                        <div class="m-field"><label for="tl">Trade licence number</label><input id="tl" class="m-input" value={form.tradeLicenseNumber} data-field="tradeLicenseNumber" oninput={handleField} placeholder="Licence number" /></div>
+                        <div class="m-field"><label for="te">Trade licence expiry</label><input id="te" class="m-input" value={form.tradeLicenseExpiryDate} type="date" data-field="tradeLicenseExpiryDate" oninput={handleField} /></div>
+                        <div class="m-field">
+                            <template lwc:if={isEmailLocked}>
+                                <label for="re-locked">Registered email</label><div class="m-lockwrap"><input id="re-locked" class="m-input m-input--locked" type="email" value={signInTarget} readonly aria-readonly="true" /><svg class="m-lock" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg></div>
+                            </template>
+                            <template lwc:else>
+                                <label for="re">Registered email</label><input id="re" class="m-input" value={form.registeredEmail} type="email" data-field="registeredEmail" oninput={handleField} placeholder="company@example.com" />
+                            </template>
+                        </div>
+                        <div class="m-field">
+                            <template lwc:if={isMobileLocked}>
+                                <label for="rp-locked">Registered phone</label><div class="m-lockwrap"><input id="rp-locked" class="m-input m-input--locked" type="tel" value={signInTarget} readonly aria-readonly="true" /><svg class="m-lock" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg></div>
+                            </template>
+                            <template lwc:else>
+                                <label for="rp">Registered phone</label><input id="rp" class="m-input" value={form.registeredPhone} type="tel" data-field="registeredPhone" oninput={handleField} placeholder="+971 x xxx xxxx" />
+                            </template>
+                        </div>
+                    </div>
+                    <p class="sect">Authorised signatory</p>
+                    <div class="m-grid2" onfocusin={handleFormFocusIn} onfocusout={handleFormFocusOut}>
+                        <div class="m-field"><label for="afn">First name</label><input id="afn" class="m-input" value={form.authorizedFirstName} data-field="authorizedFirstName" oninput={handleField} placeholder="First name" /></div>
+                        <div class="m-field"><label for="aln">Last name</label><input id="aln" class="m-input" value={form.authorizedLastName} data-field="authorizedLastName" oninput={handleField} placeholder="Last name" /></div>
+                        <div class="m-field"><label for="aem">Email</label><input id="aem" class="m-input" value={form.authorizedEmail} type="email" data-field="authorizedEmail" oninput={handleField} placeholder="name@example.com" /></div>
+                        <div class="m-field"><label for="aph">Phone</label><input id="aph" class="m-input" value={form.authorizedPhone} type="tel" data-field="authorizedPhone" oninput={handleField} placeholder="+971 5x xxx xxxx" /></div>
+                    </div>
+                    <button class="m-btn submit" type="button" onclick={submitOrganization} disabled={isBusy}>Continue <span class="arr" aria-hidden="true">&#10230;</span></button>
+                </div>
+            </div>
+        </template>
+
+        <!-- VERIFY: a code, not a chore -->
+        <template lwc:if={showOtp}>
+            <div class="m-steps">
+                <span class="m-steps__sr">{stepMobBold} — {stepMobLabel}</span>
+                <div class="m-steps__rail" aria-hidden="true">
+                    <template for:each={railSteps} for:item="s">
+                        <div key={s.label} class={s.cls}>
+                            <span class="m-step__num">
+                                <template lwc:if={s.isDone}>
+                                    <svg class="m-step__ck" viewBox="0 0 12 12" focusable="false">
+                                        <path d="M2 6.4L4.8 9.2L10 3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"></path>
+                                    </svg>
+                                </template>
+                                <template lwc:else>{s.num}</template>
+                            </span>
+                            <span class="m-step__lab">{s.label}</span>
+                            <template lwc:if={s.hasLine}><span class="m-step__line"></span></template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <h1 class="m-h1">Verify your contact</h1>
+            <c-eoi-otp-verify registration-id={submittedId} locked-channel={otpLockedChannel} initial-request={signInRequest} email-hint={otpEmailHint} mobile-hint={otpMobileHint} onverified={handleOtpVerified}></c-eoi-otp-verify>
+            <div class="backrow">
+                <button class="back" type="button" onclick={handleOtpBack} disabled={isBusy}>&larr; Back</button>
+            </div>
+        </template>
+
+        <!-- WELCOME BACK: the customer's own ledger -->
+        <template lwc:if={showWelcome}>
+            <h1 class="m-h1">{welcomeHeading}</h1>
+            <template lwc:if={uaePassVerifiedLine}>
+                <p class="m-verified">{uaePassVerifiedLine}</p>
+            </template>
+            <c-eoi-my-registrations
+                cards={history}
+                refund-enabled={refundEnabled}
+                is-busy={isBusy}
+                error-message={errorMessage}
+                onregisteranother={handleRegisterAnother}
+                onrequestrefund={handleRequestRefund}
+                oncancelregistration={handleCancelRegistration}
+            ></c-eoi-my-registrations>
+        </template>
+
+        <!-- RESIDENCES: a collection, not a catalogue -->
+        <template lwc:if={showTypology}>
+            <div class="m-steps">
+                <span class="m-steps__sr">{stepMobBold} — {stepMobLabel}</span>
+                <div class="m-steps__rail" aria-hidden="true">
+                    <template for:each={railSteps} for:item="s">
+                        <div key={s.label} class={s.cls}>
+                            <span class="m-step__num">
+                                <template lwc:if={s.isDone}>
+                                    <svg class="m-step__ck" viewBox="0 0 12 12" focusable="false">
+                                        <path d="M2 6.4L4.8 9.2L10 3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"></path>
+                                    </svg>
+                                </template>
+                                <template lwc:else>{s.num}</template>
+                            </span>
+                            <span class="m-step__lab">{s.label}</span>
+                            <template lwc:if={s.hasLine}><span class="m-step__line"></span></template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <h1 class="m-h1">Select your villa</h1>
+            <template lwc:if={uaePassVerifiedLine}>
+                <p class="m-verified">{uaePassVerifiedLine}</p>
+            </template>
+            <p class="m-sub">Choose the typologies you wish to register for. Each is confirmed with its own payment.</p>
+            <c-eoi-typology-picker
+                project-id={projectId}
+                image-base={effectiveTypologyImageBase}
+                initial-cart={unpaidCartSeed}
+                oncontinue={handleTypologyContinue}
+                onlinechange={handleLineChange}
+            ></c-eoi-typology-picker>
+            <template lwc:if={hasHistory}>
+                <div class="backrow">
+                    <button class="back" type="button" onclick={handleTypologyBackToWelcome} disabled={isBusy}>&larr; Your registrations</button>
+                </div>
+            </template>
+        </template>
+
+        <!-- CONFIRM & PAY: a checklist you can trust -->
+        <template lwc:if={showReview}>
+            <div class="m-steps">
+                <span class="m-steps__sr">{stepMobBold} — {stepMobLabel}</span>
+                <div class="m-steps__rail" aria-hidden="true">
+                    <template for:each={railSteps} for:item="s">
+                        <div key={s.label} class={s.cls}>
+                            <span class="m-step__num">
+                                <template lwc:if={s.isDone}>
+                                    <svg class="m-step__ck" viewBox="0 0 12 12" focusable="false">
+                                        <path d="M2 6.4L4.8 9.2L10 3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"></path>
+                                    </svg>
+                                </template>
+                                <template lwc:else>{s.num}</template>
+                            </span>
+                            <span class="m-step__lab">{s.label}</span>
+                            <template lwc:if={s.hasLine}><span class="m-step__line"></span></template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <h1 class="m-h1">Confirm &amp; pay</h1>
+            <c-eoi-review-submit
+                lines={visitLines}
+                terms-accepted={termsAccepted}
+                ontermsaccepted={handleTermsAccepted}
+                paid={paid}
+                is-busy={isBusy}
+                error-message={errorMessage}
+                onpayline={handlePayLine}
+                onremoveline={handleRemoveLine}
+                onback={handleChecklistBack}
+            ></c-eoi-review-submit>
+        </template>
+
+        <!-- RECEIPT: worth keeping -->
+        <template lwc:if={isDone}>
+            <h1 class="m-h1">{doneThanks}<br />Your interest is registered.</h1>
+            <p class="m-sub">A confirmation is on its way with an EOI reference for each villa.</p>
+            <div class="m-donegrid">
+                <template lwc:if={hasDoneRows}>
+                    <div>
+                        <p class="m-panelcap">Payments received</p>
+                        <div class="m-rcpt">
+                            <template for:each={doneRows} for:item="r">
+                                <div key={r.rangeId} class="m-rcpt__row">
+                                    <!-- MEOI-10: EOI number only. The payment reference is deliberately not shown
+                                         here either - the same rule as the returning-customer view. It is still
+                                         carried in the data, just not put in front of the customer. -->
+                                    <span class="l">{r.desc}<template lwc:if={r.eoiLabel}><small><b class="m-eoinum">{r.eoiLabel}</b></small></template><template lwc:if={r.awaitingEoi}><small>EOI number to follow</small></template></span>
+                                    <span class="r">AED {r.formattedAmount}</span>
+                                </div>
+                            </template>
+                            <div class="m-rcpt__row m-rcpt__row--total">
+                                <span class="l">Total received</span>
+                                <span class="r">AED {doneTotalFormatted}</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <div>
+                    <p class="m-panelcap">What happens next</p>
+                    <ol class="m-next">
+                        <li><b>Confirmation message</b><p>Your EOI reference numbers arrive by email and SMS shortly.</p></li>
+                        <li><b>Your documents</b><p>The expression-of-interest form follows for digital signature.</p></li>
+                        <li><b>Our team calls</b><p>An advisor will be in touch about the next release.</p></li>
+                    </ol>
+                </div>
+            </div>
+            <button class="m-btn m-btn--ghost" type="button" onclick={handleViewRegistrations} disabled={isBusy}>
+                View my registrations <span class="arr" aria-hidden="true">&#10230;</span>
+            </button>
+        </template>
+
+        <!-- PAY: the card form, mounted on this page (MSC-243) -->
+        <template lwc:if={isPayCard}>
+            <div class="m-steps">
+                <span class="m-steps__sr">{stepMobBold} — {stepMobLabel}</span>
+                <div class="m-steps__rail" aria-hidden="true">
+                    <template for:each={railSteps} for:item="s">
+                        <div key={s.label} class={s.cls}>
+                            <span class="m-step__num">
+                                <template lwc:if={s.isDone}>
+                                    <svg class="m-step__ck" viewBox="0 0 12 12" focusable="false">
+                                        <path d="M2 6.4L4.8 9.2L10 3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"></path>
+                                    </svg>
+                                </template>
+                                <template lwc:else>{s.num}</template>
+                            </span>
+                            <span class="m-step__lab">{s.label}</span>
+                            <template lwc:if={s.hasLine}><span class="m-step__line"></span></template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <h1 class="m-h1">Complete your payment</h1>
+            <template lwc:if={errorMessage}>
+                <p class="error" role="alert">{errorMessage}</p>
+            </template>
+            <template lwc:if={payingLine}>
+                <div class="m-paysum">
+                    <div class="m-paysum__info">
+                        <p class="m-lrow__name">{payingLine.name}</p>
+                        <p class="m-lrow__meta">{payingLine.meta}</p>
+                    </div>
+                    <p class="m-wrow__amt"><small>AED</small>{payingLine.amount}</p>
+                </div>
+            </template>
+            <div class="m-cardsurface">
+                <iframe class="cko-frame"
+                        src={cardFrameUrl}
+                        style={cardFrameStyle}
+                        title="Secure card payment"
+                        allow="payment"></iframe>
+            </div>
+            <p class="m-note"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg>Your payment is handled securely by Checkout.com — your card details never reach Modon.</p>
+            <div class="backrow">
+                <button class="back" type="button" onclick={handleCancelCard} disabled={isBusy}>&larr; Back to payments</button>
+            </div>
+        </template>
+
+        <!-- WAITING: the mark keeps the room -->
+        <template lwc:if={isPayPending}>
+            <div class="m-state">
+                <svg class="m-o spin" viewBox="0 0 20.03 20" aria-hidden="true" focusable="false">
+                    <g transform="translate(-23.27 0)">
+                        <path d="M39.2272 1.83225C39.2186 1.82522 39.2069 1.81662 39.1983 1.80959C39.0889 1.74318 38.9467 1.75802 38.853 1.84944C38.8389 1.86272 38.828 1.87678 38.8217 1.88928C38.8061 1.90725 38.7975 1.92679 38.7889 1.9471L36.8489 5.51222C36.8372 5.52785 36.8286 5.54347 36.8223 5.56066C36.7825 5.66145 36.7997 5.78099 36.8825 5.86381C37.8935 6.82326 38.4748 8.2515 38.4748 9.97273C38.4748 13.1956 36.4106 15.4263 33.2705 15.4263C30.1304 15.4263 28.0904 13.1956 28.0904 9.97273C28.0904 8.30697 28.6334 6.92171 29.5827 5.9646C29.6632 5.88179 29.6835 5.76146 29.6429 5.66146C29.6366 5.6427 29.6249 5.62552 29.614 5.60755L27.6568 2.01586C27.6505 1.99789 27.6388 1.97992 27.6302 1.96195C27.6193 1.94866 27.6083 1.93538 27.5966 1.92366C27.506 1.83225 27.363 1.8174 27.2568 1.87834C27.2364 1.89241 27.2193 1.90569 27.2013 1.92132C24.8097 3.70115 23.2705 6.55762 23.2705 9.97195C23.2705 15.7841 27.7334 19.9977 33.2713 19.9977C38.8092 19.9977 43.2971 15.7849 43.2971 9.97195C43.2971 6.50215 41.6962 3.6027 39.228 1.8299L39.2272 1.83225Z"/>
+                        <path d="M33.2331 4.6612C33.2448 4.6612 33.2558 4.65964 33.2683 4.65964C33.2855 4.65964 33.3019 4.6612 33.3191 4.66198C34.5863 4.64167 35.6083 3.61034 35.6083 2.33837C35.6083 1.06639 34.5676 0.0131836 33.2831 0.0131836C31.9986 0.0131836 30.9572 1.05389 30.9572 2.33837C30.9572 3.62284 31.9721 4.63464 33.2331 4.6612Z"/>
+                    </g>
+                </svg>
+                <h1 class="m-h1">Confirming your payment</h1>
+                <template lwc:if={errorMessage}>
+                    <p class="error" role="alert">{errorMessage}</p>
+                </template>
+                <p class="m-sub">This usually takes a moment. Your registration completes automatically once the payment is confirmed.</p>
+                <div class="m-state__card">
+                    <button class="m-btn m-btn--ghost" type="button" onclick={checkPaymentAgain} disabled={isBusy}>Check status <span class="arr" aria-hidden="true">&#10230;</span></button>
+                </div>
+            </div>
+        </template>
+
+        <!-- EDGE: payment not completed -->
+        <template lwc:if={isPayFailed}>
+            <div class="m-state">
+                <h1 class="m-h1">Payment not completed</h1>
+                <p class="m-sub">{failedSub}</p>
+                <div class="m-state__card">
+                    <button class="m-btn" type="button" onclick={retryPayment}>Try again <span class="arr" aria-hidden="true">&#10230;</span></button>
+                    <template lwc:if={helpLine}>
+                        <p class="m-help">{helpLine}</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- EDGE: registrations closed -->
+        <!-- MEOI-A11: idle session ended. Minimal by design - Kiran owns the styled screen. -->
+        <template lwc:if={isExpired}>
+            <h1 class="m-h1">Your session has ended</h1>
+            <p class="m-sub">For your security we closed it after 15 minutes without activity. Nothing you had paid for is affected.</p>
+            <button class="m-btn submit" type="button" onclick={beginAgain}>Begin again <span class="arr" aria-hidden="true">&#10230;</span></button>
+        </template>
+
+        <template lwc:if={isClosed}>
+            <div class="m-state">
+                <h1 class="m-h1">Registrations are now closed</h1>
+                <p class="m-sub">Thank you for your interest. This collection has reached its registration limit.</p>
+                <template lwc:if={contactUrl}>
+                    <div class="m-state__card">
+                        <a class="m-btn m-btn--ghost m-btn--link" href={contactUrl}>Contact our team <span class="arr" aria-hidden="true">&#10230;</span></a>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- MEOI-THANKS. After the LAST payment, when EOI_Site_Thank_You_Enabled is true. -->
+        <template lwc:if={isThanks}>
+            <c-eoi-thank-you rows={doneRows} back-url={backUrl} is-busy={isBusy} onviewregistrations={handleViewRegistrations}></c-eoi-thank-you>
+        </template>
+    </template>
+    <!-- MEOI-CAPTCHA: same-origin reCAPTCHA bridge showing Google's badge (bottom-right, above the footer bar) -->
+    <template lwc:if={recaptchaEnabled}>
+        <iframe class="rc-frame" src={recaptchaFrameSrc} title="reCAPTCHA" tabindex="-1"></iframe>
+    </template>
+</template>

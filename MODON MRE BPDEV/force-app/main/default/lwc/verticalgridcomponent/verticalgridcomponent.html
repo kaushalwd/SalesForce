@@ -1,0 +1,155 @@
+<template>
+    <lightning-card title="Business Process Steps">
+
+                    <div class="grid-container">
+                        
+                        <template for:each={records} for:item="record">
+                            <div key={record.Id} class="grid-item">
+                                <div class="grid-header">{record.Name}</div>
+                                <div class="sub-grid-container">
+                                    <template for:each={record.subItems} for:item="sub" for:index="index">
+                                        <div key={sub.Id} class="sub-wrapper">
+                                              <template if:false={sub.isHidden}>
+                                            <!-- Step clickable section -->
+                                            <div class={sub.gridClass} data-id={sub.Id} data-parent={record.Id}
+                                                onclick={handleStepClick}>
+                                                <lightning-icon icon-name={sub.iconName} size="x-small" class={sub.iconClass}>
+                                                </lightning-icon>
+                                                
+                                                <div class="sub-content">
+                                                    <div class="sub-name">{sub.Name}</div>
+                                                    
+                                                    <template if:true={sub.metaDisplay}>
+                                                        <div class="sub-meta" data-id={sub.Id}>
+                                                            <div lwc:dom="manual" class="meta-html" data-id={sub.Id}></div>
+                                                        </div>
+                                                    </template>
+                                                    
+
+                                                    <!-- Action area (not part of the clickable section) -->
+
+                                            <template if:true={sub.showReassignButton}>
+                                            <div class="step-actions">
+                                                <lightning-button 
+                                                    variant="brand" 
+                                                    label="Re Assign" 
+                                                    data-id={sub.Id} 
+                                                    data-parent={record.Id}
+                                                    class="escalated-button" 
+                                                    onclick={handleReAssign}>
+                                                </lightning-button>
+                                            </div>
+                                            </template>
+
+
+                                                    <!-- Expand/Collapse Arrow Line -->
+                                                    <div class="expand-toggle-line">
+                                                        <strong>
+                                                            <lightning-button-icon
+                                                                icon-name={sub.iconChevron}
+                                                                variant="bare"
+                                                                size="small"
+                                                                class="expand-icon-bold"
+                                                                onclick={handleExpandClick}
+                                                                data-id={sub.Id}
+                                                                data-parent={record.Id}>
+                                                            </lightning-button-icon>
+                                                            Time Lines Summary
+                                                        </strong>
+                                                    </div>
+
+                                                    <!-- Timeline Panel -->
+                                                    <template if:true={sub.isExpanded}>
+                                                        <div class="timeline-panel">
+                                                            <template if:true={sub.timelines.mileStoneTime}>
+                                                                <div><strong>Milestone Time:</strong> {sub.timelines.mileStoneTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.totalTime}>
+                                                                <div><strong>Total Time:</strong> {sub.timelines.totalTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.escalatedTime}>
+                                                                <div><strong>Escalated Time:</strong> {sub.timelines.escalatedTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.openTime}>
+                                                                <div><strong>Open Time:</strong> {sub.timelines.openTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.reOpenCount}>
+                                                                <div><strong>Reopen Count:</strong> {sub.timelines.reOpenCount}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.reOpenTime}>
+                                                                <div><strong>Reopen Time:</strong> {sub.timelines.reOpenTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.acceptedTime}>
+                                                                <div><strong>Accepted Time:</strong> {sub.timelines.acceptedTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.requiredInfoTime}>
+                                                                <div><strong>Required Info Time:</strong> {sub.timelines.requiredInfoTime}</div>
+                                                            </template>
+                                                            <template if:true={sub.timelines.providedInfoTime}>
+                                                                <div><strong>Provided Info Time:</strong> {sub.timelines.providedInfoTime}</div>
+                                                            </template>
+
+                                                            <template if:true={sub.timelines.isEscalated}>
+                                                                <lightning-button variant="destructive" label="Escalated"
+                                                                    class="escalated-button"></lightning-button>
+                                                            </template>
+                                                            <template if:false={sub.timelines.isEscalated}>
+                                                                <lightning-button variant="success" label="Not Escalated"
+                                                                    class="not-escalated-button"></lightning-button>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                              </template>
+                                            
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    
+                    </div>
+
+        <!-- Reassign Modal  -->
+        <template if:true={openReAssign}>
+            <c-step-re-assignment 
+                step={selectedStep} 
+                onsubmit={handleModalSubmit}
+                oncancel={closeModal}>
+            </c-step-re-assignment>
+        </template>
+        
+
+        <!-- Modal Dialog -->
+        <template if:true={isModalOpen}>
+            <template if:false={enableMarketingModal}>
+            <c-approval-modal
+                is-open={isModalOpen}
+                step={selectedStep}
+                accepted={acceptedByUser}
+                onsubmit={handleModalSubmit}
+                oncancel={closeModal}
+                onaccepted={handleStepAccepted}
+                record-id={recordId}
+                business-process-name={businessProcessName}>
+            </c-approval-modal>
+        </template>  
+       
+        <!--template if:true={enableMarketingModal}>
+
+            
+            <c-marketing-approval-modal
+                is-open={isModalOpen}
+                step={selectedStep}
+                accepted={acceptedByUser}
+                onsubmit={handleModalSubmit}
+                oncancel={closeModal}
+                onaccepted={handleStepAccepted}
+                record-id={recordId}>
+            </c-marketing-approval-modal>
+        </template-->
+        </template> 
+    
+    </lightning-card>
+</template>

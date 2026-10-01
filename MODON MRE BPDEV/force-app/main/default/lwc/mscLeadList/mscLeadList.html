@@ -1,0 +1,361 @@
+<template>
+  <template lwc:if={errorMsg}>
+    <div class="banner banner--error" role="alert">{errorMsg}</div>
+  </template>
+
+  <!-- 1.9: where a routed lead went (GAP 29); amber, the rep did nothing wrong -->
+  <template lwc:if={queuedNotice}>
+    <div class="banner banner--warn" role="status">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 9v4M12 17h.01"></path>
+        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+      </svg>
+      <div>{queuedNotice}</div>
+      <button class="banner__close" type="button" onclick={dismissQueuedNotice}
+        aria-label="Dismiss">&times;</button>
+    </div>
+  </template>
+
+  <!-- TOOLBAR: find, narrow, order, create -->
+  <div class="toolbar">
+    <div class={searchClass}>
+      <c-modon-icon
+        name="search"
+        size="14"
+        color="currentColor"
+        class="search__icon"
+      ></c-modon-icon>
+      <input
+        type="text"
+        placeholder="Name, email, phone or company"
+        value={search}
+        oninput={handleSearch}
+        aria-label="Search leads"
+      />
+      <!-- 1.22 - R2-04: Ctrl K off a Mac -->
+      <span class="kbd" aria-hidden="true"><span>{kbdMod}</span><span>K</span></span>
+      <template lwc:if={hasSearch}>
+        <button class="clr" onclick={clearSearch}>Clear</button>
+      </template>
+    </div>
+
+    <div class="seg" role="group" aria-label="Status">
+      <template for:each={segments} for:item="f">
+        <button
+          key={f.key}
+          data-key={f.key}
+          aria-pressed={f.pressed}
+          onclick={setFilter}
+        >
+          {f.label}<em>{f.count}</em>
+        </button>
+      </template>
+    </div>
+
+    <label class="sort">
+      <span>Sort</span>
+      <select onchange={setSort} aria-label="Sort leads">
+        <template for:each={sortOptions} for:item="o">
+          <option key={o.value} value={o.value} selected={o.selected}>
+            {o.label}
+          </option>
+        </template>
+      </select>
+      <c-modon-icon
+        name="chevron-down"
+        size="12"
+        color="currentColor"
+        class="sort__chev"
+      ></c-modon-icon>
+    </label>
+
+    <!-- 1.10: New lead hidden for now (business ask); the form and openNewForm stay wired. -->
+  </div>
+
+  <!-- THE GRID: one field per column -->
+  <div class="grid-scroll">
+    <!-- 1.11 (MSC-186): five columns; the eye runs down Next Call -->
+    <template lwc:if={showHead}>
+      <div class="list-head">
+        <span class="h-lead">Lead</span>
+        <span>Status</span>
+        <span>Source</span>
+        <span>Last outcome</span>
+        <span>Next Call</span>
+      </div>
+    </template>
+
+    <div class="list" aria-live="polite">
+      <!-- 1.12: skeletons only while there is nothing to show; a reload keeps the rows -->
+      <template lwc:if={showSkeleton}>
+        <div class="sk"></div>
+        <div class="sk"></div>
+        <div class="sk"></div>
+      </template>
+
+      <template for:each={paged} for:item="l">
+        <article key={l.id} class="row">
+          <!-- 1.11: the row opens the work drawer -->
+          <div
+            class={l.rowClass}
+            role="button"
+            tabindex="0"
+            data-id={l.id}
+            onclick={openDrawer}
+            onkeydown={rowKey}
+          >
+            <div class="cell cell-lead">
+              <span class="avatar">{l.initials}</span>
+              <span class="name">{l.name}</span>
+            </div>
+            <span class="cell cell-status">
+              <!-- 1.11: a quiet dot, not a coloured chip (business ask) -->
+              <span class="stat"><i></i><span>{l.statusText}</span></span>
+              <!-- 1.16 (MSC-210): queued for handover; a word, not a badge -->
+              <template lwc:if={l.pendingReassign}>
+                <span class="handover" title="Qualified, awaiting handover to a sales associate">handover</span>
+              </template>
+            </span>
+            <span class="cell dim" data-label="Source">{l.sourceText}</span>
+            <span class="cell" data-label="Last outcome" title={l.lastOutcomeText}>{l.lastOutcomeText}</span>
+            <span class={l.dueClass} data-label="Next Call">{l.dueText}</span>
+          </div>
+        </article>
+      </template>
+    </div>
+  </div>
+
+  <!-- EMPTY / NO MATCH -->
+  <template lwc:if={isEmpty}>
+    <div class="empty">
+      <div class="ring">
+        <c-modon-icon name="user" size="22" color="currentColor"></c-modon-icon>
+      </div>
+      <h3>No leads yet</h3>
+      <p>
+        Leads you create or that are assigned to you appear here. Start with the
+        first one. A name and one way to reach them is enough.
+      </p>
+      <!-- 1.10: New lead CTA hidden for now (business ask); the copy above stands alone. -->
+    </div>
+  </template>
+
+  <template lwc:if={noMatch}>
+    <div class="empty">
+      <div class="ring">
+        <c-modon-icon name="user" size="22" color="currentColor"></c-modon-icon>
+      </div>
+      <h3>Nothing matches</h3>
+      <p>
+        No lead matches that search or filter.
+        <a href="#" class="empty__link" onclick={clearFilters}>Clear filters</a>
+      </p>
+    </div>
+  </template>
+
+  <!-- PAGER (MSC-057): pinned to the bottom; page size fitted to the visible height -->
+  <template lwc:if={showPager}>
+    <nav class="pager" aria-label="Pages">
+      <span class="pager__info">Showing {pageInfoText}</span>
+      <div class="pager__nav">
+        <button
+          class="pager__btn pager__arrow"
+          type="button"
+          data-page="prev"
+          disabled={isFirstPage}
+          onclick={goPage}
+          aria-label="Previous page"
+        >
+          <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+        </button>
+        <template for:each={pageItems} for:item="p">
+          <template lwc:if={p.gap}>
+            <span key={p.key} class="pager__gap" aria-hidden="true">…</span>
+          </template>
+          <template lwc:else>
+            <button
+              key={p.key}
+              class={p.cls}
+              type="button"
+              data-page={p.n}
+              aria-current={p.current}
+              aria-label={p.label}
+              onclick={goPage}
+            >
+              {p.n}
+            </button>
+          </template>
+        </template>
+        <span class="pager__compact">{pageCompact}</span>
+        <button
+          class="pager__btn pager__arrow"
+          type="button"
+          data-page="next"
+          disabled={isLastPage}
+          onclick={goPage}
+          aria-label="Next page"
+        >
+          <c-modon-icon name="chevron-right" size="14" color="currentColor"></c-modon-icon>
+        </button>
+      </div>
+    </nav>
+  </template>
+
+  <!-- 1.11 (MSC-186): the work drawer - disposition the open call task, schedule, note -->
+  <c-msc-lead-drawer
+    open={drawerOpen}
+    lead={activeLead}
+    onclose={closeDrawer}
+    onchanged={handleDrawerChanged}
+  ></c-msc-lead-drawer>
+
+  <!-- NEW LEAD: a slide-over, so the list stays where the rep left it -->
+  <div class={scrimClass} onclick={cancelNewForm}></div>
+  <aside class={slideClass} aria-label="New lead" aria-hidden={slideHidden}>
+    <div class="slide-head">
+      <div class="eyebrow"><i></i><span>New lead</span></div>
+      <button class="btn-icon" onclick={cancelNewForm} aria-label="Close">
+        <c-modon-icon name="x" size="14" color="currentColor"></c-modon-icon>
+      </button>
+    </div>
+    <div class="slide-body">
+      <div class="grid2">
+        <div class="field">
+          <label for="fn">First name</label>
+          <input
+            id="fn"
+            type="text"
+            data-field="firstName"
+            value={form.firstName}
+            oninput={handleField}
+            placeholder="Layla"
+          />
+        </div>
+        <div class="field">
+          <label for="ln">Last name *</label>
+          <input
+            id="ln"
+            type="text"
+            data-field="lastName"
+            value={form.lastName}
+            oninput={handleField}
+            placeholder="Al Suwaidi"
+          />
+        </div>
+      </div>
+      <div class="field">
+        <label for="ph">Phone</label>
+        <input
+          id="ph"
+          type="tel"
+          inputmode="tel"
+          data-field="phone"
+          value={form.phone}
+          oninput={handleField}
+          onblur={checkDuplicate}
+          placeholder="+971 5X XXX XXXX"
+        />
+        <!-- 1.9: the org's format rule, said before the save -->
+        <template lwc:if={phoneError}>
+          <p class="field-error">{phoneError}</p>
+        </template>
+      </div>
+      <template lwc:if={hasDuplicate}>
+        <div class="dup" role="status">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M12 9v4M12 17h.01"></path>
+            <path
+              d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
+            ></path>
+          </svg>
+          <div>
+            You already have an open lead for <b>{duplicateName}</b> with this
+            phone. <a href="#" onclick={openDuplicate}>Show it</a> instead, or keep
+            going if this is a different person.
+            <!-- 1.9: the truth about a closed hit (GAP 30) -->
+            <template lwc:if={duplicateClosedNote}>
+              <br />{duplicateClosedNote}
+            </template>
+          </div>
+        </div>
+      </template>
+      <div class="field">
+        <label for="em">Email</label>
+        <input
+          id="em"
+          type="email"
+          inputmode="email"
+          data-field="email"
+          value={form.email}
+          oninput={handleField}
+          placeholder="name@example.com"
+        />
+      </div>
+      <!-- 1.7: what conversion demands; residency first, it decides the identity fields -->
+      <div class="grid2">
+        <div class="field">
+          <label for="res">{labels.LEAD_FORM_RESIDENCY}</label>
+          <select id="res" data-field="residentStatus" onchange={handleField}>
+            <option value="">{labels.LEAD_FORM_SELECT}</option>
+            <template for:each={residentChoices} for:item="o">
+              <option key={o.value} value={o.value} selected={o.selected}>{o.value}</option>
+            </template>
+          </select>
+        </div>
+        <div class="field">
+          <label for="nat">{labels.LEAD_FORM_NATIONALITY}</label>
+          <select id="nat" data-field="nationality" onchange={handleField}>
+            <option value="">{labels.LEAD_FORM_SELECT}</option>
+            <template for:each={nationalityChoices} for:item="o">
+              <option key={o.value} value={o.value} selected={o.selected}>{o.value}</option>
+            </template>
+          </select>
+        </div>
+        <!-- 1.7: the identity set the residency demands, the shared component. 1.8: inside the grid (display:contents). -->
+        <c-msc-identity-fields
+          resident-status={form.residentStatus}
+          values={formIdentity}
+          onidentitychange={handleIdentity}
+        ></c-msc-identity-fields>
+      </div>
+      <div class="field">
+        <label for="in">Interested in *</label>
+        <select id="in" data-field="interest" onchange={handleField}>
+          <template for:each={projectOptions} for:item="o">
+            <option key={o.value} value={o.value} selected={o.selected}>
+              {o.label}
+            </option>
+          </template>
+        </select>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span class="slide-note">{labels.LEAD_FORM_FOOT_NOTE}</span>
+      <div class="slide-actions">
+        <button class="btn btn-ghost btn-sm" onclick={cancelNewForm}>Cancel</button>
+        <button
+          class="btn btn-primary btn-sm"
+          onclick={saveLead}
+          disabled={saveDisabled}
+        >
+          {saveLabel}
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- the wait is shown and blocked: c-msc-loader covers the viewport -->
+  <template lwc:if={isBusy}>
+    <c-msc-loader></c-msc-loader>
+  </template>
+</template>

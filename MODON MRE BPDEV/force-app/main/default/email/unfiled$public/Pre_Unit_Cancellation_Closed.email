@@ -1,0 +1,151 @@
+<messaging:emailTemplate subject="Pre Unit Cancellation Closed – Request ID: {!relatedTo.Name}"
+    recipientType="User"
+    relatedToType="ServiceRequest__c">
+
+<messaging:htmlEmailBody >
+
+<html>
+<body style="margin:0; padding:0; background:#f4f4f4;">
+
+  <!-- OUTER WRAPPER -->
+  <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f4f4;">
+    <tr>
+      <td align="center">
+
+        <!-- INNER CONTAINER -->
+        <table width="600" cellspacing="0" cellpadding="0" border="0"
+               style="width:100%; max-width:600px; background:#ffffff;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="padding:0;">
+              <img src="{!$Label.Customer_Communication_Modon_Logo}"
+                   alt="Modon"
+                   style="width:100%; max-width:600px; height:auto;" />
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:20px 30px; font-family:Arial, sans-serif; font-size:15px; color:#000;">
+
+
+
+
+              <p>Dear {!relatedTo.Salesorder__r.CustomerAccount__r.Name},</p>
+
+
+
+
+
+
+              <p>
+                We would like to inform you that your request for 
+                <b>Pre Unit Cancellation</b> has been successfully processed 
+                and is now <b>closed</b>.
+              </p>
+
+              <p style="margin-top:20px;"><b>Request Details:</b></p>
+
+              <table width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;">
+
+
+
+
+                <tr>
+                  <td><b>Request Number</b></td>
+                  <td>{!relatedTo.Name}</td>
+                </tr>
+
+                <tr>
+                  <td><b>Project Name</b></td>
+                  <td>{!relatedTo.Salesorder__r.ProjectName__c}</td>
+                </tr>
+
+                <tr>
+                  <td><b>Phase Name</b></td>
+                  <td>{!relatedTo.Salesorder__r.Phase_Name__c}</td>
+                </tr>
+
+                <tr>
+                  <td><b>Unit Name</b></td>
+                  <td>
+                    <apex:outputText value="{!IF(NOT(ISBLANK(relatedTo.Salesorder__r.Unit__r.Name)), relatedTo.Salesorder__r.Unit__r.Name, 'N/A')}" />
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><b>Request Type</b></td>
+                  <td>{!relatedTo.RecordType.Name}</td>
+                </tr>
+
+
+
+                <tr>
+                  <td><b>Closed Date</b></td>
+                  <td>
+                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                      <apex:param value="{!relatedTo.CloseDate__c}"/>
+                    </apex:outputText>
+                  </td>
+                </tr>
+
+              </table>
+
+
+
+
+
+
+              <!-- Remarks -->
+              <apex:outputPanel rendered="{!NOT(ISBLANK(relatedTo.Description__c))}">
+                <p style="margin-top:15px;">
+                  <b>Remarks:</b><br/>
+                  {!relatedTo.Description__c}
+                </p>
+              </apex:outputPanel>
+
+              <p style="margin-top:20px;">
+                If you require any further assistance or have additional queries, 
+                please feel free to contact our support team.
+              </p>
+
+              <p>
+                Thank you for choosing us.
+              </p>
+
+
+
+
+
+              <p>
+                Best regards,<br/>
+                <b>Customer Support Team</b>
+              </p>
+
+
+            </td>
+          </tr>
+
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#000; color:#fff; text-align:center; padding:12px; font-size:13px;">
+              <b>modon.com</b><br/>
+              Delivering Excellence in Customer Experience
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+
+
+</body>
+</html>
+
+</messaging:htmlEmailBody>
+</messaging:emailTemplate>

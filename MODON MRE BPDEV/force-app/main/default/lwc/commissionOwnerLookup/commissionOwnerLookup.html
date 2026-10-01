@@ -1,0 +1,41 @@
+<template>
+    <div class="lookup-container">
+        <lightning-input
+            type="text"
+            variant="label-hidden"
+            value={searchKey}
+            placeholder="Search user"
+            onkeyup={handleKeyUp}
+            onblur={handleBlur}>
+        </lightning-input>
+
+        <template if:true={showDropdown}>
+            <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid slds-dropdown_left dropdown-panel">
+                <ul class="slds-listbox slds-listbox_vertical" role="listbox">
+                    <template for:each={results} for:item="item">
+                        <li key={item.value} role="presentation" class="slds-listbox__item">
+                            <div
+                                class="slds-listbox__option slds-listbox__option_plain slds-media slds-media_small slds-media_center result-item"
+                                role="option"
+                                data-id={item.value}
+                                data-name={item.label}
+                                onmousedown={handleSelect}>
+                                <span class="slds-media__body">
+                                    <span class="slds-truncate" title={item.label}>{item.label}</span>
+                                </span>
+                            </div>
+                        </li>
+                    </template>
+
+                    <template if:true={showNoResults}>
+                        <li role="presentation" class="slds-listbox__item">
+                            <div class="slds-p-horizontal_small slds-p-vertical_x-small slds-text-color_weak">
+                                No users found
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+    </div>
+</template>

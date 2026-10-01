@@ -1,0 +1,273 @@
+<template>
+    <section class="tracker">
+
+        <!-- ============================== HEADER ============================== -->
+        <header class="tracker__header">
+            <div class="tracker__title-wrap">
+                <div class="tracker__icon">
+                    <lightning-icon icon-name="standard:task" size="medium" alternative-text="Tasks"></lightning-icon>
+                </div>
+                <div>
+                    <p class="tracker__eyebrow">Broker Registration</p>
+                    <h1 class="tracker__title">Service Request Task Tracker</h1>
+                </div>
+            </div>
+            <div class="tracker__actions">
+                <button class="btn btn--ghost" onclick={handleClearFilters} disabled={isDefaultState}>
+                    Clear filters
+                </button>
+                <button class="btn btn--primary" onclick={handleRefresh} disabled={isLoading}>
+                    <lightning-icon icon-name="utility:refresh" size="xx-small" variant="inverse"
+                        alternative-text="Refresh"></lightning-icon>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================== SUBJECT FILTER PILLS ============================== -->
+        <nav class="pills" role="tablist" aria-label="Task filters">
+            <template for:each={subjectPills} for:item="pill">
+                <button key={pill.value} class={pill.cssClass} data-value={pill.value}
+                    onclick={handleSubjectFilter} role="tab" aria-selected={pill.selected} title={pill.value}>
+                    <span class="pill__dot"></span>
+                    <span class="pill__label">{pill.label}</span>
+                    <span class="pill__count">{pill.count}</span>
+                </button>
+            </template>
+        </nav>
+
+        <template lwc:if={isResubmittedView}>
+            <div class="info-banner">
+                <lightning-icon icon-name="utility:replay" size="x-small" alternative-text="Resubmitted"></lightning-icon>
+                <p>
+                    Showing <strong>Assignment of Broker Manager</strong> tasks created after the customer
+                    resubmitted — the <strong>Require more information</strong> task was closed and the request
+                    went back to the Broker Manager.
+                </p>
+            </div>
+        </template>
+
+        <!-- ============================== TOOLBAR ============================== -->
+        <div class="toolbar">
+            <div class="toolbar__search-wrap">
+                <lightning-input class="toolbar__search" type="search" label="Search" variant="label-hidden"
+                    placeholder="Search SR number, registration, agency, assigned to or updated by…"
+                    onchange={handleSearch}></lightning-input>
+            </div>
+            <div class="toolbar__filters">
+                <lightning-combobox class="toolbar__combo" label="Task status" variant="label-hidden"
+                    value={taskStatus} options={taskStatusOptions} onchange={handleTaskStatusChange}>
+                </lightning-combobox>
+                <lightning-combobox class="toolbar__combo" label="SR status" variant="label-hidden"
+                    value={srStatus} options={srStatusOptions} onchange={handleSrStatusChange}>
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <!-- ============================== ERROR ============================== -->
+        <template lwc:if={hasError}>
+            <div class="error-banner" role="alert">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="error" alternative-text="Error"></lightning-icon>
+                <span>{errorMessage}</span>
+            </div>
+        </template>
+
+        <!-- ============================== TABLE ============================== -->
+        <div class="card">
+            <div class="card__caption">
+                <span class="card__caption-title">{activeFilterLabel}</span>
+                <span class="card__caption-count">{totalRecords} records</span>
+            </div>
+
+            <div class="table-wrap">
+                <table class="grid" aria-busy={isLoading}>
+                    <thead>
+                        <tr>
+                            <template for:each={columnHeaders} for:item="col">
+                                <th key={col.key} class={col.cssClass} scope="col" aria-sort={col.ariaSort}
+                                    data-field={col.sortField} onclick={handleSort}>
+                                    <span class="grid__th-inner">
+                                        <span>{col.label}</span>
+                                        <span class="grid__sort">{col.sortIcon}</span>
+                                    </span>
+                                </th>
+                            </template>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <!-- Loading skeleton -->
+                        <template lwc:if={isLoading}>
+                            <template for:each={skeletonRows} for:item="sk">
+                                <tr key={sk.key} class="grid__row grid__row--skeleton">
+                                    <td><span class="sk sk--md"></span></td>
+                                    <td><span class="sk sk--sm"></span></td>
+                                    <td><span class="sk sk--md"></span></td>
+                                    <td><span class="sk sk--lg"></span></td>
+                                    <td><span class="sk sk--sm"></span></td>
+                                    <td><span class="sk sk--md"></span></td>
+                                    <td><span class="sk sk--md"></span></td>
+                                    <td><span class="sk sk--sm"></span></td>
+                                </tr>
+                            </template>
+                        </template>
+
+                        <!-- Data rows -->
+                        <template lwc:elseif={hasRows}>
+                            <template for:each={rows} for:item="row">
+                                <tr key={row.taskId} class={row.rowClass}>
+
+                                    <!-- Service Request -->
+                                    <td data-label="Service Request">
+                                        <template lwc:if={row.srHref}>
+                                            <a class="link link--strong" href={row.srHref} data-id={row.srId}
+                                                onclick={handleNavigate}>{row.srName}</a>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="muted">—</span>
+                                        </template>
+                                        <template lwc:if={row.srResubmitted}>
+                                            <span class="chip chip--resub" title="This SR was resubmitted by the customer">
+                                                ↻ Resubmitted SR
+                                            </span>
+                                        </template>
+                                    </td>
+
+                                    <!-- SR Status -->
+                                    <td data-label="SR Status">
+                                        <span class={row.srStatusClass}>{row.srStatus}</span>
+                                    </td>
+
+                                    <!-- Registration -->
+                                    <td data-label="Registration">
+                                        <template lwc:if={row.registrationHref}>
+                                            <a class="link" href={row.registrationHref} data-id={row.registrationId}
+                                                onclick={handleNavigate}>{row.registrationName}</a>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="muted">—</span>
+                                        </template>
+                                        <template lwc:if={row.agencyName}>
+                                            <div class="subtext" title={row.agencyName}>{row.agencyName}</div>
+                                        </template>
+                                    </td>
+
+                                    <!-- Task -->
+                                    <td data-label="Task">
+                                        <div class="task">
+                                            <span class={row.subjectDotClass}></span>
+                                            <span class="task__subject">{row.subject}</span>
+                                        </div>
+                                        <template lwc:if={row.isResubmission}>
+                                            <span class="chip chip--resub-strong">Created after resubmission</span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Task Status -->
+                                    <td data-label="Task Status">
+                                        <span class={row.taskStatusClass}>
+                                            <span class="status__dot"></span>{row.taskStatus}
+                                        </span>
+                                    </td>
+
+                                    <!-- Assigned To -->
+                                    <td data-label="Assigned To">
+                                        <div class="person">
+                                            <span class="avatar">{row.initials}</span>
+                                            <span class="person__name">{row.assignedTo}</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Updated By -->
+                                    <td data-label="Updated By">
+                                        <div class="person">
+                                            <span class="avatar avatar--alt">{row.updatedInitials}</span>
+                                            <div>
+                                                <div class="person__name">{row.updatedBy}</div>
+                                                <div class="subtext">
+                                                    <lightning-formatted-date-time value={row.lastModifiedDate}
+                                                        year="numeric" month="short" day="2-digit"
+                                                        hour="2-digit" minute="2-digit">
+                                                    </lightning-formatted-date-time>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Due Date -->
+                                    <td data-label="Due Date">
+                                        <template lwc:if={row.dueDate}>
+                                            <span class={row.dueClass}>
+                                                <lightning-formatted-date-time value={row.dueDate}
+                                                    year="numeric" month="short" day="2-digit" time-zone="UTC">
+                                                </lightning-formatted-date-time>
+                                            </span>
+                                            <template lwc:if={row.isOverdue}>
+                                                <div class="overdue-tag">Overdue</div>
+                                            </template>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="muted">—</span>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </template>
+
+                        <!-- Empty state -->
+                        <template lwc:else>
+                            <tr>
+                                <td colspan="8" class="empty">
+                                    <div class="empty__icon">
+                                        <lightning-icon icon-name="utility:search" size="small"
+                                            alternative-text="No results"></lightning-icon>
+                                    </div>
+                                    <p class="empty__title">No tasks match these filters</p>
+                                    <p class="empty__text">Try another filter or clear the search.</p>
+                                    <button class="btn btn--ghost" onclick={handleClearFilters}
+                                        disabled={isDefaultState}>Clear filters</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ============================== PAGINATION ============================== -->
+            <footer class="pager">
+                <div class="pager__info">
+                    Showing <strong>{rangeStart}–{rangeEnd}</strong> of <strong>{totalRecords}</strong>
+                </div>
+
+                <div class="pager__controls">
+                    <button class="pager__btn" onclick={handleFirst} disabled={isFirstPage} title="First page"
+                        aria-label="First page">«</button>
+                    <button class="pager__btn" onclick={handlePrevious} disabled={isFirstPage} title="Previous page"
+                        aria-label="Previous page">‹</button>
+                    <template for:each={pageButtons} for:item="p">
+                        <button key={p.key} class={p.cssClass} data-page={p.page} onclick={handlePageClick}
+                            disabled={p.disabled}>{p.label}</button>
+                    </template>
+                    <button class="pager__btn" onclick={handleNext} disabled={isLastPage} title="Next page"
+                        aria-label="Next page">›</button>
+                    <button class="pager__btn" onclick={handleLast} disabled={isLastPage} title="Last page"
+                        aria-label="Last page">»</button>
+                </div>
+
+                <div class="pager__size">
+                    <select class="pager__select" onchange={handlePageSizeChange} aria-label="Rows per page">
+                        <template for:each={pageSizeOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                </div>
+            </footer>
+
+            <template lwc:if={offsetCapped}>
+                <p class="pager__note">
+                    Only the first 2,000 matching records can be paged through. Narrow the filters or search to see the rest.
+                </p>
+            </template>
+        </div>
+    </section>
+</template>

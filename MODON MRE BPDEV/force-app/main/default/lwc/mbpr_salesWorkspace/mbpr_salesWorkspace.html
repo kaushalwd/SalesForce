@@ -1,0 +1,1691 @@
+<template>
+    <section class={salesConsoleClass} aria-label={salesConsoleAriaLabel}>
+        <template lwc:if={showBootLoadingState}>
+            <c-mbpr_loader label="Loading sales workspace"></c-mbpr_loader>
+        </template>
+
+        <template lwc:elseif={showBootErrorState}>
+            <c-mbpr_empty-state
+                kicker="Sales"
+                title="Sales workspace unavailable"
+                message="Refresh the workspace and try again."
+                tone="error"
+                primary-label="Refresh"
+                onprimary={bootstrap}
+            ></c-mbpr_empty-state>
+        </template>
+
+        <template lwc:else>
+            <template lwc:if={showStandardWorkspace}>
+            <!-- In EOI-only mode this bar would hold nothing but Refresh,
+                 which lives in the EOI toolbar instead - so the bar hides. -->
+            <div lwc:if={showConsoleBar} class="sales-console__bar">
+                <div lwc:if={showSalesTabs} class="sales-tabs" role="tablist" aria-label="Sales sections">
+                    <template for:each={salesTabs} for:item="tab">
+                        <button
+                            key={tab.key}
+                            class={tab.className}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab.ariaSelected}
+                            data-tab={tab.key}
+                            onclick={handleTab}
+                        >
+                            <span>{tab.label}</span>
+                            <template lwc:if={tab.hasCount}>
+                                <strong>{tab.count}</strong>
+                            </template>
+                        </button>
+                    </template>
+                </div>
+                <div class="sales-console__actions">
+                    <button lwc:if={showGuidedOfferAction} class="sales-primary-action sales-primary-action--compact" type="button" onclick={handleOpenGuidedOffer}>
+                        <lightning-icon icon-name="utility:email" size="x-small" alternative-text=""></lightning-icon>
+                        <span>Generate Offer</span>
+                    </button>
+                    <button class="sales-icon-action sales-icon-action--compact" type="button" onclick={refreshActiveTab}>
+                        <lightning-icon icon-name="utility:refresh" size="x-small" alternative-text=""></lightning-icon>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <template lwc:if={isPerformanceTab}>
+                <section class="sales-section" aria-label="Performance">
+                    <c-mbpr_lead-performance
+                        broker-type={brokerType}
+                        account-id={accountId}
+                        contact-id={contactId}
+                        chrome-hosted
+                        onchromestate={handlePerfChromeState}
+                    ></c-mbpr_lead-performance>
+                </section>
+            </template>
+
+            <template lwc:elseif={isLeadsTab}>
+                <section class="sales-section" aria-label="Leads">
+                    <div class="sales-toolbar">
+                        <label class="sales-search">
+                            <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                            <input type="search" value={leadSearch} placeholder="Search leads" oninput={handleLeadSearch} />
+                        </label>
+                        <div class={leadFilterPanelClass}>
+                            <button
+                                class={leadFilterButtonClass}
+                                type="button"
+                                onclick={toggleLeadFilterPanel}
+                                aria-expanded={isLeadFilterPanelOpen}
+                                aria-controls="lead-filter-panel"
+                            >
+                                <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                                <span>Filters</span>
+                                <template lwc:if={hasLeadActiveFilters}>
+                                    <strong>{leadActiveFilterCount}</strong>
+                                </template>
+                            </button>
+                            <template lwc:if={isLeadFilterPanelOpen}>
+                                <div class="sales-filter-scrim" aria-hidden="true" onclick={closeLeadFilterPanel}></div>
+                                <section id="lead-filter-panel" class="sales-filter-popover" role="dialog" aria-label="Filter leads">
+                                    <div class="sales-filter-popover__head">
+                                        <div>
+                                            <p>Refine leads</p>
+                                            <h4>Filters</h4>
+                                        </div>
+                                        <button class="sales-filter-popover__close" type="button" onclick={closeLeadFilterPanel} aria-label="Close lead filters">
+                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+                                        </button>
+                                    </div>
+                                    <div class="sales-filter-popover__grid">
+                                        <label class="sales-filter-field">
+                                            <span>Period</span>
+                                            <select data-filter="period" value={pendingLeadPeriod} onchange={handlePendingLeadFilterChange}>
+                                                <template for:each={leadPeriodSelectOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Status</span>
+                                            <select data-filter="status" value={pendingLeadStatusFilter} onchange={handlePendingLeadFilterChange}>
+                                                <template for:each={leadStatusFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Project</span>
+                                            <select data-filter="project" value={pendingLeadProjectFilter} onchange={handlePendingLeadFilterChange}>
+                                                <template for:each={leadProjectFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Unit type</span>
+                                            <select data-filter="unitType" value={pendingLeadUnitTypeFilter} onchange={handlePendingLeadFilterChange}>
+                                                <template for:each={leadUnitTypeFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Owner</span>
+                                            <select data-filter="agent" value={pendingLeadAgentFilter} onchange={handlePendingLeadFilterChange}>
+                                                <template for:each={leadAgentFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Start Date</span>
+                                            <input type="date" data-filter="startDate" value={pendingLeadStartDate} onchange={handlePendingLeadFilterChange} />
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>End Date</span>
+                                            <input type="date" data-filter="endDate" value={pendingLeadEndDate} onchange={handlePendingLeadFilterChange} />
+                                        </label>
+                                    </div>
+                                    <template lwc:if={leadDateRangeHint}>
+                                        <p class="sales-filter-popover__hint">{leadDateRangeHint}</p>
+                                    </template>
+                                    <div class="sales-filter-popover__footer">
+                                        <button class="sales-filter-popover__secondary" type="button" onclick={clearLeadFilters}>Clear</button>
+                                        <button class="sales-filter-popover__primary" type="button" onclick={applyLeadFilters} disabled={isLeadDateRangeInvalid}>Apply</button>
+                                    </div>
+                                </section>
+                            </template>
+                        </div>
+                        <button class="sales-icon-action sales-refresh-touch" type="button" onclick={refreshActiveTab} aria-label="Refresh">
+                            <lightning-icon icon-name="utility:refresh" size="x-small" alternative-text=""></lightning-icon>
+                        </button>
+                        <button class="sales-icon-action sales-export-action" type="button" onclick={handleExportLeads} disabled={isLeadsLoading}>
+                            <lightning-icon icon-name="utility:download" size="x-small" alternative-text=""></lightning-icon>
+                            <span>Export</span>
+                        </button>
+                        <template lwc:if={canCreateLead}>
+                            <button class="sales-primary-action" type="button" onclick={handleOpenLeadForm}>
+                                <lightning-icon icon-name="utility:add" size="x-small" alternative-text=""></lightning-icon>
+                                <span>New lead</span>
+                            </button>
+                        </template>
+                    </div>
+                    <template lwc:if={hasLeadActiveFilters}>
+                        <div class="sales-applied-filters" aria-label="Applied lead filters">
+                            <template for:each={leadAppliedFilterChips} for:item="chip">
+                                <span key={chip.key} class="sales-filter-chip">{chip.label}</span>
+                            </template>
+                            <button type="button" onclick={clearLeadFilters}>Clear</button>
+                        </div>
+                    </template>
+
+                    <template lwc:if={isLeadsLoading}>
+                        <c-mbpr_loading-state rows="5" label="Loading leads"></c-mbpr_loading-state>
+                    </template>
+                    <template lwc:elseif={leadsError}>
+                        <c-mbpr_empty-state
+                            compact
+                            title="Leads unavailable"
+                            message="Refresh to try again."
+                            tone="error"
+                            primary-label="Refresh"
+                            onprimary={loadLeads}
+                        ></c-mbpr_empty-state>
+                    </template>
+                    <template lwc:elseif={hasFilteredLeads}>
+                        <div class="record-table record-table--leads">
+                            <div class="record-table__head" aria-hidden="true">
+                                <span>Customer</span>
+                                <span>Email</span>
+                                <span>Phone</span>
+                                <span>Project Name</span>
+                                <span>Unit Type</span>
+                                <span>Status</span>
+                                <span>Owner</span>
+                                <span>Created</span>
+                            </div>
+                            <ol class="record-table__body">
+                                <template for:each={paginatedLeadRows} for:item="lead">
+                                    <li key={lead.key} class="record-table__item" style={lead.rowStyle}>
+                                        <button class="record-row" type="button" data-id={lead.id} onclick={handleOpenLead}>
+                                            <span class="record-identity" data-label="Customer">
+                                                <span class="record-avatar" aria-hidden="true">{lead.initials}</span>
+                                                <span>
+                                                    <strong>{lead.name}</strong>
+                                                    <small>{lead.LeadNumber}</small>
+                                                </span>
+                                            </span>
+                                            <span class="record-meta record-meta--wrap" data-label="Email">
+                                                <small>{lead.emailLabel}</small>
+                                            </span>
+                                            <span class="record-meta" data-label="Phone">
+                                                <small>{lead.mobileLabel}</small>
+                                            </span>
+                                            <span class="record-meta" data-label="Project Name">
+                                                <strong>{lead.projectLabel}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Unit Type">
+                                                <strong>{lead.unitTypeLabel}</strong>
+                                            </span>
+                                            <span data-label="Status">
+                                                <c-mbpr_status-badge label={lead.statusLabel} tone={lead.statusTone} size="small"></c-mbpr_status-badge>
+                                            </span>
+                                            <span class="record-meta" data-label="Owner">
+                                                <strong>{lead.agentLabel}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Created">
+                                                <strong>{lead.createdLabel}</strong>
+                                            </span>
+                                        </button>
+                                    </li>
+                                </template>
+                            </ol>
+                        </div>
+                        <div class="sales-pagination">
+                            <span>{leadPageLabel}</span>
+                            <button type="button" onclick={handlePreviousLeads} disabled={isFirstLeadPage}>Previous</button>
+                            <button type="button" onclick={handleNextLeads} disabled={isLastLeadPage}>Next</button>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <c-mbpr_empty-state
+                            compact
+                            title="No leads found"
+                            message="Change the filters or refresh the list."
+                        ></c-mbpr_empty-state>
+                    </template>
+                </section>
+            </template>
+
+            <template lwc:elseif={isOpportunitiesTab}>
+                <section class="sales-section" aria-label="Opportunities">
+                    <div class="sales-toolbar">
+                        <label class="sales-search">
+                            <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                            <input type="search" value={opportunitySearch} placeholder="Search opportunities" oninput={handleOpportunitySearch} />
+                        </label>
+                        <div class={opportunityFilterPanelClass}>
+                            <button
+                                class={opportunityFilterButtonClass}
+                                type="button"
+                                onclick={toggleOpportunityFilterPanel}
+                                aria-expanded={isOpportunityFilterPanelOpen}
+                                aria-controls="opportunity-filter-panel"
+                            >
+                                <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                                <span>Filters</span>
+                                <template lwc:if={hasOpportunityActiveFilters}>
+                                    <strong>{opportunityActiveFilterCount}</strong>
+                                </template>
+                            </button>
+                            <template lwc:if={isOpportunityFilterPanelOpen}>
+                                <div class="sales-filter-scrim" aria-hidden="true" onclick={closeOpportunityFilterPanel}></div>
+                                <section id="opportunity-filter-panel" class="sales-filter-popover" role="dialog" aria-label="Filter opportunities">
+                                    <div class="sales-filter-popover__head">
+                                        <div>
+                                            <p>Refine opportunities</p>
+                                            <h4>Filters</h4>
+                                        </div>
+                                        <button
+                                            class="sales-filter-popover__close"
+                                            type="button"
+                                            onclick={closeOpportunityFilterPanel}
+                                            aria-label="Close opportunity filters"
+                                        >
+                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+                                        </button>
+                                    </div>
+                                    <div class="sales-filter-popover__grid">
+                                        <label class="sales-filter-field">
+                                            <span>Stage</span>
+                                            <select data-filter="stage" value={pendingOpportunityStageFilter} onchange={handlePendingOpportunityFilterChange}>
+                                                <template for:each={opportunityStageFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Project</span>
+                                            <select data-filter="project" value={pendingOpportunityProjectFilter} onchange={handlePendingOpportunityFilterChange}>
+                                                <template for:each={opportunityProjectFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Resident</span>
+                                            <select
+                                                data-filter="residentStatus"
+                                                value={pendingOpportunityResidentStatusFilter}
+                                                onchange={handlePendingOpportunityFilterChange}
+                                            >
+                                                <template for:each={opportunityResidentStatusFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Broker agent</span>
+                                            <select
+                                                data-filter="brokerAgent"
+                                                value={pendingOpportunityBrokerAgentFilter}
+                                                onchange={handlePendingOpportunityFilterChange}
+                                            >
+                                                <template for:each={opportunityBrokerAgentFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Sales manager</span>
+                                            <select
+                                                data-filter="salesManager"
+                                                value={pendingOpportunitySalesManagerFilter}
+                                                onchange={handlePendingOpportunityFilterChange}
+                                            >
+                                                <template for:each={opportunitySalesManagerFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Start Date</span>
+                                            <input type="date" data-filter="startDate" value={pendingOpportunityStartDate} onchange={handlePendingOpportunityFilterChange} />
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>End Date</span>
+                                            <input type="date" data-filter="endDate" value={pendingOpportunityEndDate} onchange={handlePendingOpportunityFilterChange} />
+                                        </label>
+                                    </div>
+                                    <template lwc:if={opportunityDateRangeHint}>
+                                        <p class="sales-filter-popover__hint">{opportunityDateRangeHint}</p>
+                                    </template>
+                                    <div class="sales-filter-popover__footer">
+                                        <button class="sales-filter-popover__secondary" type="button" onclick={clearOpportunityFilters}>Clear</button>
+                                        <button class="sales-filter-popover__primary" type="button" onclick={applyOpportunityFilters} disabled={isOpportunityDateRangeInvalid}>Apply</button>
+                                    </div>
+                                </section>
+                            </template>
+                        </div>
+                        <button class="sales-icon-action sales-refresh-touch" type="button" onclick={refreshActiveTab} aria-label="Refresh">
+                            <lightning-icon icon-name="utility:refresh" size="x-small" alternative-text=""></lightning-icon>
+                        </button>
+                        <button class="sales-icon-action sales-export-action" type="button" onclick={handleExportOpportunities} disabled={isOpportunitiesLoading}>
+                            <lightning-icon icon-name="utility:download" size="x-small" alternative-text=""></lightning-icon>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                    <template lwc:if={hasOpportunityActiveFilters}>
+                        <div class="sales-applied-filters" aria-label="Applied opportunity filters">
+                            <template for:each={opportunityAppliedFilterChips} for:item="chip">
+                                <span key={chip.key} class="sales-filter-chip">{chip.label}</span>
+                            </template>
+                            <button type="button" onclick={clearOpportunityFilters}>Clear</button>
+                        </div>
+                    </template>
+
+                    <template lwc:if={isOpportunitiesLoading}>
+                        <c-mbpr_loading-state rows="5" label="Loading opportunities"></c-mbpr_loading-state>
+                    </template>
+                    <template lwc:elseif={opportunitiesError}>
+                        <c-mbpr_empty-state
+                            compact
+                            title="Opportunities unavailable"
+                            message="Refresh to try again."
+                            tone="error"
+                            primary-label="Refresh"
+                            onprimary={loadOpportunities}
+                        ></c-mbpr_empty-state>
+                    </template>
+                    <template lwc:elseif={hasFilteredOpportunities}>
+                        <div class="record-table record-table--opportunities">
+                            <div class="record-table__head" aria-hidden="true">
+                                <span>Opportunity</span>
+                                <span>Email</span>
+                                <span>Mobile</span>
+                                <span>Project</span>
+                                <span>Resident Status</span>
+                                <span>Stage</span>
+                                <span>Broker Name</span>
+                                <span>Modon Rep</span>
+                            </div>
+                            <ol class="record-table__body">
+                                <template for:each={paginatedOpportunityRows} for:item="opp">
+                                    <li key={opp.key} class="record-table__item" style={opp.rowStyle}>
+                                        <button class="record-row" type="button" data-id={opp.id} onclick={handleOpenOpportunity}>
+                                            <span class="record-meta" data-label="Opportunity">
+                                                <strong>{opp.name}</strong>
+                                            </span>
+                                            <span class="record-meta record-meta--wrap" data-label="Email">
+                                                <small>{opp.emailLabel}</small>
+                                            </span>
+                                            <span class="record-meta" data-label="Mobile">
+                                                <small>{opp.mobileLabel}</small>
+                                            </span>
+                                            <span class="record-meta" data-label="Project">
+                                                <strong>{opp.projectName}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Resident Status">
+                                                <strong>{opp.residentStatus}</strong>
+                                            </span>
+                                            <span data-label="Stage">
+                                                <c-mbpr_status-badge label={opp.stageLabel} tone={opp.statusTone} size="small"></c-mbpr_status-badge>
+                                            </span>
+                                            <span class="record-meta" data-label="Broker Name">
+                                                <strong>{opp.brokerAgentName}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Modon Rep">
+                                                <strong>{opp.salesManagerName}</strong>
+                                            </span>
+                                        </button>
+                                    </li>
+                                </template>
+                            </ol>
+                        </div>
+                        <div class="sales-pagination">
+                            <span>{opportunityPageLabel}</span>
+                            <button type="button" onclick={handlePreviousOpportunities} disabled={isFirstOpportunityPage}>Previous</button>
+                            <button type="button" onclick={handleNextOpportunities} disabled={isLastOpportunityPage}>Next</button>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <c-mbpr_empty-state
+                            compact
+                            title="No opportunities found"
+                            message="Change the filters to review a different set."
+                        ></c-mbpr_empty-state>
+                    </template>
+                </section>
+            </template>
+
+            <template lwc:elseif={isEoiTab}>
+                <section class="sales-section" aria-label="Expressions of Interest">
+                    <div class="sales-toolbar">
+                        <label class="sales-search">
+                            <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                            <input type="search" value={eoiSearch} placeholder="Search EOI" oninput={handleEoiSearch} disabled={isEoiActionBusy} />
+                        </label>
+                        <div class={eoiFilterPanelClass}>
+                            <button
+                                class={eoiFilterButtonClass}
+                                type="button"
+                                onclick={toggleEoiFilterPanel}
+                                disabled={isEoiActionBusy}
+                                aria-expanded={isEoiFilterPanelOpen}
+                                aria-controls="eoi-filter-panel"
+                            >
+                                <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                                <span>Filters</span>
+                                <template lwc:if={hasEoiActiveFilters}>
+                                    <strong>{eoiActiveFilterCount}</strong>
+                                </template>
+                            </button>
+                            <template lwc:if={isEoiFilterPanelOpen}>
+                                <div class="sales-filter-scrim" aria-hidden="true" onclick={closeEoiFilterPanel}></div>
+                                <section id="eoi-filter-panel" class="sales-filter-popover" role="dialog" aria-label="Filter EOI records">
+                                    <div class="sales-filter-popover__head">
+                                        <div>
+                                            <p>Refine EOI</p>
+                                            <h4>Filters</h4>
+                                        </div>
+                                        <button class="sales-filter-popover__close" type="button" onclick={closeEoiFilterPanel} aria-label="Close EOI filters">
+                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+                                        </button>
+                                    </div>
+                                    <div class="sales-filter-popover__grid">
+                                        <label class="sales-filter-field">
+                                            <span>Status</span>
+                                            <select data-filter="status" value={pendingEoiStatusFilter} onchange={handlePendingEoiFilterChange}>
+                                                <template for:each={eoiStatusFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Project</span>
+                                            <select data-filter="project" value={pendingEoiProjectFilter} onchange={handlePendingEoiFilterChange}>
+                                                <template for:each={eoiProjectFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Phase</span>
+                                            <select data-filter="phase" value={pendingEoiPhaseFilter} onchange={handlePendingEoiFilterChange}>
+                                                <template for:each={eoiPhaseFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Unit type</span>
+                                            <select data-filter="unitType" value={pendingEoiUnitTypeFilter} onchange={handlePendingEoiFilterChange}>
+                                                <template for:each={eoiUnitTypeFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-filter-field">
+                                            <span>Bedrooms</span>
+                                            <select data-filter="bedrooms" value={pendingEoiBedroomsFilter} onchange={handlePendingEoiFilterChange}>
+                                                <template for:each={eoiBedroomsFilterOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="sales-filter-popover__footer">
+                                        <button class="sales-filter-popover__secondary" type="button" onclick={clearEoiFilters} disabled={isEoiActionBusy}>Clear</button>
+                                        <button class="sales-filter-popover__primary" type="button" onclick={applyEoiFilters} disabled={isEoiActionBusy}>Apply</button>
+                                    </div>
+                                </section>
+                            </template>
+                        </div>
+                        <button class="sales-icon-action sales-refresh-touch" type="button" onclick={refreshActiveTab} aria-label="Refresh" disabled={isEoiActionBusy}>
+                            <lightning-icon icon-name="utility:refresh" size="x-small" alternative-text=""></lightning-icon>
+                        </button>
+                        <button class="sales-icon-action sales-export-action" type="button" onclick={handleExportEois} disabled={isEoiBusyOrLoading}>
+                            <lightning-icon icon-name="utility:download" size="x-small" alternative-text=""></lightning-icon>
+                            <span>Export</span>
+                        </button>
+                        <template lwc:if={eoiOnly}>
+                            <button class="sales-icon-action sales-icon-action--compact" type="button" onclick={refreshActiveTab} disabled={isEoiActionBusy}>
+                                <lightning-icon icon-name="utility:refresh" size="x-small" alternative-text=""></lightning-icon>
+                                <span>Refresh</span>
+                            </button>
+                        </template>
+                        <template lwc:if={canCreateEoi}>
+                            <button class="sales-primary-action" type="button" onclick={handleOpenEoiForm} disabled={isEoiActionBusy}>
+                                <lightning-icon icon-name="utility:add" size="x-small" alternative-text=""></lightning-icon>
+                                <span>New EOI</span>
+                            </button>
+                        </template>
+                    </div>
+                    <template lwc:if={hasEoiActiveFilters}>
+                        <div class="sales-applied-filters" aria-label="Applied EOI filters">
+                            <template for:each={eoiAppliedFilterChips} for:item="chip">
+                                <span key={chip.key} class="sales-filter-chip">{chip.label}</span>
+                            </template>
+                            <button type="button" onclick={clearEoiFilters} disabled={isEoiActionBusy}>Clear</button>
+                        </div>
+                    </template>
+
+                    <template lwc:if={isEoiLoading}>
+                        <c-mbpr_loading-state rows="5" label="Loading EOI records"></c-mbpr_loading-state>
+                    </template>
+                    <template lwc:elseif={eoiError}>
+                        <c-mbpr_empty-state
+                            compact
+                            title="EOI records unavailable"
+                            message="Refresh to try again."
+                            tone="error"
+                            primary-label="Refresh"
+                            onprimary={loadEoiRecords}
+                        ></c-mbpr_empty-state>
+                    </template>
+                    <template lwc:elseif={hasFilteredEois}>
+                        <div class="record-table record-table--eoi">
+                            <div class="record-table__head" aria-hidden="true">
+                                <span>EOI Name</span>
+                                <span>Payment (CP) Number</span>
+                                <span>Customer</span>
+                                <span>Project</span>
+                                <span>Unit Type</span>
+                                <span>Bedrooms</span>
+                                <span>Status</span>
+                                <span>Amount</span>
+                                <span>Actions</span>
+                            </div>
+                            <ol class="record-table__body">
+                                <template for:each={paginatedEoiRows} for:item="eoi">
+                                    <li key={eoi.key} class="record-table__item" style={eoi.rowStyle}>
+                                        <div
+                                            class={eoi.rowClass}
+                                            role="button"
+                                            tabindex="0"
+                                            data-id={eoi.id}
+                                            onclick={handleOpenEoi}
+                                            onkeydown={handleEoiRowKeydown}
+                                        >
+                                            <span class="record-meta" data-label="EOI Name">
+                                                <strong>{eoi.eoiNumberLabel}</strong>
+                                                <small class="eoi-card-name">{eoi.customerName}</small>
+                                            </span>
+                                            <span class="record-meta" data-label="Payment (CP) Number">
+                                                <strong>{eoi.paymentNameLabel}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Customer">
+                                                <strong>{eoi.customerName}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Project">
+                                                <strong>{eoi.projectName}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Unit Type">
+                                                <strong>{eoi.unitType}</strong>
+                                            </span>
+                                            <span class="record-meta" data-label="Bedrooms">
+                                                <strong>{eoi.bedrooms}</strong>
+                                            </span>
+                                            <span data-label="Status">
+                                                <c-mbpr_status-badge label={eoi.statusLabel} tone={eoi.statusTone} size="small"></c-mbpr_status-badge>
+                                            </span>
+                                            <span class="record-meta" data-label="Amount">
+                                                <strong>{eoi.amountLabel}</strong>
+                                            </span>
+                                            <span class={eoi.rowActionClass} data-label="Actions">
+                                                <template lwc:if={eoi.hasRowAction}>
+                                                    <button
+                                                        class={eoi.rowActionButtonClass}
+                                                        type="button"
+                                                        data-id={eoi.paymentRecordId}
+                                                        data-action={eoi.rowAction}
+                                                        disabled={isEoiActionBusy}
+                                                        onclick={handleEoiRowAction}
+                                                    >
+                                                        <template lwc:if={eoi.rowActionBusy}>
+                                                            <span class="button-spinner" aria-hidden="true"></span>
+                                                        </template>
+                                                        <span>{eoi.rowActionLabel}</span>
+                                                    </button>
+                                                </template>
+                                            </span>
+                                        </div>
+                                    </li>
+                                </template>
+                            </ol>
+                        </div>
+                        <div class="sales-pagination">
+                            <span>{eoiPageLabel}</span>
+                            <button type="button" onclick={handlePreviousEois} disabled={isEoiPreviousDisabled}>Previous</button>
+                            <button type="button" onclick={handleNextEois} disabled={isEoiNextDisabled}>Next</button>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <c-mbpr_empty-state
+                            compact
+                            title="No EOI records found"
+                            message="Change the filters or refresh the list."
+                        ></c-mbpr_empty-state>
+                    </template>
+                </section>
+            </template>
+
+            <div lwc:if={showTouchActionBar} class="sales-touch-actionbar">
+                <template lwc:if={showTouchNewLead}>
+                    <button class="sales-primary-action" type="button" onclick={handleOpenLeadForm}>
+                        <lightning-icon icon-name="utility:add" size="x-small" alternative-text=""></lightning-icon>
+                        <span>New lead</span>
+                    </button>
+                </template>
+                <template lwc:if={showTouchNewEoi}>
+                    <button class="sales-primary-action" type="button" onclick={handleOpenEoiForm}>
+                        <lightning-icon icon-name="utility:add" size="x-small" alternative-text=""></lightning-icon>
+                        <span>New EOI</span>
+                    </button>
+                </template>
+                <button lwc:if={showGuidedOfferAction} class="sales-icon-action" type="button" onclick={handleOpenGuidedOffer}>
+                    <lightning-icon icon-name="utility:email" size="x-small" alternative-text=""></lightning-icon>
+                    <span>Generate Offer</span>
+                </button>
+            </div>
+
+            </template>
+        </template>
+
+        <template lwc:if={isDrawerOpen}>
+            <c-mbpr_detail-drawer
+                open={isDrawerOpen}
+                variant={salesDrawerVariant}
+                title={drawerTitle}
+                eyebrow={drawerEyebrow}
+                subtitle={drawerSubtitle}
+                tone="accent"
+                onclose={closeDrawer}
+            >
+                <button slot="header-extra" class="sales-drawer-focus drawer-hidden-focus" type="button" onclick={closeDrawer}>
+                    Close
+                </button>
+
+                <template lwc:if={isLeadDetailDrawer}>
+                    <section class="drawer-section">
+                        <div class="drawer-hero drawer-hero--split">
+                            <c-mbpr_status-badge label={selectedLead.statusLabel} tone={selectedLead.statusTone}></c-mbpr_status-badge>
+                            <div class="drawer-actions drawer-actions--compact">
+                                <template lwc:if={selectedLead.canGenerateOffer}>
+                                    <button class="sales-primary-action" type="button" data-lead-id={selectedLead.id} onclick={handleOpenGuidedOffer}>Generate Offer</button>
+                                </template>
+                                <template lwc:if={selectedLead.canManage}>
+                                    <button class="sales-primary-action" type="button" onclick={handleEditSelectedLead}>Edit lead</button>
+                                </template>
+                                <button class="sales-icon-action" type="button" onclick={loadSelectedLeadDocuments}>Refresh documents</button>
+                            </div>
+                        </div>
+                        <dl class="detail-grid">
+                            <div>
+                                <dt>Email</dt>
+                                <dd>{selectedLead.emailLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Phone</dt>
+                                <dd>{selectedLead.mobileLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Project</dt>
+                                <dd>{selectedLeadRequirementLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Agent</dt>
+                                <dd>{selectedLead.agentLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Created</dt>
+                                <dd>{selectedLead.createdLabel}</dd>
+                            </div>
+                        </dl>
+
+                        <section class="document-list" aria-label="Lead documents">
+                            <h4>Documents</h4>
+                            <template lwc:if={isDocumentsLoading}>
+                                <c-mbpr_loading-state rows="2" label="Loading documents"></c-mbpr_loading-state>
+                            </template>
+                            <template lwc:elseif={documentsError}>
+                                <p class="sales-inline-message sales-inline-message--error">Documents could not be loaded.</p>
+                            </template>
+                            <template lwc:elseif={hasSelectedLeadDocuments}>
+                                <ul>
+                                    <template for:each={leadDocumentRows} for:item="doc">
+                                        <li key={doc.key}>
+                                            <a href={doc.downloadUrl} target="_blank" rel="noopener noreferrer">{doc.documentType}</a>
+                                            <span>{doc.title}</span>
+                                            <template lwc:if={selectedLead.canManage}>
+                                                <template lwc:if={doc.isConfirmingDelete}>
+                                                    <span class="doc-confirm" role="alertdialog" aria-label="Confirm document deletion">
+                                                        <span class="doc-confirm__question">Delete this file?</span>
+                                                        <button class="doc-confirm__yes" type="button" data-document={doc.documentType} onclick={handleConfirmDeleteLeadDocument}>Delete</button>
+                                                        <button class="doc-confirm__no" type="button" onclick={handleCancelDeleteLeadDocument}>Cancel</button>
+                                                    </span>
+                                                </template>
+                                                <template lwc:else>
+                                                    <button type="button" data-key={doc.key} onclick={handleRequestDeleteLeadDocument}>Delete</button>
+                                                </template>
+                                            </template>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:else>
+                                <p class="sales-inline-message">No uploaded documents found for this lead.</p>
+                            </template>
+                        </section>
+                    </section>
+                </template>
+
+                <template lwc:elseif={isLeadFormDrawer}>
+                    <section class="drawer-section">
+                        <div class="segmented-control" role="group" aria-label="Lead type">
+                            <template for:each={leadTypeOptions} for:item="option">
+                                <button
+                                    key={option.value}
+                                    class={option.className}
+                                    type="button"
+                                    data-type={option.value}
+                                    aria-pressed={option.ariaPressed}
+                                    disabled={isLeadFormBusy}
+                                    onclick={handleLeadType}
+                                >
+                                    {option.label}
+                                </button>
+                            </template>
+                        </div>
+
+                        <template lwc:if={isOrganizationLead}>
+                            <h4 class="form-subsection">Owner's Details</h4>
+                        </template>
+                        <div class="sales-form-grid">
+                            <label class="sales-field">
+                                <span>Salutation</span>
+                                <select value={leadForm.Salutation} data-field="Salutation" onchange={handleLeadFormChange}>
+                                    <option value="">Select</option>
+                                    <template for:each={salutationOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="sales-field">
+                                <span>First name</span>
+                                <input value={leadForm.FirstName} data-field="FirstName" onchange={handleLeadFormChange} required />
+                            </label>
+                            <label class="sales-field">
+                                <span>Last name</span>
+                                <input value={leadForm.LastName} data-field="LastName" onchange={handleLeadFormChange} required />
+                            </label>
+                            <label class="sales-field">
+                                <span>Email</span>
+                                <input type="email" value={leadForm.Email} data-field="Email" onchange={handleLeadFormChange} onblur={handleLeadEmailBlur} required />
+                                <template lwc:if={showLeadEmailStatus}>
+                                    <small class={leadEmailStatusClass} role="status" aria-live="polite">
+                                        <template lwc:if={isLeadEmailChecking}>
+                                            <i class="button-spinner" aria-hidden="true"></i>
+                                        </template>
+                                        {leadEmailStatusText}
+                                    </small>
+                                </template>
+                            </label>
+                            <label class="sales-field">
+                                <span>Mobile</span>
+                                <input type="tel" value={leadForm.MobilePhone} data-field="MobilePhone" placeholder="+971 5X XXX XXXX" onchange={handleLeadFormChange} onblur={handleLeadMobileBlur} required />
+                                <template lwc:if={showLeadMobileStatus}>
+                                    <small class={leadMobileStatusClass} role="status" aria-live="polite">
+                                        <template lwc:if={isLeadMobileChecking}>
+                                            <i class="button-spinner" aria-hidden="true"></i>
+                                        </template>
+                                        {leadMobileStatusText}
+                                    </small>
+                                </template>
+                            </label>
+                            <label class="sales-field">
+                                <span>Resident status</span>
+                                <select value={leadForm.UAEResidentStatus__c} data-field="UAEResidentStatus__c" onchange={handleLeadFormChange} required>
+                                    <option value="">Select</option>
+                                    <template for:each={residentStatusOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="sales-field">
+                                <span>Country</span>
+                                <select value={leadForm.CountryOfResidence__c} data-field="CountryOfResidence__c" onchange={handleLeadFormChange} required>
+                                    <option value="">Select</option>
+                                    <template for:each={countryOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="sales-field">
+                                <span>Nationality</span>
+                                <select value={leadForm.Nationality__c} data-field="Nationality__c" onchange={handleLeadFormChange} required>
+                                    <option value="">Select</option>
+                                    <template for:each={nationalityOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <template lwc:if={isResidentLead}>
+                                <label class="sales-field">
+                                    <span>Emirates ID</span>
+                                    <input value={leadForm.EIDNumber__c} data-field="EIDNumber__c" placeholder="784-XXXX-XXXXXXX-X" onchange={handleLeadFormChange} required />
+                                </label>
+                                <label class="sales-field">
+                                    <span>Emirates ID expiry</span>
+                                    <input type="date" value={leadForm.EmiratesIDExpiryDate__c} data-field="EmiratesIDExpiryDate__c" onchange={handleLeadFormChange} required />
+                                </label>
+                            </template>
+                            <template lwc:elseif={isNonResidentLead}>
+                                <label class="sales-field">
+                                    <span>Passport number</span>
+                                    <input value={leadForm.PassportNumber__c} data-field="PassportNumber__c" onchange={handleLeadFormChange} required />
+                                </label>
+                                <label class="sales-field">
+                                    <span>Passport issue date</span>
+                                    <input type="date" value={leadForm.PassportIssueDate__c} data-field="PassportIssueDate__c" onchange={handleLeadFormChange} />
+                                </label>
+                                <label class="sales-field">
+                                    <span>Passport expiry</span>
+                                    <input type="date" value={leadForm.PassportExpiryDate__c} data-field="PassportExpiryDate__c" onchange={handleLeadFormChange} required />
+                                </label>
+                            </template>
+                            <label class="sales-field">
+                                <span>Project name</span>
+                                <select value={leadForm.ProjectInterest__c} data-field="ProjectInterest__c" onchange={handleLeadFormChange} required>
+                                    <option value="">Select</option>
+                                    <template for:each={projectInterestOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="sales-field">
+                                <span>Unit type</span>
+                                <select value={leadForm.UnitType__c} data-field="UnitType__c" onchange={handleLeadFormChange} required>
+                                    <option value="">Select</option>
+                                    <template for:each={unitTypeOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="sales-field sales-field--wide">
+                                <span>Notes</span>
+                                <textarea value={leadForm.Description} data-field="Description" onchange={handleLeadFormChange}></textarea>
+                            </label>
+                        </div>
+
+                        <!-- Company Details renders only for organization leads. It is a
+                             SEPARATE.sales-form-grid, not a heading dropped inside the
+                             owner grid, so each section resolves its own dangling-last-field
+                             rule (.sales-form-grid >.sales-field:last-child:nth-child(odd))
+                             and neither can shift the other's column parity. Individual
+                             leads render no heading and no second grid, so that path is
+                             byte-for-byte what it was. -->
+                        <template lwc:if={isOrganizationLead}>
+                            <h4 class="form-subsection">Company Details</h4>
+                            <div class="sales-form-grid">
+                                <label class="sales-field">
+                                    <span>Organization name</span>
+                                    <input value={leadForm.Name} data-field="Name" onchange={handleLeadFormChange} required />
+                                </label>
+                                <label class="sales-field">
+                                    <span>Unified number</span>
+                                    <input value={leadForm.UnifiedNumber__c} data-field="UnifiedNumber__c" onchange={handleLeadFormChange} required />
+                                </label>
+                                <label class="sales-field">
+                                    <span>VAT certificate type</span>
+                                    <select value={leadForm.vatCertificateType} data-field="vatCertificateType" onchange={handleLeadFormChange}>
+                                        <option value="">Select</option>
+                                        <template for:each={vatCertificateTypeOptions} for:item="option">
+                                            <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                        </template>
+                                    </select>
+                                </label>
+                                <label class="sales-field">
+                                    <span>VAT number</span>
+                                    <input value={leadForm.UAEVATRegisterNumber__c} data-field="UAEVATRegisterNumber__c" onchange={handleLeadFormChange} required={isVatRegistrationCertificate} />
+                                </label>
+                                <template lwc:if={showVatTemplateDownload}>
+                                    <div class="vat-template sales-field--wide">
+                                        <div class="vat-template__copy">
+                                            <strong>VAT Undertaking Certificate</strong>
+                                            <p>Please download the VAT Undertaking certificate, sign it, and upload it below.</p>
+                                        </div>
+                                        <a class="vat-template__link" href={vatTemplateUrl} download="VAT_Undertaking_Certificate.docx">
+                                            <lightning-icon icon-name="utility:download" size="xx-small" alternative-text=""></lightning-icon>
+                                            <span>Download Template (PDF)</span>
+                                        </a>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <p class="drawer-helper-text">
+                            Upload options follow the selected lead type and residency, matching the legacy lead process.
+                        </p>
+                        <template lwc:if={showKycTemplateDownload}>
+                            <div class="doc-template">
+                                <div class="doc-template__copy">
+                                    <strong>KYC Form</strong>
+                                    <p>Please download the KYC form, fill it carefully, and upload it under Complete KYC Form below.</p>
+                                </div>
+                                <a class="doc-template__link" href={kycTemplateUrl} download="KYC_Form.docx">
+                                    <lightning-icon icon-name="utility:download" size="xx-small" alternative-text=""></lightning-icon>
+                                    <span>Download KYC Form</span>
+                                </a>
+                            </div>
+                        </template>
+                        <!-- BP-015 - on edit a card that already holds a file shows it
+                             (open + delete) and stays locked until that file is deleted,
+                             so the same slot can never collect duplicates. -->
+                        <template lwc:if={documentsError}>
+                            <p class="sales-inline-message sales-inline-message--error document-grid-note" role="alert">
+                                <span>Uploaded files could not be loaded, so uploads are paused.</span>
+                                <button class="doc-confirm__no" type="button" onclick={handleRetryLeadDocuments}>Retry</button>
+                            </p>
+                        </template>
+                        <section class="document-input-grid" aria-label="Lead document uploads">
+                            <template for:each={leadDocumentInputs} for:item="doc">
+                                <template lwc:if={doc.isLocked}>
+                                    <div key={doc.key} class="document-input document-input--locked" aria-busy={isDocumentsLoading}>
+                                        <span>{doc.label}</span>
+                                        <template for:each={doc.existingFiles} for:item="file">
+                                            <div key={file.key} class="document-input__file">
+                                                <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" title={file.title}>{file.title}</a>
+                                                <template lwc:if={file.isConfirmingDelete}>
+                                                    <span class="doc-confirm" role="alertdialog" aria-label="Confirm file deletion">
+                                                        <span class="doc-confirm__question">Delete this file?</span>
+                                                        <button class="doc-confirm__yes" type="button" data-file-id={file.key} onclick={handleConfirmDeleteLeadFile} disabled={isLeadFileActionDisabled}>Delete</button>
+                                                        <button class="doc-confirm__no" type="button" onclick={handleCancelDeleteLeadFile} disabled={isLeadFileActionDisabled}>Cancel</button>
+                                                    </span>
+                                                </template>
+                                                <template lwc:else>
+                                                    <button class="document-input__remove" type="button" data-file-id={file.key} onclick={handleRequestDeleteLeadFile} disabled={isLeadFileActionDisabled}>Delete</button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <small>{doc.lockedHint}</small>
+                                    </div>
+                                </template>
+                                <template lwc:else>
+                                    <label key={doc.key} class="document-input">
+                                        <span>{doc.label}</span>
+                                        <small>{doc.fileName}</small>
+                                        <span class="document-input__button">
+                                            <lightning-icon icon-name="utility:upload" size="xx-small" alternative-text=""></lightning-icon>
+                                            Upload Files
+                                        </span>
+                                        <input class="document-input__native" type="file" data-document={doc.slotKey} accept=".pdf,.png,.jpg,.jpeg" onchange={handleLeadFile} multiple={doc.multiple} required={doc.required} />
+                                    </label>
+                                </template>
+                            </template>
+                        </section>
+                    </section>
+                    <div slot="footer" class="form-action-rail">
+                        <template lwc:if={leadFormHasMessage}>
+                            <p class={leadFormMessageClass} role="alert" aria-live="polite">{leadFormMessage}</p>
+                        </template>
+                        <div class="drawer-footer-actions">
+                            <button class="sales-icon-action" type="button" onclick={closeDrawer}>Cancel</button>
+                            <button class="sales-primary-action" type="button" onclick={handleSaveLead} disabled={isLeadFormBusy}>
+                                <template lwc:if={isLeadFormBusy}>
+                                    <span class="button-spinner" aria-hidden="true"></span>
+                                </template>
+                                <span>{leadSaveButtonLabel}</span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isOpportunityDrawer}>
+                    <section class="drawer-section">
+                        <dl class="detail-grid">
+                            <div>
+                                <dt>Email</dt>
+                                <dd>{selectedOpportunity.emailLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Phone</dt>
+                                <dd>{selectedOpportunity.mobileLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Project</dt>
+                                <dd>{selectedOpportunity.projectName}</dd>
+                            </div>
+                            <div>
+                                <dt>Broker agent</dt>
+                                <dd>{selectedOpportunity.brokerAgentName}</dd>
+                            </div>
+                            <div>
+                                <dt>Sales manager</dt>
+                                <dd>{selectedOpportunity.salesManagerName}</dd>
+                            </div>
+                        </dl>
+                        <section class="sales-order-list" aria-label="Related sales orders">
+                            <h4>Related sales orders</h4>
+                            <template lwc:if={isSalesOrdersLoading}>
+                                <c-mbpr_loading-state rows="2" label="Loading sales orders"></c-mbpr_loading-state>
+                            </template>
+                            <template lwc:elseif={salesOrdersError}>
+                                <p class="sales-inline-message sales-inline-message--error">Sales orders could not be loaded.</p>
+                            </template>
+                            <template lwc:elseif={hasSalesOrders}>
+                                <ul>
+                                    <template for:each={salesOrders} for:item="order">
+                                        <li key={order.key}>
+                                            <div>
+                                                <strong>{order.name}</strong>
+                                                <span>{order.projectName} / {order.unitName}</span>
+                                                <span class="sales-order-rooms">No Of Rooms: {order.bedrooms}</span>
+                                            </div>
+                                            <c-mbpr_status-badge label={order.statusLabel} tone={order.statusTone} size="small"></c-mbpr_status-badge>
+                                            <span>{order.totalAmountLabel}</span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:else>
+                                <p class="sales-inline-message">No related sales orders returned for this opportunity.</p>
+                            </template>
+                        </section>
+                    </section>
+                </template>
+
+                <template lwc:elseif={isEoiDetailDrawer}>
+                    <section class="drawer-section">
+                        <div class="drawer-hero drawer-hero--split">
+                            <c-mbpr_status-badge label={selectedEoi.statusLabel} tone={selectedEoi.statusTone}></c-mbpr_status-badge>
+                            <template lwc:if={selectedEoi.hasRowAction}>
+                                <button
+                                    class={selectedEoi.rowActionButtonClass}
+                                    type="button"
+                                    data-id={selectedEoi.paymentRecordId}
+                                    data-action={selectedEoi.rowAction}
+                                    disabled={isEoiActionBusy}
+                                    onclick={handleEoiRowAction}
+                                >
+                                    <template lwc:if={selectedEoi.rowActionBusy}>
+                                        <span class="button-spinner" aria-hidden="true"></span>
+                                    </template>
+                                    <span>{selectedEoi.rowActionLabel}</span>
+                                </button>
+                            </template>
+                        </div>
+                        <dl class="detail-grid">
+                            <div>
+                                <dt>EOI Name</dt>
+                                <dd>{selectedEoi.eoiNumberLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Payment (CP) Number</dt>
+                                <dd>{selectedEoi.paymentNameLabel}</dd>
+                            </div>
+                            <div>
+                                <dt>Customer</dt>
+                                <dd>{selectedEoi.customerName}</dd>
+                            </div>
+                            <div>
+                                <dt>Email</dt>
+                                <dd>{selectedEoi.customerEmail}</dd>
+                            </div>
+                            <div>
+                                <dt>Phone</dt>
+                                <dd>{selectedEoi.customerMobile}</dd>
+                            </div>
+                            <div>
+                                <dt>Project</dt>
+                                <dd>{selectedEoi.projectName}</dd>
+                            </div>
+                            <div>
+                                <dt>Interest</dt>
+                                <dd>{selectedEoi.unitType} / {selectedEoi.bedrooms}</dd>
+                            </div>
+                            <div>
+                                <dt>Amount</dt>
+                                <dd>{selectedEoi.amountLabel}</dd>
+                            </div>
+                        </dl>
+                    </section>
+                    <div slot="footer" class="form-action-rail">
+                        <div class="drawer-footer-actions">
+                            <button class="sales-icon-action" type="button" onclick={closeDrawer}>Close</button>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isEoiFormDrawer}>
+                    <section class="drawer-section">
+                        <section class="eoi-path" aria-label="Expression of Interest path">
+                            <ol class="eoi-path__steps">
+                                <template for:each={eoiPathSteps} for:item="step">
+                                    <li key={step.key} class={step.className} aria-current={step.ariaCurrent}>
+                                        <span class="eoi-path__node" aria-hidden="true">{step.marker}</span>
+                                        <span class="eoi-path__copy">
+                                            <strong>{step.label}</strong>
+                                            <small>{step.caption}</small>
+                                        </span>
+                                    </li>
+                                </template>
+                            </ol>
+                            <div class="eoi-path__rail" aria-hidden="true">
+                                <span style={eoiPathFillStyle}></span>
+                            </div>
+                        </section>
+
+                        <template lwc:if={isEoiCustomerStep}>
+                            <section class="drawer-section">
+                                <!-- Customer type first; the grid below follows it. Same control
+                                     as the Add Lead drawer, Individual selected by default. -->
+                                <div class="segmented-control segmented-control--full" role="group" aria-label="Customer type">
+                                    <template for:each={eoiCustomerTypeOptions} for:item="option">
+                                        <button
+                                            key={option.value}
+                                            class={option.className}
+                                            type="button"
+                                            data-type={option.value}
+                                            aria-pressed={option.ariaPressed}
+                                            disabled={isEoiSaving}
+                                            onclick={handleEoiCustomerType}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <template lwc:if={isEoiIndividualCustomer}>
+                                    <div class="sales-form-grid">
+                                        <label class="sales-field">
+                                            <span>First name</span>
+                                            <input value={eoiCustomer.firstName} data-field="firstName" onchange={handleEoiCustomerChange} required />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Last name</span>
+                                            <input value={eoiCustomer.lastName} data-field="lastName" onchange={handleEoiCustomerChange} required />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Email</span>
+                                            <input type="email" value={eoiCustomer.email} data-field="email" onchange={handleEoiCustomerChange} onblur={handleEoiEmailBlur} required />
+                                            <template lwc:if={showEoiEmailStatus}>
+                                                <small class={eoiEmailStatusClass} role="status" aria-live="polite">
+                                                    <template lwc:if={isEoiEmailChecking}>
+                                                        <i class="button-spinner" aria-hidden="true"></i>
+                                                    </template>
+                                                    {eoiEmailStatusText}
+                                                </small>
+                                            </template>
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Mobile</span>
+                                            <input type="tel" value={eoiCustomer.mobile} data-field="mobile" placeholder="+971 5X XXX XXXX" onchange={handleEoiCustomerChange} onblur={handleEoiMobileBlur} required />
+                                            <template lwc:if={showEoiMobileStatus}>
+                                                <small class={eoiMobileStatusClass} role="status" aria-live="polite">
+                                                    <template lwc:if={isEoiMobileChecking}>
+                                                        <i class="button-spinner" aria-hidden="true"></i>
+                                                    </template>
+                                                    {eoiMobileStatusText}
+                                                </small>
+                                            </template>
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Resident status</span>
+                                            <select value={eoiCustomer.residentStatus} data-field="residentStatus" onchange={handleEoiCustomerChange} required>
+                                                <option value="">Select</option>
+                                                <template for:each={eoiResidentOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Nationality</span>
+                                            <select value={eoiCustomer.nationality} data-field="nationality" onchange={handleEoiCustomerChange} required>
+                                                <option value="">Select</option>
+                                                <template for:each={eoiNationalityOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                        <template lwc:if={showEoiCountryField}>
+                                            <label class="sales-field">
+                                                <span>Country of residence</span>
+                                                <select value={eoiCustomer.country} data-field="country" onchange={handleEoiCustomerChange} disabled={isEoiCountryLocked} required>
+                                                    <option value="">Select</option>
+                                                    <template for:each={eoiCountryOptions} for:item="option">
+                                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                    </template>
+                                                </select>
+                                            </label>
+                                        </template>
+                                        <!-- Identity fields appear only once residency is chosen. -->
+                                        <template lwc:if={isEoiResidentCustomer}>
+                                            <label class="sales-field">
+                                                <span>Emirates ID</span>
+                                                <input value={eoiCustomer.emiratesId} data-field="emiratesId" placeholder="784-XXXX-XXXXXXX-X" inputmode="numeric" maxlength="18" oninput={handleEoiEmiratesIdInput} onchange={handleEoiCustomerChange} required />
+                                            </label>
+                                            <label class="sales-field">
+                                                <span>Passport number</span>
+                                                <input value={eoiCustomer.passportNumber} data-field="passportNumber" onchange={handleEoiCustomerChange} />
+                                            </label>
+                                        </template>
+                                        <template lwc:elseif={isEoiNonResidentCustomer}>
+                                            <label class="sales-field">
+                                                <span>Passport number</span>
+                                                <input value={eoiCustomer.passportNumber} data-field="passportNumber" onchange={handleEoiCustomerChange} required />
+                                            </label>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template lwc:else>
+                                    <h4 class="form-subsection">Company Details</h4>
+                                    <div class="sales-form-grid">
+                                        <label class="sales-field">
+                                            <span>Organization name</span>
+                                            <input value={eoiCustomer.company} data-field="company" onchange={handleEoiCustomerChange} required />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Trade licence number</span>
+                                            <input value={eoiCustomer.tradeLicenseNumber} data-field="tradeLicenseNumber" onchange={handleEoiCustomerChange} required />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Country of registration</span>
+                                            <select value={eoiCustomer.country} data-field="country" onchange={handleEoiCustomerChange}>
+                                                <option value="">Select</option>
+                                                <template for:each={eoiCountryOptions} for:item="option">
+                                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <h4 class="form-subsection">Authorised Contact</h4>
+                                    <div class="sales-form-grid">
+                                        <label class="sales-field">
+                                            <span>First name</span>
+                                            <input value={eoiCustomer.firstName} data-field="firstName" onchange={handleEoiCustomerChange} required />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Last name</span>
+                                            <input value={eoiCustomer.lastName} data-field="lastName" onchange={handleEoiCustomerChange} required />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Email</span>
+                                            <input type="email" value={eoiCustomer.email} data-field="email" onchange={handleEoiCustomerChange} onblur={handleEoiEmailBlur} required />
+                                            <template lwc:if={showEoiEmailStatus}>
+                                                <small class={eoiEmailStatusClass} role="status" aria-live="polite">
+                                                    <template lwc:if={isEoiEmailChecking}>
+                                                        <i class="button-spinner" aria-hidden="true"></i>
+                                                    </template>
+                                                    {eoiEmailStatusText}
+                                                </small>
+                                            </template>
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Mobile</span>
+                                            <input type="tel" value={eoiCustomer.mobile} data-field="mobile" placeholder="+971 5X XXX XXXX" onchange={handleEoiCustomerChange} onblur={handleEoiMobileBlur} required />
+                                            <template lwc:if={showEoiMobileStatus}>
+                                                <small class={eoiMobileStatusClass} role="status" aria-live="polite">
+                                                    <template lwc:if={isEoiMobileChecking}>
+                                                        <i class="button-spinner" aria-hidden="true"></i>
+                                                    </template>
+                                                    {eoiMobileStatusText}
+                                                </small>
+                                            </template>
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Emirates ID</span>
+                                            <input value={eoiCustomer.emiratesId} data-field="emiratesId" placeholder="784-XXXX-XXXXXXX-X" inputmode="numeric" maxlength="18" oninput={handleEoiEmiratesIdInput} onchange={handleEoiCustomerChange} />
+                                        </label>
+                                        <label class="sales-field">
+                                            <span>Passport number</span>
+                                            <input value={eoiCustomer.passportNumber} data-field="passportNumber" onchange={handleEoiCustomerChange} />
+                                        </label>
+                                    </div>
+                                </template>
+                            </section>
+                        </template>
+
+                        <template lwc:elseif={isEoiVerificationStep}>
+                            <section class="verification-step" aria-label="Verify customer">
+                                <h4 class="verification-heading">{verificationHeading}</h4>
+                                <div class="verification-channels" role="radiogroup" aria-label="Send the code by">
+                                    <template for:each={eoiVerificationChannels} for:item="channel">
+                                        <button
+                                            key={channel.key}
+                                            class={channel.className}
+                                            type="button"
+                                            role="radio"
+                                            data-method={channel.key}
+                                            aria-checked={channel.ariaChecked}
+                                            aria-disabled={channel.ariaDisabled}
+                                            disabled={channel.disabled}
+                                            onclick={handleSelectVerificationChannel}
+                                        >
+                                            <span class="verification-channel__icon">
+                                                <lightning-icon icon-name={channel.icon} size="x-small" alternative-text=""></lightning-icon>
+                                            </span>
+                                            <span class="verification-channel__copy">
+                                                <strong>{channel.label}</strong>
+                                                <span>{channel.destination}</span>
+                                            </span>
+                                            <span class="verification-channel__state">
+                                                <template lwc:if={channel.showSoon}>
+                                                    <span class="verification-soon">Coming soon</span>
+                                                </template>
+                                                <template lwc:elseif={channel.showSpinner}>
+                                                    <span class="button-spinner button-spinner--dark" role="img" aria-label="Sending"></span>
+                                                </template>
+                                                <template lwc:elseif={channel.showSent}>
+                                                    <span class="verification-sent-tag">
+                                                        <lightning-icon icon-name="utility:check" size="xx-small" alternative-text=""></lightning-icon>
+                                                        <span>Sent</span>
+                                                    </span>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="verification-radio" aria-hidden="true"></span>
+                                                </template>
+                                            </span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <template lwc:if={showSendCodeButton}>
+                                    <button class="sales-primary-action verification-action" type="button" onclick={handleSendVerificationCode} disabled={isSendCodeDisabled}>
+                                        <template lwc:if={isSendingVerification}>
+                                            <span class="button-spinner" aria-hidden="true"></span>
+                                        </template>
+                                        <span>{sendCodeButtonLabel}</span>
+                                    </button>
+                                </template>
+                                <template lwc:if={showVerificationCodePanel}>
+                                    <div class={verificationCodePanelClass}>
+                                        <div class="verification-sent">
+                                            <span class="verification-sent__icon">
+                                                <lightning-icon icon-name="utility:send" size="xx-small" alternative-text=""></lightning-icon>
+                                            </span>
+                                            <span>Code sent to <b>{verificationMaskedTarget}</b></span>
+                                            <button class="verification-link" type="button" onclick={handleChangeVerificationChannel} disabled={isChangeChannelDisabled}>Change</button>
+                                        </div>
+                                        <div class="otp-row" aria-label="Verification code">
+                                            <template for:each={verificationDigits} for:item="digit">
+                                                <input
+                                                    key={digit.key}
+                                                    value={digit.value}
+                                                    data-otp-index={digit.index}
+                                                    maxlength="1"
+                                                    inputmode="numeric"
+                                                    autocomplete="one-time-code"
+                                                    aria-label={digit.ariaLabel}
+                                                    disabled={isCodeInputDisabled}
+                                                    oninput={handleVerificationCodeInput}
+                                                    onkeydown={handleVerificationCodeKeydown}
+                                                    onpaste={handleVerificationCodePaste}
+                                                />
+                                            </template>
+                                        </div>
+                                        <template lwc:if={verificationCodeError}>
+                                            <p class="verification-error" role="alert">{verificationCodeError}</p>
+                                        </template>
+                                        <template lwc:if={showVerificationExpiry}>
+                                            <p class={verificationExpiryClass}>{verificationExpiryText}</p>
+                                        </template>
+                                        <div class="verification-actions">
+                                            <button class="sales-icon-action verification-action" type="button" onclick={handleVerificationResend} disabled={isResendDisabled}>
+                                                <template lwc:if={showResendSpinner}>
+                                                    <span class="button-spinner button-spinner--dark" aria-hidden="true"></span>
+                                                </template>
+                                                <span>{resendButtonLabel}</span>
+                                            </button>
+                                            <button class="sales-primary-action verification-action" type="button" onclick={handleVerifyCode} disabled={isVerifyDisabled}>
+                                                <template lwc:if={isVerifyingCode}>
+                                                    <span class="button-spinner" aria-hidden="true"></span>
+                                                </template>
+                                                <span>{verificationButtonLabel}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </section>
+                        </template>
+                        <template lwc:elseif={isEoiInterestsStep}>
+                            <template lwc:if={isEoiCatalogUnavailable}>
+                                <p class="sales-inline-message sales-inline-message--warning" role="status">
+                                    {eoiCatalogUnavailableMessage}
+                                </p>
+                            </template>
+
+                            <template lwc:if={isEoiCreating}>
+                                <div class="eoi-progress" role="status" aria-live="polite">
+                                    <span class="eoi-progress__spinner" aria-hidden="true"></span>
+                                    <strong>Sending payment links to the customer</strong>
+                                    <span>{eoiCreatingCaption}</span>
+                                </div>
+                            </template>
+
+                            <div class="interest-summary">
+                                <div class="interest-summary__copy">
+                                    <strong>{eoiInterestSummary.countLabel}</strong>
+                                </div>
+                                <div class="interest-summary__total">
+                                    <small>Total</small>
+                                    <span>{eoiInterestSummary.totalLabel}</span>
+                                </div>
+                            </div>
+
+                            <div class={eoiInterestStackClass}>
+                                <template for:each={eoiInterestRows} for:item="row" for:index="index">
+                                    <div key={row.key} class="interest-item">
+                                        <template lwc:if={row.isOpen}>
+                                            <article class={row.cardClass}>
+                                                <div class="interest-card__head">
+                                                    <button
+                                                        class="interest-card__toggle"
+                                                        type="button"
+                                                        data-key={row.key}
+                                                        onclick={handleToggleEoiInterest}
+                                                        aria-expanded="true"
+                                                        title={row.toggleTitle}
+                                                    >
+                                                        <span class={row.badgeClass}>{row.badgeLabel}</span>
+                                                        <strong>Interest {row.displayIndex}</strong>
+                                                        <span class="interest-chevron interest-chevron--open" aria-hidden="true">
+                                                            <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text=""></lightning-icon>
+                                                        </span>
+                                                    </button>
+                                                    <button type="button" data-index={index} onclick={handleRemoveEoiInterest} disabled={row.isRemoveDisabled}>Remove</button>
+                                                </div>
+                                                <div class="sales-form-grid">
+                                                    <label class="sales-field">
+                                                        <span>Project</span>
+                                                        <select value={row.selectedProjectId} data-index={index} data-field="selectedProjectId" onchange={handleEoiInterestChange} disabled={row.isProjectDisabled} required>
+                                                            <option value="">Select</option>
+                                                            <template for:each={row.projectOptions} for:item="option">
+                                                                <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                            </template>
+                                                        </select>
+                                                    </label>
+                                                    <label class="sales-field">
+                                                        <span>Unit type</span>
+                                                        <select value={row.selectedUnitType} data-index={index} data-field="selectedUnitType" onchange={handleEoiInterestChange} disabled={row.isUnitTypeDisabled} required>
+                                                            <option value="">Select</option>
+                                                            <template for:each={row.unitTypeOptions} for:item="option">
+                                                                <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                            </template>
+                                                        </select>
+                                                    </label>
+                                                    <label class="sales-field">
+                                                        <span>Bedrooms</span>
+                                                        <select value={row.selectedBedrooms} data-index={index} data-field="selectedBedrooms" onchange={handleEoiInterestChange} disabled={row.isBedroomsDisabled} required>
+                                                            <option value="">Select</option>
+                                                            <template for:each={row.bedroomOptions} for:item="option">
+                                                                <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                                            </template>
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                                <div class="interest-card__foot">
+                                                    <span class="interest-card__meta">{row.metaLine}</span>
+                                                    <span class={row.amountClass}>{row.amountLabel}</span>
+                                                </div>
+                                            </article>
+                                        </template>
+                                        <template lwc:else>
+                                            <button
+                                                class={row.rowClass}
+                                                type="button"
+                                                data-key={row.key}
+                                                onclick={handleToggleEoiInterest}
+                                                aria-expanded="false"
+                                                title={row.toggleTitle}
+                                            >
+                                                <span class={row.badgeClass}>{row.badgeLabel}</span>
+                                                <span class="interest-row__copy">
+                                                    <strong>Interest {row.displayIndex}</strong>
+                                                    <small>{row.metaLine}</small>
+                                                </span>
+                                                <span class={row.amountClass}>{row.amountLabel}</span>
+                                                <span class="interest-chevron" aria-hidden="true">
+                                                    <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text=""></lightning-icon>
+                                                </span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </template>
+                                <button class="interest-add" type="button" onclick={handleAddEoiInterest} disabled={isEoiAddInterestDisabled} title={eoiAddInterestTitle}>
+                                    <lightning-icon icon-name="utility:add" size="xx-small" alternative-text=""></lightning-icon>
+                                    <span>Add another interest</span>
+                                </button>
+                            </div>
+                        </template>
+
+                        <template lwc:elseif={isEoiSuccessStep}>
+                            <div class="eoi-done">
+                                <div class="eoi-done__hero">
+                                    <span class="eoi-done__badge">
+                                        <lightning-icon icon-name="utility:check" size="x-small" alternative-text="" variant="inverse"></lightning-icon>
+                                    </span>
+                                    <strong>{eoiSubmittedHeading}</strong>
+                                    <span>{eoiSubmittedTotalLabel}</span>
+                                </div>
+                                <div class="eoi-done__list">
+                                    <template for:each={eoiSubmittedLinkRows} for:item="link">
+                                        <div key={link.key} class={link.className}>
+                                            <span class="eoi-link-row__ref">
+                                                <template lwc:if={link.isSent}>{link.paymentName}</template>
+                                                <template lwc:elseif={link.isPending}><span class="button-spinner button-spinner--dark" aria-label="Sending"></span></template>
+                                                <template lwc:else>Not sent</template>
+                                            </span>
+                                            <span class="eoi-link-row__copy">
+                                                <strong>{link.title}</strong>
+                                                <span>{link.subtitle}</span>
+                                                <template lwc:if={link.isFailed}>
+                                                    <em>{link.error}</em>
+                                                </template>
+                                            </span>
+                                            <span class="eoi-link-row__amount">{link.amountLabel}</span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <template lwc:if={hasEoiLinkSent}>
+                                    <div class="eoi-linkline">
+                                        <span class="eoi-linkline__icon">
+                                            <lightning-icon icon-name="utility:send" size="xx-small" alternative-text="" variant="inverse"></lightning-icon>
+                                        </span>
+                                        <span class="eoi-linkline__copy">
+                                            <span>{eoiSubmittedContactLine}</span>
+                                            <small>Valid for 1 day</small>
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </section>
+                    <template lwc:if={showEoiFormFooter}>
+                        <div slot="footer" class="form-action-rail">
+                            <template lwc:if={eoiFormHasMessage}>
+                                <p class={eoiFormMessageClass} role="alert" aria-live="polite">{eoiFormMessage}</p>
+                            </template>
+                            <div class="drawer-footer-actions">
+                                <template lwc:if={showEoiCancelButton}>
+                                    <button class="sales-icon-action" type="button" onclick={closeDrawer} disabled={isEoiCancelDisabled}>Cancel</button>
+                                </template>
+                                <template lwc:if={isEoiCustomerStep}>
+                                    <button class="sales-primary-action" type="button" onclick={handleCreateEoiLead} disabled={isEoiSaving}>
+                                        <template lwc:if={isEoiSaving}>
+                                            <span class="button-spinner" aria-hidden="true"></span>
+                                        </template>
+                                        <span>{eoiCustomerButtonLabel}</span>
+                                    </button>
+                                </template>
+                                <template lwc:elseif={isEoiInterestsStep}>
+                                    <button class="sales-primary-action" type="button" onclick={handleSubmitEoi} disabled={isEoiSubmitDisabled}>
+                                        <template lwc:if={isEoiSaving}>
+                                            <span class="button-spinner" aria-hidden="true"></span>
+                                        </template>
+                                        <span>{eoiSubmitButtonLabel}</span>
+                                    </button>
+                                </template>
+                                <template lwc:elseif={isEoiSuccessStep}>
+                                    <template lwc:if={hasEoiLinkFailures}>
+                                        <button class="sales-icon-action" type="button" onclick={handleRetryEoiPaymentLinks} disabled={isEoiRetryingLinks}>
+                                            <template lwc:if={isEoiRetryingLinks}>
+                                                <span class="button-spinner button-spinner--dark" aria-hidden="true"></span>
+                                            </template>
+                                            <span>{eoiRetryLinksLabel}</span>
+                                        </button>
+                                    </template>
+                                    <button class="sales-primary-action" type="button" onclick={handleEoiSubmitDone} disabled={isEoiRetryingLinks}>{eoiDoneLabel}</button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </c-mbpr_detail-drawer>
+        </template>
+
+        <!-- BP-058: the cancel confirmation. A direct child of the console, never inside the drawer,
+             so no ancestor transform can trap a fixed overlay. -->
+        <template lwc:if={isEoiCancelOpen}>
+            <div class="eoi-confirm-scrim" role="presentation" onclick={handleEoiCancelDismiss}>
+                <div
+                    class="eoi-confirm"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="eoiCancelTitle"
+                    tabindex="-1"
+                    onclick={stopEoiCancelBubble}
+                    onkeydown={handleEoiCancelKeydown}
+                >
+                    <h2 id="eoiCancelTitle" class="eoi-confirm__title">Cancel</h2>
+                    <dl class="eoi-confirm__rows">
+                        <div>
+                            <dt>Payment</dt>
+                            <dd>{eoiCancelRow.paymentName}</dd>
+                        </div>
+                        <div>
+                            <dt>EOI</dt>
+                            <dd>{eoiCancelRow.eoiNumber}</dd>
+                        </div>
+                        <div>
+                            <dt>Customer</dt>
+                            <dd>{eoiCancelRow.customerName}</dd>
+                        </div>
+                        <div>
+                            <dt>Amount</dt>
+                            <dd>{eoiCancelRow.amountLabel}</dd>
+                        </div>
+                    </dl>
+                    <div class="eoi-confirm__foot">
+                        <button class="eoi-confirm__no" type="button" onclick={handleEoiCancelDismiss} disabled={isEoiActionBusy}>Cancel</button>
+                        <button class="eoi-confirm__yes" type="button" onclick={handleEoiCancelConfirm} disabled={isEoiActionBusy}>
+                            <template lwc:if={isEoiActionBusy}>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </template>
+                            <span>Proceed</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </section>
+</template>

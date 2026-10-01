@@ -1,0 +1,70 @@
+<template>
+  <!-- Header with logo and mobile menu toggle -->
+  <header class="header">
+    <div class="logo">
+      <a href="/"><img src={logowhite} alt="Modon" /></a>
+    </div>
+    <button class="menu-toggle" onclick={handleToggleMenu} title="Toggle navigation">☰</button>
+  </header>
+<!---->
+  <!-- Tab container -->
+  <div class="tab-container">
+    <div class="top-bar">
+       <template if:true={showMyInfoContent}>
+        <!-- Child profile component -->
+        <c-mbp_logged-in-user-details onback={handleBackFromProfile}></c-mbp_logged-in-user-details>
+    </template>
+      <!-- Tabs: mobile view (only when menu is open) -->
+     
+      <template if:true={isMenuOpen}>
+        <div class="tab-header mobile-visible">
+          <template for:each={computedTabs} for:item="tab">
+            <button key={tab.label} class={tab.className} onclick={handleTabClick}>
+              {tab.label}
+            </button>
+          </template>
+        </div>
+      </template>
+
+      <!-- Tabs: desktop view (always visible) -->
+      <div class="tab-header desktop-visible">
+        <template for:each={computedTabs} for:item="tab">
+          <button key={tab.label} class={tab.className} onclick={handleTabClick}>
+            {tab.label}
+          </button>
+        </template>
+      </div>
+
+
+      <!-- Icons (notifications + profile) -->
+      <div class="top-icons">
+        <button class="icon-button" title="Notifications">
+          <img src={notificationIcon} alt="Notifications" class="icon-image" />
+        </button>
+
+        <div class="profile-menu">
+          <button class="icon-button" onclick={toggleProfileMenu} aria-haspopup="true" aria-expanded={showProfileMenu}>
+            <img src={profileIcon} alt="Profile" class="icon-image" />
+          </button>
+          <p class="highlighted-name">{firstName} {middleName} {lastName}</p>
+          <template if:true={showProfileMenu}>
+            <div class="dropdown-menu">
+              <button onclick={handleMyInfo}>My Profile</button>
+              <button onclick={handleLogout}>Logout</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+   <footer class="footer">© Modon 2025 All rights reserved</footer>
+   <!-- <div class="row">
+    <div class="col-md-4"><span class="footer">© Modon 2025 All rights reserved</span></div>
+    <div class="col-md-4"><span class="footer">Term and Conditions | Privacy Policy</span></div>
+    <div class="col-md-4"><span class="footer">Follow us in Social Media</span></div>
+   </div> -->
+ 
+</template>

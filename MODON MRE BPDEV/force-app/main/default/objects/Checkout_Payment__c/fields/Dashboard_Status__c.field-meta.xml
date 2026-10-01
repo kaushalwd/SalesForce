@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Dashboard_Status__c</fullName>
+    <description>Sales-facing view of Status, shown as EOI Status on the Checkout Payment console. Held as a formula so reports, list views and the LWC all read the same mapping. A lapsed hold still reads Paid while it is being recovered, and only becomes Refunded once the business has been told the deposit could not be taken again.</description>
+    <externalId>false</externalId>
+    <formula>CASE(
+  TEXT(Status__c),
+  &quot;Link Created&quot;, &quot;Pending Payment&quot;,
+  &quot;Authorized&quot;, &quot;Paid&quot;,
+  &quot;Captured&quot;, &quot;Paid&quot;,
+  &quot;Refunded&quot;, &quot;Refunded&quot;,
+  &quot;Partially Refunded&quot;, &quot;Refunded&quot;,
+  &quot;Voided&quot;, &quot;Refunded&quot;,
+  &quot;Declined&quot;, &quot;Declined&quot;,
+  &quot;Expired&quot;, &quot;Expired&quot;,
+  &quot;Authorization Expired&quot;, IF(Recovery_Alert_Sent__c, &quot;Refunded&quot;, &quot;Paid&quot;),
+  &quot;Pending Payment&quot;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Dashboard Status</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

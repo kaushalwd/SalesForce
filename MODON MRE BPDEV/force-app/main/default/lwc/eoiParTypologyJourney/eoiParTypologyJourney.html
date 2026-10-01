@@ -1,0 +1,307 @@
+<template>
+    <div class="par">
+
+        <template lwc:if={isLoadingStep}>
+            <section class="hero">
+                <div class="hero__media"></div>
+                <div class="hero__chrome">
+                    <div class="hero__center">
+                        <h1 class="display">Loading…</h1>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={isUnavailable}>
+            <section class="hero hero--closed">
+                <div class="hero__media hero__media--closed"></div>
+                <div class="hero__chrome">
+                    <header class="topbar topbar--hero">
+                        <div class="topbar__spacer"></div>
+                        <div class="brand">
+                            <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                        </div>
+                        <div class="topbar__spacer"></div>
+                    </header>
+                    <div class="hero__center">
+                        <h1 class="display">No <em>active launch</em></h1>
+                        <span class="rule"></span>
+                        <p class="subdued">Our next collection will be announced soon</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={isHero}>
+            <section class="hero">
+                <div class="hero__media"></div>
+                <div class="hero__chrome">
+                    <header class="topbar topbar--hero">
+                        <div class="topbar__spacer"></div>
+                        <div class="brand">
+                            <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                        </div>
+                        <div class="topbar__spacer"></div>
+                    </header>
+                    <div class="hero__center">
+                        <h1 class="display">Thank you for your <em>support</em></h1>
+                        <span class="rule"></span>
+                        <p class="subdued">We are no longer accepting new registrations</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={showStepHeader}>
+            <header class="topbar topbar--step">
+                <button class="back" onclick={handleBack}>‹</button>
+                <div class="brand brand--dark">
+                    <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                </div>
+                <div class="topbar__spacer"></div>
+            </header>
+        </template>
+
+        <template lwc:if={isIdentity}>
+            <section class="split">
+                <aside class="split__media"></aside>
+                <main class="split__form">
+                    <p class="eyebrow eyebrow--dark">Identity</p>
+                    <h2 class="display display--md">Please confirm your <em>details</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <div class="grid grid--two">
+                        <div class="field">
+                            <label class="field__label">First Name</label>
+                            <input class="field__input" type="text" data-field="firstName"
+                                value={form.firstName} oninput={handleFieldChange} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label">Last Name</label>
+                            <input class="field__input" type="text" data-field="lastName"
+                                value={form.lastName} oninput={handleFieldChange} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label">Email</label>
+                            <input class="field__input" type="email" data-field="email"
+                                value={form.email} oninput={handleFieldChange} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label">Mobile</label>
+                            <input class="field__input" type="tel" data-field="mobile"
+                                placeholder="+9715XXXXXXXX"
+                                value={form.mobile} oninput={handleFieldChange} />
+                        </div>
+                    </div>
+
+                    <div class="field field--block">
+                        <label class="field__label">Resident Status</label>
+                        <div class="segmented">
+                            <button class={residentClass} data-value="Resident" onclick={handleSelectResidentStatus}>Resident</button>
+                            <button class={nonResidentClass} data-value="Non-Resident" onclick={handleSelectResidentStatus}>Non-Resident</button>
+                        </div>
+                    </div>
+
+                    <template lwc:if={isResident}>
+                        <div class="field">
+                            <label class="field__label">Emirates ID No.</label>
+                            <input class="field__input" type="text" data-field="emiratesId"
+                                placeholder="784-XXXX-XXXXXXX-X"
+                                value={form.emiratesId} oninput={handleFieldChange} />
+                        </div>
+                    </template>
+                    <template lwc:if={isNonResident}>
+                        <div class="field">
+                            <label class="field__label">Passport Number</label>
+                            <input class="field__input" type="text" data-field="passportNumber"
+                                value={form.passportNumber} oninput={handleFieldChange} />
+                        </div>
+                    </template>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="error">{errorMessage}</p>
+                    </template>
+
+                    <footer class="actions">
+                        <button class="cta cta--pill" onclick={handleIdentityContinue}>
+                            <em>Continue</em> <span class="cta__arrow">⟶</span>
+                        </button>
+                    </footer>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isVerification}>
+            <section class="split">
+                <aside class="split__media split__media--dim"></aside>
+                <main class="split__form">
+                    <p class="eyebrow eyebrow--dark">Verify</p>
+                    <h2 class="display display--md">Verify your <em>contact details</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <div class="field field--block">
+                        <label class="field__label">Send a verification code via:</label>
+                        <div class="segmented">
+                            <button class={emailChannelClass} data-value="Email" onclick={handleSelectChannel}>Email</button>
+                            <button class={smsChannelClass} data-value="SMS" onclick={handleSelectChannel}>SMS</button>
+                        </div>
+                    </div>
+
+                    <template lwc:if={verificationRequestId}>
+                        <p class="subdued">We sent a 6-digit code to <strong>{maskedTarget}</strong></p>
+                        <div class="field field--block">
+                            <label class="field__label">Verification Code</label>
+                            <input class="field__input field__input--otp" type="text" inputmode="numeric"
+                                maxlength="6" value={enteredCode} oninput={handleCodeChange} />
+                        </div>
+
+                        <template lwc:if={errorMessage}>
+                            <p class="error">{errorMessage}</p>
+                        </template>
+
+                        <footer class="actions actions--row">
+                            <button class="cta cta--pill" onclick={handleVerify}>
+                                <em>Verify</em> <span class="cta__arrow">⟶</span>
+                            </button>
+                            <button class="link" onclick={handleResend}>Resend code</button>
+                        </footer>
+                    </template>
+
+                    <template lwc:else>
+                        <template lwc:if={errorMessage}>
+                            <p class="error">{errorMessage}</p>
+                        </template>
+                        <footer class="actions">
+                            <button class="cta cta--pill" onclick={handleSendCode}>
+                                <em>Send Code</em> <span class="cta__arrow">⟶</span>
+                            </button>
+                        </footer>
+                    </template>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isTypology}>
+            <section class="split">
+                <aside class="split__media split__media--residence"></aside>
+                <main class="split__form split__form--scroll">
+                    <p class="eyebrow eyebrow--dark">Typology</p>
+                    <h2 class="display display--md">Select your <em>typology</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <template lwc:if={tileViewModels.length}>
+                        <div class="tiles">
+                            <template for:each={tileViewModels} for:item="tile">
+                                <button key={tile.rangeId} class={tile.tileClass}
+                                    data-range-id={tile.rangeId} onclick={handleSelectTile}>
+                                    <div class="tile__media">
+                                        <img src={tile.renderUrl} alt={tile.unitTypology}
+                                            class="tile__media-img" />
+                                        <span class="tile__chip">{tile.bedrooms}</span>
+                                    </div>
+                                    <div class="tile__body">
+                                        <p class="tile__title">{tile.unitTypology}</p>
+                                        <span class="tile__divider"></span>
+                                        <p class="tile__price">{tile.startingPrice}</p>
+                                    </div>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <p class="subdued">Typologies coming soon</p>
+                    </template>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="error">{errorMessage}</p>
+                    </template>
+
+                    <footer class="actions">
+                        <button class="cta cta--pill" onclick={handleTypologyContinue}>
+                            <em>Continue</em> <span class="cta__arrow">⟶</span>
+                        </button>
+                    </footer>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isReview}>
+            <section class="split">
+                <aside class="split__media split__media--review"></aside>
+                <main class="split__form">
+                    <p class="eyebrow eyebrow--dark">Confirm</p>
+                    <h2 class="display display--md">Review and <em>submit</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <div class="summary">
+                        <div class="summary__row">
+                            <span class="summary__label">Name</span>
+                            <span class="summary__value">{form.firstName} {form.lastName}</span>
+                        </div>
+                        <div class="summary__row">
+                            <span class="summary__label">Email</span>
+                            <span class="summary__value">{form.email}</span>
+                        </div>
+                        <div class="summary__row">
+                            <span class="summary__label">Mobile</span>
+                            <span class="summary__value">{form.mobile}</span>
+                        </div>
+                        <div class="summary__row">
+                            <span class="summary__label">Resident Status</span>
+                            <span class="summary__value">{form.residentStatus}</span>
+                        </div>
+                        <template lwc:if={selectedTileView}>
+                            <div class="summary__row">
+                                <span class="summary__label">Typology</span>
+                                <span class="summary__value">{selectedTileView.unitTypology}</span>
+                            </div>
+                            <div class="summary__row">
+                                <span class="summary__label">Starting Price</span>
+                                <span class="summary__value summary__value--gold">{selectedTileView.startingPrice}</span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="error">{errorMessage}</p>
+                    </template>
+
+                    <footer class="actions">
+                        <button class="cta cta--accent" onclick={handleSubmit} disabled={isLoading}>
+                            <em>Submit</em> <span class="cta__arrow">⟶</span>
+                        </button>
+                    </footer>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isConfirmation}>
+            <section class="hero hero--confirmation">
+                <div class="hero__media hero__media--sunset"></div>
+                <div class="hero__chrome">
+                    <header class="topbar topbar--hero">
+                        <div class="topbar__spacer"></div>
+                        <div class="brand">
+                            <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                        </div>
+                        <div class="topbar__spacer"></div>
+                    </header>
+                    <div class="hero__center">
+                        <h1 class="display">Thank you, your <em>interest is registered</em></h1>
+                        <span class="rule"></span>
+                        <p class="subdued">Our team will be in touch soon</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <footer class="site-footer">
+            <p class="site-footer__copy">&copy; Modon {currentYear} &mdash; All rights reserved</p>
+            <nav class="site-footer__links">
+                <a href="https://www.modon.com/terms-and-conditions" target="_blank" rel="noopener" class="site-footer__link">Terms &amp; Conditions</a>
+                <a href="https://www.modon.com/privacy-policy" target="_blank" rel="noopener" class="site-footer__link">Privacy Policy</a>
+            </nav>
+        </footer>
+
+    </div>
+</template>

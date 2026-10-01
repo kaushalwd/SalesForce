@@ -1,0 +1,753 @@
+/* c/mscStyles for .btn / .btn-primary / .btn-ghost / .btn-sm only. Everything else is
+   local and prefixed cc__, so nothing here can collide with the shared sheet - which is
+   the mistake the grid panes made once already. */
+@import "c/mscStyles";
+
+/* ── the layer ───────────────────────────────────────────────────────────────
+   Centred, not docked: this is a check the rep reads and answers in place, and the
+   two panes need the width of the frame rather than the edge of it. Mounted from
+   mscBookingPage at .page, so position: fixed covers the whole booking. */
+.cc__layer {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: center;
+    padding: clamp(12px, 2vw, 28px);
+}
+
+/* Deep enough that the booking behind stops competing for the eye. c/mscDrawer avoids a
+   backdrop-filter because the cards behind it each run their own blur and a second live
+   one shimmers; here the blur is held to 8px and only the opacity animates, which keeps
+   it still. Browsers without backdrop-filter get the depth from the wash instead. */
+.cc__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.74);
+    backdrop-filter: blur(8px);
+    animation: cc-scrim-in 220ms ease-out both;
+}
+@supports not (backdrop-filter: blur(1px)) {
+    .cc__scrim {
+        background: rgba(0, 0, 0, 0.86);
+    }
+}
+
+.cc__panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(980px, 100%);
+    max-height: 100%;
+    min-height: 0;
+    border-radius: 16px;
+    background: var(--surface, rgba(15, 15, 15, 0.68));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(22px);
+    color: var(--text, #fafafa);
+    overflow: hidden;
+    animation: cc-panel-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cc-scrim-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes cc-panel-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.99); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cc__tab {
+        transition: none;
+    }
+    .cc__scrim,
+    .cc__panel {
+        animation: none;
+    }
+}
+
+/* ── head ────────────────────────────────────────────────────────────────── */
+
+.cc__head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.cc__head-text {
+    min-width: 0;
+}
+.cc__eyebrow {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--text-muted, #a3a3a3);
+}
+.cc__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+.cc__sub {
+    margin: 2px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-dim, #8a8a8a);
+}
+.cc__x {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.cc__x:hover {
+    color: var(--text, #fafafa);
+    border-color: var(--text-dim, #8a8a8a);
+}
+.cc__x:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+/* ── loading / unavailable ───────────────────────────────────────────────── */
+
+.cc__state {
+    padding: 28px 20px;
+}
+.cc__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* ── body: rail + form ───────────────────────────────────────────────────── */
+
+.cc__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 216px minmax(0, 1fr);
+}
+
+/* ── the rail ────────────────────────────────────────────────────────────────
+   The one decorated element on the panel, and the only place green appears while
+   anything is still outstanding - which is what keeps it meaning something. */
+.cc__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 18px 16px;
+    background: var(--rail-bg, rgba(10, 10, 10, 0.88));
+    border-right: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.cc__rail::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+.cc__ready {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+.cc__ready-n {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+}
+.cc__meter {
+    height: 4px;
+    margin-top: 8px;
+    border-radius: 99px;
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+    overflow: hidden;
+}
+.cc__meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: var(--gold, #a8a8a8);
+    transition: width 140ms ease-out;
+}
+.cc__meter-fill--ok {
+    background: var(--chip-green, #4ade80);
+}
+
+.cc__rail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+.cc__rl {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    padding: 2px;
+    margin: -2px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.cc__rl:hover .cc__rl-name {
+    color: var(--text, #fafafa);
+}
+.cc__rl:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+.cc__rl-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+.cc__rl-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim, #8a8a8a);
+}
+.cc__rl--ok .cc__rl-dot {
+    background: var(--chip-green, #4ade80);
+}
+.cc__rl-name {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.cc__rl-n {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+.cc__rl--ok .cc__rl-n {
+    color: var(--chip-green, #4ade80);
+}
+.cc__microbar {
+    display: block;
+    height: 2px;
+    border-radius: 99px;
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+    overflow: hidden;
+}
+.cc__microbar > i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: var(--text-dim, #8a8a8a);
+    transition: width 140ms ease-out;
+}
+.cc__rl--ok .cc__microbar > i {
+    background: var(--chip-green, #4ade80);
+}
+
+.cc__rail-foot {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.cc__rail-k {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+.cc__rail-v {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── the form ────────────────────────────────────────────────────────────── */
+
+.cc__form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 18px 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.cc__form::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+/* The boundary. Above it the rep acts and every control on the panel lives; below it the
+   identity verification has spoken and the rep only reads. One rule, drawn once, and the
+   only decorated thing in the form - it is carrying a rule of the system, not a style. */
+.cc__band {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 4px;
+}
+.cc__band-t {
+    flex: 0 0 auto;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+.cc__band-r {
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+/* A rail row scrolls its heading to the top of the form; this keeps it off the edge.
+   The rule between groups does the separating, so the groups themselves stay tight. */
+.cc__grp {
+    scroll-margin-top: 12px;
+}
+.cc__grp + .cc__grp {
+    padding-top: 12px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.cc__grp-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.cc__grp-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+.cc__grp-count {
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+/* Green appears once anything is complete, and nowhere else - which is what keeps it
+   meaning something when it does. */
+.cc__grp-count--ok {
+    color: var(--chip-green, #4ade80);
+}
+
+/* One grid per group. A detail on file prints as label and value; a detail missing
+   takes a control in the same cell, so nothing moves as the customer fills in and a
+   field is always read beside the ones it belongs with. */
+.cc__cells {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 10px 16px;
+}
+.cc__cell {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+}
+.cc__fact-k {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--text-dim, #8a8a8a);
+}
+.cc__fact-v {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+/* A verified detail that has not arrived reads exactly as a missing document does,
+   because the rep does the same thing about both. */
+/* 1.29 - the value is empty now, and an empty div has no line box at all, so the
+   cell would lose its height and the grid rows would stop lining up. One line's
+   worth of space keeps the rhythm. 1.4em == the .cc__fact-v line-height. */
+.cc__fact-v--none {
+    color: var(--text-dim, #8a8a8a);
+    min-height: 1.4em;
+}
+.cc__f-l {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-muted, #a3a3a3);
+}
+/* Untinted while it holds a value. x.y+1: a required one still empty takes the quiet
+   amber edge below, because the counts alone left the rep hunting for which one. */
+.cc__control {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    color: var(--text, #fafafa);
+    font-family: inherit;
+    /* 16px on a phone, or iOS zooms the panel on focus - the same guard the rest of
+       the console's inputs carry. */
+    font-size: 16px;
+}
+/* Closed while a save or a submit is in flight, so nothing typed can be lost between
+   the request going out and the answer coming back. */
+.cc__control:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.cc__control:focus {
+    outline: none;
+    border-color: var(--focus-ring, #fafafa);
+    box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.1));
+}
+textarea.cc__control {
+    height: auto;
+    padding: 7px 10px;
+    line-height: 1.45;
+    resize: vertical;
+}
+
+/* ── x.y+1 · required and still missing ─────────────────────────────────────
+   A muted star on every field the submit waits on, and a quiet amber edge on the ones
+   still empty. Grey carries it; amber appears only where something is outstanding, at
+   the 1px edge weight the tokens set aside for exactly this. */
+.cc__req {
+    margin-left: 3px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-dim, #8a8a8a);
+}
+.cc__cell--missing .cc__control:not(:focus) {
+    border-color: var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+/* A fact the rep cannot type: its empty value reads as a blank line on a form. */
+.cc__cell--missing .cc__fact-v--none {
+    border-bottom: 1px solid var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+/* Where a jump lands, kept clear of the scroller's edges. */
+.cc__cell,
+.cc__doc {
+    scroll-margin: 16px;
+}
+/* A fact or a document takes focus only while missing, and only from a jump. :focus
+   rather than :focus-visible: the jump comes from a click, and the rep has to see
+   where it went. */
+.cc__cell--missing:focus,
+.cc__doc--missing:focus {
+    outline: 1px solid var(--edge-amber, rgba(251, 191, 36, 0.44));
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* documents - a slim ledger. Status and date, never the file. */
+.cc__docs {
+    display: flex;
+    flex-direction: column;
+}
+.cc__doc {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 2px;
+    font-size: 12.5px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.cc__doc:last-child {
+    border-bottom: 0;
+}
+.cc__doc-n {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--text, #fafafa);
+}
+.cc__doc-s {
+    font-size: 12px;
+    white-space: nowrap;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+.cc__docs-note {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* ── foot ────────────────────────────────────────────────────────────────── */
+
+.cc__foot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 13px 18px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+/* One sentence, naming the nearest thing in the way. Never a list of errors. */
+.cc__blocker {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+.cc__blocker--ok {
+    color: var(--chip-green, #4ade80);
+}
+/* The only red on the panel, and it only ever appears when something actually failed. */
+.cc__blocker--bad {
+    color: var(--chip-red, #f87171);
+}
+.cc__blocker-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+/* x.y+1 - the same sentence, pressable: it takes the rep to the first missing field.
+   A dotted underline is the only sign, in the quiet way the rest of the footer reads. */
+.cc__blocker--jump {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+}
+.cc__blocker-t {
+    min-width: 0;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--text-dim, #8a8a8a);
+    text-underline-offset: 3px;
+}
+.cc__blocker--jump:hover {
+    color: var(--text, #fafafa);
+}
+.cc__blocker--jump:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+/* Wraps a button so the tooltip survives the button being disabled. */
+.cc__act {
+    display: inline-flex;
+}
+.cc__acts {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+/* Released, rather than merely available: the one filled button on the panel, and it
+   only ever appears once every check has passed. */
+.cc__go {
+    background: var(--step-done, #16a34a);
+    border-color: var(--step-done, #16a34a);
+    color: #fff;
+}
+/* x.y+2 - R2-16: closed reads as closed, grey rather than a faded green */
+.cc__go:disabled {
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border-color: var(--input-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-dim, #8a8a8a);
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* ── MSC-083 · the party strip ───────────────────────────────────────────────
+   A tab row, not a segmented control: a booking can carry seven of these and the
+   names are real ones, so it has to be able to run out of width and scroll rather
+   than squeeze six names into six illegible columns. */
+
+.cc__strip {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 6px;
+    padding: 8px 18px;
+    overflow-x: auto;
+    /* Its own scroller. The panel body must never move sideways. */
+    scrollbar-width: thin;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: var(--rail-bg, rgba(255, 255, 255, 0.02));
+}
+.cc__tab {
+    flex: 0 0 auto;
+    max-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 8px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-dim, #8a8a8a);
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.cc__tab:hover:not(:disabled) {
+    border-color: var(--focus-ring, #fafafa);
+    color: var(--text, #fafafa);
+}
+.cc__tab:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+/* Held while an edit is unsaved. Dimmed rather than hidden - the rep needs to see
+   that the other people are still there, and the title says why they are shut. */
+.cc__tab:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+.cc__tab--on {
+    border-color: var(--focus-ring, #fafafa);
+    background: var(--gold-wash, rgba(168, 168, 168, 0.1));
+    color: var(--text, #fafafa);
+}
+.cc__tab-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cc__tab-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    line-height: 1.3;
+    color: var(--text-muted, #a3a3a3);
+    white-space: nowrap;
+}
+.cc__tab-role {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cc__tab-dot {
+    flex: 0 0 auto;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+}
+.cc__tab-state {
+    flex: 0 0 auto;
+}
+
+/* ── narrow ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .cc__body {
+        grid-template-columns: minmax(0, 1fr);
+        overflow-y: auto;
+    }
+    .cc__rail {
+        border-right: 0;
+        border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+        overflow: visible;
+    }
+    .cc__rail-foot {
+        margin-top: 0;
+    }
+    .cc__form {
+        overflow: visible;
+    }
+    .cc__cells {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .cc__cells {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .cc__strip {
+        padding: 7px 14px;
+    }
+    .cc__tab {
+        max-width: 168px;
+    }
+    .cc__foot {
+        align-items: stretch;
+    }
+    .cc__acts {
+        width: 100%;
+    }
+    .cc__acts .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+/* Above the phone breakpoint the 16px iOS guard is not needed and 13px is the density
+   the rest of the panel is set at. */
+@media (min-width: 641px) {
+    .cc__control {
+        font-size: 13px;
+    }
+}
+
+/* 18 Sep 2026 (testing) - the same defect MSC-173 fixed on the manual-KYC form: the UA
+   paints a native select's list from color-scheme and the options inherited --text on a white
+   popup, so the three Transaction Details picklists were unreadable when open. Same tokens as
+   c/mscStyles .field__select. */
+.cc__control {
+    color-scheme: var(--control-scheme, dark);
+}
+.cc__control option {
+    background: var(--page-bg, #0f0f0f);
+    color: var(--text, #fafafa);
+}

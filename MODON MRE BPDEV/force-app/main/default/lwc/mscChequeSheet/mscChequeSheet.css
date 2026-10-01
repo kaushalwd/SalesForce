@@ -1,0 +1,596 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+/* the sheet: a compact table worked with a keyboard, inputs below the 44px form standard */
+.sheet {
+    font-size: 11.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sheet__hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px 18px;
+    flex-wrap: wrap;
+}
+
+.sheet__title {
+    min-width: 0;
+    flex: 1 1 260px;
+}
+
+.sheet__t {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+
+.sheet__ctl {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.sheet__fld {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.sheet__lbl {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* compact controls, one look for select, text and number */
+.sheet__sel,
+.sheet__in {
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 11.5px;
+    color: var(--text, #fafafa);
+    background: var(--input-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    outline: none;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.sheet__sel {
+    min-width: 200px;
+    max-width: 260px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 26px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    cursor: pointer;
+}
+
+.sheet__sel option {
+    background: var(--page-bg, #0f0f0f);
+    color: var(--text, #fafafa);
+}
+
+.sheet__fld--no .sheet__in {
+    width: 120px;
+    font-variant-numeric: tabular-nums;
+}
+
+.sheet__sel:focus,
+.sheet__in:focus {
+    border-color: var(--gold, #a8a8a8);
+    box-shadow: 0 0 0 3px rgba(168, 168, 168, 0.16);
+}
+
+.sheet__in:disabled,
+.sheet__sel:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.sheet__in--bad {
+    border-color: var(--chip-red, #f87171);
+}
+
+.sheet__in--num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* no spinner buttons in a 30px cell */
+.sheet__in--num::-webkit-outer-spin-button,
+.sheet__in--num::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.sheet__in--num {
+    -moz-appearance: textfield;
+}
+
+/* the table */
+.sheet__scroll {
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
+/* MSC-198: the columns are declared, not negotiated. Under the old auto layout an attached image
+   widened its cell and pushed every column after it right, taking +/x past the edge into the
+   horizontal scroll. .sheet__scroll still carries the overflow below the floor. */
+.sheet__tbl {
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 11.5px;
+}
+.w-tick { width: 26px; }
+.w-ms   { width: 20%; }
+.w-due  { width: 96px; }
+.w-left { width: 112px; }
+.w-img  { width: 132px; }
+.w-no   { width: 118px; }
+.w-date { width: 138px; }
+.w-amt  { width: 126px; }
+.w-act  { width: 34px; }
+
+.sheet__tbl th {
+    text-align: left;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    padding: 6px 6px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    white-space: nowrap;
+}
+
+.sheet__tbl td {
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.1));
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* MSC-198: one tbody per row now, so "the last row" is the last tbody's last row */
+.sheet__tbl tbody:last-child tr:last-child td {
+    border-bottom: 0;
+}
+
+/* MSC-198: the column owns the width; the box fills it */
+.sheet__tbl td .sheet__in {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.c-tick {
+    width: 22px;
+}
+
+.c-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.c-act {
+    width: 30px;
+    text-align: right;
+}
+
+.c-ms {
+    color: var(--text, #fafafa);
+}
+
+/* the milestone name is the only unbounded cell; it wraps instead of widening the column */
+.sheet__tbl td.c-ms {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 132px;
+    max-width: 240px;
+}
+
+.c-left {
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sheet__row--off td {
+    color: var(--text-dim, #8a8a8a);
+}
+
+.sheet__row--off .c-ms {
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* a fully covered milestone stays listed, dimmed */
+.sheet__row--covered td {
+    opacity: 0.5;
+}
+
+/* the second, third cheque of the same milestone: indented, no due date */
+.sheet__ms--sub {
+    display: inline-block;
+    padding-left: 14px;
+    color: var(--text-dim, #8a8a8a);
+    position: relative;
+}
+.sheet__ms--sub::before {
+    content: "↳";
+    position: absolute;
+    left: 2px;
+    top: -1px;
+}
+
+.sheet__late {
+    margin-left: 6px;
+    font-size: 10px;
+    padding: 1px 6px;
+}
+
+.sheet__cb {
+    width: 13px;
+    height: 13px;
+    accent-color: var(--pill-fg, #fafafa);
+    cursor: pointer;
+    vertical-align: -1px;
+}
+.sheet__cb:disabled {
+    cursor: not-allowed;
+}
+
+/* the image cell */
+.img {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 7px 3px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    background: var(--input-bg, rgba(255, 255, 255, 0.05));
+    font-size: 10.5px;
+    color: var(--text, #fafafa);
+    max-width: 100%;
+    font-family: inherit;
+    cursor: default;
+}
+
+.img--need {
+    border-style: dashed;
+    color: var(--chip-amber, #fbbf24);
+    cursor: pointer;
+}
+.img--need:hover:not(:disabled) {
+    opacity: 0.8;
+}
+.img--need:disabled {
+    cursor: not-allowed;
+}
+.img--dim {
+    opacity: 0.45;
+}
+.img--busy {
+    color: var(--text-dim, #8a8a8a);
+    border-style: dashed;
+}
+
+.img__th {
+    width: 26px;
+    height: 16px;
+    border-radius: 3px;
+    object-fit: cover;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+    flex: 0 0 auto;
+}
+
+.img__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.img__tick {
+    color: var(--chip-green, #4ade80);
+    font-weight: 800;
+}
+
+.img__x {
+    background: none;
+    border: 0;
+    color: var(--text-dim, #8a8a8a);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 2px;
+    cursor: pointer;
+}
+.img__x:hover:not(:disabled) {
+    color: var(--text, #fafafa);
+}
+
+.sheet__reading {
+    display: block;
+    font-size: 10px;
+    color: var(--text-dim, #8a8a8a);
+    margin-top: 2px;
+}
+
+.sheet__err {
+    display: block;
+    font-size: 10px;
+    color: var(--chip-red, #f87171);
+    margin-top: 2px;
+    white-space: normal;
+    max-width: 220px;
+}
+
+/* + / x at the end of the row */
+.sheet__ico {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    padding: 0;
+    margin-left: 4px;
+}
+.sheet__ico:hover:not(:disabled) {
+    color: var(--text, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.sheet__ico:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* the server's per-line answer after a refusal */
+.sheet__res td {
+    padding-top: 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.1));
+}
+.sheet__result {
+    font-size: 10.5px;
+    white-space: normal;
+}
+.sheet__result--ok {
+    color: var(--chip-green, #4ade80);
+}
+.sheet__result--bad {
+    color: var(--chip-red, #f87171);
+}
+
+/* the camera panel */
+/* 1.1: reachable by click(), never shown */
+.sheet__file {
+    display: none;
+}
+
+.sheet__cam {
+    margin-top: 10px;
+    padding: 10px 12px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+    background: var(--input-bg, rgba(255, 255, 255, 0.03));
+}
+.sheet__camhd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 11.5px;
+    color: var(--text, #fafafa);
+}
+
+/* hints and the footer */
+.sheet__hint {
+    margin: 6px 0 0;
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+.sheet__hint--lead {
+    margin-top: 2px;
+    max-width: 62ch;
+}
+.sheet__hint--blue {
+    color: var(--chip-blue, #60a5fa);
+}
+.sheet__hint--warn {
+    color: var(--chip-amber, #fbbf24);
+}
+.sheet__hint--bad {
+    color: var(--chip-red, #f87171);
+}
+/* MSC-196: the rest of what the image said - context, so quieter than the read line itself */
+.sheet__hint--dim {
+    margin-top: 2px;
+    color: var(--text-dim, #8a8a8a);
+}
+/* MSC-196: one more attempt, inline in the sentence that failed */
+.sheet__again {
+    margin-left: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+.sheet__again:hover:not([disabled]) {
+    color: var(--text, #fafafa);
+}
+.sheet__again[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+.sheet__again:focus-visible {
+    outline: 2px solid var(--text, #fafafa);
+    outline-offset: 2px;
+}
+
+/* 1.6: pinned, sticky against the modal's scroller on the opaque page ground. Gutters painted
+   with a box-shadow, since a negative margin would bring the horizontal scroll back. */
+.sheet__ft {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    margin-top: 10px;
+    padding: 10px 0;
+    background: var(--page-bg, #0f0f0f);
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    box-shadow: 20px 0 0 var(--page-bg, #0f0f0f), -20px 0 0 var(--page-bg, #0f0f0f);
+}
+.sheet__sum {
+    font-size: 11.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+.sheet__acts {
+    display: inline-flex;
+    gap: 8px;
+}
+
+@media (max-width: 640px) {
+    .sheet__sel {
+        min-width: 160px;
+    }
+}
+
+/* MSC-198: the read, on a line under the row it belongs to */
+.sheet__noterow td {
+    padding-top: 0;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.1));
+    white-space: normal;
+}
+.sheet__note {
+    display: block;
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: var(--chip-blue, #60a5fa);
+}
+.sheet__note--bad {
+    color: var(--chip-amber, #fbbf24);
+}
+
+/* MSC-200: the three values the image fills, as text. No box, because nothing here is typed. */
+.sheet__val {
+    display: block;
+    padding: 5px 2px;
+    font-size: 11.5px;
+    color: var(--text, #fafafa);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sheet__val--num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+/* still waiting on the image */
+.sheet__val--wait {
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* MSC-198: the declared widths step down with the screen. The table keeps its shape at every
+   size - it never re-flows when an image lands - and .sheet__scroll carries what will not fit,
+   which is how this table behaved on a phone before the widths were declared. */
+@media (max-width: 1024px) {
+    .sheet__tbl {
+        min-width: 780px;
+        font-size: 11px;
+    }
+    .sheet__tbl th,
+    .sheet__tbl td {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+    .w-due  { width: 84px; }
+    .w-left { width: 98px; }
+    .w-img  { width: 112px; }
+    .w-no   { width: 100px; }
+    .w-date { width: 126px; }
+    .w-amt  { width: 108px; }
+}
+
+@media (max-width: 640px) {
+    .sheet__tbl {
+        min-width: 640px;
+    }
+    .w-tick { width: 22px; }
+    .w-ms   { width: 24%; }
+    .w-due  { width: 76px; }
+    .w-left { width: 88px; }
+    /* the chip keeps the thumbnail and the tick; the word would cost a column */
+    .w-img  { width: 74px; }
+    .w-no   { width: 92px; }
+    .w-date { width: 122px; }
+    .w-amt  { width: 96px; }
+    .img__name {
+        display: none;
+    }
+    .sheet__note {
+        font-size: 11px;
+    }
+}
+
+/* MSC-205a: quiet ledger line, inline - a hairline sets the flags off from the read;
+   only the dot carries severity, the label stays muted */
+.flags {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px 14px;
+    flex-wrap: wrap;
+    margin-left: 10px;
+    padding-left: 12px;
+    border-left: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    vertical-align: middle;
+}
+.flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+}
+.flag::before {
+    content: "";
+    width: 4.5px;
+    height: 4.5px;
+    border-radius: 50%;
+    flex: none;
+}
+.flag--bad::before {
+    background: var(--chip-red, #f87171);
+}
+.flag--warn::before {
+    background: var(--chip-amber, #fbbf24);
+}

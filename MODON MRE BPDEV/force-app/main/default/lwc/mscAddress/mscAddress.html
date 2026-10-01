@@ -1,0 +1,123 @@
+<template>
+    <!-- 1.10 - saved and complete: one read-only line, under the heading the form
+         carried. The rep sees what landed instead of an empty space. -->
+    <template lwc:if={showSummary}>
+        <div class="addr">
+            <hr class="divider" />
+            <p class="addr__head">Customer address</p>
+            <p class="addr__saved">{addressLine}</p>
+        </div>
+    </template>
+
+    <template lwc:if={showForm}>
+        <div class="addr">
+            <!-- 1.5 - a rule and a heading, so this stops reading as a continuation of
+                 the customer fields above it. All three blocks share one section card. -->
+            <hr class="divider" />
+            <p class="addr__head">Customer address</p>
+            <p class="addr__hint">
+                The booking cannot be confirmed without it, and compliance needs the
+                same address. Most UAE addresses have no postal code, so that one
+                usually has to be typed in.
+            </p>
+
+            <!-- 1.1 - the same lookup the Save Address quick action uses. Picking a
+                 result fills the fields AND the coordinates; typing by hand still
+                 works, it just leaves lat/long null. -->
+            <div class="field addr__search">
+                <label class="field__label" for="addrq">Find an address</label>
+                <input
+                    id="addrq"
+                    class="field__input"
+                    type="text"
+                    autocomplete="off"
+                    enterkeyhint="search"
+                    autocapitalize="words"
+                    spellcheck="false"
+                    placeholder="Start typing a building, street or area"
+                    value={searchText}
+                    oninput={handleSearchChange}
+                />
+                <template lwc:if={searching}>
+                    <p class="addr__searching">Searching…</p>
+                </template>
+                <template lwc:if={hasResults}>
+                    <div class="addr__results" role="list">
+                        <template for:each={results} for:item="r">
+                            <!-- Keyed on placeId: Google returns the same formatted
+                                 address for distinct places, and a repeated key is a
+                                 render error, not a duplicate row. -->
+                            <button
+                                key={r.key}
+                                class="addr__result"
+                                type="button"
+                                role="listitem"
+                                data-lat={r.lat}
+                                data-lon={r.lon}
+                                data-label={r.label}
+                                onclick={handlePick}
+                            >{r.label}</button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <div class="field-grid">
+                <template for:each={fields} for:item="f">
+                    <div key={f.key} class={f.cls}>
+                        <label class="field__label" for={f.key}>{f.label} *</label>
+                        <!-- autocomplete="off": these are a customer's address being
+                             recorded on their Account, not the rep's own, so Chrome
+                             offering to save it to the REP's browser profile is wrong.
+                             Browsers treat this as a hint, not a rule - see the note in
+                             the JS. -->
+                        <input
+                            id={f.key}
+                            class="field__input"
+                            type="text"
+                            autocomplete="off"
+                            inputmode={f.mode}
+                            autocapitalize={f.caps}
+                            spellcheck="false"
+                            data-key={f.key}
+                            value={f.value}
+                            oninput={handleField}
+                        />
+                    </div>
+                </template>
+            </div>
+
+            <template lwc:if={errorMsg}>
+                <div class="banner banner--error addr__err">
+                    <c-modon-icon name="alert-circle" size="15" color="var(--chip-red, #f87171)"></c-modon-icon>
+                    <span>{errorMsg}</span>
+                </div>
+            </template>
+
+            <!-- 1.10 - THE SAME FOOTER THE PAYMENT PLAN CARD HAS. The two cards
+                 sit side by side on step 2 and ended differently: a rule and a
+                 ghost action on the right there, a filled white button with no
+                 rule here. A filled button is the page's strongest control, and
+                 saving an address is not the strongest thing on this screen -
+                 Continue is. Rule, right-aligned ghost, icon and label, on the
+                 same metrics as .offer-open__btn. -->
+            <hr class="divider addr__rule" />
+            <div class="addr__actions">
+                <button
+                    class="btn btn-ghost addr__save"
+                    type="button"
+                    disabled={saveDisabled}
+                    onclick={handleSave}
+                >
+                    <c-modon-icon name="map-pin" size="14" color="currentColor"></c-modon-icon>
+                    <span>{saveLabel}</span>
+                </button>
+            </div>
+        </div>
+    </template>
+    <!-- The wait is shown and blocked: c-msc-loader covers the viewport, so a
+         second press cannot land while the first call is still running. -->
+    <template lwc:if={isBusy}>
+        <c-msc-loader></c-msc-loader>
+    </template>
+</template>

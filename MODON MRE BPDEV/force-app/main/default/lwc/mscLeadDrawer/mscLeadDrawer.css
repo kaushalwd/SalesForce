@@ -1,0 +1,836 @@
+/* The lead work drawer (MSC-186). Self-contained; themed by the c/mscTokens custom properties.
+   position:fixed like mscLeadList's own slide-over, one layer above it (the two never open
+   together, but the drawer must clear the list's pager and toolbar). */
+
+:host {
+  display: block;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  color: var(--text, #fafafa);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+select,
+input,
+textarea {
+  font: inherit;
+}
+
+/* layer */
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  pointer-events: none;
+  visibility: hidden;
+}
+.layer--open {
+  pointer-events: auto;
+  visibility: visible;
+}
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay, rgba(0, 0, 0, 0.58));
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.layer--open .scrim {
+  opacity: 1;
+}
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(640px, 94%);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg, #141414);
+  border-left: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.layer--open .panel {
+  transform: none;
+}
+
+/* header */
+.head {
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.head__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: var(--row-bg, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.head__id {
+  min-width: 0;
+}
+.head__name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.head__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--text-muted, #a3a3a3);
+}
+/* 1.13 (MSC-210): queued for handover. Muted micro-label in the house style (MSC-205a) -
+   no capsule, no colour: the lead is still workable, it just says where it is going. */
+.handover {
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+  white-space: nowrap;
+}
+.head__status i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-dim, #8a8a8a);
+  flex: 0 0 auto;
+}
+/* 1.14 (MSC-212): the from-lead booking entry. A quiet ghost action in the head - the same
+   tokens as the bar's .act - so the task bar stays about the call. */
+.book {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  color: var(--text, #fafafa);
+  white-space: nowrap;
+  transition: background 0.13s ease;
+}
+.book:hover:not(:disabled) {
+  background: var(--row-bg, rgba(255, 255, 255, 0.1));
+}
+.book:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.book svg {
+  flex: 0 0 auto;
+}
+.book:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+/* while the button renders it owns the auto margin; without it .x keeps its own */
+.book + .x {
+  margin-left: 0;
+}
+
+.x {
+  margin-left: auto;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  border-radius: 8px;
+  color: var(--text-muted, #a3a3a3);
+}
+.x:hover {
+  color: var(--text, #fafafa);
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+/* the four facts, labelled - the part that must read at a glance */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 26px;
+  margin-top: 16px;
+}
+.facts div {
+  min-width: 0;
+}
+.facts span {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+}
+.facts b {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text, #fafafa);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.facts b.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+}
+
+/* task strip + actions */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  /* 1.2: the buttons never wrap - the task strip shrinks and ellipsises instead */
+  flex-wrap: nowrap;
+}
+/* 1.9: two stacked lines - the subject in full, the due date underneath */
+.tk {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.tk__subj {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tk .tk__none {
+  font-size: 13px;
+  color: var(--text-dim, #8a8a8a);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tk__due {
+  font-size: 11.5px;
+  color: var(--text-muted, #a3a3a3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tk__dot {
+  color: var(--text-dim, #8a8a8a);
+  margin: 0 5px;
+}
+.tk__late {
+  color: var(--text, #fafafa);
+  font-weight: 600;
+}
+.act {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  color: var(--text, #fafafa);
+  transition: background 0.13s ease;
+  /* 1.2: a button keeps its width and its one line */
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.act:hover:not(:disabled) {
+  background: var(--row-bg, rgba(255, 255, 255, 0.1));
+}
+.act:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.act svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+.act--key {
+  background: var(--text, #fafafa);
+  color: var(--text-inverse, #111);
+  border-color: var(--text, #fafafa);
+  font-weight: 600;
+}
+.act--key:hover:not(:disabled) {
+  /* 1.4: dim, never #fff - a hardcoded white erases the label in the light theme */
+  opacity: 0.85;
+}
+/* 1.12 (MSC-209): .act:hover:not(:disabled) ties .act--key:hover on specificity and swapped
+   the filled button's background for the ghost hover tint while the inverse label color
+   stayed - text-on-text in both themes. Re-assert the fill for the UNSELECTED key button
+   only: when selected (.act--on) the label is already --text, and the ghost tint is right. */
+.act--key:hover:not(:disabled):not(.act--on) {
+  background: var(--text, #fafafa);
+}
+.act--on,
+.act--key.act--on {
+  background: var(--row-bg, rgba(255, 255, 255, 0.12));
+  color: var(--text, #fafafa);
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+  font-weight: 500;
+}
+.act:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+
+/* body */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px 24px;
+}
+
+/* composer */
+.comp {
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  margin-bottom: 22px;
+  background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+.fk {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+  margin-bottom: 9px;
+}
+.blk {
+  margin-bottom: 15px;
+}
+.opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.opt {
+  padding: 7px 13px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: var(--input-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  color: var(--text-muted, #a3a3a3);
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+.opt:hover:not(:disabled) {
+  color: var(--text, #fafafa);
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.opt[aria-pressed="true"] {
+  background: var(--text, #fafafa);
+  color: var(--text-inverse, #111);
+  border-color: var(--text, #fafafa);
+  font-weight: 600;
+}
+.opt:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+/* 1.4: the selected chip keeps its inverse label on hover - .opt:hover outranked the
+   aria-pressed rule and painted text-on-text */
+.opt[aria-pressed="true"]:hover:not(:disabled) {
+  background: var(--text, #fafafa);
+  color: var(--text-inverse, #111);
+  opacity: 0.85;
+}
+.opt:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+
+.f label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+  margin-bottom: 7px;
+}
+.f select,
+.f input,
+.f textarea {
+  width: 100%;
+  font-size: 13px;
+  color: var(--text, #fafafa);
+  background: var(--input-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  border-radius: 8px;
+  padding: 8px 10px;
+  color-scheme: var(--control-scheme, dark);
+}
+.f select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: var(--chevron);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.f textarea {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
+}
+.f select:focus-visible,
+.f input:focus-visible,
+.f textarea:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 1px;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+}
+.three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 11px;
+}
+.three .f:nth-child(4),
+.three .f:nth-child(5) {
+  margin-top: 0;
+}
+
+/* one quiet line: what the org does next */
+.res {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted, #a3a3a3);
+  border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+  margin-top: 15px;
+  padding-top: 12px;
+}
+.res svg {
+  flex: 0 0 auto;
+  color: var(--text-dim, #8a8a8a);
+}
+.res b {
+  color: var(--text, #fafafa);
+  font-weight: 600;
+}
+
+.gate {
+  margin-top: 15px;
+  padding-top: 14px;
+  border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.err {
+  font-size: 12.5px;
+  color: var(--text, #fafafa);
+  border-left: 2px solid var(--text, #fafafa);
+  padding-left: 11px;
+  margin: 14px 0 0;
+}
+.err--top {
+  margin: 0 0 16px;
+}
+
+.cfoot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 16px;
+}
+.btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: none;
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+  color: var(--text-muted, #a3a3a3);
+}
+.btn:hover:not(:disabled) {
+  color: var(--text, #fafafa);
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.btn--pri {
+  background: var(--text, #fafafa);
+  color: var(--text-inverse, #111);
+  border-color: var(--text, #fafafa);
+  font-weight: 600;
+}
+.btn--pri:hover:not(:disabled) {
+  background: var(--text, #fafafa);
+  color: var(--text-inverse, #111);
+  opacity: 0.85;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+
+/* history (MSC-187): recency bands on an icon rail. Colour only where a result earns it -
+   the approved exception. The bands stick inside .body's own scroll; their background is the
+   OPAQUE panel token (both themes) so rows slide cleanly beneath, never through. */
+.tlhead {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+  margin: 0 0 12px;
+}
+.band {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  margin: 2px 0 6px;
+  background: var(--panel-bg, #141414);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+}
+.band .rule {
+  flex: 1;
+  height: 1px;
+  background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.tl {
+  position: relative;
+  padding-left: 44px;
+}
+.tl::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+.ev {
+  position: relative;
+  margin-bottom: 6px;
+  border-radius: 10px;
+}
+.ev__icon {
+  position: absolute;
+  left: -44px;
+  top: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--panel-bg, #141414);
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+  color: var(--text-muted, #a3a3a3);
+}
+.ev__icon svg {
+  width: 13px;
+  height: 13px;
+}
+.ev--g .ev__icon {
+  color: var(--chip-green, #4ade80);
+  border-color: var(--edge-green, rgba(74, 222, 128, 0.34));
+}
+.ev--r .ev__icon {
+  color: var(--chip-red, #f87171);
+  border-color: var(--edge-red, rgba(248, 113, 113, 0.34));
+}
+.ev--a .ev__icon {
+  color: var(--chip-amber, #fbbf24);
+  border-color: var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+
+.ev__row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.ev__row:hover {
+  background: var(--row-bg, rgba(255, 255, 255, 0.045));
+}
+.ev__row:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: -2px;
+}
+.ev__t {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 60%;
+}
+.ev__t em {
+  font-style: normal;
+  font-weight: 600;
+}
+.ev__t .sep {
+  color: var(--text-dim, #8a8a8a);
+  padding: 0 2px;
+  font-weight: 400;
+}
+.ev__preview {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-dim, #8a8a8a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ev__when {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  color: var(--text-dim, #8a8a8a);
+  white-space: nowrap;
+}
+.ev__chev {
+  color: var(--text-dim, #8a8a8a);
+  flex: 0 0 auto;
+  transition: transform 0.15s ease;
+  align-self: center;
+}
+.ev--openrow .ev__chev {
+  transform: rotate(90deg);
+}
+.ev--openrow .ev__preview {
+  visibility: hidden;
+}
+
+/* expanded - the row grows in place: full note under the headline, one quiet meta line */
+.ev--openrow {
+  background: var(--row-bg, rgba(255, 255, 255, 0.045));
+}
+.ev--openrow .ev__row:hover {
+  background: none;
+}
+.ev__detail {
+  padding: 0 10px 11px;
+}
+.ev__note {
+  font-size: 12.5px;
+  color: var(--text-muted, #a3a3a3);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.ev__metaline {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-dim, #8a8a8a);
+  overflow-wrap: anywhere;
+}
+.ev__note + .ev__metaline {
+  margin-top: 9px;
+}
+
+/* system runs folded into one quiet line */
+.cluster .ev__t {
+  color: var(--text-muted, #a3a3a3);
+  font-weight: 400;
+}
+.cluster .ev__icon {
+  border-style: dashed;
+}
+.cluster-items {
+  margin: 0 10px 9px;
+  padding-left: 13px;
+  border-left: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.cluster-items p {
+  font-size: 12px;
+  color: var(--text-muted, #a3a3a3);
+  margin: 0 0 7px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.cluster-items p:last-child {
+  margin-bottom: 0;
+}
+.cluster-items span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cluster-items .w {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: var(--text-dim, #8a8a8a);
+  white-space: nowrap;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.more {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--text-dim, #8a8a8a);
+  cursor: pointer;
+  background: none;
+  border: 1px dashed var(--input-border, rgba(255, 255, 255, 0.16));
+  border-radius: 9px;
+}
+.more:hover {
+  color: var(--text-muted, #a3a3a3);
+  border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.tl-empty {
+  font-size: 12.5px;
+  color: var(--text-dim, #8a8a8a);
+  margin: 0;
+}
+
+/* loading skeletons, the list's own look */
+.sk {
+  height: 44px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--row-bg, rgba(255, 255, 255, 0.04)),
+    var(--input-bg, rgba(255, 255, 255, 0.08)),
+    var(--row-bg, rgba(255, 255, 255, 0.04))
+  );
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .scrim {
+    transition-duration: 0.01ms;
+  }
+  .sk {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel {
+    width: 100%;
+  }
+  .head,
+  .bar,
+  .body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  /* 1.2: on a phone the task strip takes its own line; the three buttons still share one */
+  .bar {
+    flex-wrap: wrap;
+  }
+  .tk {
+    flex-basis: 100%;
+  }
+  .act {
+    padding: 7px 10px;
+    font-size: 11.5px;
+  }
+  /* 1.14: the head button shrinks with the bar's */
+  .book {
+    padding: 7px 10px;
+    font-size: 11.5px;
+  }
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .two,
+  .three {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* MSC-232: the hairline between the call actions and the lead action */
+.split {
+  width: 1px;
+  height: 20px;
+  flex: 0 0 auto;
+  margin: 0 3px;
+  background: var(--divider, rgba(255, 255, 255, 0.13));
+}

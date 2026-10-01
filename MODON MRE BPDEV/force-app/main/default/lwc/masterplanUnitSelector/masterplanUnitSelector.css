@@ -1,0 +1,2614 @@
+/* Inter has no Arabic coverage; Noto Kufi (matching ADHA's iskan.abudhabi) since 22 Aug 2026.
+   NotoNaskhArabicFont stays deployed for the jsPDF Visualforce pages. */
+@font-face {
+    font-family: 'Noto Kufi Arabic';
+    src: url('/sfsites/c/resource/NotoKufiArabicFont/NotoKufiArabic-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Kufi Arabic';
+    src: url('/sfsites/c/resource/NotoKufiArabicFont/NotoKufiArabic-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Kufi Arabic';
+    src: url('/sfsites/c/resource/NotoKufiArabicFont/NotoKufiArabic-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+/* Suisse Int'l is Modon's corporate face; same zip and URL pattern eoiPublicJourney proves in
+   production, cacheControl:Public so the Experience Cloud guest user can fetch it. */
+@font-face {
+    font-family: 'SuisseIntl';
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SuisseIntl';
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff') format('woff');
+    font-weight: 500 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Map-first single page: the frame owns the viewport, every control floats over it. The manual
+   SVG overlay cannot be reached from here - its styles live in OVERLAY_STYLES in masterplanData.js. */
+:host {
+    /* Sampled from world.modon.com; light again since 22 Aug because the basemap is a pale
+       illustrated plan and paper chrome sits with it. */
+    --bg: #eceae4;
+    --panel: rgba(255, 255, 255, 0.94);
+    --panel-solid: #ffffff;
+    --text: #16181d;
+    --muted: rgba(22, 24, 29, 0.64);
+    --border: rgba(22, 24, 29, 0.13);
+    /* ADHA's Olive Green from their brand book. Fill only, never text; it survives the
+       green-means-eligible collision because no product fill is green. */
+    --accent: #78806e;
+    --accent-ink: #ffffff;
+    /* The olive one shade down for small-text fills: white on it is 4.92:1 and passes at any
+       size, where white on #78806E only clears the bar at 18.66px bold. */
+    --accent-deep: #6c7363;
+    /* On a pale ground a surface separates by lift rather than by contrast. */
+    --shadow: 0 10px 30px -12px rgba(22, 24, 29, 0.35), 0 1px 2px rgba(22, 24, 29, 0.06);
+    /* The two meanings that carry colour. Deeper than the pre-20-Aug paper values, which were
+       4.19:1 and 4.13:1 against #eceae4 and so missed AA. These are 4.60:1 and 4.64:1. */
+    --good: #2c7649;
+    --urgent: #a64e36;
+
+    display: block;
+    height: 100vh;
+    /* Tracks the collapsing browser chrome on mobile; vh does not. */
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    /* Latin face first - Kufi carries Latin too, and Suisse covers every Arabic string we ship,
+       so the list alone cannot choose. Direction picks the face; see [dir='rtl'] below. */
+    font-family: 'SuisseIntl', 'Noto Kufi Arabic', Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Arabic in ADHA's face, Latin in MODON's - direction chooses, and the dir="ltr" map stage
+   must not lose Suisse. */
+.app[dir='rtl'] {
+    font-family: 'Noto Kufi Arabic', 'SuisseIntl', Inter, system-ui, -apple-system, sans-serif;
+}
+
+.app[dir='rtl'] [dir='ltr'] {
+    font-family: 'SuisseIntl', 'Noto Kufi Arabic', Inter, system-ui, -apple-system, sans-serif;
+}
+
+.app {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* ---------- map ---------- */
+
+/* Fills the viewport. The stage inside it is sized in JS to the render's aspect ratio and
+   centred with pan, so the map behaves like a slippy map rather than a fixed banner. */
+:host {
+    /* Same reason as .journey: the HUD and zoom controls are siblings of .frame and would
+       otherwise take the browser's double-tap. */
+    touch-action: manipulation;
+}
+
+.frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bg);
+    touch-action: none;
+    cursor: grab;
+}
+
+.frame:active {
+    cursor: grabbing;
+}
+
+/* Vignette fixed to the viewport, under the legend and HUD. pointer-events:none is not
+   optional: without it this element eats every click, drag and wheel on the map. */
+.frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+    background:
+        radial-gradient( 135% 105% at 50% 42%, rgba(255, 241, 214, 0.05) 0%, rgba(255, 241, 214, 0) 48% ), radial-gradient(130% 100% at 50% 45%, rgba(0, 0, 0, 0) 62%, rgba(22, 24, 29, 0.12) 100%);
+}
+
+.stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    /* The map is dragged, so nothing inside it is text to be selected. Deliberately on .stage and
+       not .frame: the search box, legend and filter rail are siblings, and must stay selectable. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* will-change: transform is deliberately NOT set: it GPU-scales one cached raster and leaves
+   the SVG unit numbers soft at high zoom. translate3d already composites panning. */
+
+.stage.camera-animating {
+    transition: transform 0.52s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.stage.search-animating {
+    transition: transform 0.88s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* The basemap, with an explicit z-index under .overlay-host: an earlier tile attempt relied on
+   DOM insertion order and painted over the parcels. */
+.tile-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* One layer per pyramid level, coarse stacked under fine, so a level that has not decoded yet
+   shows the coarser one through instead of a hole. */
+.tile-layer .lvl {
+    position: absolute;
+    inset: 0;
+}
+
+/* Tiles are positioned in percentages of their own level, so the grid scales with .stage exactly
+   as the single image did and the SVG overlay stays registered without computing anything. */
+.tile-layer img {
+    position: absolute;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+/* position:absolute is load-bearing - a stage child in normal flow changes stage.clientHeight,
+   which the whole camera reads from. */
+.stage-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Only for the CAD sheet: it darkens pale paper for the overlay colours; over the illustrated
+   base it just reads muddy. */
+.stage-scrim.cad-base {
+    background: linear-gradient(
+        180deg,
+        rgba(12, 16, 28, 0.1) 0%,
+        rgba(12, 16, 28, 0.02) 38%,
+        rgba(8, 12, 22, 0.13) 100%
+    );
+}
+
+.overlay-host {
+    position: absolute;
+    inset: 0;
+    /* Explicit, so nothing appended to the stage later can paint over the overlay. */
+    z-index: 2;
+}
+
+/* ---------- floating controls ---------- */
+
+.hud {
+    position: absolute;
+    z-index: 90;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+/* Summoned from the toolbar, so it opens centred on the top band, where it cannot collide with
+   the corner chips. */
+.hud-search {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    top: 16px;
+    padding: 10px 12px;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    animation: panelDrop 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes panelDrop {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-8px);
+    }
+}
+
+/* ---------- top bar ---------- */
+
+/* A floating chip rather than a full-width band, which covered the plan for nothing. One rule
+   serves both layouts - the phone block only tightens it. */
+.id-card {
+    position: absolute;
+    inset-inline-start: 16px;
+    inset-inline-end: auto;
+    top: 16px;
+    z-index: 91;
+    max-width: min(360px, calc(100vw - 32px));
+    padding: 9px 12px 10px;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+/* Sign out sits on the project line, not under it. As a third stacked row it pushed the card past
+   the height the old reservation offset assumed, which is what put the chip over the villa name. */
+.brand-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+/* The two halves are different things, so they get a line between them rather than a gap. */
+.id-divide {
+    height: 1px;
+    background: var(--border);
+    margin: 9px 0;
+}
+
+.id-top {
+    min-width: 0;
+}
+
+/* ---------- the toolbar ---------- */
+
+/* Four tools, bottom centre at every width - the panels they summon rise from the bottom edge.
+   left/translateX on purpose: centring is direction-agnostic. */
+.map-tools {
+    position: absolute;
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 92;
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 6px;
+    background: var(--panel);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+
+/* Icon over label, not beside it. A stacked tool is what the reference uses and it is what makes
+   a bottom bar readable as a bar rather than as a row of words. */
+.tool {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 78px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 13px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease;
+}
+
+.tool:hover {
+    background: rgba(22, 24, 29, 0.07);
+    color: var(--text);
+}
+
+/* Open, not merely hovered. Paper on ink like every other selected control here. */
+.tool.on {
+    background: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+/* Filters is the one tool that can be doing something while its panel is shut. */
+.tool.has-filters {
+    color: var(--text);
+}
+
+.tool.has-filters::after {
+    content: '';
+    position: absolute;
+    /* On the icon, not after the label: a stacked tool has nothing to the right of its text. */
+    margin-top: -18px;
+    margin-inline-start: 15px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--good);
+}
+
+.tool.on.has-filters::after {
+    background: var(--accent-ink);
+}
+
+.tool-ico {
+    flex: 0 0 auto;
+    width: 19px;
+    height: 19px;
+    /* One stroke set for all four glyphs, so they read as a family rather than as four icons. */
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---------- the reservation ---------- */
+
+/* Always on screen, never behind a tap. The title is the control: it goes to their villa, which
+   is the job the legend row used to do before the legend became something you ask for. */
+/* No box of its own any more: the card is the box. The hardcoded 86px that used to put this
+   under the identity chip is gone with it, and cannot go stale again. */
+.held-part {
+    min-width: 0;
+}
+
+.held-go-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.held-go-btn:hover .held-title {
+    text-decoration: underline;
+}
+
+/* ---------- panel dismiss ---------- */
+
+/* One control for both summoned panels. A chevron rather than a cross: these slide out of the
+   way rather than closing something the customer opened by mistake. */
+.panel-close {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(22, 24, 29, 0.07);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.panel-close:hover {
+    background: rgba(22, 24, 29, 0.14);
+}
+
+/* The reservation header, inside the search panel rather than floating beside it. Separated by a
+   hairline instead of by a second card - it is the same corner and the same customer. */
+.held-head {
+    margin: -2px 0 12px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--border);
+}
+
+.held-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* The one place green appears outside the map itself, and it means what it means there:
+   this villa is yours. */
+.held-tick {
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    border: 1px solid var(--good);
+    background: rgba(92, 186, 128, 0.26);
+    color: var(--good);
+    font-size: 10px;
+    line-height: 15px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.held-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.held-details {
+    flex: 0 0 auto;
+    padding: 5px 11px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.held-details:hover {
+    background: var(--accent-dim);
+}
+
+.held-meta {
+    margin-top: 5px;
+    /* Clears the tick, so the reference lines up with the villa name above it. */
+    padding-inline-start: 25px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+
+/* Under two days the remaining time is the message. Same threshold as the journey's SLA bar. */
+.held-meta.urgent {
+    color: var(--urgent);
+    font-weight: 600;
+}
+
+/* Quiet, under the project name. Matches .who on the journey card. */
+.who {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.brand {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+}
+
+.unit-search {
+    display: flex;
+    gap: 6px;
+}
+
+.search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 13px;
+    background: #ffffff;
+    color: var(--text);
+    outline: none;
+}
+
+.search-input::placeholder {
+    /* 0.54, not the 0.42 a direct inversion gives: over the input's own ground that measured
+       3.53:1. Placeholder text is text. */
+    color: rgba(22, 24, 29, 0.4);
+}
+
+.search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(22, 24, 29, 0.14);
+}
+
+button {
+    font: inherit;
+    border: 1px solid var(--border);
+    background: rgba(22, 24, 29, 0.05);
+    border-radius: 9px;
+    padding: 8px 10px;
+    cursor: pointer;
+    color: var(--text);
+}
+
+button.primary {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+/* No .hud-status: the only place a count earns its space is the filter sheet. */
+
+/* An answer, not an error - shaking blames a customer who typed a real number. The ground is
+   the reserved grey-violet the parcel itself is painted in. */
+/* The one answer search gives to a miss. A quiet ground on purpose: it does not accuse the
+   customer of a typo, and it does not borrow a status colour it cannot always mean. */
+.search-msg {
+    margin-top: 8px;
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(22, 24, 29, 0.05);
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--text);
+}
+
+/* ---------- filters ---------- */
+
+/* The toggle that used to live in the search panel is gone: Filters is a tool on the map toolbar
+   now, and .tool.has-filters carries the "something is selected" dot it used to show as a colour. */
+
+/* Full-height rail against the left edge. The map keeps its own space rather than being
+   covered by a block that grows over it. */
+.filter-rail {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 95;
+    /* Wide enough for the longest row - a style, a bedroom count and a four-figure tally on one
+       line - without the label wrapping. */
+    width: 320px;
+    max-width: 86vw;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    color: var(--text);
+    /* Symmetric, so the rail casts the same shadow whichever edge it slides from. */
+    box-shadow: 0 0 28px rgba(22, 24, 29, 0.18);
+    animation: railIn 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes railIn {
+    from {
+        transform: translateX(-100%);
+    }
+}
+
+.rail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.rail-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.rail-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 19px;
+    line-height: 1;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(22, 24, 29, 0.07);
+    color: rgba(22, 24, 29, 0.7);
+}
+
+.rail-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 14px 18px 16px;
+}
+
+.facet + .facet {
+    margin-top: 13px;
+}
+
+.facet-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22, 24, 29, 0.5);
+    margin-bottom: 7px;
+}
+
+/* Rows, not pills, at every width - the reference stacks full-width product rows. */
+.chips {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 2px;
+}
+
+.chip {
+    width: 100%;
+    min-height: 40px;
+    font-size: 13px;
+    line-height: 1.2;
+    padding: 0 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    text-align: start;
+    border: 0;
+    background: #ffffff;
+    color: rgba(22, 24, 29, 0.86);
+    font-weight: 600;
+    transition: background 0.12s ease;
+}
+
+/* The colour the map paints this product, set inline from PRODUCTS. Leading edge, so a reader
+   scanning the list matches colour to plan before reading a word. */
+.swatch {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    /* A hairline on every swatch. Two of the four are near-black against this panel, and without
+       an edge they simply are not there. The ring gives the boundary, not the colour. */
+    box-shadow: inset 0 0 0 1px rgba(22, 24, 29, 0.35);
+}
+
+.chip:hover {
+    background: rgba(22, 24, 29, 0.07);
+}
+
+/* Selected stays light - the old olive inversion read as the row turning black. The ring is
+   inset rather than a border so nothing shifts when a row is picked. */
+.chip.on {
+    background: #e3e6df;
+    color: var(--text);
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.chip.empty {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.chip-count {
+    /* Trailing, so the label and the swatch stay aligned down the list however long the count. */
+    margin-inline-start: auto;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.55;
+}
+
+
+
+/* Sits under the zoom controls in the same right-hand column. Two segments rather than one
+   toggle, because "Plan" has to be nameable - it is the view that carries the plot numbers. */
+
+/* Was inverted against a bright palette. Now the chrome is dark the control simply takes the
+   tokens, and paper text sits on the same ground as every other floating pill. */
+/* One joined pill on the trailing edge, top corner, as in the reference. The top band is free
+   now that the tools sit at the foot, so this no longer has to start below one. */
+.image-controls {
+    position: absolute;
+    inset-inline-end: 16px;
+    top: 16px;
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+}
+
+/* The pill carries the ground and the edge now, so each half is only a target. */
+.zoom-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 22px;
+    font-weight: 300;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--text);
+}
+
+.zoom-btn:hover {
+    background: rgba(22, 24, 29, 0.07);
+}
+
+.zoom-btn + .zoom-btn {
+    border-top: 1px solid var(--border);
+}
+
+/* Directly under the zoom pill it undoes, on the same trailing edge. It used to sit bottom
+   centre, which is where the toolbar now is. */
+.zoom-out-bar {
+    position: absolute;
+    left: auto;
+    inset-inline-end: 16px;
+    top: 116px;
+    bottom: auto;
+    transform: none;
+    z-index: 88;
+    padding: 9px 20px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 650;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+}
+
+
+/* ---------- loading veil ---------- */
+
+.veil {
+    position: absolute;
+    inset: 0;
+    z-index: 160;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--bg);
+    opacity: 1;
+    transition: opacity 0.35s ease;
+}
+
+/* Faded rather than removed so the transition can run; visibility is delayed by the same
+   duration so it stops intercepting pointer events only once fully clear. */
+.veil.done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+.spinner {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 3px solid rgba(22, 24, 29, 0.16);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.veil-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.veil-error {
+    max-width: 340px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e07a68;
+    line-height: 1.45;
+}
+
+.veil-retry {
+    margin-top: 14px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent-deep);
+    border: 1px solid var(--accent-deep);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Sits above the map rather than inside .stage: a non-absolute stage child changes
+   stage.clientHeight, which the whole camera reads from. */
+.nothing {
+    position: absolute;
+    inset-inline-start: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 150;
+    width: min(420px, calc(100vw - 48px));
+    padding: 26px 28px;
+    text-align: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.nothing-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 650;
+    line-height: 1.3;
+    color: var(--text);
+}
+
+.nothing-body {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--muted);
+}
+
+/* ---------- stage 1: card anchored to the unit ---------- */
+
+/* left/top are written by positionCard(); these are only pre-placement defaults. */
+.floating-details {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    z-index: 110;
+    width: 244px;
+    max-width: min(86vw, 244px);
+    padding: 12px 13px 11px;
+    color: var(--text);
+    /* Translucent so the plot underneath survives the overlap at focus zoom; the blur comes
+       down with the alpha so what shows through is a wash rather than the plot. */
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    /* Firmer than var(--border): the edge is what still reads as an object over a busy map. */
+    border: 1px solid rgba(22, 24, 29, 0.18);
+    border-radius: 13px;
+    box-shadow: 0 12px 28px rgba(22, 24, 29, 0.18);
+    cursor: default;
+}
+
+.close-details {
+    position: absolute;
+    inset-inline-end: 7px;
+    top: 7px;
+    width: 23px;
+    height: 23px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    color: var(--text);
+    background: rgba(22, 24, 29, 0.07);
+    font-size: 15px;
+    line-height: 23px;
+}
+
+.detail-sub {
+    font-size: 10px;
+    color: rgba(22, 24, 29, 0.58);
+}
+
+.detail-title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+    /* 28px reserves room for .close-details; inline so it follows the reading direction. */
+    margin: 2px 0 8px;
+    margin-inline-end: 28px;
+    color: var(--text);
+}
+
+.floating-rows {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 5px 12px;
+    align-items: center;
+    margin-top: 9px;
+}
+
+.detail-row {
+    display: contents;
+}
+
+.detail-row-label {
+    font-size: 11px;
+    color: rgba(22, 24, 29, 0.66);
+}
+
+.detail-row-value {
+    font-size: 11px;
+    font-weight: 650;
+    color: var(--text);
+    text-align: end;
+}
+
+/* The extra a customer owes on top of their approval. Clay rather than red: it is a fact about
+   the villa, not an error, but it is the fact most likely to change their mind. */
+.detail-row.extra .detail-row-label,
+.detail-row.extra .detail-row-value {
+    color: var(--urgent);
+}
+
+.detail-row.extra .detail-row-value {
+    font-weight: 700;
+}
+
+.floating-actions {
+    margin-top: 12px;
+}
+
+.explore-btn {
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--accent-deep);
+    color: var(--accent-ink);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+/* ---------- stage 2: full-screen explore ---------- */
+
+/* Covers the map rather than unmounting it, so the camera survives the round trip. */
+.explore {
+    /* The picture's inset from the screen edge. Everything that has to sit on or beside the
+       frame reads this, so one breakpoint change moves them together. */
+    --stage-pad: 40px;
+    /* The column the spec card floats over. .explore-stage pads by it, and anything else anchored
+       to the stage that is meant to line up with the picture has to start after it. */
+    --card-gutter: 462px;
+    position: absolute;
+    inset: 0;
+    z-index: 150;
+    background: #efece5;
+    animation: exploreIn 0.2s ease;
+    overflow: hidden;
+}
+
+@keyframes exploreIn {
+    from {
+        opacity: 0;
+    }
+}
+
+/* Blurred stand-in for the render backdrop until ADHA supplies one. Scaled up so the blur
+   has no soft edge at the viewport boundary. */
+.explore-bg {
+    position: absolute;
+    inset: -8%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(46px) saturate(0.7) brightness(0.62);
+    transform: scale(1.1);
+}
+
+/* ---------- spec card ---------- */
+
+/* Inset from the viewport edges so the card floats over the backdrop rather than bleeding
+   into the browser chrome. */
+.spec-card {
+    position: absolute;
+    inset-inline-start: 22px;
+    top: 22px;
+    z-index: 20;
+    width: 372px;
+    max-width: calc(100vw - 44px);
+    max-height: calc(100vh - 44px);
+    overflow-y: auto;
+    padding: 16px 22px 22px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--text);
+    border-radius: 16px;
+    /* Ground to card is 1.36:1, so the edge is what makes this a surface; a drop shadow would
+       do nothing over the blurred render. */
+    border: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+}
+
+/* Quiet by design - the primary action in this card is the CTA at the bottom. */
+.explore-back {
+    margin: 0 0 14px;
+    margin-inline-start: -6px;
+    padding: 4px 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(22, 24, 29, 0.55);
+}
+
+.explore-back:hover {
+    color: var(--text);
+    background: rgba(22, 24, 29, 0.07);
+}
+
+.spec-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.spec-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.spec-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.spec-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+}
+
+.spec-label {
+    color: rgba(22, 24, 29, 0.72);
+}
+
+/* Pushes the value right and lets the unit toggle sit after it. */
+.spec-value {
+    margin-inline-start: auto;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.spec-row.total {
+    margin-top: 6px;
+    padding-top: 13px;
+    border-top: 1px solid var(--border);
+    font-size: 14.5px;
+}
+
+/* Mirrors the selection card's .detail-row.extra deliberately - one figure shown two ways reads
+   as two figures. Clay rather than red: a fact, not an error. */
+.spec-row.extra .spec-label,
+.spec-row.extra .spec-value {
+    color: var(--urgent);
+}
+
+.spec-row.extra .spec-value {
+    font-weight: 700;
+}
+
+.unit-toggle {
+    display: inline-flex;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.u {
+    padding: 3px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 0;
+    border-radius: 0;
+    background: rgba(22, 24, 29, 0.07);
+    color: rgba(22, 24, 29, 0.5);
+}
+
+.u.on {
+    background: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+.spec-note {
+    margin-top: 14px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--urgent);
+}
+
+.spec-cta {
+    width: 100%;
+    margin-top: 20px;
+    /* Height, not padding, and 12px to match the journey's .cta. The two are the same button in
+       two components and were 10px vs 12px with different sizing methods, so they never matched. */
+    height: 50px;
+    padding: 0 13px;
+    /* 19px/700 for the same reason as the journey's .cta: it puts the white label over WCAG's
+       large-text threshold, where white on #78806E only has to beat 3:1 rather than 4.5:1. */
+    font-size: 19px;
+    font-weight: 700;
+    border-radius: 12px;
+    /* The primary action of the whole map, so it is solid rather than outlined. */
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #ffffff;
+}
+
+/* Darkens rather than fades. This was #e3e0d9, a paper tint from when the button itself was
+   paper; against the white label the CTA now carries, that was about 1.3:1 on hover. */
+.spec-cta:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+}
+
+.spec-cta:disabled {
+    background: transparent;
+    border-color: var(--border);
+    color: rgba(22, 24, 29, 0.38);
+    cursor: not-allowed;
+}
+
+/* ---------- floor picker ---------- */
+
+/* Lives inside .media-plate, so it is placed against the picture rather than the section. Above
+   .media-cap, which is a full width strip on the plate's bottom edge. */
+.floor-picker {
+    position: absolute;
+    inset-inline-end: 10px;
+    bottom: 44px;
+    z-index: 20;
+    padding: 5px;
+    border-radius: 10px;
+    background: var(--panel);
+    box-shadow: 0 2px 10px rgba(22, 24, 29, 0.14);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.floor-cap {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22, 24, 29, 0.55);
+    padding: 0 6px 0 4px;
+}
+
+.floor-btn {
+    width: 44px;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 650;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(22, 24, 29, 0.66);
+}
+
+.floor-btn.active {
+    background: rgba(22, 24, 29, 0.12);
+    color: var(--text);
+}
+
+/* ---------- media ---------- */
+
+.explore-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: stretch;
+    /* 104px at the foot clears the tab row at bottom:22 and the journey's language switch at
+       bottom:16. The plate fills this box now, so an inset that used to be slack is a collision. */
+    padding: var(--stage-pad) var(--stage-pad) 104px;
+    /* Clears the spec card, which is 418px wide once padding and border are counted, not the
+       372px its width property says. */
+    padding-inline-start: var(--card-gutter);
+}
+
+/* Sized by the layout, never by the file inside it: reading the image's ratio resized the whole
+   screen three times per tab switch. The picture letterboxes inside it instead. */
+.media-plate {
+    position: relative;
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 12px;
+    background: var(--panel);
+    box-shadow: 0 18px 60px rgba(22, 24, 29, 0.18);
+}
+
+/* Scales with --ez like the supplied picture, so the fallback zooms the same way. */
+/* Fits the plate the way a render does. object-fit: contain rather than cover: a film has one
+   framing the director chose and cropping it would cut the house out of its own walkthrough. */
+.walkthrough-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    display: block;
+}
+
+.villa-art {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scale(var(--ez, 1));
+    transition: transform 0.22s ease;
+}
+
+/* ---------- supplied media ---------- */
+
+/* The picture fades in inside a box that is already the right shape; nothing reflows. The zoom
+   scales the picture, not the plate - scaling the plate carried the caption and picker off. */
+.media-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* contain on every tab - cover cropped mismatched frames, and fill would stretch three
+       different shapes into a lie about the house. */
+    object-fit: contain;
+
+    /* Inset so the render sits in a frame; the bottom is deeper because .media-cap is a strip on
+       the plate's bottom edge. border-box, so the padding comes out of the 100%. */
+    box-sizing: border-box;
+    padding: 20px 20px 48px;
+
+    opacity: 0;
+    transform: scale(var(--ez, 1));
+    transition: opacity 0.3s ease, transform 0.22s ease;
+}
+
+/* Plans are black line on white, so only the ground is special here; content-box so the sheet
+   stops where the picture stops. */
+.media-plate .media-img[src*='/plan/'] {
+    background: #fff;
+    background-clip: content-box;
+}
+
+.media-img.ready {
+    opacity: 1;
+}
+
+/* Skeleton and spinner, on top of the empty plate until the image reports back. Same spinner
+   and caption treatment as the map's loading veil, so the site has one loading language. */
+.media-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(100deg, #242424 30%, #333333 50%, #242424 70%);
+    background-size: 220% 100%;
+    animation: media-shimmer 1.25s linear infinite;
+}
+
+@keyframes media-shimmer {
+    to {
+        background-position: -220% 0;
+    }
+}
+
+/* Arrows live outside the clipping plate, just inside its edges. The leading edge must clear
+   --card-gutter, not just --stage-pad - it did not, and the arrow floated over the backdrop. */
+.media-next {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: calc(var(--stage-pad) + 16px);
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(22, 24, 29, 0.14);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 6px 20px rgba(22, 24, 29, 0.2);
+    font-size: 22px;
+    line-height: 1;
+    color: #16181d;
+    cursor: pointer;
+}
+
+.media-next:hover {
+    background: #fff;
+}
+
+/* Mirrors .media-next on the leading edge; with nineteen interiors, forward-only meant pressing
+   next eighteen times to go back one. */
+.media-prev {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--card-gutter) + 16px);
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.media-prev:hover {
+    background: #fff;
+}
+
+/* Centred under the picture, above the caption strip. Position in a set of nineteen is not
+   something anyone holds in their head, and the arrows alone do not say how far there is to go. */
+.media-count {
+    position: absolute;
+    inset-block-end: calc(var(--stage-pad) + 44px);
+    inset-inline-start: var(--card-gutter);
+    inset-inline-end: 0;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: rgba(22, 24, 29, 0.7);
+    pointer-events: none;
+}
+
+/* No RTL glyph rule: it never matched live, so the chevrons ended up pointing at each other.
+   prevGlyph / nextGlyph in the JS pick the character instead. */
+
+@media (prefers-reduced-motion: reduce) {
+    .media-loading {
+        animation: none;
+    }
+    .media-img {
+        transition: none;
+    }
+}
+
+/* On the drawing rather than under the plate: it qualifies what is being shown, and a caption
+   outside the sheet reads as a note about the page instead. */
+/* The room, ahead of the standing note and set brighter, because it names what you are looking at
+   where the note only qualifies it. */
+.media-room {
+    font-weight: 650;
+    color: var(--text);
+}
+
+/* The unit beside the plot area figure. Muted and small: it names the number, it is not a
+   control - the sqft/sqm toggle one row up is still the only thing you press. */
+.spec-unit {
+    margin-inline-start: 6px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.media-room::after {
+    content: ' \00B7\00A0';
+    color: rgba(22, 24, 29, 0.45);
+}
+
+.media-cap {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    line-height: 1.35;
+    text-align: center;
+    color: #4a443a;
+    background: rgba(237, 232, 222, 0.92);
+    border-top: 1px solid rgba(74, 68, 58, 0.16);
+}
+
+/* Top trailing corner of the picture, the same joined pill the map uses. It was pinned to the
+   middle of the trailing edge, which put it across the elevation on every landscape shot. */
+.explore-zoom {
+    position: absolute;
+    inset-inline-end: calc(var(--stage-pad) + 16px);
+    top: calc(var(--stage-pad) + 16px);
+    bottom: auto;
+    transform: none;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+}
+
+.ez-btn + .ez-btn {
+    border-top: 1px solid var(--border);
+}
+
+.ez-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 24px;
+    font-weight: 300;
+    border: 0;
+    background: transparent;
+    color: rgba(22, 24, 29, 0.92);
+}
+
+/* ---------- bottom bar ---------- */
+
+.explore-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+}
+
+/* A light pill: the old dark wash fell to 2.2-3.3:1 once the ground went light. */
+.bar-btn {
+    padding: 12px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 0;
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(6px);
+    white-space: nowrap;
+}
+
+.bar-btn.active {
+    background: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+/* Sits under the applicant's name in the top bar. Quiet by default - it is an exit, not an
+   action anyone came here to take - and it only firms up on hover. */
+.top-signout {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.top-signout:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+/* ---------- badges ---------- */
+
+/* One set of variants: the details card and the spec card are the same dark surface. */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* "Yours". A paper fill, matching .unit.held on the map, so it is never mistaken for the grey
+   badge a villa somebody else holds carries. */
+.badge.held {
+    background: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+.badge.available {
+    background: rgba(92, 186, 128, 0.20);
+    color: var(--good);
+}
+
+.badge.reserved {
+    background: rgba(22, 24, 29, 0.09);
+    color: rgba(22, 24, 29, 0.62);
+}
+
+.badge.sold {
+    background: rgba(224, 138, 109, 0.20);
+    color: var(--urgent);
+}
+
+.badge.blocked {
+    background: rgba(22, 24, 29, 0.07);
+    color: rgba(22, 24, 29, 0.5);
+}
+
+/* Above the explore bar, not on it - at bottom:26px the toast covered the only way off the
+   screen. pointer-events:none: a notification is never a target. */
+.toast {
+    position: absolute;
+    left: 50%;
+    bottom: 74px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 200;
+    background: rgba(20, 26, 34, 0.94);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 18px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+/* On a phone the sheet becomes a bottom sheet so the map keeps the full width. */
+/* Touch devices need a 44px minimum target regardless of screen size - a desktop-sized
+   tablet still gets fingers, not a cursor. */
+@media (pointer: coarse) {
+    button.primary,
+    .search-input {
+        height: 44px;
+    }
+
+    /* 16px, or iOS Safari zooms the whole page the moment the field is focused. */
+    .search-input {
+        font-size: 16px;
+    }
+
+    .chip,
+    .bar-btn,
+    .floor-btn,
+    .u {
+        min-height: 44px;
+    }
+
+    .chip {
+        padding: 0 12px;
+    }
+
+    .u {
+        min-width: 44px;
+    }
+
+    .ez-btn,
+    .rail-close {
+        width: 44px;
+        height: 44px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stage.camera-animating,
+    .stage.search-animating,
+    .filter-rail,
+    .hud-search,
+    .media-img,
+    .villa-art {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* ---------- tablet ---------- */
+
+@media (max-width: 1180px) {
+    /* Tighter margins. The card's own column and the tab row are reserved by the base rules. */
+    .explore {
+        --stage-pad: 24px;
+    }
+}
+
+/* ---------- phone ---------- */
+
+@media (max-width: 820px) {
+    /* ---------- the toolbar moves to the foot: same element, icon over label, thumb-height ---------- */
+
+    /* A floating card rather than nothing. It used to be hidden outright on a phone, which
+       left no project name and no sign of who was signed in until a villa was held. */
+    .id-card {
+        inset-inline: 12px auto;
+        top: calc(10px + env(safe-area-inset-top, 0px));
+        /* Clears the journey's language switch, which sits at top:12 on the trailing edge. */
+        max-width: calc(100% - 96px);
+        padding: 7px 12px;
+        padding-inline-end: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    /* The same bottom-centre bar, squared off against the foot of the screen: a floating box
+       wastes the safe area under it and a phone has none to waste. */
+    .map-tools {
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+        transform: none;
+        gap: 0;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+        border: 0;
+        border-top: 1px solid var(--border);
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .id-card .brand {
+        font-size: 12.5px;
+        margin-bottom: 0;
+    }
+
+    .id-card .who {
+        margin-top: 1px;
+        font-size: 10.5px;
+    }
+
+    .tool {
+        flex: 1 1 0;
+        gap: 3px;
+        min-width: 0;
+        min-height: 52px;
+        padding: 6px 2px;
+        font-size: 10px;
+        border-radius: 12px;
+    }
+
+    .tool-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    /* ---------- the reservation, and search when asked for: both stop short of the journey's
+       .lang-switch in the trailing corner ---------- */
+    .hud-search {
+        box-sizing: border-box;
+        inset-inline-start: 12px;
+        inset-inline-end: auto;
+        transform: none;
+        top: 12px;
+        width: calc(100vw - 138px);
+        max-width: none;
+        border-radius: 12px;
+    }
+
+    /* Stops short of the trailing corner: the journey's .lang-switch is about 102px wide at
+       top:12px there, and border-box is what stops the padding pushing this underneath it. */
+    .id-card {
+        box-sizing: border-box;
+        width: calc(100vw - 138px);
+        max-width: none;
+    }
+
+    .hud-search {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 9px;
+        animation: none;
+    }
+
+    /* The search panel opens into the same corner, and the panel is what is being read. */
+    .frame.panel-open .id-card {
+        display: none;
+    }
+
+    .unit-search {
+        flex: 1 1 120px;
+        min-width: 0;
+    }
+
+    .search-input {
+        flex: 1 1 90px;
+    }
+
+    /* A CSS-drawn glyph, not a character - magnifier codepoints render as anything across mobile
+       fonts. The label stays as the accessible name, hidden by font-size alone. */
+    .unit-search .primary {
+        position: relative;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        font-size: 0;
+    }
+
+    .unit-search .primary::before {
+        content: '';
+        position: absolute;
+        left: 13px;
+        top: 13px;
+        width: 13px;
+        height: 13px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+    }
+
+    .unit-search .primary::after {
+        content: '';
+        position: absolute;
+        left: 26px;
+        top: 26px;
+        width: 8px;
+        height: 2px;
+        background: currentColor;
+        transform: rotate(45deg);
+        transform-origin: left center;
+    }
+
+    .search-cancel {
+        flex: 0 0 auto;
+        min-height: 44px;
+        padding: 0 10px;
+        font-size: 11.5px;
+        font-weight: 600;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+    }
+
+    /* border-box, or flex-basis:100% resolves against the content box and then the padding and
+       border push both of these past the panel's trailing edge. */
+    .search-msg {
+        box-sizing: border-box;
+        flex: 1 0 100%;
+        margin-top: 0;
+    }
+
+    /* ---------- summoned panels dock above the toolbar; env() keeps Safari's own bar from
+       clipping them ---------- */
+    .amenity-bar {
+        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Top trailing as on desktop, but starting below the journey's .lang-switch, which is fixed
+       at top:12 on this edge and outranks everything here. */
+    .image-controls {
+        inset-inline-end: 12px;
+        top: calc(56px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+    }
+
+    .zoom-out-bar {
+        left: auto;
+        inset-inline-end: 12px;
+        top: calc(154px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        transform: none;
+    }
+
+    /* ---------- selected unit: bottom sheet - anchored beside the plot there is nowhere for
+       the card to go on a phone ---------- */
+    .floating-details {
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+        width: auto;
+        max-width: none;
+        border-radius: 16px 16px 0 0;
+        padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        box-shadow: 0 -10px 30px rgba(22, 24, 29, 0.18);
+    }
+
+    /* Type, bedrooms and GSA. All three are on the Explore view in full, and the sheet has to stay
+       short enough that the plot behind it is still visible. */
+    .floating-details .detail-row.secondary {
+        display: none;
+    }
+
+    /* The card and the search bar must not stack, which is what filled the screen. */
+    .frame.card-open .hud-search {
+        display: none;
+    }
+
+    /* ---------- filters: a sheet sized to its content - four rows in a full-height sheet read
+       as a page that failed to load ---------- */
+    .filter-rail {
+        inset-inline: 0;
+        top: auto;
+        bottom: 0;
+        width: auto;
+        max-width: none;
+        height: auto;
+        max-height: 88dvh;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -12px 34px rgba(22, 24, 29, 0.2);
+        animation-name: sheetUp;
+    }
+
+    /* The grip the reference puts on its sheets. Decorative: the row itself is not draggable, and
+       the rail's own close button is the control. */
+    .rail-head::before {
+        content: '';
+        position: absolute;
+        inset-inline-start: 50%;
+        top: 7px;
+        width: 38px;
+        height: 4px;
+        margin-inline-start: -19px;
+        border-radius: 999px;
+        background: rgba(22, 24, 29, 0.18);
+    }
+
+    .rail-head {
+        position: relative;
+        padding: 20px 16px 12px;
+    }
+
+    .rail-body {
+        padding: 6px 16px 14px;
+    }
+
+    /* A section heading, centred, as "Villas" and "Townhouses" are in the reference. */
+    .facet-label {
+        margin-bottom: 8px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-align: center;
+        color: var(--muted);
+    }
+
+    .facet + .facet {
+        margin-top: 18px;
+    }
+
+    .chips {
+        gap: 1px;
+    }
+
+    /* Rows are the shape at every width now; the phone only wants a bigger tap target. */
+    .chip {
+        min-height: 48px;
+        padding: 0 14px;
+        font-size: 14px;
+    }
+
+    .chip .chip-count {
+        font-size: 12px;
+    }
+
+    .chip .swatch {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* ---------- explore: hero at the top, spec below. Width binds on a phone, so nothing
+       reserves height - the picture takes its ratio's height, the spec takes the rest ---------- */
+    .explore {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* order, not markup: the desktop layout wants the card painted under the plan. basis 0, NOT
+       auto - with auto the picture's own ratio sized the stage, differently per tab. */
+    .explore-stage {
+        order: 1;
+        position: relative;
+        inset: auto;
+        flex: 1 1 0;
+        min-height: 180px;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Full bleed - there is no table on a phone, and the chrome only drew attention to the void
+       around the letterboxed photo. */
+    .media-plate {
+        border-radius: 0;
+        box-shadow: none;
+        background: var(--bg);
+    }
+
+    /* One line at full width. Over the picture still: it qualifies what is being shown. */
+    .media-cap {
+        padding: 6px 12px;
+        font-size: 10.5px;
+    }
+
+    /* Tighter inset here, and a shallower foot because the caption above is a smaller strip. The
+       plate is full-bleed on a phone, so 20px each side would be a noticeable slice of it. */
+    .media-img {
+        padding: 10px 10px 34px;
+    }
+
+    /* The stage is exactly the picture now, so 50% of it is the middle of the photo. */
+    .media-next {
+        inset-inline-start: auto;
+        inset-inline-end: 6px;
+        inset-block-start: 50%;
+        transform: translateY(-50%);
+    }
+
+    .media-prev {
+        inset-inline-end: auto;
+        inset-inline-start: 6px;
+        inset-block-start: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* Above the caption strip, which is shorter here. The stage has no card gutter on a phone,
+       so the leading inset the desktop rule sets has to come back off. */
+    .media-count {
+        inset-block-end: 34px;
+        inset-inline: 0;
+        font-size: 10.5px;
+    }
+
+    /* On the picture's trailing corner but below the journey's .lang-switch (top:12, z 300) -
+       at top:10 the + was unreachable on every phone. */
+    .explore-zoom {
+        inset-inline-end: 10px;
+        top: calc(56px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        transform: none;
+        flex-direction: row;
+        gap: 0;
+        padding: 0;
+        border-radius: 999px;
+        background: var(--panel);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
+    }
+
+    /* Slimmer than the coarse-pointer 44px, which sat over the render it magnifies. The tap
+       target does NOT shrink with it - see the ::before below. */
+    .ez-btn {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    /* Keeps a 46px tall, 41px wide hit area on a 36px button. Extended outward only, so the two
+       halves cannot steal each other's taps at the divider. */
+
+    .ez-btn::before {
+        content: '';
+        position: absolute;
+        inset: -5px 0;
+    }
+
+    .ez-btn:first-child::before {
+        inset-inline-start: -5px;
+    }
+
+    .ez-btn:last-child::before {
+        inset-inline-end: -5px;
+    }
+
+    /* Same corner as desktop, tightened. The supplied sheets are one floor each since the 19 Aug
+       drop, so this now drives the picture and not only the drawn fallback. */
+    .floor-picker {
+        inset-inline-end: 8px;
+        bottom: 36px;
+        top: auto;
+        padding: 3px;
+    }
+
+    .floor-btn {
+        width: 40px;
+        padding: 7px 0;
+    }
+
+    .floor-cap {
+        display: none;
+    }
+
+    /* Always four tabs and the Arabic labels never fit, so a scroller. flex-start, not center -
+       centring puts the start of the row out of reach once it overflows. */
+    .explore-bar {
+        order: 2;
+        position: static;
+        transform: none;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
+        scroll-padding-inline: 12px;
+        scrollbar-width: none;
+        max-width: none;
+        gap: 6px;
+        padding: 8px 12px;
+        background: var(--panel-solid);
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* No edge fade. The fourth tab sits about half in view, which is the affordance already, and a
+       static mask would have dimmed that tab again once it was scrolled to. */
+    .explore-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* handleBackToCommunity twice on one screen: this button and .explore-back immediately
+       below it are the same action with different words. */
+    .explore-bar > .bar-btn:first-child {
+        display: none;
+    }
+
+    /* The pill only has to separate from its own --panel-solid ground. 1 0 auto: grow to share
+       the row, shrink 0 so Arabic never squeezes one below its label. */
+    .bar-btn {
+        flex: 1 0 auto;
+        padding: 12px 8px;
+        font-size: 12.5px;
+        text-align: center;
+        background: rgba(22, 24, 29, 0.06);
+        box-shadow: none;
+    }
+
+    /* Everything the picture and the tabs do not take. Scrolls under the pinned CTA rather than
+       cutting the price off, which is what the 46dvh cap used to do. */
+    .spec-card {
+        order: 3;
+        position: static;
+        /* This sheet has no box-sizing reset, so width:100% plus padding ran 28px wider than
+           the phone and clipped the badge. */
+        box-sizing: border-box;
+        /* Its content's height, not the leftover: growing was what pooled the gap above the CTA.
+           The cap keeps a long card from crushing the picture; past it the card scrolls. */
+        flex: 0 1 auto;
+        min-height: 0;
+        width: 100%;
+        max-width: 100%;
+        max-height: 52dvh;
+        overflow-y: auto;
+        border-radius: 0;
+        /* No bottom reserve - see ::after: a scroll container's own padding-bottom is not part
+           of its scrollable overflow. */
+        padding: 10px 14px 0;
+        background: var(--panel-solid);
+        /* backdrop-filter creates a containing block for absolutely positioned descendants,
+           which would trap .spec-cta inside this card's scroll area. */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .explore-back {
+        margin-bottom: 6px;
+        font-size: 12px;
+    }
+
+    .spec-head {
+        margin-bottom: 9px;
+    }
+
+    .spec-title {
+        font-size: 15.5px;
+    }
+
+    /* Two figures per line halves the card; the unit toggle wraps under its own row, and rows
+       without a toggle have nothing to wrap. */
+    .spec-rows {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 14px;
+        row-gap: 9px;
+        /* Top aligned, so the two columns share a baseline whatever wraps; stretched, a single
+           line floated to the middle beside a wrapped neighbour. */
+        align-items: start;
+    }
+
+    .spec-row {
+        flex-wrap: wrap;
+        row-gap: 5px;
+        font-size: 12.5px;
+    }
+
+    .spec-row.total {
+        grid-column: 1 / -1;
+        margin-top: 0;
+        padding-top: 9px;
+        font-size: 13.5px;
+    }
+
+    /* Spans like the total above it. Half-width, it sat orphaned in the left column with empty
+       space beside it, directly under a row that runs the full width. */
+    .spec-row.extra {
+        grid-column: 1 / -1;
+    }
+
+    .spec-note {
+        margin-top: 8px;
+    }
+
+    /* Room for the pinned CTA, as real content so it survives scrolling - .spec-cta is
+       positioned against .explore, so nothing in here knows it is there. */
+    .spec-card::after {
+        content: '';
+        display: block;
+        height: calc(74px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Pinned out of the card's scroll area - its containing block is .explore, which carries it
+       through the overflow. This is the booking button and it was below the fold. */
+    .spec-cta {
+        position: absolute;
+        inset-inline-start: 12px;
+        inset-inline-end: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        z-index: 40;
+        width: auto;
+        margin-top: 0;
+        /* Pinned, so the spacer above has to reserve a known height. It is not in the 44px touch
+           list, and if the label ever wraps to two lines an unbounded button eats the reserve. */
+        min-height: 48px;
+        box-shadow: 0 8px 24px rgba(22, 24, 29, 0.3);
+    }
+}
+
+/* ---------- phone, turned sideways ---------- */
+
+/* 360px of height cannot stack picture, tabs and spec: card beside the picture, CTA confined to
+   its column. Also catches a browser window resized short. */
+@media (max-width: 820px) and (max-height: 560px) {
+    .explore {
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    /* order is reset, not inherited: the column above puts the picture first because that is the
+       reading order on a phone held upright. Turned sideways the card leads again. */
+    .spec-card {
+        order: 0;
+        flex: 0 0 46%;
+        max-width: 46%;
+        height: 100%;
+        /* The reserve is the ::after from the portrait rule, which carries through - padding here
+           would be discarded the moment this card scrolls, same as it was there. */
+        border-inline-end: 1px solid var(--border);
+    }
+
+    .spec-cta {
+        inset-inline-end: calc(54% + 12px);
+    }
+
+    /* Same rule as the portrait column, laid the other way: the frame is what the row leaves
+       beside the card, and the picture letterboxes inside it. */
+    .explore-stage {
+        order: 1;
+        flex: 1 1 0;
+        align-self: stretch;
+        /* 70px clears the control row at top:12, which is 52px tall on a touch device. */
+        margin: 70px 0 calc(62px + env(safe-area-inset-bottom, 0px));
+        padding: 0 12px;
+    }
+
+    /* Floating over the picture, so it drops the solid strip the portrait layout gives it. The
+       buttons carry their own ground already. */
+    .explore-bar {
+        order: 2;
+        position: absolute;
+        inset-inline-start: 46%;
+        inset-inline-end: 0;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        padding: 0 12px;
+        background: transparent;
+        border-bottom: 0;
+    }
+
+    /* The bar is transparent again here, so the grey pill the portrait block sets would sit
+       straight on the picture. Back to the light pill. */
+    .bar-btn {
+        background: var(--panel);
+        box-shadow: var(--shadow);
+    }
+
+    /* Above the picture; row laid, so it clears .lang-switch by width rather than by height -
+       360px of screen has no room to push it down. */
+    .explore-zoom {
+        inset-inline-end: 92px;
+        top: 12px;
+        bottom: auto;
+    }
+
+    /* The caption wraps to two lines on a 225px plate, 41px of it, so the picker clears 46. The
+       plate is only 228px tall here, so the buttons shrink with it. */
+    .floor-picker {
+        bottom: 46px;
+        inset-inline-end: 6px;
+        padding: 2px;
+    }
+
+    .floor-btn {
+        width: 34px;
+        padding: 5px 0;
+        font-size: 12px;
+    }
+}
+
+
+/* ---------- amenities ---------- */
+
+/* The panel treatment lives on the buttons; the bar class name stays because onChrome() keys
+   off it. */
+.amenity-bar {
+    position: absolute;
+    /* Above the toolbar that summons it, not across the top of the plan. */
+    top: auto;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 90;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: calc(100vw - 24px);
+}
+
+.amenity-chip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 72px;
+    padding: 7px 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.amenity-chip:hover {
+    background: rgba(22, 24, 29, 0.08);
+}
+
+/* Selected takes the paper accent - a dark tile on dark chrome read as disabled. */
+.amenity-chip.active {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+}
+
+/* Sized against the 10px label rather than against the tile, so the icon reads as part of the
+   same object as its name. */
+.amenity-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.amenity-name {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--muted);
+}
+
+.amenity-chip.active .amenity-name {
+    color: var(--accent-ink);
+}
+
+/* Tablet and below the bar moves clear of the search HUD, which owns the top-left corner. */
+@media (max-width: 1100px) {
+    /* One swipeable row - wrapped, the chips became a 2x4 slab hiding the villas underneath. */
+    .amenity-bar {
+        top: auto;
+        /* Clears the toolbar, which floats 24px off the foot at this width. */
+        bottom: 100px;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-inline: 12px;
+        /* Not translateX(-50%): a scroller has to start at the leading edge or its first chip is
+           unreachable. Anchored to both edges instead. */
+        left: 0;
+        right: 0;
+        transform: none;
+        max-width: 100%;
+    }
+
+    .amenity-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .amenity-chip {
+        width: 64px;
+        flex: 0 0 auto;
+    }
+
+    .amenity-name {
+        font-size: 9px;
+    }
+}
+
+/* Detail tiles are styled inline in ensureDetailTiles - synthetic shadow scoping means a rule
+   here would never match them. Do not move the styles back into this file. */
+
+/* ---------- RTL ---------- */
+
+/* Logical properties mirror the layout; only physical-transform keyframes need RTL rules.
+   Deliberately NOT .stage: it keeps physical left:0 and dir="ltr" - the map is geographic and the pan maths measure from the physical left. */
+[dir='rtl'] .filter-rail {
+    animation-name: railInRtl;
+}
+
+@keyframes railInRtl {
+    from {
+        transform: translateX(100%);
+    }
+}
+
+/* A vertical slide has no direction to mirror. Must sit after the rule above: same specificity,
+   so source order decides, and the phone block comes earlier. */
+@keyframes sheetUp {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+@media (max-width: 820px) {
+    [dir='rtl'] .filter-rail {
+        animation-name: sheetUp;
+    }
+
+    /* The toolbar is flush with the foot on a phone, so the row sits lower than it does on the
+       floating bar above. After the 1100px block, which is the one that would otherwise win. */
+    .amenity-bar {
+        bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* The pill is row laid here, so the divider between its halves is the leading edge, not the top. */
+    .ez-btn + .ez-btn {
+        border-top: 0;
+        border-inline-start: 1px solid var(--border);
+    }
+}
+/* ---------- Pin mode panel (ops sessions only) ---------- */
+.ops-panel {
+    position: absolute;
+    top: 12px;
+    /* 76px clears the 44px zoom pill on the trailing edge; 290px keeps the Reset bar clear too. */
+    inset-inline-end: 76px;
+    width: 290px;
+    max-height: calc(100% - 24px);
+    overflow-y: auto;
+    background: var(--card-bg, #fff);
+    color: var(--ink, #222);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+    z-index: 60;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    font-size: 13px;
+}
+.ops-title { margin: 0 0 8px; font-size: 15px; }
+.ops-subtitle { margin: 12px 0 6px; font-size: 13px; }
+.ops-search { width: 100%; box-sizing: border-box; padding: 7px 9px; margin-bottom: 6px; }
+.ops-results, .ops-warnings { list-style: none; margin: 0 0 8px; padding: 0; }
+.ops-results button {
+    width: 100%; text-align: start; padding: 6px 8px; background: none;
+    border: none; border-bottom: 1px solid rgba(0, 0, 0, 0.08); cursor: pointer;
+}
+.ops-card { border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.ops-meta { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; opacity: 0.85; }
+.ops-target-head { display: flex; justify-content: space-between; align-items: center; }
+.ops-x { background: none; border: none; font-size: 16px; cursor: pointer; }
+.ops-btn {
+    width: 100%; padding: 8px; margin-top: 6px; border: none; border-radius: 6px;
+    background: var(--accent-deep, #1d5c3c); color: #fff; cursor: pointer;
+}
+.ops-btn:disabled { opacity: 0.45; cursor: default; }
+.ops-danger { background: #a33; }
+.ops-warnings li { color: #8a5a00; margin: 2px 0; }
+.ops-error { color: #a33; margin: 6px 0 0; }
+.ops-hint { opacity: 0.75; }
+
+/* ---------- Assign from the card, board panel, enlarged table ---------- */
+
+/* Card, ops variant: the search needs the extra width. */
+.floating-details.ops { width: 290px; max-width: min(86vw, 290px); }
+.badge.pinned { background: rgba(124, 88, 211, 0.16); color: #4c3390; }
+/* The ops working pool. Teal, the one band the status palette leaves free. */
+.badge.reserve { background: rgba(23, 118, 130, 0.14); color: #10606a; }
+.ops-holder { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.ops-pin-line { margin-top: 10px; font-size: 12px; font-weight: 650; color: #4c3390; }
+.ops-card-search { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 7px 9px;
+    border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+.ops-card-results { list-style: none; margin: 6px 0 0; padding: 0; max-height: 160px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 8px; }
+.ops-result { width: 100%; display: flex; justify-content: space-between; gap: 8px; align-items: center;
+    padding: 6px 8px; background: none; border: 0; border-bottom: 1px solid rgba(22, 24, 29, 0.07);
+    text-align: start; cursor: pointer; font-size: 11.5px; }
+.ops-result.blocked { opacity: 0.55; cursor: default; }
+.ops-result-tag { font-size: 10px; color: var(--urgent); white-space: nowrap; }
+.ops-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px;
+    padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; font-weight: 650; }
+.ops-chip-clear { border: 0; background: none; color: var(--accent-deep); font-size: 11px; cursor: pointer; }
+.assign-btn { width: 100%; padding: 9px 10px; border: 0; border-radius: 9px;
+    background: var(--accent-deep); color: var(--accent-ink); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.assign-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* Board panel head and counts strip. */
+.ops-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ops-enlarge { border: 1px solid var(--border); background: none; border-radius: 8px;
+    padding: 4px 9px; font-size: 11px; cursor: pointer; }
+.ops-counts { display: flex; gap: 6px; margin: 8px 0 10px; }
+.ops-count { flex: 1; text-align: center; padding: 6px 2px; border: 1px solid var(--border);
+    border-radius: 8px; }
+.ops-count b { display: block; font-size: 15px; }
+.ops-count span { font-size: 10px; color: var(--muted); }
+/* The enlarged board. Above the card (110), veil (160) and explore (150); below the toast (200)
+   so action notices stay readable, and far below the journey's idle modal (500). */
+.ops-board-overlay { position: absolute; inset: 0; z-index: 170; display: flex; align-items: center;
+    justify-content: center; background: rgba(22, 24, 29, 0.45); }
+.ops-board-sheet { width: min(880px, calc(100vw - 48px)); max-height: calc(100% - 48px);
+    display: flex; flex-direction: column; background: var(--panel-solid); border-radius: 16px;
+    box-shadow: var(--shadow); padding: 18px 20px; }
+.ops-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+/* The shared .ops-title carries a bottom margin for the map panel; in this row it would push
+   the heading's centre line up and leave the close button sitting high beside it. */
+.ops-sheet-head .ops-title { margin: 0; }
+.ops-sheet-close { flex: 0 0 28px; width: 28px; height: 28px; border: 0; border-radius: 999px;
+    background: rgba(22, 24, 29, 0.07); font-size: 17px; line-height: 1; cursor: pointer;
+    display: grid; place-items: center; padding: 0; }
+.ops-table-scroll { overflow-y: auto; }
+.ops-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ops-table thead th { position: sticky; top: 0; background: var(--panel-solid); text-align: start;
+    padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+.ops-table th button { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+.ops-table td { padding: 8px 10px; border-bottom: 1px solid rgba(22, 24, 29, 0.07); }
+.ops-debug { margin: 6px 0 0; font-size: 10.5px; color: var(--muted); word-break: break-word; }
+.ops-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.ops-tab {
+    border: 1px solid var(--border); background: none; border-radius: 999px;
+    padding: 6px 12px; font: inherit; font-size: 12px; cursor: pointer; color: var(--muted);
+}
+.ops-tab.on { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+.ops-row-actions { display: flex; gap: 10px; }
+.ops-row-actions button { border: 0; background: none; color: var(--accent-deep);
+    font-size: 11.5px; font-weight: 650; cursor: pointer; }
+.ops-row-actions .ops-danger-link { color: var(--urgent); }
+
+/* Key for the two map tints. The swatches restate the overlay fills exactly, so the panel and the
+   plan cannot drift apart - change one and change the other (masterplanData.js, .ops rules). */
+.ops-legend { list-style: none; display: flex; gap: 12px; margin: 0 0 10px; padding: 0;
+    font-size: 11px; color: var(--muted); }
+.ops-legend li { display: flex; align-items: center; gap: 5px; }
+.ops-key { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex: none; }
+.ops-key--reserve { background: rgba(23, 118, 130, 0.45); border: 1px solid #10606a; }
+.ops-key--pinned { background: rgba(124, 88, 211, 0.55); border: 1px solid #4c3390; }
+
+/* ---------- ops on a phone: same bottom-sheet card as customers, panel as a strip ---------- */
+@media (max-width: 820px) {
+    /* The 290px desktop width outranks the phone bottom-sheet rule, tearing the card off the
+       edge. Yield, and the ops card rises full width like the customer one. */
+    .floating-details.ops { width: auto; max-width: none; }
+
+    /* One slim bar under the identity card: counts inline, board button at the end. Short
+       enough to end above the zoom pill, so nothing overlaps on the trailing edge. */
+    .ops-panel {
+        /* 64px keeps the bar out of the zoom pill's lane on the trailing edge. */
+        inset-inline: 12px 64px;
+        top: calc(74px + env(safe-area-inset-top, 0px));
+        width: auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+    }
+    /* Scoped to the panel: the board sheet shares .ops-title and keeps its heading. */
+    .ops-panel .ops-title { display: none; }
+    .ops-panel .ops-head { display: contents; }
+    /* Icon-only: font-size 0 hides the label but keeps it as the accessible name, and the
+       glyph is drawn in CSS - codepoints render as anything across mobile fonts. */
+    .ops-panel .ops-enlarge {
+        order: 1;
+        flex: 0 0 44px;
+        width: 44px;
+        padding: 0;
+        font-size: 0;
+        position: relative;
+    }
+    /* A 2x2 board grid in the toolbar's own icon language: one square, three shadows. */
+    .ops-panel .ops-enlarge::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        margin: -7px 0 0 -7px;
+        border-radius: 1px;
+        background: currentColor;
+        box-shadow: 9px 0 0 currentColor, 0 9px 0 currentColor, 9px 9px 0 currentColor;
+    }
+    .ops-panel .ops-counts { display: flex; flex: 1; gap: 2px; margin: 0; min-width: 0; }
+    .ops-panel .ops-count {
+        flex: 1;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 4px;
+        padding: 0;
+        border: 0;
+    }
+    .ops-panel .ops-count b { font-size: 14px; }
+    .ops-panel .ops-count span { font-size: 10px; }
+    .ops-panel .ops-hint { display: none; }
+
+    /* The board sheet takes the screen; the table keeps its shape and scrolls sideways
+       inside it, so the page itself never scrolls horizontally. */
+    .ops-board-sheet { width: calc(100vw - 16px); max-height: calc(100% - 16px); padding: 14px; }
+    .ops-table-scroll { overflow-x: auto; }
+    .ops-table { min-width: 560px; }
+}
+
+/* Ops touch sizing. Must stay BELOW the pin-mode base rules: equal specificity means source
+   order decides, and higher up the base font-size wins and iOS zooms the page again. */
+@media (pointer: coarse) {
+    .ops-btn,
+    .assign-btn,
+    .ops-enlarge,
+    .ops-card-results button {
+        min-height: 44px;
+    }
+
+    /* 16px, or iOS Safari zooms the whole page the moment the field is focused. */
+    .ops-card-search {
+        min-height: 44px;
+        font-size: 16px;
+    }
+}

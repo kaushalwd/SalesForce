@@ -1,0 +1,371 @@
+<!--
+  @description       : 
+  @author            : Krishna Chaitanya
+  @group             : 
+  @last modified on  : 05-14-2025
+  @last modified by  : Krishna Chaitanya
+-->
+
+<template>
+    <c-custom-toast></c-custom-toast>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="large" variant="brand"></lightning-spinner>
+    </template>
+    <!-- Header -->
+        <header class="header slds-grid slds-grid_align-spread slds-p-around_medium slds-box">
+            <div class="slds-col">
+                <img src={logowhiteUrl} onclick={homepage} class="logo" alt="Modon Logo" />
+            </div>
+            <!-- <div class="slds-col slds-text-align_center">
+                    <h1 class="slds-text-title company-font-text" style="color: white;"><b>My Properties</b></h1>
+                    </div><div class="slds-col slds-text-align_center">
+       
+                    <a href="https://www.modon.com/real-estate"><h1 class="slds-text-title company-font-text" style="color: white;"><b>Modon Properties</b></h1></a>
+            </div> -->
+            <div class="slds-col ">
+                <div class="slds-grid slds-grid_align-end slds-gutters_x-small slds-align-middle">
+                    <div class="slds-col slds-is-relative">
+                    <lightning-button-icon
+                    icon-name="utility:search"
+                    alternative-text="Search"
+                    title="Search"
+                    onclick={toggleSearch}
+                    variant="bare" size="large"
+                ></lightning-button-icon>
+                <template if:true={showSearch}>
+                    <div class="slds-box slds-dropdown slds-dropdown_right slds-dropdown_small">
+                        <ul class="slds-dropdown__list" role="menu">
+                            <li class="slds-dropdown__item" role="presentation">
+                                <lightning-input
+                                type="text"
+                                label="Search by Project Name"
+                                value={searchProjectName}
+                                onchange={handleProjectChange}
+                            ></lightning-input>                            </li>
+                            <li class="slds-dropdown__item" role="presentation">
+                                <lightning-input
+                                type="text"
+                                label="Search by Unit Name"
+                                value={searchUnitName}
+                                onchange={handleUnitChange}
+                            ></lightning-input>                            </li>
+                        </ul>
+                    </div>
+                </template>
+                </div>
+                <div class="slds-col slds-is-relative">
+                    <lightning-button-icon
+                    icon-name="utility:notification"
+                    alternative-text="notification"
+                    title="notification"
+                    onclick={toggleNotif}
+                    variant="bare" size="large"
+                ></lightning-button-icon>
+                <template if:true={showNotif}>
+                    <div class="slds-box slds-dropdown slds-dropdown_right slds-dropdown_small slds-is-absolute">
+                            <template if:true={notifications}>
+                                <template for:each={notifications} for:item="notif">
+                                    <div key={notif.name} class="slds-box slds-m-bottom_small">
+                                        <strong>{notif.name}</strong>
+                                        <div class="slds-text-body_small">
+                                            <lightning-formatted-date-time
+                                                value={notif.eventDateTime}
+                                                year="numeric"
+                                                month="short"
+                                                day="2-digit"
+                                                hour="2-digit"
+                                                minute="2-digit"
+                                            ></lightning-formatted-date-time>
+                                            <br />
+                                            {notif.eventDescription}
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+                            <template if:false={notifications}>
+                                <p class="slds-text-body_small">No events this month.</p>
+                            </template>
+                    </div>
+                </template>
+                </div>
+                                    <!--<lightning-icon icon-name="utility:notification" size="small"></lightning-icon> -->
+                    <div class="slds-col slds-is-relative">
+                        <lightning-button-icon icon-name="utility:user" alternative-text="User Profile" onclick={toggleMenu} variant="bare" size="large"></lightning-button-icon>
+                        <template if:true={menuOpen}>
+                            <div class="slds-box slds-dropdown slds-dropdown_right slds-dropdown_small">
+                                <ul class="slds-dropdown__list" role="menu">
+                                    <li class="slds-dropdown__item" role="presentation">
+                                        <a value="profile" data-id="profile" role="menuitem" onclick={handleMenuSelect}>My Profile</a>
+                                    </li>
+                                    <li class="slds-dropdown__item" role="presentation">
+                                        <a value="logout" data-id="logout" role="menuitem" onclick={handleMenuSelect}>Log Out</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <br />
+        <br />
+        <br />
+        <div class="welcome-container">
+            <p>Welcome {userName}</p>
+        </div>
+        &nbsp;&nbsp;
+    <template for:each={properties} for:item="property">
+        <div key={property.Id} class="slds-grid slds-wrap company-font-text slds-box slds-theme_default slds-m-bottom_medium" style="background-color: honeydew;">
+            
+            <!-- Left side: Image with info overlay -->
+          <!-- Left side: Image with info overlay -->
+<div class="slds-size_1-of-1 slds-medium-size_2-of-3" style="position: relative;">
+    <img src={property.ImageUrl} alt="Property" class="property-image slds-border_radius_large slds-size_full" style="object-fit: cover;" />
+
+    <div class="slds-size_1-of-1 left-align-padding" style="padding-left: 2%; position: absolute; bottom: 0; left: 0; color: white;">
+        <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-m-top_small">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_7-of-12">
+                <div class="slds-text-heading_large slds-truncate slds-text-color_inverse slds-text-align_left"><b>{property.ProjectName}</b></div>
+                <div class="slds-text-title slds-truncate slds-text-color_inverse slds-text-align_left"><b>{property.UnitName}</b></div>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-grid slds-grid_align-end slds-m-top_small">
+            </div>
+         <!-- BUTTONS RIGHT -->
+        
+        </div>
+        <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-m-top_small">
+
+            <!-- LEFT: ICONS -->
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_9-of-12 slds-p-bottom_small">
+                <div class="slds-grid slds-wrap slds-text-body_small slds-grid_align-start">
+                    <!-- Bed Icon -->
+                    <div class="slds-col slds-size_6-of-12 slds-medium-size_3-of-12 slds-p-around_xx-small slds-text-color_inverse slds-text-align_center">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <div class="slds-m-right_x-small">
+                                <img src={bedIcon} alt="Bedrooms" class="slds-icon" />
+                            </div>
+                            <div>
+                                <span>&nbsp;{property.NoofBedrooms}</span>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Car Icon -->
+                    <div class="slds-col slds-size_6-of-12 slds-medium-size_3-of-12 slds-p-around_xx-small slds-text-color_inverse slds-text-align_center">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <div class="slds-m-right_x-small">
+                                <img src={carIcon} alt="Parking" class="slds-icon" />
+                            </div>
+                            <div>
+                                <span>&nbsp;{property.NoofCars}</span>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Total Area -->
+                    <div class="slds-col slds-size_6-of-12 slds-medium-size_3-of-12 slds-p-around_xx-small slds-text-color_inverse slds-text-align_center">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <div class="slds-m-right_x-small">
+                                <img src={areaIcon} alt="Total Area Icon" class="slds-icon" />
+                            </div>
+                            <div>
+                                <div>{property.TotalArea} m²</div>
+                                <div class="slds-text-body_small slds-text-color_inverse">Total Area</div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Gross Area -->
+                    <div class="slds-col slds-size_6-of-12 slds-medium-size_3-of-12 slds-p-around_xx-small slds-text-color_inverse slds-text-align_center">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <div class="slds-m-right_x-small">
+                                <img src={areaIcon} alt="Gross Area Icon" class="slds-icon" />
+                            </div>
+                            <div>
+                                <div>{property.TotalGrossArea} m²</div>
+                                <div class="slds-text-body_small slds-text-color_inverse">Gross Area</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- RIGHT: BUTTON -->
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-grid slds-align_absolute-center slds-m-top_small slds-p-bottom_small ">
+                <button class="slds-button slds-button_neutral slds-m-left_small" onclick={handleMyProperties} data-id={property.Id} style="background: lightslategrey;">
+                    <img src={campaignIcon} alt="360 Icon" style="background: transparent; height: 2.5rem;" class="imagecss" onclick={handleMyProperties} data-id={property.Id}/>
+                    <span class="slds-text-color_inverse" onclick={handleMyProperties} data-id={property.Id}>&nbsp;Virtual Tour</span>
+                </button>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+            <!-- Right side: Payment Details + Charts -->
+            <div class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-box slds-p-around_medium"> <!-- style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;"-->
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+
+                <!-- Charts -->
+                <!--<div class="slds-grid slds-wrap slds-grid_align-center slds-m-bottom_medium">-->
+                    <!-- Installments Donut -->
+                  <!--  <div class="slds-col slds-size_6-of-12 slds-p-around_xx-small" style="min-height: 110px;">
+                        <canvas label="Installments" class="donut-chart-installments" data-id={property.Id}></canvas>
+                        <div class="slds-text-align_center slds-text-title_caps slds-m-top_x-small" style="font-size: 10px;">
+                           <b> {property.installmentSummary.totalPaidInstallments}/{property.installmentSummary.totalInstallments} Paid Installments</b>
+                        </div>
+                    </div>-->
+                
+                    <!-- Equity Donut -->
+                    <!--<div class="slds-col slds-size_6-of-12 slds-p-around_xx-small" style="min-height: 110px;">
+                        <canvas label="Paid %" class="donut-chart-equity" data-id={property.Id}></canvas>
+                        <div class="slds-text-align_center slds-text-title_caps slds-m-top_x-small" style="font-size: 10px;">
+                            <b>{property.installmentSummary.paidPercentage}% Paid Amount</b>
+                        </div>
+                    </div>
+                    
+                </div>-->
+                <div class="slds-grid slds-wrap slds-grid_align-center slds-m-bottom_medium">
+                    <!-- Installments Donut -->
+                    <div class="slds-col slds-size_6-of-12 slds-p-around_xx-small" style="max-height: 190px; height: 190px; margin-bottom:30px;">
+                        <canvas style="width:180px; height:180px;" label="Installments" class="donut-chart-installments" data-id={property.Id}></canvas>
+                        <div class="slds-text-align_center slds-text-title_caps slds-m-top_x-small testAline" >
+                           <b> {property.installmentSummary.totalPaidInstallments}/{property.installmentSummary.totalInstallments} Paid Installments</b>
+                        </div>
+                    </div>
+               
+                    <!-- Equity Donut -->
+                    <div class="slds-col slds-size_6-of-12 slds-p-around_xx-small" style="max-height: 190px; height: 190px; margin-bottom:30px;">
+                        <canvas style="width:180px; height:180px;"  label="Paid %" class="donut-chart-equity" data-id={property.Id}></canvas>
+                        <div class="slds-text-align_center slds-text-title_caps slds-m-top_x-small testAline" >
+                            <b>{property.installmentSummary.paidPercentage}% Paid Amount</b>
+                        </div>
+                    </div>
+                </div>
+ 
+    
+                <!-- Payment Information -->
+                <div class="slds-text-align_center">
+                    <div class="slds-text-title_caps">Next Installment</div>
+                    <div class="slds-text-heading_medium"><b>AED {property.formattedAmount} </b></div>
+    
+                    <div class="slds-m-top_small">
+                        <div class="slds-text-title_caps">Due Date</div>
+                        <div class="slds-text-heading_medium"><b><lightning-formatted-date-time 
+                            value={property.installmentSummary.nextMilestoneDate}
+                            year="numeric" month="long" day="2-digit">
+                          </lightning-formatted-date-time></b></div>
+                    </div>
+    
+                    <div class="slds-border_top slds-m-top_medium"></div>
+    
+                    <div class="slds-grid slds-wrap slds-m-top_medium">
+                        <div class="slds-col slds-size_12-of-12 slds-large-size_6-of-12 slds-p-around_x-small ">
+                            <div class="slds-text-title_caps">Purchase Price</div>
+                            <div class="slds-text-heading_medium"><b>AED {property.formattedtotal}</b></div>
+                        </div>
+                        <div class="slds-col slds-size_12-of-12 slds-large-size_6-of-12 slds-p-around_x-small">
+                            <div class="slds-text-title_caps">Remaining Balance</div>
+                            <div class="slds-text-heading_medium"><b>AED {property.formattedsize}</b></div>                       
+                        </div>
+                        <div class="slds-col slds-size_12-of-12 slds-large-size_6-of-12 buttionCss">
+                                <lightning-button 
+                                    label="Download SPA"
+                                    icon-name="utility:download"
+                                    variant="neutral"
+                                    title="Sale Purchase Agreement"
+                                    onclick={handleButtonMethod}
+                                    data-id={property.Id}
+                                    data-value="SPA"
+                                    class="slds-size_full">
+                                </lightning-button>
+                         </div>
+                         <div class="slds-col slds-size_12-of-12 slds-large-size_6-of-12 buttionCss">
+                                <lightning-button 
+                                    label="Download SOA"
+                                    icon-name="utility:download"
+                                    variant="neutral"
+                                    title="Statement of Account"
+                                    onclick={handleSOA}
+                                    data-id={property.Id}
+                                    data-value="SOA"
+                                    class="slds-size_full">
+                                </lightning-button>
+                        </div>
+                    </div>
+                </div>
+    
+                </div>
+            </div>
+    
+        </div>
+        <br key={property.Id} />
+    </template>
+    
+        
+
+        <template if:false={properties}>
+            <lightning-card>
+    
+          <!--<div class="slds-text-align_center slds-text-title">
+            <h1><b>No Properties Found</b></h1>
+            <p class="slds-text-body_small">No Properties associated with this Email.</p>
+            </div>-->
+            <!--<div class="slds-text-align_center slds-text-title">
+                <h1><b>No Properties Found</b></h1>
+                <p class="slds-text-body_small">Please search with different criteria.</p>
+                </div>-->
+                <div class="slds-text-align_center slds-text-title">
+                    <h1><b>Loading...</b></h1>
+                    <p class="slds-text-body_small">Please wait while we load the data.. </p>
+                    </div>
+        </lightning-card>
+    
+        </template>
+   <!-- <template if:true={nodata}>
+        <lightning-card>
+
+      <div class="slds-text-align_center slds-text-title">
+        <h1><b>No Properties Found</b></h1>
+        <p class="slds-text-body_small">Please search with different criteria.</p>
+        </div>
+    </lightning-card>
+
+    </template>
+    <template if:true={onload}>
+        <lightning-card>
+
+      <div class="slds-text-align_center slds-text-title">
+        <h1><b>Lodaing...</b></h1>
+        <p class="slds-text-body_small">Please wait while we load the data.. </p>
+        </div>
+    </lightning-card>
+
+    </template> -->
+    <br/><br/>
+    <footer class="footer">
+        <p style="float:left">© Modon 2025 — All rights reserved</p>
+        <div class="slds-grid slds-wrap slds-text-body_small">
+            <!-- <div  class="slds-col slds-size_2-of-8 slds-p-around_x-small slds-text-color_inverse ">
+                <a href="#" style="color: aliceblue;" class="slds-align_absolute-center" onclick={handleContactUs}><b>Contact Us &nbsp;</b></a>
+            </div> -->
+          <!-- Row 1 -->
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={instagramUrl} alt="Instagram" class="slds-icon" onclick={handleinstagram} />
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={youtubeiconUrl} alt="Youtube" class="slds-icon" onclick={handleyoutube}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={linkediniconUrl} alt="Ln" class="slds-icon" onclick={handlelinkedin}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={facebookUrl} alt="Facebook" class="slds-icon" onclick={handlefacebook}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={twitterxUrl} alt="X" class="slds-icon" onclick={handletwitterx}/>
+          </div>
+          <!-- You can add more fields here if needed -->
+      </div>
+    </footer>
+</template>

@@ -1,0 +1,73 @@
+<template>
+    <lightning-card title="Cheques Received Acknowledgement">
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+        </template>
+
+        <template if:true={showUI}>
+            <div class="slds-box slds-theme_default slds-p-around_medium">
+                <template if:true={soDetails}>
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                        <thead>
+                            <tr class="slds-text-title_caps">
+                                <th colspan="2">Property Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Customer Name</strong></td>
+                                <td>{soDetails.customerName}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Unit No</strong></td>
+                                <td>{soDetails.unitNo}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sale Order No</strong></td>
+                                <td>{soDetails.saleOrderNo}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Project Name</strong></td>
+                                <td>{soDetails.projectName}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date of Acknowledgement</strong></td>
+                                <td>{soDetails.currentDateVal}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </template>
+
+                <template if:true={soDetails.soPaymentDetails}>
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-m-top_medium">
+                        <thead>
+                            <tr class="slds-text-title_caps">
+                                <th>Installment No</th>
+                                <th>Bank Name</th>
+                                <th>Cheque No</th>
+                                <th>Cheque Date</th>
+                                <th>Amount (AED)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={soDetails.soPaymentDetails} for:item="soPayment">
+                                <tr key={soPayment.milestone}>
+                                    <td>{soPayment.milestone}</td>
+                                    <td>{soPayment.bank}</td>
+                                    <td>{soPayment.transactionNumber}</td>
+                                    <td>{soPayment.chequeDate}</td>
+                                    <td>{soPayment.amount}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+            </div>
+        </template>
+
+        <div class="slds-m-around_medium">
+            <lightning-button label="Download Ack" variant="brand" onclick={handleDownload} disabled={isDownloadDisabled}></lightning-button>
+            <lightning-button label="Send Email" variant="brand" class="slds-m-left_medium" onclick={handleSendEmail} disabled={isSendEmailDisabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

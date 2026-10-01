@@ -1,0 +1,186 @@
+<template>
+    <!-- Back Navigation -->
+    
+
+    <div class="page-main-container">
+<c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+<c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+        
+         <template if:true={showCustomToast}>
+              <div class="custom-toast">
+                <div class="custom-toast-content {customToastVariant}">
+                  <strong>{customToastTitle}</strong><br />
+                  {customToastMessage}
+                </div>
+              </div>
+            </template>
+        <template if:false={hideBackNav}>
+        <div class="back">
+            <span onclick={backToDashboard}>
+                ❮ Back 
+            </span>
+        </div>
+    </template>
+        <div class="heading">
+            <h1>My Profile</h1>
+        </div>
+
+        <div class="page-body">
+            <!-- Left Section -->
+            <div class="page-left-side">
+                <div class="user-photo-container">
+    <div class="profile-img-wrapper">
+        <template if:true={isImageLoading}>
+            <lightning-spinner alternative-text="Loading..." size="small" class="overlay-spinner"></lightning-spinner>
+        </template>
+        <img src={profilePhoto} alt="Profile Photo" class="profile-img" onload={handleImageLoad}>
+    </div>
+</div>
+
+                <div class="btn-container">
+                    <button class="modon-btn slds-button slds-button_brand" onclick={showProfileImagePopup}>Upload Profile Image</button>
+                    <button class="modon-btn slds-button slds-button_brand" onclick={openPasswordModal}>Reset Password</button>
+                    <button class="modon-btn slds-button slds-button_brand" onclick={logout}>Logout</button>
+                </div>
+            </div>
+
+            <!-- Right Section -->
+          
+               
+                <div class="page-right-side">
+                <div class="profile-box">
+                    <h3><strong>User Information</strong></h3>
+                    <p><strong>First Name:</strong> {firstName}</p>
+                    <p><strong>Last Name:</strong> {lastName}</p>
+                    <p><strong>User Name:</strong> {username}</p>
+                    <p><strong>Email:</strong> {Email}</p>
+                    <p><strong>Mobile:</strong> {mobilePhone}</p>
+                    <p><strong>Customer Type:</strong> {brokerType}</p>
+                    <p><strong>Country:</strong> {country}</p>
+                    <p><strong>Nationality:</strong> {natinalty}</p>
+                    <p><strong>UAE Resident Status:</strong> {residentsatus}</p>
+                    <button class="modon-btn slds-button slds-button_brand" onclick={openEditProfileModal}>Update Profile</button>
+                </div>
+                       
+            </div>
+                
+          
+        </div>
+          <!-- Profile Image Modal -->
+    <template if:true={profileImagePopup}>
+        <section class="slds-modal slds-fade-in-open ">
+            <div class="slds-backdrop slds-backdrop_open">
+            <div class="slds-modal__container">
+                <template if:true={isLoading}>
+    
+</template>
+
+                <header class="slds-modal__header">
+                    <h2>Upload Profile Image</h2>
+                    <button onclick={hideProfileImagePopup} class="closebtn">&times;</button>
+                </header>
+               <div class="slds-modal__content">
+                   <img class="profileImagePreview" src={previewPhoto} alt="Preview" />
+
+                    <lightning-input type="file" accept={acceptedPhotoFormats} onchange={handlePreview}></lightning-input>
+              </div>
+                <footer class="slds-modal__footer">
+                    <button class="modon-btn slds-button slds-button_outline-brand" onclick={hideProfileImagePopup}>Cancel</button>
+                    <button class="modon-btn slds-button slds-button_brand" onclick={submitProfileImage}>Submit</button>
+                </footer></div></div>
+           </section>
+    </template>
+
+
+
+        <!-- Edit Profile Modal -->
+        <template if:true={editProfileModal}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2>Update Profile</h2>
+                        <button onclick={closeEditProfileModal} class="closebtn">&times;</button>
+                    </header>
+
+                    <div class="slds-modal__content">
+                        <lightning-input label="First Name" value={firstName} disabled></lightning-input>
+                        <lightning-input label="Last Name" value={lastName} disabled></lightning-input>
+                        <lightning-input label="Email" value={Email} disabled></lightning-input>
+                        <lightning-input label="Username" value={username} disabled></lightning-input>
+                        <lightning-input label="Customer Type" value={brokerType} disabled></lightning-input>
+                        <lightning-input label="Country" value={country} disabled></lightning-input>
+
+                   <!-- Mobile Number -->
+<lightning-combobox
+    label="Country Code"
+    value={editableMobileCountryCode}
+    options={mobCountryOptions}
+    onchange={handleMobileCountryCodeChange}>
+</lightning-combobox>
+
+<lightning-input
+    label="Mobile Number"
+    value={editableMobileNumber}
+    onchange={handleMobileNumberChange}>
+</lightning-input>
+
+<lightning-button
+    label={mobileButtonLabel}
+    onclick={handleMobileValidation}
+    variant="brand"
+    class="validate-mobile-btn"
+    disabled={mobileValidating}>
+</lightning-button>
+
+                        <lightning-combobox
+                            label="UAE Resident Status"
+                            value={editableUaeStatus}
+                            options={uaeResidentOptions}
+                            onchange={handleUaeStatusChange}>
+                        </lightning-combobox>
+
+                        <lightning-combobox
+                            label="Nationality"
+                            value={editableNationality}
+                            options={nationalityOptions}
+                            onchange={handleNationalityChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <button class="modon-btn slds-button slds-button_outline-brand" onclick={closeEditProfileModal}>Cancel</button>
+                        <button class="modon-btn slds-button slds-button_brand" onclick={submitProfileUpdate}>Update</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    <!-- Password Modal -->
+    <template if:true={passwordModal}>
+        <section class="slds-modal slds-fade-in-open ">
+            <div class="slds-modal__container">
+                <template if:true={isLoading}>
+    <lightning-spinner alternative-text="Loading..." size="medium" class="overlay-spinner"></lightning-spinner>
+</template>
+
+                <header class="slds-modal__header">
+                    <h2>Reset Password</h2>
+                    <button onclick={closePasswordModal} class="closebtn">&times;</button>
+                </header>
+                <div class="slds-modal__content">
+                    <lightning-input type="password" label="Old Password" data-id="oldPassword"></lightning-input>
+                    <lightning-input type="password" label="New Password" data-id="newPassword"></lightning-input>
+                    <lightning-input type="password" label="Confirm Password" data-id="confirmPassword"></lightning-input>
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="modon-btn slds-button slds-button_outline-brand" onclick={closePasswordModal}>Cancel</button>
+                    <button class="modon-btn slds-button slds-button_brand" onclick={submitPasswordReset}>Submit</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    </div>
+
+  
+</template>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CaseCreation_OnlyNewStatus</fullName>
+    <active>true</active>
+    <description>Cases should be created only with New status.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+ISNEW()
+,ISBLANK(ParentId)
+,NOT(ISPICKVAL(Status, &apos;New&apos;))
+,NOT(ISPICKVAL(CaseCategory__c,&apos;General Enquiry&apos;))
+,NOT(ISPICKVAL(Status,&apos;Closed with Resolution&apos;))
+)
+)</errorConditionFormula>
+    <errorDisplayField>Status</errorDisplayField>
+    <errorMessage>Cases should be created only with New status.</errorMessage>
+</ValidationRule>

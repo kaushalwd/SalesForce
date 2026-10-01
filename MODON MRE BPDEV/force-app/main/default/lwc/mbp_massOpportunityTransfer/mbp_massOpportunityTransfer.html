@@ -1,0 +1,126 @@
+<template>
+
+    <lightning-card title="EOI Mass Opportunity Transfer">
+
+        <!-- Loader -->
+
+        <template if:true={isLoading}>
+            <lightning-spinner
+                    alternative-text="Loading"
+                    size="medium">
+            </lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-m-bottom_medium">
+
+            <lightning-button
+                    label="Change Owner"
+                    variant="brand"
+                    onclick={openModal}
+                    disabled={disableButton}>
+            </lightning-button>
+
+        </div>
+<div class="slds-p-horizontal_medium slds-m-bottom_small">
+    <lightning-input
+        type="search"
+        label="Search EOI"
+        placeholder="Search by EOI Name or EOI ID"
+        onchange={handleSearch}>
+    </lightning-input>
+</div>
+        <lightning-datatable
+                key-field="Id"
+                data={paginatedRecords}
+                columns={columns}
+
+                selected-rows={selectedRowIds}
+
+                sorted-by={sortedBy}
+                sorted-direction={sortedDirection}
+
+                onsort={doSorting}
+
+                onrowselection={handleRowSelection}>
+        </lightning-datatable>
+
+        <!-- Pagination -->
+
+        <div class="slds-m-around_medium
+                    slds-grid
+                    slds-grid_align-center">
+
+            <lightning-button
+                    label="Previous"
+                    onclick={handlePrevious}
+                    disabled={disablePrevious}>
+            </lightning-button>
+
+            <span class="slds-m-horizontal_medium">
+                Page {pageNumber} of {totalPages}
+            </span>
+
+            <lightning-button
+                    label="Next"
+                    onclick={handleNext}
+                    disabled={disableNext}>
+            </lightning-button>
+
+        </div>
+
+    </lightning-card>
+
+    <!-- Modal -->
+
+    <template if:true={showModal}>
+
+        <section
+                role="dialog"
+                tabindex="-1"
+                class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container">
+
+                <header class="slds-modal__header">
+
+                    <h2 class="slds-text-heading_medium">
+                        Change Opportunity Owner
+                    </h2>
+
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <lightning-record-picker
+                            label="Select User"
+                            object-api-name="User"
+                            onchange={handleUserChange}>
+                    </lightning-record-picker>
+
+                </div>
+
+                <footer class="slds-modal__footer">
+
+                    <lightning-button
+                            label="Cancel"
+                            onclick={closeModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                            variant="brand"
+                            class="slds-m-left_small"
+                            label="Submit"
+                            onclick={handleSubmit}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+
+    </template>
+
+</template>

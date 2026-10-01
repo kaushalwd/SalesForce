@@ -1,0 +1,168 @@
+@import "c/mscStyles";
+
+/* The component measures ITSELF, so the layout answers to the box it was given
+   rather than to the size of the screen. It renders at 430px inside the
+   verification dialog and at full card width in step 2, on the same monitor. */
+:host {
+    display: block;
+    container-type: inline-size;
+}
+
+.gate {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    /* A left rule in the accent, matching how the journey marks a blocked
+       section elsewhere rather than inventing a second vocabulary. */
+    border-left: 2px solid var(--gold, #a8a8a8);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.gate--expired {
+    border-left-color: var(--chip-amber, #fbbf24);
+}
+
+/* ── copy ──────────────────────────────────────────────────────────────── */
+
+.gate__copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Uppercase and tracked, the same treatment the rail gives its section labels -
+   it reads as a state marker rather than as the first line of the sentence. */
+.gate__status {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--gold, #a8a8a8);
+}
+.gate--expired .gate__status {
+    color: var(--chip-amber, #fbbf24);
+}
+
+/* The dot is the only moving thing on the card, and it is moving for a reason:
+   something off-screen is still in progress. It stops when the link expires,
+   because then nothing is. */
+.gate__dot {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 0 currentColor;
+    animation: gate-pulse 2s ease-out infinite;
+}
+.gate--expired .gate__dot {
+    animation: none;
+}
+
+@keyframes gate-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(168, 168, 168, 0.45);
+    }
+    70% {
+        box-shadow: 0 0 0 7px rgba(168, 168, 168, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(168, 168, 168, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gate__dot {
+        animation: none;
+    }
+}
+
+.gate__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text, #fafafa);
+    text-wrap: balance;
+}
+
+/* Capped in characters, not pixels. Wide enough to read, narrow enough that the
+   line never runs the full width of a step-2 card. */
+.gate__body {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.gate__expiry {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── actions ───────────────────────────────────────────────────────────── */
+
+.gate__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gate__btn {
+    min-height: 38px;
+    padding: 8px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* Waiting is the expected path, so Check again carries the weight; the exit is
+   the exception and stays quiet - but it is never hidden and never smaller. */
+.gate__btn--primary {
+    flex: 0 0 auto;
+}
+.gate__btn--exit {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.gate__btn--exit:hover:not(:disabled) {
+    color: var(--text, #fafafa);
+}
+
+/* Under ~380px of OUR OWN width the two labels cannot share a row without one
+   of them being clipped, so they stack and fill it instead. */
+@container (max-width: 380px) {
+    .gate__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .gate__btn {
+        width: 100%;
+    }
+}
+
+/* Wide enough for the step-2 card: copy left, actions right, on one line - the
+   strip this started as, now applied only where there is room for it. */
+@container (min-width: 620px) {
+    .gate {
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+    }
+    .gate__copy {
+        flex: 1 1 auto;
+    }
+    .gate__actions {
+        flex: 0 0 auto;
+    }
+}

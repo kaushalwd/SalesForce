@@ -1,0 +1,1121 @@
+<apex:page renderAs="pdf"
+           applyBodyTag="false"
+           controller="NewStatementOfAccountController"
+           showHeader="false"
+           applyHtmlTag="false"
+           standardStylesheets="false"
+           cache="true">
+
+<html>
+<head>
+<style type="text/css">
+
+    @page {
+        size: A4;
+        margin: 0mm 0mm 40mm 0mm;
+
+        @bottom-center {
+            content: element(footer);
+        }
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000000;
+        background: #FFFFFF;
+        font-size: 12px;
+    }
+
+    .pageWrapper {
+        width: 100%;
+        background: #FFFFFF;
+    }
+
+    .topHeader {
+        padding: 18px 16px 16px 16px;
+        background: #FFFFFF;
+        border-bottom: 2px solid #000000;
+    }
+
+    .headerTopTable {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .statementTitle {
+        font-size: 28px;
+        font-weight: bold;
+        vertical-align: middle;
+        text-align: left;
+        letter-spacing: 0.6px;
+    }
+
+    .logoCell {
+        text-align: right;
+        vertical-align: middle;
+    }
+
+    .logoCell img {
+        width: 150px;
+        height: auto;
+    }
+
+    .headerInfoTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+        font-size: 13px;
+    }
+
+    .headerInfoTable td {
+        vertical-align: top;
+        padding: 2px 0;
+    }
+
+    .headerLabel {
+        font-weight: bold;
+        font-size: 11px;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #555555;
+    }
+
+    .mintBlock {
+        background-color: #FFFFFF;
+        padding: 10px 16px 12px 16px;
+    }
+
+    .mintBlockSmall {
+        background-color: #FFFFFF;
+        padding: 8px 16px 10px 16px;
+    }
+
+    .whiteBlock {
+        background-color: #FFFFFF;
+        padding: 4px 16px 4px 16px;
+    }
+
+    .sectionTitle {
+        font-size: 14.5px;
+        font-weight: bold;
+        margin: 0 0 8px 0;
+        padding: 7px 10px;
+        color: #FFFFFF;
+        background-color: #000000;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        border-radius: 3px;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    .unitSpecBlock {
+        padding-top: 8px;
+        padding-bottom: 10px;
+    }
+
+    .unitCard {
+        width: 100%;
+        background-color: #FFFFFF;
+        border: 1px solid #D6D6D6;
+        border-radius: 6px;
+        box-shadow: none;
+        padding: 6px 10px;
+        box-sizing: border-box;
+    }
+
+    .unitTable {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+    }
+
+    .unitTable td {
+        width: 33.33%;
+        text-align: center;
+        vertical-align: top;
+        padding: 4px 4px;
+        border: none;
+        background: #FFFFFF;
+    }
+
+    .unitLabel {
+        font-weight: bold;
+        font-size: 10.5px;
+        display: inline;
+        margin-right: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #555555;
+    }
+
+    .tableCard {
+        width: 100%;
+        background-color: #FFFFFF;
+        border: 1px solid #D6D6D6;
+        border-radius: 6px;
+        box-shadow: none;
+        padding: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .soa-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #FFFFFF;
+        font-size: 10.5px;
+        border: 1px solid #C9C9C9;
+        border-top: 2px solid #2FA9E0;
+    }
+
+    .soa-table th {
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 7px 3px;
+        font-size: 9px;
+        border: 1px solid #333333;
+        border-bottom: 1px solid #000000;
+        font-weight: bold;
+        text-align: center;
+        background-color: #000000;
+        color: #FFFFFF;
+        vertical-align: middle;
+        text-transform: uppercase;
+    }
+
+    .soa-table th:first-child {
+        border-left: none;
+    }
+
+    .soa-table th:last-child {
+        border-right: none;
+    }
+
+    .soa-table td {
+        font-family: Arial, Helvetica, sans-serif;
+        border: 1px solid #D9D9D9;
+        padding: 6px 3px;
+        text-align: center;
+        vertical-align: top;
+        color: #000000;
+        background-color: #FFFFFF;
+    }
+
+    .soa-table td:first-child {
+        border-left: none;
+    }
+
+    .soa-table td:last-child {
+        border-right: none;
+    }
+
+    /* zebra striping - explicit classes (PDF renderer ignores :nth-child) */
+    .soa-table tbody tr.rowMain td {
+        background-color: #FFFFFF;
+    }
+
+    .soa-table tbody tr.rowAlt td {
+        background-color: #F4F7FA;
+    }
+
+    .soa-table tbody tr:nth-child(even) td {
+        background-color: #F4F7FA;
+    }
+
+    .soa-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* keep the nested allocation tables grid-free */
+    .soa-table .small-table,
+    .soa-table .small-table td {
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .total-row td {
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        text-align: center;
+        background-color: #EDEDED !important;
+        color: #000000;
+        padding: 8px 3px;
+        font-size: 11px;
+        border-top: 1px solid #000000;
+        border-bottom: none;
+    }
+
+    .small-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .small-table td {
+        border: none;
+        padding: 1px;
+        text-align: center;
+        font-size: 10.5px;
+    }
+
+    .bankCard {
+        page-break-inside: avoid;
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #FFFFFF;
+        border: 1px solid #D6D6D6;
+        border-radius: 6px;
+        box-shadow: none;
+        font-size: 12.5px;
+    }
+
+    .bankCard td {
+        border: none;
+        border-bottom: 1px solid #E6E6E6;
+        padding: 6px 12px;
+        vertical-align: top;
+        color: #000000;
+        background-color: #FFFFFF;
+    }
+
+    .bankCard tr:last-child td {
+        border-bottom: none;
+    }
+
+    .footer {
+        position: running(footer);
+        width: 180mm;
+        margin: 0 auto;
+        padding-top: 3mm;
+        border-top: 1px solid #000000;
+        background: #FFFFFF;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000000;
+    }
+
+    .footerTable {
+        width: 180mm;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .footerTable td {
+        border: none;
+        padding: 0;
+        vertical-align: bottom;
+    }
+
+    .footerLeft {
+        width: 128mm;
+        font-size: 9px;
+        font-weight: bold;
+        line-height: 1.3;
+        text-align: left;
+    }
+
+    .footerDisclaimerTitle {
+        text-decoration: underline;
+    }
+
+    .footerDisclaimerLines {
+        font-size: 8px;
+        line-height: 1.35;
+    }
+
+    .footerSpacer {
+        width: 42mm;
+    }
+
+    .footerRight {
+    width: 46mm;
+    font-size: 7.5px;
+    line-height: 1.25;
+    text-align: right;
+    vertical-align: bottom;
+    padding-right: 0;
+    }
+
+    .footerWebsite {
+        font-size: 11px;
+        font-weight: bold;
+        margin-top: 4px;
+    }
+
+    .grandTotalBlock .tableCard {
+        border: none;
+        border-radius: 4px;
+        background-color: #000000;
+    }
+
+    .grandTotalBlock .soa-table,
+    .grandTotalBlock .soa-table td {
+        background-color: #000000 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-size: 13px;
+        padding: 11px 12px;
+    }
+
+    .rightText {
+        text-align: right;
+    }
+
+    b {
+        font-weight: bold;
+    }
+
+  .escrowSection {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    page-break-before: auto;
+    margin-top: 10px;
+}
+
+   .bankCard{
+    page-break-inside: avoid;
+}
+
+.bankCard tr{
+    page-break-inside: avoid;
+}
+
+.sectionTitle{
+    page-break-after: avoid;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- PDF FOOTER -->
+<div class="footer">
+    <table class="footerTable">
+        <tr>
+            <td class="footerLeft">
+    <span class="footerDisclaimerTitle">Disclaimer:</span><br/>
+    <div class="footerDisclaimerLines">
+        * Cheque payments will be applied only after the cheque has been successfully cleared.<br/>
+        * For all modes of payment, please allow 3&#8211;5 working days for the payment to be reflected in the Statement of Account.<br/>
+        * This is a system-generated document; therefore, no stamp or signature is required.
+    </div>
+
+    <div class="footerWebsite">
+        www.modon.com
+    </div>
+</td>
+
+<td style="width:6mm;"></td>
+
+<td class="footerRight">
+    20th Floor, Al Maryah Tower,<br/>
+    Abu Dhabi Global Market Square,<br/>
+    Al Maryah Island, P.O. Box: 26866,<br/>
+    Abu Dhabi, UAE<br/>
+    T 800MODON | E customercare@modon.com
+</td>
+        </tr>
+    </table>
+</div>
+
+<div class="pageWrapper">
+
+    <!-- Content below is kept identical to NewSOA.page so the downloaded PDF
+         matches the on-screen Statement of Account. -->
+
+    <!-- HEADER -->
+    <div class="topHeader">
+
+        <table class="headerTopTable">
+            <tr>
+                <td class="statementTitle">
+                    STATEMENT OF ACCOUNT
+                </td>
+
+                <td class="logoCell">
+                    <img src="{!URLFOR($Resource.modonLogoPlain)}"
+                         width="130px"/>
+                </td>
+            </tr>
+        </table>
+
+        <table class="headerInfoTable">
+            <tr>
+                <td style="width:34%;">
+                    <div class="headerLabel">
+                        Customer Name
+                    </div>
+
+                    {!soa.customerName}
+                </td>
+
+                <!-- <td style="width:46%;">
+                    <div class="headerLabel">
+                        Subject
+                    </div>
+
+                    Statement of Account as of&nbsp;
+
+                    <apex:outputText value="{0,date,dd MMM yyyy}">
+                        <apex:param value="{!soa.todayDate}"/>
+                    </apex:outputText>
+
+                    for {!soa.projectName}
+                </td> -->
+
+                <td style="width:20%;">
+                    <div class="headerLabel">
+                        Date
+                    </div>
+
+                    <apex:outputText value="{0,date,dd MMM, yyyy}">
+                        <apex:param value="{!soa.todayDate}"/>
+                    </apex:outputText>
+                </td>
+            </tr>
+
+            <apex:outputPanel rendered="{!NOT(ISBLANK(soa.jointOwnerNames))}" layout="none">
+                <tr>
+                    <td colspan="3" style="padding-top:6px;">
+                        <b>Joint Owner(s):</b> {!soa.jointOwnerNames}
+                    </td>
+                </tr>
+			</apex:outputPanel>
+
+        </table>
+    </div>
+
+    <!-- UNIT SPECIFICATION -->
+    <div class="mintBlock unitSpecBlock">
+
+        <div class="sectionTitle">
+            UNIT SPECIFICATION
+        </div>
+
+        <div class="unitCard">
+
+            <table class="unitTable">
+
+                <tr>
+                    <td>
+                        <span class="unitLabel">SPA DATE :</span>
+                        <apex:outputText value="{0,date,dd MMM yyyy}">
+                            <apex:param value="{!soa.spaDate}"/>
+                        </apex:outputText>
+                    </td>
+
+                    <td>
+                        <span class="unitLabel">TYPE :</span>
+                        {!soa.unitType}
+                    </td>
+
+                    <td>
+                        <span class="unitLabel">PROJECT :</span>
+                        {!soa.projectName}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span class="unitLabel">PRICE (AED) :</span>
+                        <apex:outputText value="{0,number,###,##0.00}">
+                            <apex:param value="{!soa.price}"/>
+                        </apex:outputText>
+
+                        <apex:outputPanel layout="none" rendered="{!showLPC}">
+                        <div style="height:4px;"></div>
+
+                        <span class="unitLabel">LATE PAYMENT CHARGES :</span>
+                        1% per month
+                        </apex:outputPanel>
+                    </td>
+
+                    <td>
+                        <span class="unitLabel">ADM DISTRICT :</span>
+                        {!soa.admDistrict}
+
+                        <div style="height:4px;"></div>
+
+                        <span class="unitLabel">ADM PLOT/UNIT NO. :</span>
+                        {!soa.admPlotNo}
+                    </td>
+
+                    <td>
+                        <span class="unitLabel">UNIT/PLOT NO. :</span>
+                        {!soa.unitName}
+                    </td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+
+    <!-- PAYMENT PLAN DETAIL -->
+    <div style="height:2px;"></div>
+
+    <div class="mintBlock">
+
+        <div class="sectionTitle">
+            PAYMENT PLAN DETAIL
+        </div>
+
+        <div class="tableCard">
+
+            <table class="soa-table">
+
+                <thead>
+                    <tr>
+                        <th style="width:11%;">
+                            Due Date
+                        </th>
+
+                        <th style="width:5%;">
+                            Ins #
+                        </th>
+
+                        <th style="width:8%;">
+                            Invoice No.
+                        </th>
+
+                        <th style="width:4%;">
+                            %
+                        </th>
+
+                        <th style="width:11%;">
+                            Amount (AED)
+                        </th>
+
+                        <th style="width:15%;">
+                            Cheque/Transaction No.
+                        </th>
+
+                        <th style="width:10%;">
+                            Cleared Date
+                        </th>
+
+                        <th style="width:8%;">
+                            Status
+                        </th>
+
+                        <th style="width:13%;">
+                            Amount<br/>
+                            Collected (AED)
+                        </th>
+
+                        <th style="width:13%;">
+                            Amount<br/>
+                            Outstanding (AED)
+                        </th>
+
+                        <apex:outputPanel layout="none" rendered="{!showLPC}">
+                        <th style="width:12%;">
+                            Late Payment<br/>
+                            Charge (AED)
+                        </th>
+                        </apex:outputPanel>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <apex:repeat value="{!soa.paymentRows}"
+                                 var="row">
+
+                        <tr class="{!IF(row.isAltRow, 'rowAlt', 'rowMain')}">
+                            <td data-label="Due Date">
+                                {!row.dueDateDisplay}
+                            </td>
+
+                            <td data-label="Ins #">
+                                {!row.installmentNumberDisplay}
+                            </td>
+
+                            <td data-label="Invoice No.">
+                                {!row.invoiceNo}
+                            </td>
+
+                            <td data-label="%">
+                                {!row.milestonePercentDisplay}
+                            </td>
+
+                            <td data-label="Amount (AED)">
+                                <apex:outputText value="{0,number,###,##0.00}">
+                                    <apex:param value="{!row.amount}"/>
+                                </apex:outputText>
+                            </td>
+
+                            <td data-label="Cheque/Transaction No.">
+                                <table class="small-table">
+
+                                    <apex:repeat value="{!row.allocationRows}"
+                                                 var="alloc">
+
+                                        <tr>
+                                            <td>
+                                                {!alloc.transactionNumber}
+                                            </td>
+                                        </tr>
+
+                                    </apex:repeat>
+
+                                </table>
+                            </td>
+
+                            <td data-label="Cleared Date">
+                                <table class="small-table">
+
+                                    <apex:repeat value="{!row.allocationRows}"
+                                                 var="alloc">
+
+                                        <tr>
+                                            <td>
+                                                {!alloc.ebsClearingDateDisplay}
+                                            </td>
+                                        </tr>
+
+                                    </apex:repeat>
+
+                                </table>
+                            </td>
+
+                            <td data-label="Status">
+                                <table class="small-table">
+
+                                    <apex:repeat value="{!row.allocationRows}"
+                                                 var="alloc">
+
+                                        <tr>
+                                            <td>
+                                                {!alloc.receiptStatus}
+                                            </td>
+                                        </tr>
+
+                                    </apex:repeat>
+
+                                </table>
+                            </td>
+
+                            <td data-label="Amount Collected (AED)">
+                                <table class="small-table">
+
+                                    <apex:repeat value="{!row.allocationRows}"
+                                                 var="alloc">
+
+                                        <tr>
+                                            <td>
+                                                <apex:outputText value="{0,number,###,##0.00}">
+
+                                                    <apex:param value="{!alloc.allocationAmount}"/>
+
+                                                </apex:outputText>
+                                            </td>
+                                        </tr>
+
+                                    </apex:repeat>
+
+                                </table>
+                            </td>
+
+                            <td data-label="Amount Outstanding (AED)">
+                                <apex:outputText value="{0,number,###,##0.00}">
+
+                                    <apex:param value="{!row.outstandingAmount}"/>
+
+                                </apex:outputText>
+                            </td>
+
+                            <apex:outputPanel layout="none" rendered="{!showLPC}">
+                            <td data-label="Late Payment Charge (AED)">
+                                <apex:outputText value="{0,number,###,##0.00}">
+
+                                    <apex:param value="{!row.lpcAmount}"/>
+
+                                </apex:outputText>
+                            </td>
+                            </apex:outputPanel>
+                        </tr>
+
+                    </apex:repeat>
+
+                    <!-- CORRECTED PAYMENT PLAN TOTAL ROW -->
+                    <tr class="total-row">
+
+                        <td colspan="4"
+                            style="text-align:left;">
+
+                            Total (AED)
+                        </td>
+
+                        <!-- Amount -->
+                        <td data-label="Amount (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalAmount}"/>
+
+                            </apex:outputText>
+                        </td>
+
+                        <!-- Cheque/Transaction No. -->
+                        <td></td>
+
+                        <!-- Cleared Date -->
+                        <td></td>
+
+                        <!-- Status -->
+                        <td></td>
+
+                        <!-- Amount Collected -->
+                        <td data-label="Amount Collected (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalAmountCollected}"/>
+
+                            </apex:outputText>
+                        </td>
+
+                        <!-- Amount Outstanding -->
+                        <td data-label="Amount Outstanding (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalAmountOutstanding}"/>
+
+                            </apex:outputText>
+                        </td>
+
+                        <!-- Late Payment Charge -->
+                        <apex:outputPanel layout="none" rendered="{!showLPC}">
+                        <td data-label="Late Payment Charge (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+                                <apex:param value="{!soa.totalLatePayment}"/>
+                            </apex:outputText>
+                        </td>
+                        </apex:outputPanel>
+
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- OTHER PAYMENT DETAILS -->
+    <div class="mintBlockSmall">
+
+        <div class="sectionTitle">
+            OTHER PAYMENT DETAILS
+        </div>
+
+        <div class="tableCard">
+
+            <table class="soa-table">
+
+                <thead>
+                    <tr>
+                        <th style="width:12%;">
+                            Due Date
+                        </th>
+
+                        <th style="width:12%;">
+                            Invoice No.
+                        </th>
+
+                        <th style="width:16%;">
+                            Transaction Type
+                        </th>
+
+                        <th style="width:13%;">
+                            Amount (AED)
+                        </th>
+
+                        <th style="width:18%;">
+                            Cheque/Transaction No.
+                        </th>
+
+                        <th style="width:10%;">
+                            Cleared Date
+                        </th>
+
+                        <th style="width:10%;">
+                            Status
+                        </th>
+
+                        <th style="width:15%;">
+                            Amount Collected (AED)
+                        </th>
+
+                        <th style="width:14%;">
+                            Amount Outstanding (AED)
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <apex:repeat value="{!soa.otherPaymentRows}"
+                                 var="row">
+
+                        <tr class="{!IF(row.isAltRow, 'rowAlt', 'rowMain')}">
+                            <td data-label="Due Date">
+                                {!row.dueDateDisplay}
+                            </td>
+
+                            <td data-label="Invoice No.">
+                                {!row.invoiceNo}
+                            </td>
+
+                            <td data-label="Transaction Type">
+                                {!row.transactionType}
+                            </td>
+
+                            <td data-label="Amount (AED)">
+                                <apex:outputText value="{0,number,###,##0.00}">
+
+                                    <apex:param value="{!row.amount}"/>
+
+                                </apex:outputText>
+                            </td>
+
+                            <td data-label="Cheque/Transaction No.">
+                                <table class="small-table">
+
+                                    <apex:repeat value="{!row.allocationRows}"
+                                                 var="alloc">
+
+                                        <tr>
+                                            <td>
+                                                {!alloc.transactionNumber}
+                                            </td>
+                                        </tr>
+
+                                    </apex:repeat>
+
+                                </table>
+                            </td>
+
+                            <td data-label="Cleared Date">
+                                <table class="small-table">
+
+                                    <apex:repeat value="{!row.allocationRows}"
+                                                 var="alloc">
+
+                                        <tr>
+                                            <td>
+                                                {!alloc.ebsClearingDateDisplay}
+                                            </td>
+                                        </tr>
+
+                                    </apex:repeat>
+
+                                </table>
+                            </td>
+
+                            <td data-label="Status">
+                                {!row.invoiceStatus}
+                            </td>
+
+                            <td data-label="Amount Collected (AED)">
+                                <apex:outputText value="{0,number,###,##0.00}">
+
+                                    <apex:param value="{!row.amountCollected}"/>
+
+                                </apex:outputText>
+                            </td>
+
+                            <td data-label="Amount Outstanding (AED)">
+                                <apex:outputText rendered="{!row.isClearedExcessRow}" escape="false" value="&lt;{0,number,###,##0.00}&gt;">
+                                    <apex:param value="{!ABS(row.outstandingAmount)}"/>
+                                </apex:outputText>
+                                <apex:outputText rendered="{!NOT(row.isClearedExcessRow)}" value="{0,number,###,##0.00}">
+
+                                    <apex:param value="{!row.outstandingAmount}"/>
+
+                                </apex:outputText>
+                            </td>
+                        </tr>
+
+                    </apex:repeat>
+
+                    <!-- CORRECTED OTHER PAYMENT TOTAL ROW -->
+                    <tr class="total-row">
+
+                        <td colspan="3"
+                            style="text-align:left;">
+
+                            Total (AED)
+                        </td>
+
+                        <!-- Amount 
+                        <td data-label="Amount (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalOtherAmount}"/>
+
+                            </apex:outputText>
+                        </td> -->
+
+                        <!-- Cheque/Transaction No. -->
+                        <td></td>
+
+                        <!-- Cleared Date -->
+                        <td></td>
+
+                        <!-- Status -->
+                        <td></td>
+                        <td></td>
+
+                        <!-- Amount Collected -->
+                        <td data-label="Amount Collected (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalOtherAmountCollected}"/>
+
+                            </apex:outputText>
+                        </td>
+
+                        <!-- Amount Outstanding -->
+                        <td data-label="Amount Outstanding (AED)">
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalOtherAmountOutstanding}"/>
+
+                            </apex:outputText>
+                        </td>
+
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TOTAL OUTSTANDING -->
+    <div class="whiteBlock grandTotalBlock"
+         style="padding-top:4px; padding-bottom:6px;">
+
+        <div class="tableCard">
+
+            <table class="soa-table">
+                <apex:outputPanel layout="none" rendered="{!soa.unclearedReceiptsAmount > 0}">
+                    <tr class="total-row">
+
+                        <td colspan="4"
+                            style="text-align:right;">
+
+                            Uncleared Receipts Amount (AED)
+                        </td>
+
+                        <td style="text-align:right;">
+
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.unclearedReceiptsAmount}"/>
+
+                            </apex:outputText>
+
+                        </td>
+
+                    </tr>
+                </apex:outputPanel>
+
+                <apex:outputPanel layout="none" rendered="{!soa.totalExcessAmount > soa.grandTotalOutstanding}">
+                    <tr class="total-row">
+
+                        <td colspan="4"
+                            style="text-align:right;">
+
+                            Total Excess Amount (AED)
+                        </td>
+
+                        <td style="text-align:right;">
+
+                            <apex:outputText value="{0,number,###,##0.00}">
+
+                                <apex:param value="{!soa.totalExcessAmount}"/>
+
+                            </apex:outputText>
+
+                        </td>
+
+                    </tr>
+                </apex:outputPanel>
+
+                <tr class="total-row">
+
+                    <td colspan="4"
+                        style="text-align:right;">
+
+                        TOTAL OUTSTANDING (AED)
+                    </td>
+
+                    <td style="text-align:right;">
+
+                        <apex:outputText value="{0,number,###,##0.00}">
+
+                            <apex:param value="{!soa.grandTotalOutstanding}"/>
+
+                        </apex:outputText>
+
+                    </td>
+
+                </tr>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- ESCROW ACCOUNT DETAILS -->
+    <div class="mintBlockSmall escrowSection">
+
+        <div class="sectionTitle">
+            ESCROW ACCOUNT DETAILS
+        </div>
+
+        <table class="bankCard">
+
+            <tr>
+                <td style="width:28%;">
+                    Payable via : Cheque
+                </td>
+
+                <td style="width:72%;">
+                    Account Name :
+                    <b>{!soa.escrowAccountName}</b>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    Payable via : Bank Transfer
+                </td>
+
+                <td>
+                    Bank Name :
+                    <b>{!soa.escrowBankName}</b>
+                    <br/>
+
+                    Account Number :
+                    {!soa.virtualAccountNumber}
+                    <br/>
+
+                    IBAN :
+                    {!soa.virtualIbanNumber}
+                    <br/>
+
+                    Swift Code :
+                    <b>{!soa.swiftCode}</b>
+                </td>
+            </tr>
+
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
+
+</apex:page>

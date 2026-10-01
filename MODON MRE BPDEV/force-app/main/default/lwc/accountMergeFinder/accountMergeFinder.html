@@ -1,0 +1,497 @@
+<template>
+    <template if:false={canSubmit}></template>
+
+    <template if:true={canSubmit}>
+        <div class="merge-container">
+
+            <!-- ── Loading ───────────────────────────────── -->
+            <template if:true={isLoading}>
+                <div class="slds-p-around_large slds-text-align_center">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                    <p class="slds-text-body_small slds-m-top_medium slds-text-color_weak">
+                        Loading duplicate accounts…
+                    </p>
+                </div>
+            </template>
+
+            <!-- ── Load Error ────────────────────────────── -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_small" role="alert">
+                    <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    {loadError}
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+
+                <!-- ── No Duplicates ──────────────────────── -->
+                <template if:true={noDuplicates}>
+                    <div class="slds-p-around_large slds-text-align_center">
+                        <lightning-icon icon-name="utility:check" size="large" variant="success"></lightning-icon>
+                        <h3 class="slds-text-heading_medium slds-m-top_medium">No Duplicate Accounts Found</h3>
+                        <p class="slds-text-body_regular slds-text-color_weak slds-m-top_small">
+                            No accounts of the same record type match by passport, mobile, Emirates ID or email.
+                        </p>
+                    </div>
+                </template>
+
+                <template if:false={noDuplicates}>
+
+                    <!-- ═══════════════════════════════════════
+                         SCREEN 1 — TABLE
+                    ═══════════════════════════════════════ -->
+                    <template if:true={showTable}>
+
+                        <!-- Master rule banner -->
+                        <template if:true={masterRuleBanner.show}>
+                            <div class="slds-notify slds-notify_alert slds-alert_info slds-m-around_small" role="status">
+                                <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                {masterRuleBanner.msg}
+                            </div>
+                        </template>
+
+                        <!-- Portal locked notice -->
+                        <template if:true={isPortalRule}>
+                            <div class="portal-lock-notice slds-m-around_small">
+                                <lightning-icon icon-name="utility:lock" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                <strong>Master is locked.</strong>
+                                The portal account is automatically the Master. All other accounts are set as Child.
+                            </div>
+                        </template>
+
+                        <!-- Filter cards -->
+                        <div class="filter-bar slds-p-horizontal_small slds-p-top_small">
+                            <template for:each={filterOptions} for:item="f">
+                                <button key={f.key}
+                                        class={f.cardClass}
+                                        data-key={f.key}
+                                        onclick={handleFilterClick}>
+                                    <span class="filter-icon">{f.icon}</span>
+                                    <div>
+                                        <div class="filter-label">{f.label}</div>
+                                        <div class="filter-count">
+                                            {f.count}<span class="filter-match"> {f.countLabel}</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- Active filter banner -->
+                        <template if:true={showFilterBanner}>
+                            <div class="slds-notify slds-notify_alert slds-alert_info slds-m-horizontal_small slds-m-top_x-small" role="status">
+                                <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                Showing <strong>{activeFilterCount}</strong> duplicate(s) matching by
+                                <strong> {activeFilterLabel}</strong>
+                                <button class="slds-button slds-button_reset slds-m-left_small" onclick={clearFilter}>
+                                    ✕ Clear
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- ERP / Portal warning -->
+                        <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-horizontal_small slds-m-top_x-small" role="alert">
+                            <lightning-icon icon-name="utility:warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                            {masterRuleWarning}
+                        </div>
+
+                        <!-- No filter results -->
+                        <template if:true={noFilterResults}>
+                            <div class="slds-p-around_medium slds-text-align_center slds-m-horizontal_small" style="background:#fafaf9;border:1px solid #dddbda;border-radius:6px;">
+                                <lightning-icon icon-name="utility:search" size="small" class="slds-m-bottom_x-small"></lightning-icon>
+                                <p class="slds-text-body_regular slds-text-color_weak slds-m-top_x-small">
+                                    No duplicates match by <strong>{activeFilterLabel}</strong>.
+                                </p>
+                                <button class="slds-button slds-button_neutral slds-m-top_small" onclick={clearFilter}>
+                                    Show All Duplicates
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- Account table -->
+                        <template if:false={noFilterResults}>
+                        <div class="slds-m-around_small">
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout merge-table">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th style="width:44px"></th>
+                                        <th><div class="slds-truncate">Account Name</div></th>
+                                        <th style="width:130px"><div class="slds-truncate">Account No.</div></th>
+                                        <th style="width:140px"><div class="slds-truncate">ERP ID</div></th>
+                                        <th style="width:130px"><div class="slds-truncate">Sales Orders</div></th>
+                                        <th style="width:130px"><div class="slds-truncate">Role</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={visibleRows} for:item="row">
+                                        <tr key={row.id}
+                                            class={row.rowClass}
+                                            data-id={row.id}
+                                            onclick={handleRowClick}>
+
+                                            <td>
+                                                <span class={row.radioClass}>
+                                                    <template if:true={row.isMasterRow}>
+                                                        <span class="radio-dot"></span>
+                                                    </template>
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <div class="slds-cell-wrap">
+                                                    <div class="name-cell">
+                                                        <a href="javascript:void(0)"
+                                                           class="account-link"
+                                                           data-id={row.id}
+                                                           onclick={handleNameClick}>
+                                                            {row.name}
+                                                            <lightning-icon icon-name="utility:new_window"
+                                                                            size="xx-small"
+                                                                            class="slds-m-left_xx-small">
+                                                            </lightning-icon>
+                                                        </a>
+                                                        <template if:true={row.portalBadge}>
+                                                            <span class="portal-badge">🏠 Portal</span>
+                                                        </template>
+                                                    </div>
+                                                    <template if:true={row.showNoCanBeMaster}>
+                                                        <div class="slds-text-body_small slds-text-color_error slds-m-top_xx-small">
+                                                            Cannot be master
+                                                        </div>
+                                                    </template>
+                                                    <template if:true={row.showPortalLocked}>
+                                                        <div class="slds-text-body_small slds-text-color_error slds-m-top_xx-small">
+                                                            🔒 Auto-assigned as Child (portal rule)
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <div class="slds-truncate slds-text-color_weak">{row.accountNumber}</div>
+                                            </td>
+
+                                            <td>
+                                                <template if:true={row.hasErpId}>
+                                                    <span class="erp-badge">{row.erpId}</span>
+                                                </template>
+                                                <template if:false={row.hasErpId}>
+                                                    <span class="slds-text-color_weak">—</span>
+                                                </template>
+                                            </td>
+
+                                            <td>
+                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                    <lightning-icon icon-name="standard:orders"
+                                                                    size="x-small"
+                                                                    class="slds-m-right_xx-small">
+                                                    </lightning-icon>
+                                                    <strong>{row.salesOrderCount}</strong>
+                                                    <span class="slds-m-left_xx-small slds-text-color_weak">
+                                                        order{row.soPlural}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <template if:true={row.isMasterRow}>
+                                                    <span class="role-badge role-master">⭐ Master</span>
+                                                </template>
+                                                <template if:false={row.isMasterRow}>
+                                                    <template if:true={row.isChildRow}>
+                                                        <span class="role-badge role-child">Child</span>
+                                                    </template>
+                                                    <template if:false={row.isChildRow}>
+                                                        <span class="slds-text-color_weak">—</span>
+                                                    </template>
+                                                </template>
+                                            </td>
+
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        </template>
+
+                        <!-- Validation -->
+                        <template if:true={validationError}>
+                            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-horizontal_small" role="alert">
+                                <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                {validationError}
+                            </div>
+                        </template>
+
+                        <!-- Footer -->
+                        <div class="merge-footer">
+                            <p class="slds-text-body_small slds-text-color_weak">{footerText}</p>
+                            <lightning-button label="Next: Review Fields →"
+                                              variant="brand"
+                                              onclick={handleNext}
+                                              disabled={isSubmitDisabled}>
+                            </lightning-button>
+                        </div>
+
+                    </template>
+
+                    <!-- ═══════════════════════════════════════
+                         SCREEN 2 — COMPARE / EDIT
+                    ═══════════════════════════════════════ -->
+                    <template if:true={showCompare}>
+
+                        <template if:true={_compLoading}>
+                            <div class="slds-p-around_large slds-text-align_center">
+                                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                                <p class="slds-text-body_small slds-m-top_medium slds-text-color_weak">
+                                    Loading field comparison…
+                                </p>
+                            </div>
+                        </template>
+
+                        <template if:false={_compLoading}>
+
+                            <!-- Info banner -->
+                            <div class="slds-notify slds-notify_alert slds-alert_info slds-m-around_small" role="status">
+                                <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                Amber rows have differences. Click <strong>Use</strong> on a child value to copy it to the master.
+                                Each field you update will be automatically added to the comment below.
+                            </div>
+
+                            <!-- Compare table -->
+                            <div class="compare-scroll slds-m-around_small">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered compare-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th style="width:180px">
+                                                <div class="slds-truncate">Field</div>
+                                            </th>
+                                            <th class="compare-master-header">
+                                                <div class="slds-truncate">⭐ Master</div>
+                                            </th>
+                                            <template for:each={compChildNames} for:item="cName">
+                                                <th key={cName}>
+                                                    <div class="slds-truncate" title={cName}>{cName} (Child)</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={comparisonRows} for:item="row">
+                                            <tr key={row.uniqueKey} class={row.rowHighlight}>
+
+                                                <td class="field-label-cell">{row.fieldLabel}</td>
+
+                                                <td class="compare-master-col">
+                                                    <div class="master-val-cell">
+                                                        <span class={row.masterValClass}>{row.masterDisplay}</span>
+                                                        <template if:true={row.isOverridden}>
+                                                            <span class="override-badge">Updated</span>
+                                                            <lightning-button-icon
+                                                                icon-name="utility:undo"
+                                                                size="x-small"
+                                                                variant="bare"
+                                                                data-field={row.fieldApiName}
+                                                                onclick={handleClearOverride}
+                                                                title="Revert to original">
+                                                            </lightning-button-icon>
+                                                        </template>
+                                                    </div>
+                                                </td>
+
+                                                <!-- Child columns — data-childidx (no second hyphen) -->
+                                                <template for:each={row.childCols} for:item="col">
+                                                    <td key={col.uniqueKey} class={col.cellClass}>
+                                                        <div class="child-val-cell">
+                                                            <span>{col.value}</span>
+                                                            <template if:true={col.isDifferent}>
+                                                                <template if:true={col.isEditable}>
+                                                                    <lightning-button
+                                                                        label="Use"
+                                                                        size="x-small"
+                                                                        variant="base"
+                                                                        class="use-btn"
+                                                                        data-field={col.fieldName}
+                                                                        data-childidx={col.childIndex}
+                                                                        onclick={handleCopyToMaster}>
+                                                                    </lightning-button>
+                                                                </template>
+                                                            </template>
+                                                        </div>
+                                                    </td>
+                                                </template>
+
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Override count text -->
+                            <template if:true={overridesText}>
+                                <p class="slds-m-horizontal_small slds-text-body_small slds-text-color_weak">
+                                    {overridesText}
+                                </p>
+                            </template>
+
+                            <!-- ── AUTO-GENERATED COMMENT (read-only) ──── -->
+                            <template if:true={hasOverrides}>
+                                <div class="comment-section slds-m-around_small">
+                                    <div class="comment-header">
+                                        <lightning-icon icon-name="utility:note" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        <span class="comment-label">Merge Comment (auto-generated)</span>
+                                    </div>
+                                    <p class="comment-hint">
+                                        This comment is automatically generated from the fields you updated using the
+                                        <strong>Use</strong> button. It will be saved to the master account.
+                                    </p>
+                                    <div class="comment-readonly">{_mergeComment}</div>
+                                </div>
+                            </template>
+
+                            <!-- Validation -->
+                            <template if:true={validationError}>
+                                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-horizontal_small" role="alert">
+                                    <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    {validationError}
+                                </div>
+                            </template>
+
+                            <!-- Footer -->
+                            <div class="merge-footer">
+                                <lightning-button label="← Back"
+                                                  variant="neutral"
+                                                  onclick={handleBackToTable}>
+                                </lightning-button>
+                                <lightning-button label={compareButtonLabel}
+                                                  variant={compareButtonVariant}
+                                                  onclick={handleSaveAndSubmit}
+                                                  disabled={isSubmitting}>
+                                </lightning-button>
+                            </div>
+
+                        </template>
+                    </template>
+
+
+                </template>  <!-- end if:false={noDuplicates} -->
+
+                    <!-- ── Screens 3-6: phase-driven, outside noDuplicates block.
+                         noDuplicates getter is guarded with _phase==='table'
+                         so these are never hidden when active. ── -->
+                    <!-- ═══════════════════════════════════════
+                         SCREEN 3 — SUBMITTED (pending approval)
+                    ═══════════════════════════════════════ -->
+                    <template if:true={isSubmitted}>
+                        <div class="slds-p-around_large slds-text-align_center">
+                            <lightning-icon icon-name="action:approval" size="large" class="slds-m-bottom_medium"></lightning-icon>
+                            <h2 class="slds-text-heading_medium slds-m-bottom_x-small">Submitted for Approval</h2>
+                            <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_large">
+                                The merge request has been sent to the approvers.
+                                This page will update automatically once a decision is made.
+                            </p>
+
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered submitted-table slds-m-bottom_large">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th><div class="slds-truncate">Account Name</div></th>
+                                        <th><div class="slds-truncate">Account No.</div></th>
+                                        <th><div class="slds-truncate">Role</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={submittedRows} for:item="row">
+                                        <tr key={row.id} class={row.submittedRowClass}>
+                                            <td><div class="slds-truncate">{row.name}</div></td>
+                                            <td><div class="slds-truncate slds-text-color_weak">{row.accountNumber}</div></td>
+                                            <td>
+                                                <template if:true={row.isMaster}>
+                                                    <span class="role-badge role-master">⭐ Master</span>
+                                                </template>
+                                                <template if:false={row.isMaster}>
+                                                    <span class="role-badge role-child">Child</span>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+
+                            <div class="submitted-notices slds-m-top_medium">
+                                <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_small" role="status">
+                                    <lightning-icon icon-name="utility:clock" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Pending Approval — approvers have been notified
+                                </div>
+                                <div class="slds-notify slds-notify_alert slds-alert_info" role="status">
+                                    <lightning-icon icon-name="utility:lock" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    This page will update automatically once the approver takes action.
+                                    Refresh the page to see the latest status.
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ═══════════════════════════════════════
+                         SCREEN 4 — RECALLED
+                    ═══════════════════════════════════════ -->
+                    <template if:true={isRecalled}>
+                        <div class="slds-p-around_large slds-text-align_center">
+                            <lightning-icon icon-name="utility:ban" size="large" class="slds-m-bottom_medium"></lightning-icon>
+                            <h2 class="slds-text-heading_medium slds-m-bottom_x-small">Merge Request Cancelled</h2>
+                            <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_large">
+                                The approval request has been recalled.
+                                All child accounts have been reset. No merge has taken place.
+                            </p>
+                            <lightning-button label="Start New Merge"
+                                              variant="brand"
+                                              onclick={resetForm}>
+                            </lightning-button>
+                        </div>
+                    </template>
+
+                    <!-- ═══════════════════════════════════════
+                         SCREEN 5 — MERGE ERROR
+                    ═══════════════════════════════════════ -->
+                    <template if:true={isMergeError}>
+                        <div class="slds-p-around_large slds-text-align_center">
+                            <lightning-icon icon-name="utility:error" size="large" variant="error" class="slds-m-bottom_medium"></lightning-icon>
+                            <h2 class="slds-text-heading_medium slds-m-bottom_x-small">Merge Job Failed</h2>
+                            <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                The approval was granted, but the background merge job encountered an error.
+                                Some records may have already been re-parented — check with your administrator
+                                before retrying.
+                            </p>
+
+                            <!-- Full error detail box -->
+                            <div class="merge-error-box slds-m-bottom_large">
+                                <div class="merge-error-box__title">
+                                    <lightning-icon icon-name="utility:bug" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    <strong>Error Detail</strong>
+                                </div>
+                                <pre class="merge-error-box__body">{_mergeErrorDetail}</pre>
+                            </div>
+
+                            <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_medium" style="max-width:520px;margin-left:auto;margin-right:auto;" role="status">
+                                <lightning-icon icon-name="utility:warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                Clicking <strong>Clear Error &amp; Retry</strong> will reset the master account
+                                and all linked victims so you can resubmit. The merge will <strong>not</strong>
+                                proceed automatically — you must go through the process again.
+                            </div>
+
+                            <div class="slds-grid slds-grid_align-center" style="gap:12px;">
+                                <lightning-button
+                                    label={clearErrorLabel}
+                                    variant="brand"
+                                    onclick={handleClearMergeError}
+                                    disabled={isClearingError}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+
+            </template>  <!-- end if:false={isLoading} -->
+
+        </div>
+    </template>
+
+
+</template>

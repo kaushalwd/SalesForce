@@ -1,0 +1,164 @@
+<template>
+
+<div style="margin:20px;">
+    <lightning-spinner if:true={isLoading}></lightning-spinner>
+
+    <!-- TOP SECTION CARD -->
+    <div class="header-card slds-box slds-theme_default slds-m-bottom_medium">
+        <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+
+            <!-- Tower -->
+            <div class="slds-col slds-size_1-of-6 header-label">Tower:</div>
+            <div class="slds-col slds-size_5-of-6 header-value">
+                <a href={towerUrl} target="_blank">{towerName}</a>
+            </div>
+
+            <!-- Project -->
+            <div class="slds-col slds-size_1-of-6 header-label">Project:</div>
+            <div class="slds-col slds-size_5-of-6 header-value">
+                <a href={projectUrl} target="_blank">{projectName}</a>
+            </div>
+
+            <!-- CHECKLIST NAME -->
+            <div class="slds-col slds-size_1-of-6 header-label slds-text-nowrap">Checklist Name:</div>
+            <div class="slds-col slds-size_5-of-6 header-value">
+                {checkListName}
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- MAKER-CHECKER CHECKLIST TITLE -->
+    <div class="section-title slds-m-bottom_small">
+        <h2>Maker-Checker Checklist</h2>
+    </div>
+
+    <!-- ADD ITEM BUTTON (Only visible if user is in SPA_Factsheet_Add_Queue) -->
+    <template if:true={userCanAdd}>
+        <div class="slds-m-bottom_medium">
+            <lightning-button label="Add Item" variant="brand" onclick={handleAddItem}></lightning-button>
+        </div>
+    </template>
+
+    <!-- CHECKLIST ITEMS -->
+    <template if:true={items.length}>
+        <template for:each={items} for:item="item">
+            <div key={item.Id} class="checklist-item-card">
+
+                <!-- SEQUENCE NUMBER AND CHECKLIST NAME HEADER -->
+                <div class="checklist-name-header slds-grid slds-gutters_small">
+                    <div class="slds-col slds-size_1-of-12">
+                        <span class="sequence-number">{item.serialNo}</span>
+                    </div>
+                    <div class="slds-col slds-size_11-of-12">
+                        <lightning-formatted-text value={item.Checklist_Name__c}></lightning-formatted-text>
+                    </div>
+                </div>
+
+
+
+                <!-- Maker Comments Content -->
+                <div class="item-content">
+                    
+                    <div class="content-wrapper">
+                        <!-- Maker Comments Label & Content -->
+                        <div class="comments-section">
+                            <div class="field-label">Remarks</div>
+                            <div class="field-value comment-box">
+                                {item.Maker_Comments__c}
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons (Only visible if user is in SPA_Factsheet_Edit_Queue) -->
+                        <template if:true={userCanEdit}>
+                            <div class="actions-column">
+                                <lightning-button-icon 
+                                    icon-name="utility:edit"
+                                    alternative-text="Edit"
+                                    data-id={item.Id}
+                                    onclick={handleEdit}
+                                    variant="bare"
+                                    class="action-btn">
+                                </lightning-button-icon>
+
+                                <lightning-button-icon 
+                                    icon-name="utility:delete"
+                                    alternative-text="Delete"
+                                    data-id={item.Id}
+                                    onclick={handleDelete}
+                                    variant="bare"
+                                    class="action-btn">
+                                </lightning-button-icon>
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+
+            </div>
+        </template>
+    </template>
+
+    <!-- ADD/EDIT MODAL -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                
+                <!-- MODAL HEADER -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </header>
+
+                <!-- MODAL BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    
+                    <!-- CHECKLIST NAME INPUT -->
+                    <div class="slds-m-bottom_medium">
+                        <lightning-input
+                            label="Checklist Name"
+                            value={editedName}
+                            onchange={handleNameChange}
+                            required>
+                        </lightning-input>
+                    </div>
+
+                    <!-- MAKER COMMENTS INPUT -->
+                    <div>
+                        <lightning-textarea
+                            label="Maker Comments"
+                            value={editedComments}
+                            onchange={handleCommentsChange}
+                            rows="6">
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+
+                <!-- MODAL FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button 
+                        label="Cancel" 
+                        onclick={closeModal}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button 
+                        variant="brand" 
+                        label="Save" 
+                        onclick={handleSave}
+                        icon-name="utility:save">
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</div>    
+
+</template>

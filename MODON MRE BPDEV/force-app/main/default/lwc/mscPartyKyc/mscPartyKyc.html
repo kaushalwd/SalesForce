@@ -1,0 +1,56 @@
+<template>
+    <!-- The joint owner's manual KYC route: the buyer's own pieces on this person's Account.
+         Grey and quiet; the drawer's KYC box around it carries the status border. -->
+    <template lwc:if={show}>
+        <div class="pk">
+            <template lwc:if={isAwaiting}>
+                <div class="pk__row">
+                    <p class="pk__line">{labels.KYCG_B_AWAITING}</p>
+                    <button type="button" class="pill pk__sm" onclick={handleRefresh}
+                            disabled={busy}>{refreshLabel}</button>
+                </div>
+            </template>
+            <template lwc:if={isWithdrawn}>
+                <p class="pk__line">{withdrawnLine}</p>
+            </template>
+
+            <template lwc:if={showForm}>
+                <div class="pk__part">
+                    <c-msc-manual-kyc
+                        party-account-id={accountId}
+                        opportunity-id={opportunityId}
+                        onsubmitted={handleSubmitted}
+                    ></c-msc-manual-kyc>
+                </div>
+            </template>
+
+            <template lwc:if={showDocuments}>
+                <div class="pk__part">
+                    <!-- UI-28: MODON's joint owner check refuses the add without these files -->
+                    <c-msc-kyc-documents
+                        party-account-id={accountId}
+                        opportunity-id={opportunityId}
+                        needed-for="adding"
+                        onchanged={handleDocumentsChanged}
+                        onliststate={handleDocumentsList}
+                    ></c-msc-kyc-documents>
+                </div>
+            </template>
+
+            <template lwc:if={showCapture}>
+                <div class="pk__part">
+                    <c-msc-kyc-capture
+                        party-account-id={accountId}
+                        opportunity-id={opportunityId}
+                        documents-listed={documentsListed}
+                        onchanged={handleCaptureChanged}
+                    ></c-msc-kyc-capture>
+                </div>
+            </template>
+
+            <template lwc:if={problem}>
+                <p class="pk__problem">{problem}</p>
+            </template>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,1691 @@
+:host {
+    --commission-ink: var(--mbpr-theme-ink, #101112);
+    --commission-ink-soft: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.64));
+    --commission-ink-faint: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    --commission-line: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    --commission-line-strong: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    --commission-paper: var(--mbpr-theme-paper, #f0ede9);
+    --commission-surface: var(--mbpr-theme-surface-solid, #ffffff);
+    --commission-surface-soft: var(--mbpr-theme-surface-soft, #f8f6f2);
+    --commission-row: var(--mbpr-theme-row-bg, #f8f6f2);
+    --commission-row-hover: var(--mbpr-theme-row-bg-hover, #f1ece4);
+    --commission-control: var(--mbpr-theme-control-bg, #f7f5f1);
+    --commission-input: var(--mbpr-theme-input-bg, #f7f5f1);
+    --commission-input-border: var(--mbpr-theme-input-border, rgba(0, 0, 0, 0.2));
+    --commission-inverse: var(--mbpr-theme-inverse-ink, #ffffff);
+    --commission-accent: var(--mbpr-theme-accent, #0b7772);
+    --commission-accent-ink: var(--mbpr-theme-accent-ink, #06504c);
+    --commission-accent-soft: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    --commission-accent-line: var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    --commission-warning: var(--mbpr-theme-warning, #7a4d00);
+    --commission-warning-soft: var(--mbpr-theme-warning-soft, rgba(177, 111, 0, 0.12));
+    --commission-warning-line: var(--mbpr-theme-warning-line, rgba(177, 111, 0, 0.24));
+    --commission-error: var(--mbpr-theme-error, #8b2f2f);
+    --commission-error-soft: var(--mbpr-theme-error-soft, rgba(139, 47, 47, 0.1));
+    --commission-error-line: var(--mbpr-theme-error-line, rgba(139, 47, 47, 0.22));
+    --commission-overlay: var(--mbpr-theme-overlay-strong, rgba(0, 0, 0, 0.58));
+    --commission-tooltip-bg: var(--mbpr-theme-tooltip-bg, #101112);
+    --commission-tooltip-ink: var(--mbpr-theme-tooltip-ink, #ffffff);
+    --commission-tooltip-line: var(--mbpr-theme-tooltip-border, rgba(255, 255, 255, 0.08));
+    --commission-shadow-sm: var(--mbpr-theme-shadow-sm, 0 1px 2px rgba(16, 17, 18, 0.06));
+    --commission-shadow-md: var(--mbpr-theme-shadow-md, 0 16px 32px rgba(16, 17, 18, 0.08));
+    --commission-radius-sm: var(--mbpr-radius-sm, 8px);
+    --commission-radius-md: var(--mbpr-radius-md, 12px);
+    --commission-radius-lg: var(--mbpr-radius-lg, 16px);
+    --commission-radius-pill: var(--mbpr-radius-pill, 999px);
+    --commission-ease: var(--mbpr-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    color: var(--commission-ink);
+    display: block;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    height: 100%;
+    min-height: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.commissions-workspace,
+.commissions-console {
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+}
+
+/* Hosted inside the revenue workspace, which already provides the page
+   background and outer padding - no second paper band or inset. */
+.commissions-workspace {
+    background: transparent;
+}
+
+.commissions-console {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    overflow: hidden;
+    padding: 0;
+}
+
+.state-panel {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    min-height: 20rem;
+    padding: 1.25rem;
+}
+
+.state-panel > * {
+    max-width: 34rem;
+    width: 100%;
+}
+
+.state-panel--loading {
+    align-items: flex-start;
+}
+
+.summary-grid {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 0.6rem;
+    /* BP-068: three tiles, three tracks, so the row is filled edge to edge. This was cut for
+       four while Current Payout and Eligible Amount were shown; put the fourth track back if
+       either tile is restored. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-card {
+    background: var(--commission-surface);
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-md);
+    box-shadow: var(--commission-shadow-sm);
+    min-width: 0;
+    padding: 0.68rem 0.78rem;
+}
+
+.summary-card p {
+    color: var(--commission-ink-faint);
+    font-size: 0.63rem;
+    font-weight: 820;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.summary-card strong {
+    color: var(--commission-ink);
+    display: block;
+    font-family: var(--mbpr-serif, ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif);
+    font-size: clamp(1rem, 1.35vw, 1.28rem);
+    font-weight: 720;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-top: 0.28rem;
+    overflow-wrap: anywhere;
+}
+
+/* Conditional bank-details warning (UAT parity): renders as its own
+   console row only while acceptance is blocked - no passive strip. */
+.bank-warning {
+    align-items: center;
+    background: var(--commission-warning-soft);
+    border: 1px solid var(--commission-warning-line);
+    border-radius: calc(var(--commission-radius-md) - 3px);
+    color: var(--commission-warning);
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 0.69rem;
+    gap: 0.25rem;
+    line-height: 1.35;
+    margin: 0;
+    min-width: 0;
+    padding: 0.38rem 0.55rem;
+}
+
+.commission-toolbar {
+    align-items: end;
+    background: var(--commission-surface);
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-md);
+    display: grid;
+    flex: 0 0 auto;
+    gap: 0.65rem;
+    grid-template-columns: minmax(15rem, 24rem) auto;
+    justify-content: space-between;
+    padding: 0.58rem;
+}
+
+.toolbar-search {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.toolbar-search label,
+.filter-field > span {
+    color: var(--commission-ink-soft);
+    font-size: 0.67rem;
+    font-weight: 780;
+    line-height: 1.2;
+}
+
+.toolbar-search__control {
+    align-items: center;
+    background: var(--commission-input);
+    border: 1px solid var(--commission-input-border);
+    border-radius: calc(var(--commission-radius-md) - 2px);
+    display: flex;
+    min-height: 2.35rem;
+    min-width: 0;
+    padding: 0 0.62rem;
+    transition:
+        border-color 160ms var(--commission-ease),
+        box-shadow 160ms var(--commission-ease);
+}
+
+.toolbar-search__control:focus-within {
+    border-color: var(--commission-accent);
+    box-shadow: 0 0 0 3px var(--commission-accent-soft);
+}
+
+.toolbar-search__control svg {
+    fill: none;
+    flex: 0 0 auto;
+    height: 1rem;
+    margin-right: 0.45rem;
+    stroke: var(--commission-ink-faint);
+    stroke-linecap: round;
+    stroke-width: 1.8;
+    width: 1rem;
+}
+
+.toolbar-search__control input {
+    background: transparent;
+    border: 0;
+    color: var(--commission-ink);
+    font-size: 0.78rem;
+    min-width: 0;
+    outline: none;
+    width: 100%;
+}
+
+.toolbar-search__control input::placeholder {
+    color: var(--commission-ink-faint);
+}
+
+/* With the meta pills gone the filter trigger is the toolbar's last
+   column; on the touch rows it shares the 1fr track with nothing, so
+   keep it hugging the right edge instead of stretching. */
+.commission-toolbar .toolbar-button {
+    justify-self: end;
+}
+
+.toolbar-button,
+.filter-action,
+.view-invoice-button,
+.mobile-view-invoice,
+.pagination button,
+.invoice-action,
+.confirmation__action,
+.error-rail button {
+    align-items: center;
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-pill);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 820;
+    justify-content: center;
+    min-height: 2.35rem;
+    transition:
+        background 160ms var(--commission-ease),
+        border-color 160ms var(--commission-ease),
+        color 160ms var(--commission-ease),
+        transform 160ms var(--commission-ease);
+}
+
+.toolbar-button {
+    background: var(--commission-ink);
+    border-color: var(--commission-ink);
+    color: var(--commission-inverse);
+    gap: 0.42rem;
+    padding: 0.45rem 0.8rem;
+}
+
+.toolbar-button svg,
+.view-invoice-button svg {
+    fill: none;
+    height: 1rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+    width: 1rem;
+}
+
+.toolbar-button:hover,
+.toolbar-button:focus-visible,
+.filter-action:hover,
+.filter-action:focus-visible,
+.view-invoice-button:hover,
+.view-invoice-button:focus-visible,
+.mobile-view-invoice:hover,
+.mobile-view-invoice:focus-visible,
+.pagination button:hover:not(:disabled),
+.pagination button:focus-visible,
+.invoice-action:hover:not(:disabled),
+.invoice-action:focus-visible,
+.confirmation__action:hover:not(:disabled),
+.confirmation__action:focus-visible,
+.error-rail button:hover,
+.error-rail button:focus-visible {
+    border-color: var(--commission-accent-line);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.filter-panel {
+    background: var(--commission-surface);
+    border: 1px solid var(--commission-line-strong);
+    border-radius: var(--commission-radius-md);
+    box-shadow: var(--commission-shadow-md);
+    flex: 0 0 auto;
+    padding: 0.7rem;
+    animation: commissionPanelIn 220ms var(--commission-ease) both;
+}
+
+/* Touch-band bottom-sheet scrim - inert on desktop, where the panel stays
+   an in-flow card. */
+.commission-filter-scrim {
+    display: none;
+}
+
+.filter-panel__header {
+    align-items: flex-start;
+    border-bottom: 1px solid var(--commission-line);
+    display: flex;
+    gap: 0.8rem;
+    justify-content: space-between;
+    padding: 0 0 0.58rem;
+}
+
+.filter-panel__header p {
+    color: var(--commission-ink);
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin: 0;
+}
+
+.filter-panel__header span {
+    color: var(--commission-ink-soft);
+    display: block;
+    font-size: 0.67rem;
+    margin-top: 0.12rem;
+}
+
+.filter-panel__header button {
+    align-items: center;
+    background: var(--commission-control);
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-pill);
+    color: var(--commission-ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 1rem;
+    height: 2rem;
+    justify-content: center;
+    width: 2rem;
+}
+
+.filter-panel__header button:focus-visible {
+    border-color: var(--commission-accent);
+    outline: 3px solid var(--commission-accent-soft);
+}
+
+.filter-grid {
+    display: grid;
+    gap: 0.62rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding-top: 0.62rem;
+}
+
+.filter-field {
+    display: grid;
+    gap: 0.28rem;
+    min-width: 0;
+}
+
+.filter-field input,
+.filter-field select {
+    appearance: none;
+    background: var(--commission-input);
+    border: 1px solid var(--commission-input-border);
+    border-radius: calc(var(--commission-radius-md) - 2px);
+    color: var(--commission-ink);
+    font-size: 0.75rem;
+    min-height: 2.35rem;
+    min-width: 0;
+    padding: 0.42rem 0.58rem;
+    width: 100%;
+}
+
+.filter-field select {
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--commission-ink-soft) 50%),
+        linear-gradient(135deg, var(--commission-ink-soft) 50%, transparent 50%);
+    background-position:
+        calc(100% - 0.85rem) 50%,
+        calc(100% - 0.61rem) 50%;
+    background-repeat: no-repeat;
+    background-size: 0.25rem 0.25rem, 0.25rem 0.25rem;
+    padding-right: 1.7rem;
+}
+
+.filter-field input:focus,
+.filter-field select:focus {
+    border-color: var(--commission-accent);
+    box-shadow: 0 0 0 3px var(--commission-accent-soft);
+    outline: none;
+}
+
+.filter-error {
+    color: var(--commission-error);
+    font-size: 0.7rem;
+    font-weight: 760;
+    margin: 0.5rem 0 0;
+}
+
+.filter-panel__footer {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding-top: 0.65rem;
+}
+
+.filter-action {
+    padding: 0.44rem 0.82rem;
+}
+
+.filter-action--secondary {
+    background: var(--commission-surface-soft);
+    color: var(--commission-ink);
+}
+
+.filter-action--primary {
+    background: var(--commission-ink);
+    border-color: var(--commission-ink);
+    color: var(--commission-inverse);
+}
+
+.filter-chips {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.filter-chip {
+    align-items: center;
+    background: var(--commission-accent-soft);
+    border: 1px solid var(--commission-accent-line);
+    border-radius: var(--commission-radius-pill);
+    color: var(--commission-accent-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.65rem;
+    font-weight: 800;
+    gap: 0.38rem;
+    min-height: 1.75rem;
+    padding: 0.3rem 0.54rem;
+}
+
+.filter-chip:focus-visible {
+    outline: 3px solid var(--commission-accent-soft);
+}
+
+.error-rail {
+    align-items: center;
+    background: var(--commission-error-soft);
+    border: 1px solid var(--commission-error-line);
+    border-radius: var(--commission-radius-md);
+    color: var(--commission-error);
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 720;
+    gap: 0.75rem;
+    justify-content: space-between;
+    padding: 0.48rem 0.65rem;
+}
+
+.error-rail button {
+    background: var(--commission-surface);
+    color: var(--commission-error);
+    min-height: 2rem;
+    padding: 0.3rem 0.62rem;
+}
+
+.commission-content {
+    background: var(--commission-surface);
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-md);
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    /* Containing block for.head-tip. No other absolutely
+       positioned descendant exists inside this box, so nothing else moves. */
+    position: relative;
+}
+
+/* Column help text, large screens only. display:none is the default and the
+   styling lives inside the min-width query, so the element is inert on tablet
+   and phone; the JS also refuses to switch it on below 1024px or for non-mouse
+   pointers. Width is fixed at 272px to match HEAD_TIP_WIDTH in the JS, which
+   needs a known width to clamp the tip inside the card. */
+.head-tip {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .head-tip {
+        background: var(--commission-tooltip-bg);
+        border: 1px solid var(--commission-tooltip-line);
+        border-radius: var(--commission-radius-sm);
+        box-shadow: var(--commission-shadow-md);
+        color: var(--commission-tooltip-ink);
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        left: 0;
+        letter-spacing: 0.01em;
+        line-height: 1.45;
+        opacity: 0;
+        padding: 0.45rem 0.7rem;
+        pointer-events: none;
+        position: absolute;
+        text-transform: none;
+        top: 0;
+        transform: translateX(-50%) translateY(4px);
+        transition: opacity 0.16s ease, transform 0.18s var(--commission-ease);
+        width: 272px;
+        z-index: 30;
+    }
+
+    /* Placed from --head-tip-caret rather than a flat 50%: the tip clamps at the
+       card edges for the first and last columns, so a caret pinned to the box
+       centre would point at the wrong header. Falls back to centre. */
+    .head-tip::before {
+        border-color: transparent transparent var(--commission-tooltip-bg) transparent;
+        border-style: solid;
+        border-width: 0 6px 6px;
+        bottom: 100%;
+        content: "";
+        height: 0;
+        left: var(--head-tip-caret, 50%);
+        position: absolute;
+        transform: translateX(-50%);
+        width: 0;
+    }
+
+    .head-tip--on {
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .head-tip {
+        transition: none;
+    }
+}
+
+.commission-empty {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-height: 13rem;
+    padding: 1rem;
+}
+
+.commission-table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+/* No fixed min-width, so the 17 columns share the wrapper's width and it
+   never scrolls sideways. overflow-wrap:anywhere on data cells lowers each
+   column's min-content width so the auto layout can compress them, which
+   break-word would not. The wrapper keeps overflow:auto as a fallback for
+   narrow non-touch windows. */
+.commission-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.69rem;
+    width: 100%;
+}
+
+.commission-table th,
+.commission-table td {
+    border-bottom: 1px solid var(--commission-line);
+    color: var(--commission-ink-soft);
+    padding: 0.58rem 0.5rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.commission-table td {
+    overflow-wrap: anywhere;
+}
+
+.commission-table th {
+    background: var(--commission-surface-soft);
+    color: var(--commission-ink);
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.035em;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    white-space: normal;
+    z-index: 2;
+}
+
+.commission-table th:first-child,
+.commission-table td:first-child {
+    padding-left: 0.8rem;
+}
+
+.commission-table th:last-child,
+.commission-table td:last-child {
+    background: var(--commission-surface);
+    border-left: 1px solid var(--commission-line);
+    position: sticky;
+    right: 0;
+    z-index: 1;
+}
+
+.commission-table th:last-child {
+    background: var(--commission-surface-soft);
+    /* Centered over the View Invoice buttons (user request). */
+    text-align: center;
+    z-index: 3;
+}
+
+/* Down Payment and SPA head the two widest columns, so their short labels
+   read as misaligned against the long badges below. Class hook rather than
+:nth-child, so it survives a column reorder. Header only; body cells keep
+   the shared left alignment. */
+.commission-table th.th-center {
+    text-align: center;
+}
+
+.commission-table th button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    gap: 0.3rem;
+    letter-spacing: inherit;
+    padding: 0;
+    text-transform: inherit;
+}
+
+.commission-table th button span {
+    color: var(--commission-ink-faint);
+    font-size: 0.72rem;
+}
+
+.commission-table th button:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--commission-accent);
+    outline-offset: 3px;
+}
+
+.commission-table tbody tr {
+    background: var(--commission-surface);
+    transition: background 140ms var(--commission-ease);
+}
+
+.commission-table tbody tr:hover,
+.commission-table tbody tr:focus-within {
+    background: var(--commission-row-hover);
+}
+
+.commission-table tbody tr:hover td:last-child,
+.commission-table tbody tr:focus-within td:last-child {
+    background: var(--commission-row-hover);
+}
+
+.commission-table td strong {
+    color: var(--commission-ink);
+    font-weight: 820;
+}
+
+.view-invoice-button {
+    background: var(--commission-surface-soft);
+    color: var(--commission-ink);
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    white-space: nowrap;
+}
+
+/* The row awaiting the broker's invoice gets the primary treatment, so the
+   one row they must act on reads as an action. Same ink/inverse pair as
+.invoice-action--primary, so no new colour. Compound selector so the base
+   rule's ordering cannot defeat it. */
+.view-invoice-button.view-invoice-button--submit {
+    background: var(--commission-ink);
+    border-color: var(--commission-ink);
+    color: var(--commission-inverse);
+}
+
+.commission-cards {
+    display: none;
+}
+
+.pagination {
+    align-items: center;
+    background: var(--commission-surface);
+    border-top: 1px solid var(--commission-line);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    min-height: 3rem;
+    padding: 0.48rem 0.65rem;
+}
+
+.pagination button {
+    background: var(--commission-surface-soft);
+    color: var(--commission-ink);
+    min-width: 5.4rem;
+    padding: 0.35rem 0.65rem;
+}
+
+.pagination button:disabled,
+.invoice-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.44;
+}
+
+.pagination span {
+    color: var(--commission-ink-soft);
+    font-size: 0.7rem;
+    font-weight: 780;
+}
+
+/* The native PDF viewer needs reading width, so this instance opts into the
+   drawer's width hook. Desktop only in effect: the drawer's touch rules
+   hard-set their own widths later in its stylesheet. */
+c-mbpr_detail-drawer {
+    --mbpr-drawer-wide-width: 58rem;
+}
+
+.invoice-shell {
+    background: var(--commission-surface-soft);
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-md);
+    height: min(66dvh, 42rem);
+    min-height: 25rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.invoice-frame {
+    /* Same-origin VF renderAs=pdf response - the browser's native PDF
+       viewer renders here (Generate Offer parity); the surface tone
+       only shows for the instant before it paints. */
+    background: var(--commission-surface-soft);
+    border: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.invoice-loading {
+    background: var(--commission-surface);
+    inset: 0;
+    padding: 1rem;
+    position: absolute;
+    z-index: 2;
+}
+
+/* The legacy VF page hosted these fields inside the invoice HTML; the PDF
+   viewer cannot, so they sit in the footer beside the actions they gate. Not
+.filter-field: the touch block restyles that into borderless sheet cards. */
+.invoice-form {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.invoice-form--split {
+    grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+}
+
+.invoice-field {
+    display: grid;
+    gap: 0.28rem;
+    min-width: 0;
+}
+
+.invoice-field > span:first-child {
+    color: var(--commission-ink-soft);
+    font-size: 0.67rem;
+    font-weight: 780;
+    line-height: 1.2;
+}
+
+.invoice-field input,
+.invoice-field textarea {
+    appearance: none;
+    background: var(--commission-input);
+    border: 1px solid var(--commission-input-border);
+    border-radius: calc(var(--commission-radius-md) - 2px);
+    color: var(--commission-ink);
+    font: inherit;
+    font-size: 0.75rem;
+    min-height: 2.35rem;
+    min-width: 0;
+    padding: 0.42rem 0.58rem;
+    width: 100%;
+}
+
+.invoice-field textarea {
+    min-height: 3.4rem;
+    resize: vertical;
+}
+
+.invoice-field input:focus,
+.invoice-field textarea:focus {
+    border-color: var(--commission-accent);
+    box-shadow: 0 0 0 3px var(--commission-accent-soft);
+    outline: none;
+}
+
+.invoice-field--error input,
+.invoice-field--error textarea {
+    border-color: var(--commission-error);
+}
+
+.invoice-field__error {
+    color: var(--commission-error);
+    font-size: 0.66rem;
+    font-weight: 760;
+}
+
+.invoice-footer {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.invoice-warning {
+    background: var(--commission-warning-soft);
+    border: 1px solid var(--commission-warning-line);
+    border-radius: var(--commission-radius-md);
+    color: var(--commission-warning);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0.5rem 0.62rem;
+}
+
+/* Drawer footer notices, so a commission that cannot be acted on keeps its
+   PDF view and gains an explanation. The box model mirrors.invoice-warning
+   above, so the footer keeps one rhythm whether it shows a notice, a warning
+   or both; only the tone tokens differ. Base-level only, like
+.invoice-warning: it is a full-width grid child that wraps down to 320px. */
+.invoice-notice {
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-md);
+    display: grid;
+    font-size: 0.72rem;
+    gap: 0.16rem;
+    line-height: 1.45;
+    margin: 0;
+    padding: 0.55rem 0.68rem;
+}
+
+.invoice-notice__heading {
+    font-size: 0.63rem;
+    font-weight: 850;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.invoice-notice__body {
+    overflow-wrap: anywhere;
+}
+
+.invoice-notice--warning {
+    background: var(--commission-warning-soft);
+    border-color: var(--commission-warning-line);
+    color: var(--commission-warning);
+}
+
+.invoice-notice--success {
+    background: var(--commission-accent-soft);
+    border-color: var(--commission-accent-line);
+    color: var(--commission-accent-ink);
+}
+
+.invoice-notice--error {
+    background: var(--commission-error-soft);
+    border-color: var(--commission-error-line);
+    color: var(--commission-error);
+}
+
+.invoice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.invoice-action {
+    min-width: 6.2rem;
+    padding: 0.44rem 0.78rem;
+}
+
+.invoice-action--primary {
+    background: var(--commission-ink);
+    border-color: var(--commission-ink);
+    color: var(--commission-inverse);
+}
+
+.invoice-action--secondary {
+    background: var(--commission-surface-soft);
+    color: var(--commission-ink);
+}
+
+.confirmation-layer {
+    align-items: center;
+    background: var(--commission-overlay);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 9600;
+}
+
+.confirmation {
+    background: var(--commission-surface);
+    border: 1px solid var(--commission-line-strong);
+    border-radius: var(--commission-radius-lg);
+    box-shadow: var(--commission-shadow-md);
+    max-width: 26rem;
+    padding: 1rem;
+    width: 100%;
+    animation: confirmationIn 200ms var(--commission-ease) both;
+}
+
+.confirmation__eyebrow {
+    color: var(--commission-accent-ink);
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.confirmation h3 {
+    color: var(--commission-ink);
+    font-size: 1rem;
+    font-weight: 850;
+    margin: 0.3rem 0 0;
+}
+
+.confirmation > p:not(.confirmation__eyebrow) {
+    color: var(--commission-ink-soft);
+    font-size: 0.76rem;
+    line-height: 1.45;
+    margin: 0.42rem 0 0;
+}
+
+.confirmation__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 0.9rem;
+}
+
+.confirmation__action {
+    background: var(--commission-surface-soft);
+    color: var(--commission-ink);
+    min-width: 5.5rem;
+    padding: 0.42rem 0.72rem;
+}
+
+.confirmation__action--primary {
+    background: var(--commission-ink);
+    border-color: var(--commission-ink);
+    color: var(--commission-inverse);
+}
+
+/* Own-invoice upload. Extends.confirmation rather than being a new dialog,
+   so overlay, surface, animation, the action grid and the reduced-motion kill
+   switch come for free; only the form furniture is new.
+
+   The VAT notice here is a div, not a p, on purpose:
+   `.confirmation > p:not(.confirmation__eyebrow)` would out-specify
+.invoice-notice--warning and flatten the tone. */
+.invoice-upload {
+    max-width: 30rem;
+}
+
+.invoice-upload__grid {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.75rem;
+}
+
+.invoice-upload__drop {
+    border: 1px dashed var(--commission-line-strong);
+    border-radius: var(--commission-radius-md);
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+    padding: 0.7rem;
+    transition: border-color 160ms var(--commission-ease);
+}
+
+.invoice-upload__drop--error {
+    border-color: var(--commission-error-line);
+}
+
+.invoice-upload__label {
+    cursor: pointer;
+    display: grid;
+    gap: 0.15rem;
+}
+
+.invoice-upload__title {
+    color: var(--commission-ink);
+    font-size: 0.7rem;
+    font-weight: 850;
+}
+
+.invoice-upload__hint {
+    color: var(--commission-ink-faint);
+    font-size: 0.66rem;
+}
+
+.invoice-upload__input {
+    color: var(--commission-ink-soft);
+    font-size: 0.68rem;
+    margin-top: 0.35rem;
+    max-width: 100%;
+}
+
+/* Keeps the native file button on-theme in both light and dark. */
+.invoice-upload__input::file-selector-button {
+    background: var(--commission-surface-soft);
+    border: 1px solid var(--commission-line-strong);
+    border-radius: var(--commission-radius-sm);
+    color: var(--commission-ink);
+    cursor: pointer;
+    font: inherit;
+    margin-right: 0.5rem;
+    padding: 0.28rem 0.55rem;
+}
+
+.invoice-upload__file {
+    align-items: center;
+    background: var(--commission-surface-soft);
+    border: 1px solid var(--commission-line);
+    border-radius: var(--commission-radius-sm);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    padding: 0.32rem 0.45rem;
+}
+
+.invoice-upload__file-name {
+    color: var(--commission-ink);
+    font-size: 0.68rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.invoice-upload__file-clear {
+    background: none;
+    border: none;
+    color: var(--commission-error);
+    cursor: pointer;
+    flex: 0 0 auto;
+    font-size: 0.66rem;
+    font-weight: 850;
+    padding: 0.1rem 0.2rem;
+}
+
+.invoice-upload__file-clear:hover {
+    text-decoration: underline;
+}
+
+.invoice-upload .invoice-notice {
+    margin-top: 0.6rem;
+}
+
+/* Built on.confirmation rather than a new dialog: that shell already carries
+   the overlay, surface, animation, action grid and reduced-motion switch, so
+   this inherits theme and responsive parity. Only the warning glyph and its
+   title row are new. */
+.threshold-block__title {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
+}
+
+.threshold-block__icon {
+    align-items: center;
+    background: var(--commission-warning-soft);
+    border: 1px solid var(--commission-warning-line);
+    border-radius: var(--commission-radius-pill);
+    color: var(--commission-warning);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    font-weight: 850;
+    height: 1.4rem;
+    justify-content: center;
+    line-height: 1;
+    width: 1.4rem;
+}
+
+.threshold-block__body strong {
+    color: var(--commission-ink);
+    font-weight: 850;
+}
+
+.confirmation__action--danger {
+    background: var(--commission-error);
+    border-color: var(--commission-error);
+    color: var(--commission-inverse);
+}
+
+@keyframes commissionPanelIn {
+    from {
+        opacity: 0;
+        transform: translateY(-0.35rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes confirmationIn {
+    from {
+        opacity: 0;
+        transform: translateY(0.6rem) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 1199px) {
+    .filter-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px),
+    (min-width: 768px) and (max-width: 1199px) and (pointer: coarse),
+    (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    :host {
+        --commission-touch-target: 44px;
+    }
+
+    .commissions-console {
+        gap: 0.6rem;
+        overflow: auto;
+        padding: 0;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* BP-068: an odd number of tiles in a two-track grid leaves the last one at half width
+       on its own row. Three across is unreadable at phone widths, so the last tile spans
+       instead and every row stays full. Harmless at 374px and below, where the grid is
+       already a single column. */
+    .summary-grid .summary-card:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .summary-card {
+        padding: 0.62rem 0.68rem;
+    }
+
+    .summary-card strong {
+        font-size: 1rem;
+    }
+
+    .commission-toolbar {
+        align-items: stretch;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .toolbar-search {
+        grid-column: 1 / -1;
+    }
+
+    .toolbar-search__control,
+    .toolbar-button,
+    .filter-field input,
+    .filter-field select,
+    .invoice-field input,
+    .filter-action,
+    .filter-panel__header button,
+    .view-invoice-button,
+    .mobile-view-invoice,
+    .pagination button,
+    .invoice-action,
+    .confirmation__action {
+        min-height: var(--commission-touch-target);
+    }
+
+    /* 16px floor stops iOS Safari's focus zoom on the native controls. */
+    .toolbar-search__control input,
+    .filter-field input,
+    .filter-field select,
+    .invoice-field input,
+    .invoice-field textarea {
+        font-size: 16px;
+    }
+
+    /* Filters become a fixed bottom sheet and scrim on touch, the same pattern
+       as the units filter and offer pickers. The !important set defeats the
+       in-flow card positioning. */
+    .commission-filter-scrim {
+        background: rgba(16, 17, 18, 0.6);
+        cursor: pointer;
+        display: block;
+        inset: 0;
+        position: fixed;
+        z-index: 2147482999;
+    }
+
+    .filter-panel {
+        animation: none;
+        border-radius: 18px 18px 0 0;
+        bottom: 0 !important;
+        left: 0 !important;
+        margin: 0;
+        max-height: min(84dvh, 42rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0.8rem 0.9rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+        position: fixed !important;
+        right: 0 !important;
+        top: auto !important;
+        width: auto !important;
+        z-index: 2147483000;
+    }
+
+    .filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .commission-content {
+        flex: 0 0 auto;
+        min-height: 15rem;
+        overflow: visible;
+    }
+
+    .commission-table-wrap {
+        display: none;
+    }
+
+    .commission-cards {
+        display: grid;
+        gap: 0.5rem;
+        padding: 0.55rem;
+    }
+
+    .commission-card {
+        background: var(--commission-surface);
+        border: 1px solid var(--commission-line);
+        border-radius: var(--commission-radius-md);
+        overflow: hidden;
+    }
+
+    .commission-card--open {
+        border-color: var(--commission-accent-line);
+    }
+
+    .commission-card__toggle {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: var(--commission-ink);
+        cursor: pointer;
+        display: grid;
+        gap: 0.55rem;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        min-height: 4rem;
+        padding: 0.65rem;
+        text-align: left;
+        width: 100%;
+    }
+
+    .commission-card__toggle:focus-visible {
+        outline: 3px solid var(--commission-accent-soft);
+        outline-offset: -3px;
+    }
+
+    .commission-card__identity {
+        display: grid;
+        gap: 0.12rem;
+        min-width: 0;
+    }
+
+    .commission-card__identity small {
+        color: var(--commission-ink-faint);
+        font-size: 0.58rem;
+        font-weight: 820;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .commission-card__identity strong {
+        font-size: 0.9rem;
+        font-weight: 850;
+        overflow-wrap: anywhere;
+    }
+
+    .commission-card__identity em {
+        color: var(--commission-ink-soft);
+        font-size: 0.69rem;
+        font-style: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .commission-card__chevron {
+        color: var(--commission-ink-soft);
+        font-size: 1.05rem;
+        transform: rotate(0deg);
+        transition: transform 160ms var(--commission-ease);
+    }
+
+    .commission-card--open .commission-card__chevron {
+        transform: rotate(180deg);
+    }
+
+    .commission-card__body {
+        border-top: 1px solid var(--commission-line);
+        display: grid;
+        gap: 0.62rem;
+        padding: 0.65rem;
+    }
+
+    .commission-details {
+        display: grid;
+        gap: 0.4rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: 0;
+    }
+
+    .commission-details div {
+        background: var(--commission-surface-soft);
+        border: 1px solid var(--commission-line);
+        border-radius: calc(var(--commission-radius-md) - 2px);
+        min-width: 0;
+        padding: 0.48rem 0.52rem;
+    }
+
+    .commission-details dt {
+        color: var(--commission-ink-faint);
+        font-size: 0.56rem;
+        font-weight: 820;
+        letter-spacing: 0.045em;
+        text-transform: uppercase;
+    }
+
+    .commission-details dd {
+        color: var(--commission-ink);
+        font-size: 0.7rem;
+        font-weight: 760;
+        line-height: 1.3;
+        margin: 0.18rem 0 0;
+        overflow-wrap: anywhere;
+    }
+
+    .mobile-view-invoice {
+        background: var(--commission-ink);
+        border-color: var(--commission-ink);
+        color: var(--commission-inverse);
+        justify-self: stretch;
+        padding: 0.48rem 0.8rem;
+        width: 100%;
+    }
+
+    .pagination {
+        bottom: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        position: sticky;
+        z-index: 2;
+    }
+
+    .pagination span {
+        text-align: center;
+    }
+
+    .invoice-shell {
+        height: calc(100dvh - 15.5rem);
+        min-height: 18rem;
+    }
+
+    .invoice-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .invoice-action {
+        width: 100%;
+    }
+
+    .invoice-action:last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 599px) {
+    .filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .filter-panel__footer {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .commission-details {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .invoice-form--split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .confirmation__actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .confirmation__action {
+        width: 100%;
+    }
+
+    .invoice-upload__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 374px) {
+    .summary-grid,
+    .commission-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .toolbar-search {
+        grid-column: auto;
+    }
+
+    .toolbar-button {
+        width: 100%;
+    }
+
+    .pagination button {
+        font-size: 0.64rem;
+        min-width: 0;
+        padding-inline: 0.45rem;
+    }
+}
+
+@media (max-height: 479px) and (max-width: 899px) {
+    .summary-grid {
+        display: none;
+    }
+
+    .invoice-shell {
+        height: calc(100dvh - 10.5rem);
+        min-height: 12rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        scroll-behavior: auto !important;
+        transition: none !important;
+    }
+}
+
+@media (forced-colors: active) {
+    .summary-card,
+    .commission-toolbar,
+    .filter-panel,
+    .commission-content,
+    .commission-card,
+    .confirmation {
+        border: 1px solid CanvasText;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Tablet arm (768-1199 touch): roomier deck than the phone column -  */
+/* summary tiles on one line, commission cards two-up (each expands in  */
+/* place). Desktop >=1200 untouched.                                  */
+/* ------------------------------------------------------------------ */
+
+@media (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .summary-grid {
+        /* BP-068: three tiles here too */
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .commission-cards {
+        align-items: start;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .commission-details {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Filter-sheet parity: the commissions sheet renders                 */
+/* exactly like the sales (leads) filter sheet on touch - same sheet  */
+/* chrome, eyebrow + title head (eyebrow CSS-generated, subtitle      */
+/* hidden), bordered circle close, 7px field cards with the label     */
+/* inside and borderless controls, and full-width footer pills with   */
+/* the accent Apply. Desktop in-flow panel untouched.                 */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .filter-panel {
+        border-bottom: 0;
+        box-shadow: 0 -18px 48px rgba(16, 17, 18, 0.24);
+        display: grid;
+        gap: 10px;
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .filter-panel__header {
+        align-items: center;
+        background: inherit;
+        border-bottom: 0;
+        padding-bottom: 0;
+        position: sticky;
+        top: -12px;
+        z-index: 2;
+    }
+
+    .filter-panel__header p {
+        font-size: 0.88rem;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+    }
+
+    .filter-panel__header p::before {
+        color: var(--commission-accent-ink);
+        content: "Refine commissions";
+        display: block;
+        font-size: 0.52rem;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        line-height: 1;
+        margin-bottom: 0.14rem;
+        text-transform: uppercase;
+    }
+
+    .filter-panel__header span {
+        display: none;
+    }
+
+    .filter-panel__header button {
+        background: var(--commission-control);
+        border: 1px solid var(--commission-line);
+        border-radius: 50%;
+        color: var(--commission-ink);
+    }
+
+    .filter-grid {
+        gap: 8px;
+        padding-top: 0;
+    }
+
+    .filter-grid > .filter-field:nth-child(odd):last-child {
+        grid-column: 1 / -1;
+    }
+
+    /* Sales field-card anatomy: bordered card, label voice inside,
+       borderless slim control - the card is the touch target. */
+    .filter-field {
+        background: var(--commission-surface);
+        border: 1px solid var(--commission-line);
+        border-radius: 7px;
+        gap: 0.18rem;
+        padding: 0.38rem 0.48rem;
+        transition:
+            background 180ms var(--commission-ease),
+            border-color 180ms var(--commission-ease),
+            box-shadow 220ms var(--commission-ease);
+    }
+
+    .filter-field:hover,
+    .filter-field:focus-within {
+        background: var(--commission-surface-soft);
+        border-color: var(--commission-accent-line);
+        box-shadow: 0 0 0 1px var(--commission-accent-soft);
+    }
+
+    .filter-field > span {
+        color: var(--commission-ink-soft);
+        font-size: 0.5rem;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    .filter-field input,
+    .filter-field select {
+        background: transparent;
+        background-image: none;
+        border: 0;
+        border-radius: 0;
+        font-weight: 780;
+        min-height: 1.18rem;
+        padding: 0;
+    }
+
+    .filter-field input:focus,
+    .filter-field select:focus {
+        border: 0;
+        box-shadow: none;
+    }
+
+    .filter-panel__footer {
+        background: inherit;
+        border-top: 1px solid var(--commission-line);
+        bottom: calc(-12px - env(safe-area-inset-bottom, 0px));
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        padding-top: 0.5rem;
+        position: sticky;
+        z-index: 2;
+    }
+
+    .filter-action {
+        border-radius: 999px;
+        font-size: 0.64rem;
+        font-weight: 850;
+        min-height: 48px;
+        padding: 0;
+        width: 100%;
+    }
+
+    .filter-action--secondary {
+        background: var(--commission-surface);
+        border: 1px solid var(--commission-line);
+        color: var(--commission-ink);
+    }
+
+    .filter-action--primary {
+        background: var(--commission-accent-ink);
+        border-color: var(--commission-accent-ink);
+        color: var(--commission-inverse);
+    }
+}
+
+/* Sales-sheet column behavior: the grid goes single-column across the
+   whole phone tier, not just <=599. */
+@media (max-width: 720px) {
+    .filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* The native WebKit picker indicator is a fixed dark bitmap, near-invisible
+   on the dark theme. Redrawn in currentColor via mask so it follows the ink. */
+.filter-field input[type="date"]::-webkit-calendar-picker-indicator {
+    background: currentColor;
+    cursor: pointer;
+    height: 1.05rem;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z'/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0.75;
+    width: 1.05rem;
+}

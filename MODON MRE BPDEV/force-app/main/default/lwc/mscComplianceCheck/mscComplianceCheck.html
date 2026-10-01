@@ -1,0 +1,401 @@
+<template>
+    <template lwc:if={open}>
+        <!-- The layer is the click target; the panel stops the event, so a click
+             inside it does not close the check. Same arrangement as c/mscDrawer. -->
+        <div class="cc__layer" onclick={handleScrim}>
+            <div class="cc__scrim"></div>
+
+            <section
+                class="cc__panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cc-title"
+                onclick={stop}
+                onkeydown={handleKeydown}
+            >
+                <header class="cc__head">
+                    <div class="cc__head-text">
+                        <span class="cc__eyebrow">{labels.COMPLIANCE_CHECK}</span>
+                        <h2 id="cc-title" class="cc__title">{title}</h2>
+                        <template lwc:if={showSubtitle}>
+                            <p class="cc__sub">{subtitle}</p>
+                        </template>
+                    </div>
+                    <button
+                        class="cc__x"
+                        type="button"
+                        onclick={handleClose}
+                        title="Close"
+                        aria-label="Close"
+                    >
+                        <c-modon-icon name="x" size="15" color="currentColor"></c-modon-icon>
+                    </button>
+                </header>
+
+                <!-- MSC-083 - one booking, up to seven people, one submission each.
+                     Outside the state templates below on purpose: switching to
+                     somebody whose check cannot run is how the rep reads WHY, so
+                     the strip has to survive an unavailable checklist. -->
+                <template lwc:if={hasStrip}>
+                    <!-- A GROUP, NOT A TABLIST. Tab semantics promise a tabpanel this
+                         panel does not have - the body below is three different states,
+                         only one of which is a checklist - and a screen reader told to
+                         look for one finds nothing. aria-current says the true thing. -->
+                    <div class="cc__strip" role="group" aria-label={labels.JO_C_STRIP_LABEL}>
+                        <template for:each={partyTabs} for:item="t">
+                            <button
+                                key={t.key}
+                                class={t.cls}
+                                type="button"
+                                aria-current={t.current}
+                                data-account={t.accountId}
+                                title={t.title}
+                                disabled={t.disabled}
+                                onclick={handleSwitchParty}
+                            >
+                                <span class="cc__tab-name">{t.name}</span>
+                                <span class="cc__tab-meta">
+                                    <span class="cc__tab-role">{t.role}</span>
+                                    <template lwc:if={t.hasState}>
+                                        <span class="cc__tab-dot" aria-hidden="true"></span>
+                                        <span class="cc__tab-state">{t.state}</span>
+                                    </template>
+                                </span>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+
+                <template lwc:if={showLoading}>
+                    <div class="cc__state">
+                        <c-msc-loader label={labels.COMPLIANCE_CHECKING} contained></c-msc-loader>
+                    </div>
+                </template>
+
+                <template lwc:if={showUnavailable}>
+                    <div class="cc__state">
+                        <div class="cc__note">
+                            <c-modon-icon name="info" size="15" color="currentColor"></c-modon-icon>
+                            <span>{unavailableReason}</span>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:if={showBody}>
+                    <div class="cc__body">
+                        <!-- ── the rail: the count, and the way to each group ─── -->
+                        <aside class="cc__rail">
+                            <div>
+                                <div class="cc__ready">
+                                    <span>{labels.COMPLIANCE_READY}</span>
+                                    <span class="cc__ready-n">{readyText}</span>
+                                </div>
+                                <div class="cc__meter">
+                                    <i class={meterClass} style={meterStyle}></i>
+                                </div>
+                            </div>
+
+                            <div class="cc__rail-list">
+                                <template for:each={railRows} for:item="r">
+                                    <button
+                                        key={r.key}
+                                        class={r.cls}
+                                        type="button"
+                                        data-key={r.key}
+                                        onclick={handleJump}
+                                    >
+                                        <span class="cc__rl-top">
+                                            <span class="cc__rl-dot"></span>
+                                            <span class="cc__rl-name">{r.label}</span>
+                                            <span class="cc__rl-n">{r.count}</span>
+                                        </span>
+                                        <span class="cc__microbar"><i style={r.barStyle}></i></span>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <template lwc:if={showKycDate}>
+                                <div class="cc__rail-foot">
+                                    <div class="cc__rail-k">{labels.COMPLIANCE_KYC_DONE}</div>
+                                    <div class="cc__rail-v">{kycDateText}</div>
+                                </div>
+                            </template>
+                        </aside>
+
+                        <!-- ── the form: the same groups, in the same order ───── -->
+                        <div class="cc__form">
+                            <!-- the first half: what the rep settles. Every control on the
+                                 panel is inside it, and it needs no band of its own - the
+                                 controls are the only ones on the screen. -->
+                            <template lwc:if={hasOwnCells}>
+                                <div class="cc__grp">
+                                    <div class="cc__cells">
+                                        <template for:each={ownCells} for:item="c">
+                                            <div key={c.key} class={c.cellCls} data-sec={c.sec}
+                                                 data-missing={c.missing} tabindex={c.focusIndex}>
+                                                <template lwc:if={c.isFact}>
+                                                    <div class="cc__fact-k">{c.label}<template lwc:if={c.required}><span class="cc__req" aria-hidden="true">*</span></template></div>
+                                                    <div class={c.valueCls}>{c.display}</div>
+                                                </template>
+                                                <template lwc:else>
+                                                    <label class="cc__f-l" for={c.api}>{c.label}<template lwc:if={c.required}><span class="cc__req" aria-hidden="true">*</span></template></label>
+                                                    <template lwc:if={c.isPicklist}>
+                                                        <select
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            disabled={isBusy} onchange={handleEdit}
+                                                        >
+                                                            <option value="">Select…</option>
+                                                            <template for:each={c.options} for:item="o">
+                                                                <option key={o.value} value={o.value} selected={o.selected}>
+                                                                    {o.label}
+                                                                </option>
+                                                            </template>
+                                                        </select>
+                                                    </template>
+                                                    <template lwc:elseif={c.isTextarea}>
+                                                        <textarea
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            rows="2" disabled={isBusy} onchange={handleEdit} oninput={handleEdit}
+                                                        >{c.value}</textarea>
+                                                    </template>
+                                                    <!-- x.y+2 - UI-13: dd/mm/yyyy through the console's own picker -->
+                                                    <template lwc:elseif={c.isDate}>
+                                                        <c-msc-date-picker
+                                                            data-api={c.api} label={c.label} value={c.value} size="small"
+                                                            disabled={isBusy} onchange={handleEdit}
+                                                        ></c-msc-date-picker>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <input
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            type={c.inputType} value={c.value}
+                                                            disabled={isBusy} onchange={handleEdit} oninput={handleEdit}
+                                                        />
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template lwc:if={hasContext}>
+                                <div class="cc__grp" data-group="context">
+                                    <div class="cc__grp-head">
+                                        <span class="cc__grp-title">{labels.COMPLIANCE_CONTEXT}</span>
+                                    </div>
+                                    <div class="cc__cells">
+                                        <template for:each={contextCells} for:item="c">
+                                            <div key={c.key} class={c.cellCls} data-sec={c.sec}
+                                                 data-missing={c.missing} tabindex={c.focusIndex}>
+                                                <template lwc:if={c.isFact}>
+                                                    <div class="cc__fact-k">{c.label}<template lwc:if={c.required}><span class="cc__req" aria-hidden="true">*</span></template></div>
+                                                    <div class={c.valueCls}>{c.display}</div>
+                                                </template>
+                                                <template lwc:else>
+                                                    <label class="cc__f-l" for={c.api}>{c.label}<template lwc:if={c.required}><span class="cc__req" aria-hidden="true">*</span></template></label>
+                                                    <template lwc:if={c.isPicklist}>
+                                                        <select
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            disabled={isBusy} onchange={handleEdit}
+                                                        >
+                                                            <option value="">Select…</option>
+                                                            <template for:each={c.options} for:item="o">
+                                                                <option key={o.value} value={o.value} selected={o.selected}>
+                                                                    {o.label}
+                                                                </option>
+                                                            </template>
+                                                        </select>
+                                                    </template>
+                                                    <template lwc:elseif={c.isTextarea}>
+                                                        <textarea
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            rows="2" disabled={isBusy} onchange={handleEdit} oninput={handleEdit}
+                                                        >{c.value}</textarea>
+                                                    </template>
+                                                    <!-- x.y+2 - UI-13: dd/mm/yyyy through the console's own picker -->
+                                                    <template lwc:elseif={c.isDate}>
+                                                        <c-msc-date-picker
+                                                            data-api={c.api} label={c.label} value={c.value} size="small"
+                                                            disabled={isBusy} onchange={handleEdit}
+                                                        ></c-msc-date-picker>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <input
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            type={c.inputType} value={c.value}
+                                                            disabled={isBusy} onchange={handleEdit} oninput={handleEdit}
+                                                        />
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- the second half: everything under it is read, not written -->
+                            <template lwc:if={hasVerifiedCells}>
+                                <div class="cc__band">
+                                    <span class="cc__band-t">{labels.COMPLIANCE_VERIFIED}</span>
+                                    <i class="cc__band-r"></i>
+                                </div>
+
+                                <div class="cc__grp" data-group={detailsKey}>
+                                    <div class="cc__cells">
+                                        <template for:each={verifiedCells} for:item="c">
+                                            <div key={c.key} class={c.cellCls} data-sec={c.sec}
+                                                 data-missing={c.missing} tabindex={c.focusIndex}>
+                                                <template lwc:if={c.isFact}>
+                                                    <div class="cc__fact-k">{c.label}<template lwc:if={c.required}><span class="cc__req" aria-hidden="true">*</span></template></div>
+                                                    <div class={c.valueCls}>{c.display}</div>
+                                                </template>
+                                                <template lwc:else>
+                                                    <label class="cc__f-l" for={c.api}>{c.label}<template lwc:if={c.required}><span class="cc__req" aria-hidden="true">*</span></template></label>
+                                                    <template lwc:if={c.isPicklist}>
+                                                        <select
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            disabled={isBusy} onchange={handleEdit}
+                                                        >
+                                                            <option value="">Select…</option>
+                                                            <template for:each={c.options} for:item="o">
+                                                                <option key={o.value} value={o.value} selected={o.selected}>
+                                                                    {o.label}
+                                                                </option>
+                                                            </template>
+                                                        </select>
+                                                    </template>
+                                                    <template lwc:elseif={c.isTextarea}>
+                                                        <textarea
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            rows="2" disabled={isBusy} onchange={handleEdit} oninput={handleEdit}
+                                                        >{c.value}</textarea>
+                                                    </template>
+                                                    <!-- x.y+2 - UI-13: dd/mm/yyyy through the console's own picker -->
+                                                    <template lwc:elseif={c.isDate}>
+                                                        <c-msc-date-picker
+                                                            data-api={c.api} label={c.label} value={c.value} size="small"
+                                                            disabled={isBusy} onchange={handleEdit}
+                                                        ></c-msc-date-picker>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <input
+                                                            id={c.api} class="cc__control" data-api={c.api} aria-required={c.ariaRequired}
+                                                            type={c.inputType} value={c.value}
+                                                            disabled={isBusy} onchange={handleEdit} oninput={handleEdit}
+                                                        />
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- documents: the one subsection, a status and never a file -->
+                            <template lwc:if={hasDocs}>
+                                <div class="cc__grp" data-group="documents">
+                                    <div class="cc__grp-head">
+                                        <span class="cc__grp-title">{labels.COMPLIANCE_DOCUMENTS}</span>
+                                        <span class={docsCountClass}>{docsCountText}</span>
+                                    </div>
+                                    <div class="cc__docs">
+                                        <template for:each={docRows} for:item="d">
+                                            <div key={d.key} class={d.cls} data-sec="documents"
+                                                 data-missing={d.missing} tabindex={d.focusIndex}>
+                                                <span class="cc__doc-n">{d.name}</span>
+                                                <span class="cc__doc-s">{d.status}</span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- one instruction, for the documents and the details alike -->
+                            <template lwc:if={showVerifiedNote}>
+                                <p class="cc__docs-note">{labels.COMPLIANCE_VERIFIED_NOTE}</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- ── the footer ───────────────────────────────────────── -->
+                    <footer class="cc__foot">
+                        <template lwc:if={hasError}>
+                            <span class="cc__blocker cc__blocker--bad">
+                                <span class="cc__blocker-dot"></span>{errorMessage}
+                            </span>
+                        </template>
+                        <template lwc:elseif={showSubmittedNote}>
+                            <span class="cc__blocker cc__blocker--ok">
+                                <span class="cc__blocker-dot"></span>{submittedNote}
+                            </span>
+                        </template>
+                        <template lwc:elseif={showBlocker}>
+                            <!-- x.y+1: while it names what is still needed, the sentence
+                                 takes the rep to the first of it -->
+                            <template lwc:if={blockerJumps}>
+                                <button
+                                    class="cc__blocker cc__blocker--jump"
+                                    type="button"
+                                    title={showMissingHint}
+                                    onclick={handleShowMissing}
+                                >
+                                    <span class="cc__blocker-dot"></span>
+                                    <span class="cc__blocker-t">{blockerText}</span>
+                                </button>
+                            </template>
+                            <template lwc:else>
+                                <span class={blockerClass}>
+                                    <span class="cc__blocker-dot"></span>{blockerText}
+                                </span>
+                            </template>
+                        </template>
+                        <template lwc:else>
+                            <span></span>
+                        </template>
+
+                        <div class="cc__acts">
+                            <button class="btn btn-ghost btn-sm" type="button" onclick={handleClose}>
+                                {labels.CTA_CANCEL}
+                            </button>
+                            <template lwc:if={showActions}>
+                                <button
+                                    class="btn btn-ghost btn-sm"
+                                    type="button"
+                                    disabled={refreshDisabled}
+                                    onclick={handleRefresh}
+                                >
+                                    <c-modon-icon name="refresh-cw" size="14" color="currentColor"></c-modon-icon>
+                                    <span>{refreshLabel}</span>
+                                </button>
+                            </template>
+                            <template lwc:if={showActions}>
+                                <!-- the reason rides on the wrapper: a browser will not
+                                     show a title on a button it has disabled -->
+                                <span class="cc__act" title={saveHint}>
+                                    <button
+                                        class={saveClass}
+                                        type="button"
+                                        disabled={saveDisabled}
+                                        onclick={handleSave}
+                                    >{saveLabel}</button>
+                                </span>
+                                <span class="cc__act" title={submitHint}>
+                                    <button
+                                        class="btn btn-primary btn-sm cc__go"
+                                        type="button"
+                                        disabled={submitDisabled}
+                                        onclick={handleSubmit}
+                                    >
+                                        <c-modon-icon name="shield-check" size="14" color="currentColor"></c-modon-icon>
+                                        <span>{submitLabel}</span>
+                                    </button>
+                                </span>
+                            </template>
+                        </div>
+                    </footer>
+                </template>
+            </section>
+        </div>
+    </template>
+</template>

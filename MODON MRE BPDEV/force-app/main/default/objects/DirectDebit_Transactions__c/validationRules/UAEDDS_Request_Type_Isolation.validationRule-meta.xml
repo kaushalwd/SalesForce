@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>UAEDDS_Request_Type_Isolation</fullName>
+    <active>true</active>
+    <description>Existing FAB methods dispatch on Request Type as a whitelist, so UAEDDS rows pass through untouched. That only holds while UAEDDS rows never carry a FAB request type. This rule enforces it against data loads, flows and manual edits.</description>
+    <errorConditionFormula>AND(
+  ISPICKVAL(Direct_Debit_Request__r.Gateway__c, &quot;UAEDDS&quot;),
+  OR(
+    ISPICKVAL(Request_Type__c, &quot;New Registration&quot;),
+    ISPICKVAL(Request_Type__c, &quot;Collection&quot;),
+    ISPICKVAL(Request_Type__c, &quot;Cancellation&quot;)
+  )
+)</errorConditionFormula>
+    <errorDisplayField>Request_Type__c</errorDisplayField>
+    <errorMessage>A transaction on a UAEDDS mandate must use a UAEDDS request type. New Registration, Collection and Cancellation route to the FAB gateway and would submit this record to an integration that does not know this mandate.</errorMessage>
+</ValidationRule>

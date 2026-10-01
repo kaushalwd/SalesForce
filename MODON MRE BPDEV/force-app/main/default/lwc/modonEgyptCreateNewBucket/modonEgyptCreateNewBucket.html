@@ -1,0 +1,60 @@
+<template>
+
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="medium" variant="brand"></lightning-spinner>
+    </template>
+
+    <div class="slds-card slds-m-top_medium">
+        <div class="slds-card__header">
+            <h3 class="slds-card__header-title">{sectionTitle}</h3>
+        </div>
+        <div class="slds-card__body slds-card__body_inner">
+
+            <div class="slds-grid slds-wrap">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_xx-small">
+                    <lightning-input label="Bucket Name" value={bucketName} name="bucketName" pattern="[a-zA-Z0-9 ]*"
+                        message-when-pattern-mismatch="Special characters are not allowed" required
+                        onchange={handleChangeEvent}>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_xx-small">
+                    <lightning-input label="Description" value={bucketDescription} name="bucketDescription"
+                        onchange={handleChangeEvent}>
+                    </lightning-input>
+                </div>
+            </div>
+
+            <div class="slds-grid slds-wrap display-end">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_xx-small">
+                    <lightning-combobox name="selectedUserType" label="User Type" value={selectedUserType}
+                        options={userTypeOptions} onchange={handleChangeEvent}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_xx-small">
+                    <lightning-input type="checkbox" label="Is Active?" checked={isActive}
+                        onchange={handleCheckboxChange}>
+                    </lightning-input>
+                </div>
+            </div>
+
+            <template if:true={showSelectedUserTable}>
+                <div class="slds-m-bottom--small slds-m-top--large">
+                    <h3 class="slds-card__header-title">Select Users</h3>
+                </div>
+            </template>
+
+            <c-modon-egypt-multi-select-picklist-component selected-options={selectedOptions}
+                standards-option-list={multiSelectCombobox} parsed-user-options={parsedUserOptions}
+                onuserselection={handlePicklistUserSelection}></c-modon-egypt-multi-select-picklist-component>
+
+            <div class="slds-m-top_medium slds-grid slds-wrap slds-grid_align-center">
+                <lightning-button variant="neutral" label="Cancel" name="cancelNewBucket" onclick={handleCancel}>
+                </lightning-button>
+
+                <lightning-button variant="brand" class="slds-m-left_small mobile-full" label="Save"
+                    name="saveNewBucket" onclick={handleSave}>
+                </lightning-button>
+            </div>
+        </div>
+    </div>
+</template>

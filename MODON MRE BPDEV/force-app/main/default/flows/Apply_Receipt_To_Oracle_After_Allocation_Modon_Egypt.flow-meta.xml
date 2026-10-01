@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Call_Apex_to_apply_Receipt</name>
+        <label>Call Apex to apply Receipt</label>
+        <locationX>578</locationX>
+        <locationY>384</locationY>
+        <actionName>ModonEgypt_ReceiptApplyQueueable</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>allocationIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>ModonEgypt_ReceiptApplyQueueable</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>60.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Check_Source_Entity</name>
+        <label>Check Source Entity</label>
+        <locationX>182</locationX>
+        <locationY>276</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Source_Entity_is_Modon_Egypt</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Invoice__r.SalesOrderInstallment__r.SalesOrder__r.Source_Entity__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Modon - Egypt</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Oracle_Details</targetReference>
+            </connector>
+            <label>Source Entity is Modon Egypt</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_Source_Entity_1</name>
+        <label>Check Source Entity</label>
+        <locationX>710</locationX>
+        <locationY>276</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Source_Entity_is_Modon_Egypt_1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Invoice__r.SalesOrderInstallment__r.SalesOrder__r.Source_Entity__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Modon - Egypt</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Call_Apex_to_apply_Receipt</targetReference>
+            </connector>
+            <label>Source Entity is Modon Egypt</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <interviewLabel>Apply Receipt To Oracle After Allocation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Apply Receipt To Oracle After Allocation (Modon - Egypt)</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Update_Oracle_Details</name>
+        <label>Update Oracle Details</label>
+        <locationX>50</locationX>
+        <locationY>384</locationY>
+        <inputAssignments>
+            <field>Oracle_Integration_Message_Modon_Egypt__c</field>
+            <value>
+                <stringValue>Oracle Apply Receipt Sync Pending</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Oracle_Integration_Status_Modon_Egypt__c</field>
+            <value>
+                <stringValue>Pending</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>320</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Source_Entity</targetReference>
+        </connector>
+        <object>Allocation__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <scheduledPaths>
+            <name>Run_after_2_minutes_of_Allocation_creation</name>
+            <connector>
+                <targetReference>Check_Source_Entity_1</targetReference>
+            </connector>
+            <label>Run after 2 minutes of Allocation creation</label>
+            <offsetNumber>2</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <timeSource>RecordTriggerEvent</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Draft</status>
+</Flow>

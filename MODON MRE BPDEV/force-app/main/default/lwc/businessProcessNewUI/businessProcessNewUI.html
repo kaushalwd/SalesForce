@@ -1,0 +1,212 @@
+<template>
+    <lightning-card>
+
+        <div class="bp-root">
+
+            <!-- ① COLLAPSE TOGGLE PANEL (issue 7) — clicking hides/shows everything below -->
+            <div class="bp-toggle-bar" onclick={handleToggle}>
+                <lightning-icon icon-name={toggleIcon} size="x-small" class="bp-toggle-icon"></lightning-icon>
+                <span class="bp-toggle-label">Service Request Steps</span>
+                <span class="bp-toggle-hint">{toggleHint}</span>
+            </div>
+
+            <!-- ② COLLAPSIBLE BODY -->
+            <template if:true={isExpanded}>
+
+                <!-- ⑥ SECTION LEGEND AT TOP (issue 6) -->
+                <div class="bp-legend">
+                    <template for:each={records} for:item="record">
+                        <div key={record.Id} class="bp-legend-item">
+                            <span class="bp-legend-dot" style={record.legendDotStyle}></span>
+                            <span class="bp-legend-label">{record.Name}</span>
+                            <span class="bp-legend-count">{record.stepCount}</span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ③ NAV ROW with dynamic arrow direction (issue 4) -->
+                <div class="bp-nav-row">
+
+                    <template if:true={showLeftArrow}>
+                        <button class={leftBtnClass} onclick={handleNavLeft}>{leftArrowSymbol}</button>
+                    </template>
+                    <template if:false={showLeftArrow}>
+                        <div class="bp-nav-placeholder"></div>
+                    </template>
+
+                    <!-- ⑤ NO scroll bar — wrapper is overflow visible, sections wrap naturally (issue 5) -->
+                    <div class="bp-track-wrapper">
+                        <div class="bp-sections-row">
+
+                            <template for:each={records} for:item="record">
+                                <div key={record.Id} class={record.sectionGroupClass} style={record.sectionGroupStyle}>
+
+                                    <!-- Section header -->
+                                    <div class="bp-sec-head" style={record.sectionHeadStyle}>
+                                        <span class="bp-sec-name">{record.Name}</span>
+                                        <span class="bp-sec-count">{record.stepCount} steps</span>
+                                    </div>
+
+                                    <!-- Number bubbles -->
+                                    <div class="bp-num-row">
+                                        <div class="bp-conn-line" style={record.connLineStyle}></div>
+                                        <template for:each={record.visibleSteps} for:item="step">
+                                            <div key={step.Id} class="bp-num-cell">
+                                                <div class={step.numClass}>{step.stepNumber}</div>
+                                                <template if:false={step.isLastInSection}>
+                                                    <div class="bp-chevron" style={record.chevronStyle}></div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Cards -->
+                                    <div class="bp-card-row">
+                                        <template for:each={record.visibleSteps} for:item="step">
+                                            <div key={step.Id} class="bp-card-cell">
+
+                                                <div class={step.cardClass} data-id={step.Id} data-parent={record.Id}
+                                                    onclick={handleStepClick}>
+
+                                                    <div class="bp-card-icon">
+                                                        <lightning-icon icon-name={step.iconName} size="x-small"
+                                                            class={step.iconClass}></lightning-icon>
+                                                    </div>
+
+                                                    <div class="bp-card-name">{step.Name}
+                                                        <template if:true={step.stepDesc}>
+                                                            <lightning-helptext content={step.stepDesc}
+                                                                class="help-icon">
+                                                            </lightning-helptext>
+                                                        </template>
+
+                                                    </div>
+
+
+                                                    <template if:true={step.metaDisplay}>
+                                                        <div class="bp-card-meta">
+                                                            <div lwc:dom="manual" class="meta-html" data-id={step.Id}>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+
+                                                    <span class={step.statusBadgeClass}>{step.Status}</span>
+
+                                                    <template if:true={step.showReassignButton}>
+                                                        <div class="bp-card-actions" onclick={stopProp}>
+                                                            <lightning-button variant="brand" label="Re Assign"
+                                                                data-id={step.Id} data-parent={record.Id}
+                                                                onclick={handleReAssign}>
+                                                            </lightning-button>
+                                                        </div>
+                                                    </template>
+
+                                                    <div class="bp-expand-toggle" data-id={step.Id}
+                                                        data-parent={record.Id} onclick={handleExpandClick}>
+                                                        <lightning-button-icon icon-name={step.iconChevron}
+                                                            variant="bare" size="small" data-id={step.Id}
+                                                            data-parent={record.Id}>
+                                                        </lightning-button-icon>
+                                                        <strong>Time Lines</strong>
+                                                    </div>
+
+                                                </div>
+
+                                                <template if:true={step.isExpanded}>
+                                                    <div class="bp-timeline-panel">
+                                                        <template if:true={step.timelines.mileStoneTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Milestone:</strong><span>{step.timelines.mileStoneTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.totalTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Total:</strong><span>{step.timelines.totalTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.escalatedTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Escalated:</strong><span>{step.timelines.escalatedTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.openTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Open:</strong><span>{step.timelines.openTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.reOpenCount}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Reopen #:</strong><span>{step.timelines.reOpenCount}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.reOpenTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Reopen Time:</strong><span>{step.timelines.reOpenTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.acceptedTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Accepted:</strong><span>{step.timelines.acceptedTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.requiredInfoTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Req. Info:</strong><span>{step.timelines.requiredInfoTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.providedInfoTime}>
+                                                            <div class="bp-tl-row">
+                                                                <strong>Prov. Info:</strong><span>{step.timelines.providedInfoTime}</span>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={step.timelines.isEscalated}>
+                                                            <lightning-button variant="destructive" label="Escalated"
+                                                                class="bp-esc-btn"></lightning-button>
+                                                        </template>
+                                                        <template if:false={step.timelines.isEscalated}>
+                                                            <lightning-button variant="success" label="Not Escalated"
+                                                                class="bp-not-esc-btn"></lightning-button>
+                                                        </template>
+                                                    </div>
+                                                </template>
+
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                </div>
+                            </template>
+
+                        </div>
+                    </div>
+
+                    <template if:true={showRightArrow}>
+                        <button class={rightBtnClass} onclick={handleNavRight}>{rightArrowSymbol}</button>
+                    </template>
+                    <template if:false={showRightArrow}>
+                        <div class="bp-nav-placeholder"></div>
+                    </template>
+
+                </div>
+
+            </template><!-- end collapsible body -->
+
+        </div>
+
+        <!-- Modals -->
+        <template if:true={openReAssign}>
+            <c-step-re-assignment step={selectedStep} onsubmit={handleModalSubmit} oncancel={closeModal}>
+            </c-step-re-assignment>
+        </template>
+        <template if:true={isModalOpen}>
+          
+<template if:false={enableMarketingModal}>
+                <c-approval-modal is-open={isModalOpen} step={selectedStep} accepted={acceptedByUser}
+                    onsubmit={handleModalSubmit} oncancel={closeModal} onaccepted={handleStepAccepted}
+                    record-id={recordId} business-process-name={businessProcessName}>
+                </c-approval-modal>
+            </template>
+        </template>
+
+    </lightning-card>
+</template>

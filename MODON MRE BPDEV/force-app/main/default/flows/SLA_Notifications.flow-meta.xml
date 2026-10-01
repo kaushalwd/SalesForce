@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>SLA_1_Email_Reminder</name>
+        <label>SLA 1 Email Reminder</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>Expressionofinterest__c.EOI_SLA_1_Notification</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>Expressionofinterest__c.EOI_SLA_1_Notification</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>SLA_2_Email_Reminder</name>
+        <label>SLA 2 Email Reminder</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>Expressionofinterest__c.EOI_SLA_2_Notification</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>Expressionofinterest__c.EOI_SLA_2_Notification</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <description>SLA Notifications</description>
+    <environments>Default</environments>
+    <interviewLabel>SLA Notifications {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>SLA Notifications</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Source_Entity__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Modon - Egypt</stringValue>
+            </value>
+        </filters>
+        <object>Expressionofinterest__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <scheduledPaths>
+            <name>SLA_Reminder_1</name>
+            <connector>
+                <targetReference>SLA_1_Email_Reminder</targetReference>
+            </connector>
+            <label>SLA Reminder 1</label>
+            <offsetNumber>8</offsetNumber>
+            <offsetUnit>Hours</offsetUnit>
+            <recordField>SLA_Start_Time__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>SLA_Reminder_2</name>
+            <connector>
+                <targetReference>SLA_2_Email_Reminder</targetReference>
+            </connector>
+            <label>SLA Reminder 2</label>
+            <offsetNumber>-2</offsetNumber>
+            <offsetUnit>Hours</offsetUnit>
+            <recordField>SLA_Expiry_Time__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

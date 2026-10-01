@@ -1,0 +1,133 @@
+<template>
+    <lightning-quick-action-panel header={labels.title}>
+        <div class="slds-is-relative slds-p-horizontal_x-small" aria-busy={ariaBusy}>
+            <template lwc:if={busy}>
+                <lightning-spinner alternative-text={labels.working} size="small"></lightning-spinner>
+            </template>
+
+            <div role="status" aria-live="polite">
+                <template lwc:if={errorMessage}>
+                    <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error slds-m-bottom_small">
+                        <div class="slds-media__figure">
+                            <lightning-icon icon-name="utility:error" size="x-small" variant="inverse"
+                                alternative-text={labels.errorTitle}></lightning-icon>
+                        </div>
+                        <div class="slds-media__body">
+                            <p>{errorMessage}</p>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:if={isLoading}>
+                    <p class="slds-text-color_weak">{labels.loading}</p>
+                </template>
+
+                <template lwc:elseif={isDisabled}>
+                    <p>{labels.disabled}</p>
+                </template>
+
+                <template lwc:elseif={isSent}>
+                    <div class="slds-scoped-notification slds-media slds-media_center slds-theme_success">
+                        <div class="slds-media__figure">
+                            <lightning-icon icon-name="utility:success" size="x-small" variant="inverse"
+                                alternative-text={labels.sentTitle}></lightning-icon>
+                        </div>
+                        <div class="slds-media__body">
+                            <p>{sentMessage}</p>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:elseif={hasProblems}>
+                    <p class="slds-text-color_error">{labels.problemsIntro}</p>
+                    <ul class="slds-list_dotted slds-m-top_x-small">
+                        <template for:each={problems} for:item="problem">
+                            <li key={problem.key}>{problem.text}</li>
+                        </template>
+                    </ul>
+                </template>
+
+                <template lwc:elseif={isCases}>
+                    <template lwc:if={hasNotices}>
+                        <div class="slds-scoped-notification slds-media slds-media_center slds-theme_warning slds-m-bottom_small">
+                            <div class="slds-media__figure">
+                                <lightning-icon icon-name="utility:warning" size="x-small"
+                                    alternative-text={labels.title}></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <template for:each={notices} for:item="notice">
+                                    <p key={notice.key}>{notice.text}</p>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <h2 class="slds-text-heading_small slds-m-bottom_x-small">{labels.casesTitle}</h2>
+                    <template lwc:if={hasCases}>
+                        <ul class="slds-has-dividers_around-space">
+                            <template for:each={caseRows} for:item="row">
+                                <li key={row.id} class="slds-item">
+                                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
+                                        <span class="slds-text-title_bold">{row.title}</span>
+                                        <template lwc:if={row.live}>
+                                            <lightning-badge label={labels.live}></lightning-badge>
+                                        </template>
+                                    </div>
+                                    <dl class="slds-dl_horizontal slds-text-body_small">
+                                        <dt class="slds-dl_horizontal__label">{labels.statusLabel}</dt>
+                                        <dd class="slds-dl_horizontal__detail">{row.repStatus}</dd>
+                                        <template lwc:if={row.linkSentAt}>
+                                            <dt class="slds-dl_horizontal__label">{labels.sentLabel}</dt>
+                                            <dd class="slds-dl_horizontal__detail">
+                                                <lightning-formatted-date-time value={row.linkSentAt} year="numeric"
+                                                    month="short" day="2-digit" hour="2-digit"
+                                                    minute="2-digit"></lightning-formatted-date-time>
+                                            </dd>
+                                        </template>
+                                        <template lwc:if={row.linkExpiresAt}>
+                                            <dt class="slds-dl_horizontal__label">{labels.validUntilLabel}</dt>
+                                            <dd class="slds-dl_horizontal__detail">
+                                                <lightning-formatted-date-time value={row.linkExpiresAt} year="numeric"
+                                                    month="short" day="2-digit" hour="2-digit"
+                                                    minute="2-digit"></lightning-formatted-date-time>
+                                            </dd>
+                                        </template>
+                                        <template lwc:if={row.lastReadAt}>
+                                            <dt class="slds-dl_horizontal__label">{labels.lastCheckedLabel}</dt>
+                                            <dd class="slds-dl_horizontal__detail">
+                                                <lightning-formatted-date-time value={row.lastReadAt} year="numeric"
+                                                    month="short" day="2-digit" hour="2-digit"
+                                                    minute="2-digit"></lightning-formatted-date-time>
+                                            </dd>
+                                        </template>
+                                        <template lwc:if={row.reviewReason}>
+                                            <dt class="slds-dl_horizontal__label">{labels.reasonLabel}</dt>
+                                            <dd class="slds-dl_horizontal__detail">{row.reviewReason}</dd>
+                                        </template>
+                                    </dl>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template lwc:else>
+                        <p class="slds-text-color_weak">{labels.noCases}</p>
+                    </template>
+
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">{labels.resendWarning}</p>
+                </template>
+            </div>
+        </div>
+
+        <div slot="footer">
+            <lightning-button label={labels.close} onclick={handleClose}></lightning-button>
+            <template lwc:if={showRefresh}>
+                <lightning-button class="slds-m-left_x-small" label={labels.refresh} onclick={handleRefresh}
+                    disabled={busy}></lightning-button>
+            </template>
+            <template lwc:if={showSend}>
+                <lightning-button class="slds-m-left_x-small" variant="brand" label={sendLabel}
+                    onclick={handleSendConfirmed} disabled={busy}></lightning-button>
+            </template>
+        </div>
+    </lightning-quick-action-panel>
+</template>

@@ -1,0 +1,97 @@
+<template>
+    <lightning-record-edit-form object-api-name="SalesOrder__c" style="display:none">
+        <lightning-input-field field-name="Customer_Management_Associate__c"></lightning-input-field>
+    </lightning-record-edit-form>
+
+    <div class="slds-card">
+        <div class="slds-card__header slds-grid slds-wrap slds-gutters_small">
+
+            <div class="slds-col slds-size_1-of-5">
+                <lightning-combobox label="Customer Management Associate Assignment" value={scopeFilter}
+                                    options={scopeOptions}
+                                    onchange={handleScopeChange}>
+                </lightning-combobox>
+            </div>
+
+            <template for:each={dynamicFilters} for:item="df">
+                <div key={df.api} class="slds-col slds-size_1-of-5">
+                    <lightning-combobox data-api={df.api} label={df.label}
+                                        value={df.value} options={df.options}
+                                        onchange={handleDynFilter}>
+                    </lightning-combobox>
+                </div>
+            </template>
+
+            <div class="slds-col slds-size_1-of-5">
+                <lightning-input type="search"
+                                placeholder="Search all columns"
+                                onkeyup={handleSearchKeyUp}>
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-col_bump-left slds-text-align_right" style="margin-top:auto;">
+                <lightning-button variant="brand" label="Assign CM Associate"
+                                  disabled={assignBtnDisabled}
+                                  onclick={openModal}
+                                  >
+                </lightning-button>
+            </div>
+        </div>
+
+        <div class="slds-scrollable_y" style="max-height:70vh;">
+            <lightning-datatable key-field="Id" data={rows} columns={columns}
+                                 onrowselection={handleRowSel}
+                                 selected-rows={selectedRowIds}>
+            </lightning-datatable>
+        </div>
+    </div>
+
+    <template if:true={isModalOpen}>
+        <section class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-text-align_center">
+                    <h2 class="slds-modal__title">Assign CM Associate</h2>
+                </header>
+
+                <div class="slds-modal__content">
+                    <div class="slds-grid slds-wrap slds-gutters_medium slds-m-bottom_medium slds-align_absolute-center">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-record-edit-form object-api-name="SalesOrder__c">
+                                <label class="slds-form-element__label">
+                                    CM Associate <abbr class="slds-required" title="required">*</abbr>
+                                </label>
+                                <lightning-input-field field-name="Customer_Management_Associate__c"
+                                                       variant="label-hidden"
+                                                       onchange={handleAssociateChange}>
+                                </lightning-input-field>
+                            </lightning-record-edit-form>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-4 slds-p-top_large">
+                            <lightning-input type="checkbox" label="Override current associate"
+                                             checked onchange={handleOverrideToggle}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-scrollable_y" style="max-height:18rem;">
+                        <lightning-datatable key-field="Id" data={previewRows}
+                                             columns={previewColumns}
+                                             hide-checkbox-column
+                                             row-class="rowClass">
+                        </lightning-datatable>
+                    </div>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" variant="destructive-text" onclick={closeModal}></lightning-button>
+                    <lightning-button variant="brand" class="slds-m-left_small" label="Assign"
+                                      disabled={confirmDisabled}
+                                      onclick={handleAssign}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

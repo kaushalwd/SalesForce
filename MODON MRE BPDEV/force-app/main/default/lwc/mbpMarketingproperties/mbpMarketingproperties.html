@@ -1,0 +1,179 @@
+<template>
+    <div class="properties-container">
+        <!-- Project Selection Section -->
+        <div>
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <!-- Project Combobox -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12">
+                    <lightning-combobox name="projectSelector" label="Select Project to Download the marketing material"
+                        value={selectedProjectId} options={projectOptions} onchange={handleProjectSelection}
+                        class="placeholder"></lightning-combobox>
+                </div>
+            </div>
+
+            <!-- Projects List/Grid View -->
+            <template if:true={showProjectsList}>
+                <template if:true={hasUserInteracted}>
+                    <template if:true={filteredRecords.length}>
+                        <!-- Grid View -->
+                        <template if:true={isGridView}>
+                            <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium">
+                                <template for:each={filteredRecords} for:item="rec">
+                                    <div key={rec.Id} class="slds-col slds-size_1-of-3">
+                                        <div class="card" data-id={rec.Id} onclick={handleCardClick}>
+                                            <img src={rec.firstImageUrl} alt="Property Image" />
+                                            <div class="card-content">
+                                                <template for:each={rec.fieldData} for:item="f">
+                                                    <p key={f.label}><strong>{f.label}:</strong> {f.value}</p>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- List View -->
+                        <template if:false={isGridView}>
+                            <div class="panel">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped">
+                                    <thead>
+                                        <tr>
+                                            <template for:each={columnsList} for:item="col">
+                                                <th key={col.fieldName} scope="col">{col.label}</th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={filteredRecords} for:item="rec">
+                                            <tr key={rec.Id} data-id={rec.Id} onclick={handleCardClick}
+                                                class="slds-hint-parent">
+                                                <template for:each={rec.rowData} for:item="cell">
+                                                    <td key={cell.fieldName}>{cell.value}</td>
+                                                </template>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- No Records 
+                    <template if:false={filteredRecords.length}>
+                        <div class="slds-align_absolute-center slds-m-top_large">
+                            <p>No projects found matching your criteria.</p>
+                        </div>
+                    </template>-->
+                </template>
+            </template>
+        </div>
+
+        <!-- Project Details Section -->
+        <template if:true={showProjectDetails}>
+            <!-- Back Button 
+             <div class="slds-p-bottom_medium mt-4" style="cursor:pointer;" onclick={handleBackToList}>
+         <lightning-icon icon-name="utility:chevronleft" size="x-small"
+            class="slds-m-right_x-small"></lightning-icon>
+         <span class="slds-text-body_large slds-text-color_default">
+            <strong>Back to Projects</strong>
+          </span>
+            </div>-->
+            <!--<h2>{projectName}</h2>-->
+            <!-- Select All Checkbox -->
+            <lightning-input type="checkbox" label="Select All" onchange={handleSelectAllChange} checked={isAllSelected}
+                class="mt-2">
+            </lightning-input>
+
+            <!-- Tile Grid -->
+            <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium">
+                <!-- Brochures Tile -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                    <div class="panel">
+                        <h4 class="slds-text-heading_small slds-m-top_medium"> Brochures </h4>
+                        <!-- Always show image -->
+                        <img src={brochureIcon} alt="Brochure Icon" class="thumbnail" />
+
+                        <!-- Conditional: checkbox or no files -->
+                        <div class="checkbox-container">
+                            <template if:true={hasBrochureFiles}>
+                                <lightning-input type="checkbox" label="Select Brochures" data-section="Brochures"
+                                    checked={isSectionSelected.Brochures} onchange={handleSectionCheckboxChange}>
+                                </lightning-input>
+                            </template>
+                            <template if:false={hasBrochureFiles}>
+                                <p class="slds-text-color_weak">No files available</p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Gallery Tile -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                    <div class="panel">
+                        <h4 class="slds-text-heading_small slds-m-top_medium"> Gallery </h4>
+                        <img src={galleryThumbnail} alt="Gallery Thumbnail" class="thumbnail" />
+                        <!-- <h4 class="slds-text-heading_small">Gallery</h4> -->
+                        <template if:true={hasGalleryFiles}>
+
+                            <div class="checkbox-container">
+                                <lightning-input type="checkbox" label="Select Gallery" data-section="gallery"
+                                    checked={isSectionSelected.gallery} onchange={handleSectionCheckboxChange}>
+                                </lightning-input>
+                            </div>
+                        </template>
+                        <template if:false={hasGalleryFiles}>
+                            <p class="slds-text-color_weak">No files available</p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Floor Plans Tile -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                    <div class="panel">
+                          <h4 class="slds-text-heading_small slds-m-top_medium"> Floor Plan </h4>
+                        <img src={floorPlanIcon} alt="Floor Plan Icon" class="thumbnail" />
+
+                        <!--<h4 class="slds-text-heading_small">Floor Plans</h4>-->
+                        <template if:true={hasFloorPlanFiles}>
+                            <div class="checkbox-container">
+                                <lightning-input type="checkbox" label="Select Floor Plans" data-section="floorPlans"
+                                    checked={isSectionSelected.floorPlans} onchange={handleSectionCheckboxChange}>
+                                </lightning-input>
+                            </div>
+                        </template>
+                        <template if:false={hasFloorPlanFiles}>
+                            <p class="slds-text-color_weak">No files available</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Download Selected -->
+            <div class="slds-m-top_large slds-align_absolute-center">
+                <template if:true={hasSelectedSections}>
+                    <lightning-button variant="brand" label="Download Selected" class="slds-m-left_medium"
+                        onclick={downloadSelectedSections}>
+                    </lightning-button>
+                </template>
+            </div>
+
+            <!-- Spinner -->
+            <template if:true={loadingDocuments}>
+                <div class="slds-align_absolute-center">
+                    <lightning-spinner alternative-text="Loading documents"></lightning-spinner>
+                </div>
+            </template>
+
+        </template>
+    </div>
+
+    <!-- Empty State -->
+    <template if:true={showEmptyState}>
+        <div class="footer">
+            <label>Project Marketing Materials</label>
+        </div>
+    </template>
+</template>

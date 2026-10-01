@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>send_Email</name>
+        <label>send Email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <stringValue>kaushal.patel@horizontal.com‎</stringValue>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>ccAddresses</name>
+            <value>
+                <collectionElements>
+                    <stringValue>kaushal.patel@horizontal.com</stringValue>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>no-reply@modon.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>subject</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>&lt;p&gt;{!body}&lt;/p&gt;</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+            <value>
+                <booleanValue>true</booleanValue>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <apiVersion>68.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <environments>Default</environments>
+    <formulas>
+        <name>row_CancellationReason</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK({!$Record.Business_Process__r.Cancellation_Reason__c})),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;Reason for Cancellation&lt;/td&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+{!$Record.Business_Process__r.Cancellation_Reason__c} &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_PaymentReceived</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK({!$Record.Business_Process__r.Total_Paid_by_Customer_with_ADM__c})),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;Payment Received&lt;/td&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+TEXT({!$Record.Business_Process__r.Total_Paid_by_Customer_with_ADM__c}) &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_Project</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK({!$Record.Business_Process__r.Project__r.Name})),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td style=&apos;padding: 12px 16px 12px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;Project&lt;/td&gt;&quot; &amp;
+&quot;&lt;td style=&apos;padding: 12px 0 12px 16px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+{!$Record.Business_Process__r.Project__r.Name} &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_SONumber</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK({!$Record.Business_Process__r.Sales_Order__r.Name})),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;SO Number&lt;/td&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+{!$Record.Business_Process__r.Sales_Order__r.Name} &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_SPAStatus</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK(TEXT({!$Record.Business_Process__r.Sales_Order__r.SPAStatus__c}))),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;SPA Status&lt;/td&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+TEXT({!$Record.Business_Process__r.Sales_Order__r.SPAStatus__c}) &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_Status</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK(TEXT({!$Record.Business_Process__r.Sales_Order__r.Status__c}))),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;Status&lt;/td&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+TEXT({!$Record.Business_Process__r.Sales_Order__r.Status__c}) &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_SubStatus</name>
+        <dataType>String</dataType>
+        <expression>IF(
+NOT(ISBLANK(TEXT({!$Record.Business_Process__r.Sales_Order__r.Sub_Status__c}))),
+&quot;&lt;tr&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;Sub Status&lt;/td&gt;&quot; &amp;
+&quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+TEXT({!$Record.Business_Process__r.Sales_Order__r.Sub_Status__c}) &amp;
+&quot;&lt;/td&gt;&quot; &amp;
+&quot;&lt;/tr&gt;&quot;,
+&quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>row_Unit</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Business_Process__r.Unit__r.Name})),
+    &quot;&lt;tr&gt;&quot; &amp;
+    &quot;&lt;td class=&apos;stack-column&apos; style=&apos;padding: 10px 12px 10px 0; font-size: 14px; font-weight: 700; color: #111111; border-bottom: 1px solid #e0e0e0; width: 40%; vertical-align: top;&apos;&gt;Unit&lt;/td&gt;&quot; &amp;
+    &quot;&lt;td class=&apos;stack-column stack-column-value&apos; style=&apos;padding: 10px 0 10px 12px; font-size: 14px; color: #333333; border-bottom: 1px solid #e0e0e0; width: 60%; vertical-align: top;&apos;&gt;&quot; &amp;
+    {!$Record.Business_Process__r.Unit__r.Name} &amp;
+    &quot;&lt;/td&gt;&quot; &amp;
+    &quot;&lt;/tr&gt;&quot;,
+    &quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>subject</name>
+        <dataType>String</dataType>
+        <expression>&apos;Unit Cancellation Notification - &apos;+{!$Record.Business_Process__r.Project__r.Name} + &apos; &apos;+ {!$Record.Business_Process__r.Unit__r.Name} + &apos;-&apos; + {!$Record.Business_Process__r.Sales_Order__r.Name}</expression>
+    </formulas>
+    <interviewLabel>Send Email to {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Send Email for Unit Cancellation Notification</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>send_Email</targetReference>
+        </connector>
+        <filterFormula>{!$Record.Business_Process__r.Type__c} ==&apos;Unit Cancellation and Release Process&apos; &amp;&amp; {!$Record.Name}==&apos;CCO Approval&apos; &amp;&amp; TEXT({!$Record.Status__c})==&apos;Completed&apos; &amp;&amp;  ISCHANGED({!$Record.Status__c})==true</filterFormula>
+        <object>Business_Process_Step__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>body</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;table class=&quot;ql-table-blob&quot; border=&quot;0&quot; style=&quot;background-color: rgb(244, 244, 244); margin: 0px; padding: 20px 0px; &quot; width=&quot;100%&quot;&gt;    &lt;tbody style=&quot;&quot;&gt;        &lt;tr style=&quot;&quot;&gt;            &lt;td align=&quot;center&quot; style=&quot;&quot;&gt;               &lt;table width=&quot;650&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;width: 650px; max-width: 650px; background-color: rgb(255, 255, 255); &quot;&gt;                    &lt;tbody style=&quot;&quot;&gt;                        &lt;tr style=&quot;&quot;&gt;                            &lt;td align=&quot;center&quot; style=&quot;padding:20px 20px 15px 20px; background-color:#ffffff&quot;&gt;&lt;img width=&quot;160&quot; alt=&quot;MODON&quot; src=&quot;https://www.modon.com/images/modoncorporatelibraries/about-us/modon-logo-black5ea80736-1364-498f-afbd-9d3d1d086356.png?sfvrsn=ff9d88d7_3&quot; style=&quot;display:block; width:160px; max-width:160px; height:auto; border:0&quot; tabindex=&quot;0&quot;&gt; &lt;/td&gt;                        &lt;/tr&gt;                        &lt;tr style=&quot;&quot;&gt;                            &lt;td style=&quot;padding: 25px 30px 10px; color: rgb(51, 51, 51); font-size: 14px; line-height: 22px; &quot;&gt;                                &lt;p style=&quot;margin:0 0 15px 0&quot;&gt;Dear Team, &lt;/p&gt;                                &lt;p style=&quot;margin:0&quot;&gt;Please be informed that the below unit has been initiated for cancellation. Kindly review the details and proceed with the required actions.&lt;/p&gt;                            &lt;/td&gt;                        &lt;/tr&gt;                        &lt;tr style=&quot;&quot;&gt;                            &lt;td style=&quot;padding: 15px 30px 30px; &quot;&gt;&lt;table width=&quot;100%&quot;&gt;{!row_Project} {!row_Unit} {!row_SONumber} {!row_PaymentReceived} {!row_Status} {!row_SubStatus} {!row_SPAStatus} {!row_CancellationReason}&lt;/table&gt;&lt;/td&gt;                        &lt;/tr&gt;&lt;tr style=&quot;&quot;&gt;                            &lt;td style=&quot;padding: 25px 30px 10px; color: rgb(51, 51, 51); font-size: 14px; line-height: 22px; &quot;&gt;&lt;p style=&quot;margin:0&quot;&gt;&lt;p&gt;Please review the above cancellation request and complete the necessary actions as applicable.&lt;/p&gt;&lt;/p&gt;&lt;br /&gt;&lt;p&gt;Thanks,&lt;/p&gt;&lt;br&lt;p&gt;&lt;strong&gt;MODON Salesforce.&lt;/strong&gt;&lt;/p&gt;&lt;/td&gt;                        &lt;/tr&gt;                                               &lt;tr style=&quot;&quot;&gt;                            &lt;td style=&quot;padding: 20px 30px; background-color: rgb(247, 247, 247); color: rgb(102, 102, 102); font-size: 12px; line-height: 18px; text-align: center; &quot;&gt;                                &lt;p style=&quot;margin:0 0 5px 0&quot;&gt;This is an automated notification. &lt;/p&gt;                                &lt;p style=&quot;margin:0&quot;&gt;Please do not reply to this email. &lt;/p&gt;                            &lt;/td&gt;                        &lt;/tr&gt;                    &lt;/tbody&gt;                &lt;/table&gt;            &lt;/td&gt;        &lt;/tr&gt;    &lt;/tbody&gt;&lt;/table&gt;</text>
+    </textTemplates>
+</Flow>

@@ -1,0 +1,249 @@
+<template>
+    <lightning-card title="Select Installment">
+
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Processing"
+                size="medium"
+                variant="brand">
+            </lightning-spinner>
+        </template>
+
+        <div class="slds-p-around_medium">
+
+            <template if:true={hasInstallments}>
+                <div class="table-wrapper">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={installments}
+                        columns={columns}
+                        max-row-selection="1"
+                        selected-rows={selectedRows}
+                        wrap-text-max-lines="4"
+                        onrowselection={handleRowSelection}>
+                    </lightning-datatable>
+                </div>
+            </template>
+
+            <template if:false={hasInstallments}>
+                <div class="slds-box slds-theme_default slds-text-align_center">
+                    No unpaid installments are available for Payment Extension.
+                </div>
+            </template>
+
+            <!-- Extension Date -->
+            <template if:true={selectedRecord}>
+                <div class="slds-box slds-theme_default slds-m-top_medium">
+                    <template if:true={selectedRecord.MilestoneDescription__c}>
+                        <div class="selected-description slds-m-bottom_medium">
+                            <div class="field-label">
+                                {selectedRecord.Name} – Milestone Description
+                            </div>
+                            <div class="description-text">
+                                {selectedRecord.MilestoneDescription__c}
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="slds-grid slds-wrap slds-gutters">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                            <lightning-combobox
+                                name="extensionOption"
+                                label="Extension Duration"
+                                placeholder="Select Extension Duration"
+                                value={extensionOption}
+                                options={extensionOptions}
+                                required
+                                onchange={handleExtensionOptionChange}>
+                            </lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+
+                            <template if:true={isCustomExtension}>
+                                <lightning-input
+                                    type="date"
+                                    name="extensionDate"
+                                    label="Extension Date"
+                                    value={extensionDate}
+                                    required
+                                    onchange={handleExtensionDateChange}>
+                                </lightning-input>
+                            </template>
+
+                            <template if:false={isCustomExtension}>
+                                <div class="field-label">
+                                    Extension Date
+                                </div>
+
+                                <template if:true={extensionDate}>
+                                    <lightning-formatted-date-time
+                                        value={extensionDate}
+                                        year="numeric"
+                                        month="2-digit"
+                                        day="2-digit"
+                                        time-zone="UTC">
+                                    </lightning-formatted-date-time>
+                                </template>
+
+                                <template if:false={extensionDate}>
+                                    <span>—</span>
+                                </template>
+                            </template>
+
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                            <div class="field-label">
+                                Current Milestone Date
+                            </div>
+
+                            <lightning-formatted-date-time
+                                value={selectedRecord.MilestoneDate__c}
+                                year="numeric"
+                                month="2-digit"
+                                day="2-digit"
+                                time-zone="UTC">
+                            </lightning-formatted-date-time>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                            <div class="field-label">
+                                Next Installment Date
+                            </div>
+
+                            <template if:true={selectedRecord.NextInstallmentDate}>
+                                <lightning-formatted-date-time
+                                    value={selectedRecord.NextInstallmentDate}
+                                    year="numeric"
+                                    month="2-digit"
+                                    day="2-digit"
+                                    time-zone="UTC">
+                                </lightning-formatted-date-time>
+                            </template>
+
+                            <template if:false={selectedRecord.NextInstallmentDate}>
+                                <span>No subsequent installment</span>
+                            </template>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                            <div class="field-label">
+                                No of Days
+                            </div>
+
+                            <template if:true={noOfDays}>
+                                <span>{noOfDays}</span>
+                            </template>
+
+                            <template if:false={noOfDays}>
+                                <span>—</span>
+                            </template>
+                        </div>
+
+                    </div>
+
+                    <template if:true={dateValidationMessage}>
+                        <div
+                            class="slds-text-color_error slds-m-top_small"
+                            role="alert">
+                            {dateValidationMessage}
+                        </div>
+                    </template>
+
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                            <lightning-combobox
+                                name="typeOfRequest"
+                                label="Type of Request"
+                                placeholder="Select Type of Request"
+                                value={typeOfRequest}
+                                options={typeOfRequestOptions}
+                                required
+                                onchange={handleTypeOfRequestChange}>
+                            </lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+                            <lightning-textarea
+                                name="paymentExtensionReason"
+                                label="Payment Extension Reason"
+                                value={paymentExtensionReason}
+                                required
+                                onchange={handlePaymentExtensionReasonChange}>
+                            </lightning-textarea>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-textarea
+                                name="approvalJustification"
+                                label="Management Approval Justification"
+                                value={approvalJustification}
+                                onchange={handleApprovalJustificationChange}>
+                            </lightning-textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <lightning-file-upload
+                                label="Upload Proof of Request"
+                                record-id={recordId}
+                                onuploadfinished={handleUploadFinished}
+                                accept=".pdf,.doc,.docx,.jpg,.png"
+                                required>
+                            </lightning-file-upload>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <template if:true={uploadedFiles.length}>
+
+                                <p class="slds-text-title_bold slds-m-bottom_x-small">
+                                    Uploaded Files
+                                </p>
+
+                                <template for:each={uploadedFiles} for:item="file">
+                                    <div
+                                        key={file.documentId}
+                                        class="slds-pill slds-m-top_x-small slds-grid slds-grid_align-spread slds-p-around_x-small">
+
+                                        <span class="slds-pill__label">
+                                            {file.name}
+                                        </span>
+
+                                        <lightning-button-icon
+                                            icon-name="utility:close"
+                                            alternative-text="Remove"
+                                            title="Remove File"
+                                            size="x-small"
+                                            data-id={file.documentId}
+                                            onclick={removeFile}>
+                                        </lightning-button-icon>
+
+                                    </div>
+                                </template>
+
+                            </template>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <div class="slds-m-top_large slds-align_absolute-center">
+                <lightning-button
+                    label="Create Payment Extension"
+                    variant="brand"
+                    icon-name="utility:date_input"
+                    disabled={isSubmitDisabled}
+                    onclick={handleSubmit}>
+                </lightning-button>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,190 @@
+<template>
+    <lightning-card>
+        <div class="approval-container">
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Processing" size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Header -->
+            <div class="header-section">
+                <div class="header-icon">
+                    <lightning-icon icon-name="standard:approval" size="medium" alternative-text="Approval">
+                    </lightning-icon>
+                </div>
+
+                <div class="header-content">
+                    <h1 class="header-title">
+                        Initiate Process Approval
+                    </h1>
+
+                    <p class="header-description">
+                        Select an approval type and subcategory to initiate the request.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 1: Approval Type -->
+            <section class="section-container">
+                <div class="section-header">
+                    <span class="step-number">1</span>
+
+                    <div class="section-heading-content">
+                        <h2 class="section-title">
+                            Approval Type
+                        </h2>
+
+                        <p class="section-description">
+                            Choose the approval process you want to initiate.
+                        </p>
+                    </div>
+                </div>
+
+                <template if:true={approvalTypes.length}>
+                    <div class="option-grid">
+                        <template for:each={approvalTypes} for:item="item">
+
+                            <button
+                                key={item.value}
+                                type="button"
+                                class={item.cssClass}
+                                data-value={item.value}
+                                aria-pressed={item.isSelected}
+                                onclick={handleChange}>
+
+                                <span class="option-content">
+                                    <span class="option-label">
+                                        {item.label}
+                                    </span>
+                                </span>
+
+                                <template if:true={item.isSelected}>
+                                    <span class="selected-indicator">
+                                        <lightning-icon
+                                            icon-name="utility:check"
+                                            size="xx-small"
+                                            variant="inverse"
+                                            alternative-text="Selected">
+                                        </lightning-icon>
+                                    </span>
+                                </template>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+
+                <template if:false={approvalTypes.length}>
+                    <div class="empty-state">
+                        No approval types are currently available.
+                    </div>
+                </template>
+            </section>
+
+            <!-- Step 2: Subcategory -->
+            <template if:true={hasSubCategories}>
+                <section class="section-container subcategory-section">
+                    <div class="section-header">
+                        <span class="step-number">2</span>
+
+                        <div class="section-heading-content">
+                            <h2 class="section-title">
+                                Subcategory
+                            </h2>
+
+                            <p class="section-description">
+                                Select the applicable subcategory for the request.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="subcategory-grid">
+                        <template for:each={subCategories} for:item="sub">
+
+                            <button
+                                key={sub.value}
+                                type="button"
+                                class={sub.cssClass}
+                                data-value={sub.value}
+                                aria-pressed={sub.isSelected}
+                                onclick={handleSubCategoryChange}>
+
+                                <span class="subcategory-label">
+                                    {sub.label}
+                                </span>
+
+                                <template if:true={sub.isSelected}>
+                                    <span class="subcategory-check">
+                                        <lightning-icon
+                                            icon-name="utility:check"
+                                            size="xx-small"
+                                            variant="inverse"
+                                            alternative-text="Selected">
+                                        </lightning-icon>
+                                    </span>
+                                </template>
+                            </button>
+                        </template>
+                    </div>
+                </section>
+            </template>
+
+            <!-- Selected Summary -->
+            <template if:true={selectedSubCategory}>
+                <div class="selection-summary">
+                    <div class="summary-icon">
+                        <lightning-icon icon-name="utility:success" size="small" variant="success"
+                            alternative-text="Selected">
+                        </lightning-icon>
+                    </div>
+
+                    <div class="summary-content">
+                        <span class="summary-title">
+                            Selected Approval
+                        </span>
+
+                        <span class="summary-value">
+                            {selectedApprovalTypeLabel}
+                            <span class="summary-divider">•</span>
+                        {selectedSubCategoryLabel}
+                        </span>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Installment Selector -->
+            <template if:true={isInsatallmentShow}>
+                <section class="installment-section">
+                    <c-installment-selector record-id={recordId} onprocesssuccess={handleInstallmentSuccess}
+                        onprocesserror={handleInstallmentError}>
+                    </c-installment-selector>
+                </section>
+            </template>
+            
+            <!--Employee Payment Plan Change
+            <template if:true={isEmployeePaymentPlan}>
+                <section class="installment-section">
+                    <c-employee-payment-plan-change record-id={recordId}
+                        onprocesssuccess={handleEmployeePaymentPlanSuccess} onprocesserror={handleInstallmentError}>
+                    </c-employee-payment-plan-change>
+                </section>
+            </template>
+            -->
+
+            <!-- Footer -->
+            <div class="footer-section">
+                <lightning-button label="Reset" variant="neutral" icon-name="utility:refresh" disabled={isLoading}
+                    onclick={handleReset}>
+                </lightning-button>
+
+                <template if:true={showParentSubmitButton}>
+                    <lightning-button label="Submit Approval Request" variant="brand" icon-name="utility:send"
+                        icon-position="right" disabled={isSubmitDisabled} onclick={handleSubmit}>
+                    </lightning-button>
+                </template>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,94 @@
+<template>
+  <div class={cardClass}>
+    <div class="header">
+        <div class="title">Executive Summary</div>
+        <div class="signature">  <img src={customertickicon} class="signature-icon" />Signature Premier</div>
+       
+    </div>
+
+    <div class="content">
+        <div class="avatar-placeholder">
+
+              <img src={profileicon}  />
+        </div>
+        <div class="info-section">
+            <template for:each={groupedFields} for:item="field">
+                <div key={field.label} class="info-item">
+                    <span class="label">{field.label}:</span>
+                    <span class={field.cssClass}>{field.value}</span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div class="footer">
+        <template if:true={showExpiryWarning}>
+            <div class="warning"><img src={warningicon} class="warning-icon" />{expiryWarningText}</div>
+        </template>
+        <button class="update-button" onclick={handleUpdateClick}> <img src={updateiocn} class="update-icon" />Update Emirates ID</button>
+    </div>
+</div>
+
+
+    <!-- Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" class="modal-background">
+            <div class="modal">
+                <h2>Update {modalType}</h2>
+                <!-- 📂 Conditional Upload Fields -->
+<template if:true={isEmiratesId}>
+    <div class="upload-section">
+        <label>Emirates ID Front Copy</label>
+        <input type="file" accept="image/*,application/pdf" data-type="front" onchange={handleUploadFileChange} />
+        <template if:true={eidFrontUrl}>
+            <div class="preview-box">
+                <img src={eidFrontUrl} class="preview-image" />
+                <button class="delete-btn" data-type="front" onclick={handleDeleteFile}>×</button>
+            </div>
+        </template>
+
+        <label>Emirates ID Back Copy</label>
+        <input type="file" accept="image/*,application/pdf" data-type="back" onchange={handleUploadFileChange} />
+        <template if:true={eidBackUrl}>
+            <div class="preview-box">
+                <img src={eidBackUrl} class="preview-image" />
+                <button class="delete-btn" data-type="back" onclick={handleDeleteFile}>×</button>
+            </div>
+        </template>
+    </div>
+</template>
+
+<template if:true={isPassport}>
+    <div class="upload-section">
+        <label>Passport Copy</label>
+        <input type="file" accept="image/*,application/pdf" data-type="passport" onchange={handleUploadFileChange} />
+        <template if:true={passportUrl}>
+            <div class="preview-box">
+                <img src={passportUrl} class="preview-image" />
+                <button class="delete-btn" data-type="passport" onclick={handleDeleteFile}>×</button>
+            </div>
+        </template>
+    </div>
+</template>
+
+                <lightning-input
+                    label={modalNumberLabel}
+                    value={modalNumber}
+                    onchange={handleNumberChange}>
+                </lightning-input>
+
+                <lightning-input
+                    type="date"
+                    label={modalExpiryLabel}
+                    value={modalExpiryDate}
+                    onchange={handleExpiryChange}>
+                </lightning-input>
+
+                <div class="modal-footer">
+                    <button class="update-button" onclick={handleSave}>Save</button>
+                    <button class="update-button cancel" onclick={handleCloseModal}>Cancel</button>
+                </div>
+            </div>
+        </section>
+    </template>
+</template>

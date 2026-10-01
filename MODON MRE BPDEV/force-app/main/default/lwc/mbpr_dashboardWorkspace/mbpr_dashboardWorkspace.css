@@ -1,0 +1,1574 @@
+:host {
+    --dash-ink: var(--mbpr-theme-ink, #101112);
+    --dash-ink-soft: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.64));
+    --dash-ink-faint: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    --dash-line: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    --dash-line-strong: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    --dash-surface: var(--mbpr-theme-surface-solid, #ffffff);
+    --dash-surface-soft: var(--mbpr-theme-surface-soft, #f8f6f2);
+    --dash-control: var(--mbpr-theme-control-bg, #f7f5f1);
+    --dash-inverse: var(--mbpr-theme-inverse-ink, #ffffff);
+    --dash-accent: var(--mbpr-theme-accent, #0b7772);
+    --dash-accent-ink: var(--mbpr-theme-accent-ink, #06504c);
+    --dash-accent-soft: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    --dash-accent-line: var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    --dash-gold: var(--mbpr-theme-gold, #b69a68);
+    --dash-gold-soft: var(--mbpr-theme-gold-soft, rgba(182, 154, 104, 0.16));
+    --dash-input-bg: var(--mbpr-theme-input-bg, #f7f5f1);
+    --dash-input-border: var(--mbpr-theme-input-border, rgba(0, 0, 0, 0.2));
+    --dash-shadow-sm: var(--mbpr-theme-shadow-sm, 0 1px 2px rgba(16, 17, 18, 0.06));
+    --dash-shadow-md: var(--mbpr-theme-shadow-md, 0 16px 32px rgba(16, 17, 18, 0.08));
+    --dash-shadow-lg: var(--mbpr-theme-shadow-lg, 0 28px 64px rgba(16, 17, 18, 0.22));
+    --dash-radius-sm: var(--mbpr-radius-sm, 8px);
+    --dash-radius-md: var(--mbpr-radius-md, 12px);
+    --dash-radius-lg: var(--mbpr-radius-lg, 16px);
+    --dash-radius-pill: var(--mbpr-radius-pill, 999px);
+    --dash-mono: var(--mbpr-mono, ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace);
+    --dash-ease: var(--mbpr-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    --dash-c1: var(--mbpr-theme-chart-1, #1F3A5F);
+    --dash-c2: var(--mbpr-theme-chart-2, #B5893E);
+    --dash-c3: var(--mbpr-theme-chart-3, #4C6B8A);
+    --dash-c4: var(--mbpr-theme-chart-4, #7A6E8C);
+    --dash-c5: var(--mbpr-theme-chart-5, #74787A);
+    --dash-c6: var(--mbpr-theme-chart-6, #74787A);
+    --dash-c7: var(--mbpr-theme-chart-7, #74787A);
+    --dash-c8: var(--mbpr-theme-chart-8, #74787A);
+    --dash-c9: var(--mbpr-theme-chart-9, #74787A);
+    --dash-c10: var(--mbpr-theme-chart-10, #74787A);
+    /* Semantic viz tones: gauge arc + commission chips. */
+    --dash-viz-active: var(--mbpr-theme-viz-active, #1F3A5F);
+    --dash-viz-success: var(--mbpr-theme-viz-success, #B5893E);
+    --dash-viz-pending: var(--mbpr-theme-viz-pending, #4C6B8A);
+    --dash-tip-bg: var(--mbpr-theme-tooltip-bg, #101112);
+    --dash-tip-ink: var(--mbpr-theme-tooltip-ink, #ffffff);
+    --dash-tip-line: var(--mbpr-theme-tooltip-border, rgba(255, 255, 255, 0.08));
+    color: var(--dash-ink);
+    display: block;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 0;
+    position: relative;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+    font: inherit;
+}
+
+.state-panel {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    justify-content: center;
+    min-height: 12rem;
+    padding: 1rem;
+}
+
+.state-panel--loading {
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-top: 1.4rem;
+}
+
+.dash {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-height: 0;
+    /* Breathing room against the workspace modal's bottom edge. */
+    padding-bottom: 1.1rem;
+    position: relative;
+    transition: opacity 0.2s ease;
+}
+
+.dash--busy {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+/* ============================= Entrance choreography ============================= */
+
+/* From-only keyframes: elements animate from the keyframe to their computed
+   state (including inline styles), so draw-ins compose with dynamic values. */
+@keyframes panelIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.985);
+    }
+}
+
+@keyframes chipIn {
+    from {
+        opacity: 0;
+        transform: translateX(0.6rem);
+    }
+}
+
+@keyframes rowIn {
+    from {
+        opacity: 0;
+        transform: translateX(-0.5rem);
+    }
+}
+
+@keyframes arcIn {
+    from {
+        stroke-dasharray: 0 100;
+    }
+}
+
+@keyframes barIn {
+    from {
+        width: 0;
+    }
+}
+
+/* ============================= Buttons ============================= */
+
+.dash-button {
+    align-items: center;
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-accent-line);
+    border-radius: var(--dash-radius-sm);
+    color: var(--dash-accent-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.4rem;
+    justify-content: center;
+    letter-spacing: 0.01em;
+    min-height: 2.25rem;
+    padding: 0.4rem 0.95rem;
+    transition: background 0.15s ease, transform 0.15s var(--dash-ease);
+}
+
+.dash-button:hover {
+    background: var(--dash-accent-soft);
+}
+
+.dash-button:active {
+    transform: scale(0.97);
+}
+
+.dash-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+}
+
+.dash-button--ghost {
+    border-color: var(--dash-line);
+    color: var(--dash-ink-soft);
+}
+
+.dash-button--ghost:hover {
+    background: var(--dash-surface-soft);
+}
+
+/* ============================= Toolbar + filter popover ============================= */
+
+.dash-toolbar {
+    align-items: center;
+    display: flex;
+    justify-content: flex-end;
+    min-height: 2.75rem;
+    position: relative;
+    z-index: 5;
+}
+
+/* The trigger lives in the modal header, so the toolbar collapses to a
+   zero-height popover anchor. The negative margin swallows the flex gap. */
+.dash--chrome-hosted .dash-toolbar {
+    margin-bottom: -0.9rem;
+    min-height: 0;
+}
+
+/* With the anchor row collapsed, `top: calc(100% +...)` would hang the
+   panel below whatever height the row computes to. Pinning keeps it under
+   the header's Filters chip. */
+.dash--chrome-hosted .filter-pop {
+    top: 0.45rem;
+}
+
+.dash-filter-trigger {
+    align-items: center;
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-line-strong);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.8rem;
+    font-weight: 600;
+    gap: 0.45rem;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.9rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dash-filter-trigger:hover {
+    background: var(--dash-surface-soft);
+    border-color: var(--dash-accent-line);
+}
+
+.dash-filter-trigger--active {
+    border-color: var(--dash-accent-line);
+}
+
+.dash-filter-chip {
+    background: var(--dash-accent-soft);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-accent-ink);
+    font-size: 0.7rem;
+    font-weight: 650;
+    padding: 0.16rem 0.55rem;
+    white-space: nowrap;
+}
+
+.filter-pop {
+    animation: dashPopIn 180ms var(--dash-ease) both;
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-line-strong);
+    border-radius: var(--dash-radius-md);
+    box-shadow: var(--dash-shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.8rem;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.45rem);
+    transform-origin: top right;
+    width: min(19rem, calc(100vw - 2rem));
+    z-index: 20;
+}
+
+@keyframes dashPopIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.filter-pop__head {
+    align-items: center;
+    color: var(--dash-ink);
+    display: flex;
+    font-size: 0.86rem;
+    justify-content: space-between;
+}
+
+.filter-pop__close {
+    align-items: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--dash-radius-sm);
+    color: var(--dash-ink-faint);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.85rem;
+    height: 1.9rem;
+    justify-content: center;
+    width: 1.9rem;
+}
+
+.filter-pop__close:hover {
+    background: var(--dash-surface-soft);
+    color: var(--dash-ink);
+}
+
+/* Compact field cells - the units-screen filter language: a bordered cell
+   holding a small-caps kicker and a borderless control. */
+.filter-cell {
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-line);
+    border-radius: calc(var(--dash-radius-sm) - 1px);
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+    padding: 0.38rem 0.48rem;
+    transition: background 180ms var(--dash-ease), border-color 180ms var(--dash-ease), box-shadow 220ms var(--dash-ease);
+}
+
+.filter-cell:hover,
+.filter-cell:focus-within {
+    background: var(--dash-surface-soft);
+    border-color: var(--dash-accent-line);
+    box-shadow: 0 0 0 1px var(--dash-accent-soft);
+}
+
+.filter-cell span {
+    color: var(--dash-ink-faint);
+    font-size: 0.5rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.filter-cell select,
+.filter-cell input {
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    background-image: none;
+    border: 0;
+    color: var(--dash-ink);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.15;
+    min-height: 1.18rem;
+    outline: none;
+    padding: 0;
+    width: 100%;
+}
+
+.filter-cell select::-ms-expand {
+    display: none;
+}
+
+.filter-cell input[type="date"] {
+    color-scheme: inherit;
+}
+
+.filter-pop__dates {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+.filter-pop__hint {
+    color: var(--dash-ink-faint);
+    font-size: 0.72rem;
+    line-height: 1.35;
+    margin: -0.2rem 0 0;
+}
+
+.filter-pop__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* ============================= Hero canvas ============================= */
+
+/* Aurora blobs drift behind the content: isolation plus a negative z-index
+   keeps them above the panel background but below the text. */
+.hero {
+    animation: panelIn 700ms var(--dash-ease) both;
+    background:
+        radial-gradient(110% 160% at 90% -40%, var(--dash-accent-soft), transparent 55%),
+        var(--dash-surface);
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius-lg);
+    box-shadow: var(--dash-shadow-sm);
+    color: var(--dash-ink);
+    isolation: isolate;
+    overflow: hidden;
+    padding: 1.15rem 1.25rem;
+    position: relative;
+}
+
+.hero__aura {
+    border-radius: 50%;
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+}
+
+.hero__aura--a {
+    animation: auraDrift 22s ease-in-out infinite alternate;
+    background: radial-gradient(circle, color-mix(in srgb, var(--dash-accent) 14%, transparent), transparent 68%);
+    height: 24rem;
+    right: -7rem;
+    top: -12rem;
+    width: 24rem;
+}
+
+.hero__aura--b {
+    animation: auraDrift 27s ease-in-out infinite alternate-reverse;
+    background: radial-gradient(circle, color-mix(in srgb, var(--dash-gold) 13%, transparent), transparent 70%);
+    bottom: -13rem;
+    height: 22rem;
+    left: 10%;
+    width: 22rem;
+}
+
+.hero__aura--c {
+    animation: auraDrift 19s ease-in-out infinite alternate;
+    background: radial-gradient(circle, color-mix(in srgb, var(--dash-accent) 8%, transparent), transparent 72%);
+    height: 17rem;
+    left: 44%;
+    top: -9rem;
+    width: 17rem;
+}
+
+@keyframes auraDrift {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+        transform: translate3d(2.5rem, 1.5rem, 0) scale(1.16);
+    }
+}
+
+.hero__grid {
+    align-items: center;
+    display: grid;
+    gap: 1.4rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+}
+
+.hero-kicker {
+    color: var(--dash-ink-soft);
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.hero-sales {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.hero-sales__value {
+    align-items: baseline;
+    display: flex;
+    gap: 0.55rem;
+    margin: 0;
+    min-width: 0;
+}
+
+.hero-sales__currency {
+    color: var(--dash-ink-faint);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.hero-sales__number {
+    font-family: var(--dash-mono);
+    font-size: clamp(2.5rem, 5vw, 3.6rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 780;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+.hero-commission {
+    align-items: center;
+    border-left: 1px solid var(--dash-line);
+    display: flex;
+    gap: 1.1rem;
+    min-width: 0;
+    padding-left: 1.4rem;
+    /* Anchor for the gauge's absolutely-positioned enlarge button. */
+    position: relative;
+}
+
+/* ---- Radial gauge ---- */
+
+/* Sized up ~15% with the portal's other circle charts (user request); stroke geometry follows the viewBox automatically. */
+.gauge {
+    flex: 0 0 auto;
+    height: 8.6rem;
+    position: relative;
+    width: 8.6rem;
+}
+
+.gauge__svg {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.gauge__track {
+    fill: none;
+    stroke: var(--dash-accent-soft);
+    stroke-width: 3.4;
+}
+
+.gauge__arc {
+    animation: arcIn 1100ms var(--dash-ease) 250ms both;
+    cursor: pointer;
+    fill: none;
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--dash-viz-active) 35%, transparent));
+    stroke: var(--dash-viz-active);
+    stroke-linecap: round;
+    stroke-width: 3.4;
+}
+
+.gauge__center {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    inset: 0;
+    justify-content: center;
+    pointer-events: none;
+    position: absolute;
+    text-align: center;
+}
+
+.gauge__pct {
+    font-family: var(--dash-mono);
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 780;
+    line-height: 1;
+}
+
+.gauge__pct i {
+    color: var(--dash-ink-faint);
+    font-size: 0.9rem;
+    font-style: normal;
+    margin-left: 0.1rem;
+}
+
+.gauge__cap {
+    color: var(--dash-ink-faint);
+    font-size: 0.58rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ---- Commission body + glass chips ---- */
+
+.hero-commission__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.hero-commission__value {
+    font-family: var(--dash-mono);
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 760;
+    line-height: 1.05;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.hero-commission__full {
+    color: var(--dash-ink-faint);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+}
+
+.glass-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    list-style: none;
+    margin: 0.45rem 0 0;
+    padding: 0;
+}
+
+.glass-chip {
+    align-items: center;
+    animation: chipIn 600ms var(--dash-ease) both;
+    background: var(--dash-surface-soft);
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius-sm);
+    display: flex;
+    gap: 0.55rem;
+    padding: 0.36rem 0.55rem;
+}
+
+.glass-chip:nth-child(1) {
+    animation-delay: 350ms;
+}
+
+.glass-chip:nth-child(2) {
+    animation-delay: 440ms;
+}
+
+.glass-chip:nth-child(3) {
+    animation-delay: 530ms;
+}
+
+.glass-chip__dot {
+    border-radius: 50%;
+    flex: 0 0 auto;
+    height: 0.45rem;
+    width: 0.45rem;
+}
+
+.glass-chip__dot--paid {
+    background: var(--dash-viz-success);
+}
+
+.glass-chip__dot--pending {
+    background: var(--dash-viz-pending);
+}
+
+.glass-chip__dot--eligible {
+    background: var(--dash-viz-active);
+}
+
+.glass-chip__label {
+    color: var(--dash-ink-faint);
+    flex: 1 1 auto;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.glass-chip__value {
+    color: var(--dash-ink);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.glass-chip__pct {
+    color: var(--dash-accent-ink);
+    font-family: var(--dash-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    min-width: 2.1rem;
+    text-align: right;
+}
+
+/* ============================= Pulse row ============================= */
+
+.pulse-row {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pulse-tile {
+    animation: panelIn 700ms var(--dash-ease) both;
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius-lg);
+    box-shadow: var(--dash-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.95rem 1.05rem 1rem;
+    transition: border-color 200ms ease, box-shadow 250ms ease, transform 250ms var(--dash-ease);
+}
+
+.pulse-tile:nth-child(1) {
+    animation-delay: 120ms;
+}
+
+.pulse-tile:nth-child(2) {
+    animation-delay: 200ms;
+}
+
+.pulse-tile:nth-child(3) {
+    animation-delay: 280ms;
+}
+
+.pulse-tile:hover {
+    border-color: var(--dash-accent-line);
+    box-shadow: var(--dash-shadow-md);
+    transform: translateY(-3px);
+}
+
+.pulse-tile__head {
+    align-items: baseline;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.pulse-tile__name {
+    color: var(--dash-ink-soft);
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.pulse-tile__meta {
+    background: var(--dash-accent-soft);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-accent-ink);
+    font-size: 0.62rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 750;
+    padding: 0.14rem 0.5rem;
+    white-space: nowrap;
+}
+
+.pulse-tile__total {
+    color: var(--dash-ink);
+    font-family: var(--dash-mono);
+    font-size: 2rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 770;
+    line-height: 1.05;
+    margin: 0;
+}
+
+.pulse-bar {
+    background: var(--dash-surface-soft);
+    border-radius: var(--dash-radius-pill);
+    display: flex;
+    gap: 2px;
+    height: 0.5rem;
+    overflow: hidden;
+}
+
+.pulse-bar__seg {
+    animation: barIn 900ms var(--dash-ease) both;
+    animation-delay: calc(300ms + var(--seg-delay, 0ms));
+    border-radius: var(--dash-radius-pill);
+    display: block;
+}
+
+.pulse-bar__seg--a {
+    background: var(--dash-c1);
+    cursor: pointer;
+}
+
+.pulse-bar__seg--b {
+    /* Slot 2. 'b' is a success state (Converted to sales, Sold), which the
+       brief pins to gold. */
+    background: var(--dash-c2);
+    cursor: pointer;
+}
+
+.pulse-bar__seg--c {
+    background: var(--dash-c3);
+    cursor: pointer;
+}
+
+.pulse-bar__seg--d {
+    background: var(--dash-c4);
+    cursor: pointer;
+}
+
+.pulse-bar__seg--e {
+    background: var(--dash-c5);
+    cursor: pointer;
+}
+
+/* The Units tile has no bar or chips, so nothing pins its number to the
+   bottom. The pulse row is a 3-column grid, so the tile still stretches to
+   its neighbours' height; auto margins centre the count instead of leaving
+   a void beneath it. Scoped to the modifier. */
+.pulse-tile--solo .pulse-tile__total {
+    margin: auto 0;
+}
+
+.pulse-stats {
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    list-style: none;
+    margin: auto 0 0;
+    padding: 0;
+}
+
+.pulse-stat {
+    align-items: center;
+    background: var(--dash-surface-soft);
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius-sm);
+    display: flex;
+    gap: 0.4rem;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
+}
+
+.pulse-dot {
+    border-radius: 50%;
+    flex: 0 0 auto;
+    height: 0.42rem;
+    width: 0.42rem;
+}
+
+.pulse-dot--a {
+    background: var(--dash-c1);
+}
+
+.pulse-dot--b {
+    background: var(--dash-c2);
+}
+
+/* Slots 3 to 5 complete the rotation for the Leads tile, one segment per
+   status. Tones map straight through, a-e to slots 1-5. */
+.pulse-dot--c {
+    background: var(--dash-c3);
+}
+
+.pulse-dot--d {
+    background: var(--dash-c4);
+}
+
+.pulse-dot--e {
+    background: var(--dash-c5);
+}
+
+.pulse-stat__label {
+    color: var(--dash-ink-faint);
+    flex: 1 1 auto;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.pulse-stat__value {
+    color: var(--dash-ink);
+    font-family: var(--dash-mono);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 780;
+}
+
+/* ============================= Project row ============================= */
+
+.project-row {
+    align-items: stretch;
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.panel {
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius-lg);
+    box-shadow: var(--dash-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1rem 1.05rem 1.05rem;
+}
+
+.panel__title {
+    color: var(--dash-ink);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.proj-panel {
+    animation: panelIn 700ms var(--dash-ease) both;
+    gap: 0.8rem;
+    transition: border-color 200ms ease, box-shadow 250ms ease, transform 250ms var(--dash-ease);
+}
+
+.proj-panel:nth-child(1) {
+    animation-delay: 260ms;
+}
+
+.proj-panel:nth-child(2) {
+    animation-delay: 340ms;
+}
+
+.proj-panel:nth-child(3) {
+    animation-delay: 420ms;
+}
+
+.proj-panel:hover {
+    border-color: var(--dash-accent-line);
+    box-shadow: var(--dash-shadow-md);
+    transform: translateY(-3px);
+}
+
+.proj-panel__head {
+    align-items: baseline;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.proj-panel__meta {
+    background: var(--dash-accent-soft);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-accent-ink);
+    font-size: 0.62rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 750;
+    padding: 0.14rem 0.5rem;
+    white-space: nowrap;
+}
+
+.proj-empty {
+    align-items: center;
+    color: var(--dash-ink-faint);
+    display: flex;
+    font-size: 0.78rem;
+    justify-content: center;
+    margin: 0;
+    min-height: 6rem;
+    text-align: center;
+}
+
+/* Donut cards render through c-mbpr_chart (frameless, ring-only) - the
+   panel sets the geometry the bespoke donuts used to hard-code. */
+.proj-panel c-mbpr_chart {
+    --chart-donut-size: 14rem;
+    --chart-center-scale: 1.15;
+}
+
+/* ---- Ranked bars (SPA's) ---- */
+
+.rank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    list-style: none;
+    margin: 0.1rem 0 0;
+    padding: 0;
+}
+
+.rank-row {
+    align-items: center;
+    animation: rowIn 600ms var(--dash-ease) both;
+    animation-delay: calc(350ms + var(--row-i, 0ms));
+    display: flex;
+    gap: 0.6rem;
+}
+
+.rank-row__rank {
+    color: var(--dash-ink-faint);
+    font-family: var(--dash-mono);
+    font-size: 0.66rem;
+    font-weight: 750;
+    min-width: 1.3rem;
+}
+
+.rank-row__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.rank-row__line {
+    align-items: baseline;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.rank-row__label {
+    color: var(--dash-ink);
+    font-size: 0.74rem;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rank-row__value {
+    color: var(--dash-ink-soft);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.rank-row__value b {
+    background: var(--dash-accent-soft);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-accent-ink);
+    font-family: var(--dash-mono);
+    font-size: 0.62rem;
+    font-weight: 750;
+    margin-left: 0.3rem;
+    padding: 0.05rem 0.3rem;
+}
+
+.rank-row__track {
+    background: var(--dash-surface-soft);
+    border-radius: var(--dash-radius-pill);
+    height: 0.42rem;
+    overflow: hidden;
+}
+
+.rank-row__fill {
+    animation: barIn 900ms var(--dash-ease) both;
+    animation-delay: calc(420ms + var(--seg-delay, 0ms));
+    /* Single-metric ranked bars take slot 1 (navy) solid - no gradient,
+       per the business brief. */
+    background: var(--dash-c1);
+    border-radius: var(--dash-radius-pill);
+    display: block;
+    height: 100%;
+    transition: filter 200ms ease;
+}
+
+.rank-row:hover .rank-row__fill {
+    filter: brightness(1.08);
+}
+
+/* ============================= Responsive ============================= */
+
+@media (max-width: 1099px) {
+    .hero__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-commission {
+        border-left: 0;
+        border-top: 1px solid var(--dash-line);
+        padding-left: 0;
+        padding-top: 1.1rem;
+    }
+
+    .project-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .project-row {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-button,
+    .dash-filter-trigger {
+        min-height: 2.75rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .dash {
+        gap: 0.75rem;
+    }
+
+    .hero {
+        padding: 1rem 1.05rem;
+    }
+
+    .hero-sales__number {
+        font-size: clamp(2.1rem, 9vw, 2.6rem);
+    }
+
+    .hero-commission {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .hero-commission__body {
+        flex-basis: 100%;
+    }
+
+    .pulse-row {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-button,
+    .dash-filter-trigger {
+        min-height: 2.9rem;
+    }
+
+    .filter-pop {
+        width: calc(100vw - 2rem);
+    }
+
+    .filter-cell select,
+    .filter-cell input {
+        font-size: 16px;
+    }
+
+    .filter-pop__dates {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dash,
+    .dash-button,
+    .dash-filter-trigger,
+    .filter-cell,
+    .pulse-tile,
+    .proj-panel,
+    .rank-row__fill,
+    .dash-tip,
+    .gauge-expand,
+    .proj-panel__expand,
+    .pulse-tile__expand {
+        transition: none;
+    }
+
+    .filter-pop,
+    .hero,
+    .hero__aura--a,
+    .hero__aura--b,
+    .hero__aura--c,
+    .gauge__arc,
+    .glass-chip,
+    .pulse-tile,
+    .pulse-bar__seg,
+    .proj-panel,
+    .rank-row,
+    .rank-row__fill {
+        animation: none;
+    }
+
+    .pulse-tile:hover,
+    .proj-panel:hover {
+        transform: none;
+    }
+}
+
+/* ============================= Chart enlarge ============================= */
+
+.gauge-expand,
+.proj-panel__expand,
+.pulse-tile__expand {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 1.7rem;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+    width: 1.7rem;
+}
+
+.gauge-expand svg,
+.proj-panel__expand svg,
+.pulse-tile__expand svg {
+    fill: none;
+    height: 0.82rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 0.82rem;
+}
+
+.gauge-expand:hover,
+.proj-panel__expand:hover,
+.pulse-tile__expand:hover,
+.gauge-expand:focus-visible,
+.proj-panel__expand:focus-visible,
+.pulse-tile__expand:focus-visible {
+    background: var(--dash-surface-soft);
+    border-color: var(--dash-line-strong, var(--dash-line));
+    color: var(--dash-ink);
+}
+
+.gauge-expand:focus-visible,
+.proj-panel__expand:focus-visible,
+.pulse-tile__expand:focus-visible {
+    outline: 2px solid var(--dash-ink-soft);
+    outline-offset: 2px;
+}
+
+.gauge-expand {
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+}
+
+.proj-panel__tools,
+.pulse-tile__tools {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 0.45rem;
+}
+
+/* Floating tooltip (mbpr_chart's.tip, ported): anchored to.dash for the
+   small charts, to.dash-xl inside the lightbox. */
+.dash-tip {
+    background: var(--dash-tip-bg);
+    border: 1px solid var(--dash-tip-line);
+    border-radius: 12px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+    color: var(--dash-tip-ink);
+    left: 0;
+    max-width: 15rem;
+    min-width: 8.5rem;
+    opacity: 0;
+    padding: 0.5rem 0.68rem;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    transform: translateY(5px) scale(0.97);
+    transition: opacity 0.16s ease, transform 0.18s var(--dash-ease);
+    will-change: transform;
+    z-index: 30;
+}
+
+.dash-tip--on {
+    opacity: 1;
+    transform: none;
+}
+
+.dash-tip__row {
+    align-items: center;
+    display: flex;
+    gap: 0.42rem;
+    line-height: 1.55;
+    white-space: nowrap;
+}
+
+.dash-tip__swatch {
+    border-radius: 3px;
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 0.56rem;
+    width: 0.56rem;
+}
+
+.dash-tip__label {
+    flex: 1 1 auto;
+    font-size: 0.74rem;
+    max-width: 9rem;
+    opacity: 0.78;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-tip__value {
+    font-size: 0.76rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 780;
+}
+
+.dash-tip__pct {
+    font-size: 0.64rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.6;
+}
+
+/* Enlarged bespoke views inside the lightbox slot. */
+.dash-xl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem 2rem;
+    min-width: 0;
+    position: relative;
+}
+
+.gauge--xl {
+    height: min(16rem, 44vh);
+    margin-inline: auto;
+    width: min(16rem, 44vh);
+}
+
+.gauge--xl .gauge__pct {
+    font-size: 2.4rem;
+}
+
+.gauge--xl .gauge__cap {
+    font-size: 0.72rem;
+}
+
+.dash-xl__rows {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-direction: column;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    min-width: 0;
+    padding: 0;
+}
+
+.dash-xl__row {
+    align-items: center;
+    border-bottom: 1px solid var(--dash-line);
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    padding: 0.5rem 0.35rem;
+}
+
+.dash-xl__row:last-child {
+    border-bottom: 0;
+}
+
+.dash-xl__row .pulse-dot,
+.dash-xl__row .glass-chip__dot {
+    border-radius: 50%;
+    height: 0.6rem;
+    width: 0.6rem;
+}
+
+.dash-xl__label {
+    color: var(--dash-ink-soft);
+    font-size: 0.9rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dash-xl__value {
+    color: var(--dash-ink);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.dash-xl__pct {
+    background: var(--dash-surface-soft);
+    border-radius: var(--dash-radius-pill);
+    color: var(--dash-ink-faint);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    padding: 0.14rem 0.5rem;
+}
+
+.dash-xl__total {
+    color: var(--dash-ink);
+    flex-basis: 100%;
+    font-family: var(--dash-mono);
+    font-size: 2rem;
+    font-weight: 770;
+    margin: 0;
+}
+
+.dash-xl__total span {
+    color: var(--dash-ink-faint);
+    font-family: "Salesforce Sans", Inter, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 650;
+    margin-left: 0.6rem;
+}
+
+.dash-xl .pulse-bar--xl {
+    flex-basis: 100%;
+    height: 1.1rem;
+}
+
+.dash-xl .rank-list--xl {
+    flex: 1 1 100%;
+}
+
+.dash-xl .rank-list--xl .rank-row__label,
+.dash-xl .rank-list--xl .rank-row__value {
+    font-size: 0.9rem;
+}
+
+.dash-xl .rank-list--xl .rank-row__track {
+    height: 0.7rem;
+}
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .gauge-expand,
+    .proj-panel__expand,
+    .pulse-tile__expand {
+        height: 2.2rem;
+        width: 2.2rem;
+    }
+
+    .gauge--xl {
+        height: min(14rem, 68vw);
+        width: min(14rem, 68vw);
+    }
+
+    .dash-xl__row {
+        min-height: 44px;
+    }
+}
+
+/* Scrim under the filter popover on touch. z 19 sits under the pop at
+   z 20 in the same.dash-toolbar stacking context; tap closes. */
+.dash-filter-scrim {
+    display: none;
+}
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .dash-filter-scrim {
+        background: rgba(16, 17, 18, 0.6);
+        cursor: pointer;
+        display: block;
+        inset: 0;
+        position: fixed;
+        z-index: 19;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Filter-sheet parity: on touch the dashboard filter pop             */
+/* becomes the sales-style bottom sheet - same chrome, eyebrow + title  */
+/* head (CSS-generated so the desktop markup stays untouched), bordered */
+/* circle close, 7px field cards, and full-width footer pills with the  */
+/* accent Apply. Desktop popover untouched.                           */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .filter-pop {
+        animation: none;
+        border-bottom: 0;
+        border-radius: 18px 18px 0 0;
+        bottom: 0;
+        box-shadow: 0 -18px 48px rgba(16, 17, 18, 0.24);
+        gap: 10px;
+        left: 0;
+        max-height: min(84dvh, 42rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+        position: fixed;
+        right: 0;
+        top: auto;
+        transform: none;
+        width: 100%;
+    }
+
+    .filter-pop__head {
+        background: inherit;
+        position: sticky;
+        top: -12px;
+        z-index: 2;
+    }
+
+    .filter-pop__head b {
+        display: grid;
+        font-size: 0.88rem;
+        font-weight: 850;
+        gap: 0.14rem;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+    }
+
+    .filter-pop__head b::before {
+        color: var(--dash-accent-ink);
+        content: "Refine dashboard";
+        font-size: 0.52rem;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    .filter-pop__close {
+        background: var(--dash-control);
+        border: 1px solid var(--dash-line);
+        border-radius: 50%;
+        color: var(--dash-ink);
+    }
+
+    .filter-cell {
+        border-radius: 7px;
+    }
+
+    .filter-cell select,
+    .filter-cell input {
+        font-weight: 780;
+    }
+
+    .filter-pop__actions {
+        background: inherit;
+        border-top: 1px solid var(--dash-line);
+        bottom: calc(-12px - env(safe-area-inset-bottom, 0px));
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        padding-top: 0.5rem;
+        position: sticky;
+        z-index: 2;
+    }
+
+    .filter-pop__actions .dash-button {
+        border-radius: 999px;
+        font-size: 0.64rem;
+        min-height: 48px;
+        width: 100%;
+    }
+
+    .filter-pop__actions .dash-button:not(.dash-button--ghost) {
+        background: var(--dash-accent-ink);
+        border-color: var(--dash-accent-ink);
+        color: var(--dash-inverse);
+    }
+
+    .filter-pop__actions .dash-button--ghost {
+        background: var(--dash-surface);
+        border: 1px solid var(--dash-line);
+        color: var(--dash-ink);
+    }
+}
+
+/* The native WebKit picker indicator is a fixed dark bitmap, near-invisible
+   on the dark theme. Redrawn in currentColor via mask so it follows the ink. */
+.filter-cell input[type="date"]::-webkit-calendar-picker-indicator {
+    background: currentColor;
+    cursor: pointer;
+    height: 1.05rem;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z'/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0.75;
+    width: 1.05rem;
+}
+
+/* Desktop fit: removes the vertical scroll inside the height-capped modal
+   by tightening spacing only. Everything below is padding, margin or gap;
+   chart sizes, type, borders and radii are unchanged. Starts at 1200px, so
+   tablet and mobile keep their own spacing. */
+@media (min-width: 1200px) {
+    .dash {
+        gap: 0.55rem;
+        padding-bottom: 0.3rem;
+    }
+
+    .hero {
+        padding-block: 0.7rem;
+    }
+
+    .pulse-tile {
+        gap: 0.35rem;
+        padding-block: 0.62rem 0.65rem;
+    }
+
+    .panel {
+        padding-block: 0.68rem 0.7rem;
+    }
+
+    .proj-panel {
+        gap: 0.5rem;
+    }
+
+    /* The icon buttons set every card header's height, so 0.25rem off each
+       comes straight off the stack. Only the hit area tightens, and it stays
+       clear of the 44px touch floor, which is out of range here. */
+    .gauge-expand,
+    .proj-panel__expand,
+    .pulse-tile__expand {
+        height: 1.45rem;
+        width: 1.45rem;
+    }
+}

@@ -1,0 +1,133 @@
+<messaging:emailTemplate subject="Pre Unit Cancellation Request for {!relatedTo.Name} [SRID:{!relatedTo.Id}]" 
+                         recipientType="User" 
+                         relatedToType="ServiceRequest__c">
+
+    <messaging:htmlEmailBody >
+        <html>
+            <body style="font-family: Arial, sans-serif; font-size: 14px;">
+                
+                <div style="max-width: 800px; margin: 0 auto;">
+                    
+                    <h2>Memorandum</h2>
+
+                    <p><b>Date:</b>
+                        <apex:outputText value="{0,date,dd MMM yyyy}">
+                            <apex:param value="{!TODAY()}" />
+                        </apex:outputText>
+                    </p>
+
+                    <p><b>Ref No.:</b> {!relatedTo.Name}</p>
+                    <p><b>Subject:</b> Pre Unit Cancellation Request</p>
+
+                    <!-- CASE DESCRIPTION -->
+                    <h3>CASE DESCRIPTION</h3>
+                    <p>
+                        Dear {!recipient.Name},<br /><br />
+                        
+                        {!relatedTo.SalesOrder__r.CustomerAccount__r.Name} has requested 
+                        cancellation of the unit associated with Sales Order 
+                        <b>{!relatedTo.SalesOrder__r.Name}</b>.<br/><br/>
+                        
+                        As per company policy, this request is subject to approval.
+                    </p>
+
+                    <!-- FINANCIAL SUMMARY -->
+                    <h3>FINANCIAL SUMMARY</h3>
+
+                    <table border="1" cellpadding="5" cellspacing="0" 
+                           style="border-collapse: collapse; width: 100%;">
+                        
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Total Paid Amount</th>
+                            <th>ADM Paid Amount</th>
+                            <th>Forfeiture</th>
+                            <th>Market Loss</th>
+                            <th>Payable to Customer</th>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Total_Paid_Amount__c}" />
+                                </apex:outputText>
+                            </td>
+
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.ADM_Paid_Amount__c}" />
+                                </apex:outputText>
+                            </td>
+
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Forfeiture__c}" />
+                                </apex:outputText>
+                            </td>
+
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Market_Loss__c}" />
+                                </apex:outputText>
+                            </td>
+
+                            <td>
+                                <apex:outputText value="{0,number,#,##0.00}">
+                                    <apex:param value="{!relatedTo.Payable_to_Customer__c}" />
+                                </apex:outputText>
+                            </td>
+                        </tr>
+
+                    </table>
+
+                    <!-- REQUEST DETAILS -->
+                    <h3>REQUEST DETAILS</h3>
+                    <p>
+                        {!relatedTo.Description__c}
+                    </p>
+
+                    <!-- APPROVAL HISTORY -->
+                    <p>Best Regards,</p>
+
+                    <table border="1" cellpadding="3" cellspacing="0" 
+                           style="border-collapse: collapse; width: 100%;">
+                        
+                        <tr style="background-color: #000000; color: #ffffff;">
+                            <th>Approver Name</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                        </tr>
+
+                        <apex:repeat var="pi" value="{!relatedTo.ProcessInstances}">
+                            <apex:repeat var="step" value="{!pi.Steps}">
+                                <apex:outputPanel rendered="{!step.StepStatus != 'Started'}">
+                                    <tr>
+                                        <td>{!step.Actor.Name}</td>
+                                        <td>{!step.Actor.Title}</td>
+                                        <td>{!step.StepStatus}</td>
+                                    </tr>
+                                </apex:outputPanel>
+                            </apex:repeat>
+                        </apex:repeat>
+
+                        <!-- Current Approver -->
+                        <tr>
+                            <td>{!recipient.Name}</td>
+                            <td>{!recipient.Title}</td>
+                            <td>Pending</td>
+                        </tr>
+
+                    </table>
+
+                </div>
+                <p>
+    <b>Approval Link:</b><br/><br/>
+
+    <a href="{!LEFT($Api.Partner_Server_URL_370, FIND('/services', $Api.Partner_Server_URL_370))}/lightning/r/ServiceRequest__c/{!relatedTo.Id}/view"
+       style="background-color: #0176d3; color: white; padding: 10px 15px; text-decoration: none;">
+       Open Service Request
+    </a>
+</p>
+            </body>
+        </html>
+    </messaging:htmlEmailBody>
+</messaging:emailTemplate>

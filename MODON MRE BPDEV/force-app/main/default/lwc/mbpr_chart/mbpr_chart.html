@@ -1,0 +1,159 @@
+<template>
+    <section class="chart-card" onpointerleave={handleHoverLeave}>
+        <template lwc:if={header}>
+            <header class="chart-card__head">
+                <h3 class="chart-card__title">{header}</h3>
+                <template lwc:if={showExpand}>
+                    <button
+                        class="chart-card__expand"
+                        type="button"
+                        title="Enlarge"
+                        aria-label={expandLabel}
+                        onclick={handleExpandClick}
+                    >
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                        </svg>
+                    </button>
+                </template>
+            </header>
+        </template>
+
+        <template lwc:if={hasData}>
+            <template lwc:if={isDonut}>
+                <div class={donutLayoutClass}>
+                    <div class="donut">
+                        <svg class="donut__svg" viewBox="0 0 42 42" role="img" aria-label={ariaSummary} focusable="false">
+                            <circle class="donut__track" cx="21" cy="21" r="15.9155"></circle>
+                            <template for:each={donutSegments} for:item="seg">
+                                <circle
+                                    key={seg.key}
+                                    class={seg.className}
+                                    cx="21"
+                                    cy="21"
+                                    r="15.9155"
+                                    style={seg.style}
+                                    data-index={seg.index}
+                                    aria-label={seg.ariaLabel}
+                                    onpointerenter={handleSegmentEnter}
+                                    onpointermove={handleTipMove}
+                                    onpointerleave={handleHoverLeave}
+                                ></circle>
+                            </template>
+                        </svg>
+                        <div class="donut__center" aria-hidden="true">
+                            <template lwc:if={centerPrefix}>
+                                <span class="donut__prefix">{centerPrefix}</span>
+                            </template>
+                            <span class={centerValueClass}>{centerDisplay}</span>
+                            <template lwc:if={centerCaptionResolved}>
+                                <span class="donut__caption">{centerCaptionResolved}</span>
+                            </template>
+                        </div>
+                    </div>
+                    <template lwc:if={showLegend}>
+                    <ul class="legend">
+                        <template for:each={legendRows} for:item="row">
+                            <li
+                                key={row.key}
+                                class={row.className}
+                                data-index={row.index}
+                                onpointerenter={handleSegmentEnter}
+                                onpointermove={handleTipMove}
+                                onpointerleave={handleHoverLeave}
+                            >
+                                <span class="legend__swatch" style={row.swatchStyle} aria-hidden="true"></span>
+                                <span class="legend__label">{row.label}</span>
+                                <span class="legend__value">{row.display}</span>
+                                <span class="legend__pct">{row.percent}</span>
+                            </li>
+                        </template>
+                    </ul>
+                    </template>
+                </div>
+            </template>
+
+            <template lwc:if={isBars}>
+                <ul class="bars">
+                    <template for:each={barRows} for:item="row">
+                        <li
+                            key={row.key}
+                            class={row.className}
+                            data-index={row.index}
+                            onpointerenter={handleBarEnter}
+                            onpointermove={handleTipMove}
+                            onpointerleave={handleHoverLeave}
+                        >
+                            <div class="bars__meta">
+                                <span class="bars__label">{row.label}</span>
+                                <span class="bars__value">{row.display}</span>
+                            </div>
+                            <div class="bars__track">
+                                <span class="bars__fill" style={row.fillStyle}></span>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <template lwc:if={isColumns}>
+                <div class="columns-scroll">
+                    <div class="columns-wrap">
+                        <div class="columns__yaxis" aria-hidden="true">
+                            <template for:each={yTicks} for:item="tick">
+                                <span key={tick.key} class="columns__tick">{tick.label}</span>
+                            </template>
+                        </div>
+                        <div class="columns" role="img" aria-label={ariaSummary}>
+                            <template for:each={columnCells} for:item="col">
+                                <div
+                                    key={col.key}
+                                    class={col.className}
+                                    data-index={col.index}
+                                    onpointerenter={handleColumnEnter}
+                                    onpointermove={handleTipMove}
+                                    onpointerleave={handleHoverLeave}
+                                >
+                                    <div class="columns__bar" style={col.barStyle}>
+                                        <template for:each={col.stacks} for:item="st">
+                                            <span key={st.key} class="columns__stack" style={st.style}></span>
+                                        </template>
+                                    </div>
+                                    <span class="columns__label">{col.label}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <ul class="legend legend--inline">
+                    <template for:each={columnsLegend} for:item="row">
+                        <li key={row.key} class="legend__row legend__row--inline">
+                            <span class="legend__swatch" style={row.swatchStyle} aria-hidden="true"></span>
+                            <span class="legend__label">{row.label}</span>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- Floating tooltip card: follows the pointer inside the chart card. -->
+            <div class={tooltipClass} style={tooltipStyle} aria-hidden="true">
+                <template lwc:if={tipTitle}>
+                    <p class="tip__title">{tipTitle}</p>
+                </template>
+                <template for:each={tipRows} for:item="row">
+                    <div key={row.key} class="tip__row">
+                        <span class="tip__swatch" style={row.swatchStyle}></span>
+                        <span class="tip__label">{row.label}</span>
+                        <span class="tip__value">{row.value}</span>
+                        <template lwc:if={row.pct}>
+                            <span class="tip__pct">{row.pct}</span>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template lwc:else>
+            <div class="chart-card__empty">{emptyMessageResolved}</div>
+        </template>
+    </section>
+</template>

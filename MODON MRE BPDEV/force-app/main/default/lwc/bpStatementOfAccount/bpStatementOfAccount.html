@@ -1,0 +1,410 @@
+<template>
+
+    <!-- ============================================================
+         LOADING
+         ============================================================ -->
+    <template if:true={isLoading}>
+        <div class="soa-loading">
+            <lightning-spinner
+                alternative-text="Loading Statement of Account"
+                variant="brand"
+                size="medium">
+            </lightning-spinner>
+        </div>
+    </template>
+
+
+    <!-- ============================================================
+         ERROR
+         ============================================================ -->
+    <template if:true={error}>
+        <div class="soa-error">
+            <lightning-icon
+                icon-name="utility:error"
+                variant="error"
+                size="small">
+            </lightning-icon>
+
+            <div>
+                <p class="soa-error-title">
+                    Unable to load Statement of Account
+                </p>
+
+                <p class="soa-error-message">
+                    {error}
+                </p>
+            </div>
+        </div>
+    </template>
+
+
+    <!-- ============================================================
+         MAIN CONTENT
+         Layout mirrors the NewSOA Visualforce page section by section.
+         ============================================================ -->
+    <template if:true={soa}>
+
+        <!-- ACTION BAR (Refresh / Download PDF) -->
+        <div class="actionBar">
+            <button
+                type="button"
+                class="refreshBtn"
+                disabled={isRefreshing}
+                onclick={handleRefresh}>
+                <span class="refreshIcon">&#8635;</span>Refresh
+            </button>
+
+            <button
+                type="button"
+                class="downloadBtn"
+                disabled={isDownloadDisabled}
+                onclick={handleDownload}>
+                {downloadLabel}
+            </button>
+        </div>
+
+        <div class="pageWrapper">
+
+            <!-- HEADER -->
+            <div class="topHeader">
+
+                <div class="headerTop">
+                    <div class="statementTitle">
+                        STATEMENT OF ACCOUNT
+                    </div>
+
+                    <div class="logoCell">
+                        <img src={logoUrl} alt="Modon"/>
+                    </div>
+                </div>
+
+                <div class="headerInfo">
+                    <div class="headerInfoCustomer">
+                        <div class="headerLabel">Customer Name</div>
+                        {customerName}
+                    </div>
+
+                    <div class="headerInfoDate">
+                        <div class="headerLabel">Date</div>
+                        {todayDateDisplay}
+                    </div>
+                </div>
+
+                <template if:true={hasJointOwners}>
+                    <div class="jointOwners">
+                        <b>Joint Owner(s):</b> {jointOwnerNames}
+                    </div>
+                </template>
+            </div>
+
+
+            <!-- UNIT SPECIFICATION -->
+            <div class="mintBlock unitSpecBlock">
+
+                <div class="sectionTitle">
+                    UNIT SPECIFICATION
+                </div>
+
+                <div class="unitCard">
+                    <div class="unitGrid">
+
+                        <div class="unitCell">
+                            <span class="unitLabel">SPA DATE :</span>
+                            {spaDateDisplay}
+                        </div>
+
+                        <div class="unitCell">
+                            <span class="unitLabel">TYPE :</span>
+                            {unitType}
+                        </div>
+
+                        <div class="unitCell">
+                            <span class="unitLabel">PROJECT :</span>
+                            {projectName}
+                        </div>
+
+                        <div class="unitCell">
+                            <span class="unitLabel">PRICE (AED) :</span>
+                            {priceDisplay}
+
+                            <template if:true={showLpc}>
+                                <div class="unitSubLine">
+                                    <span class="unitLabel">LATE PAYMENT CHARGES :</span>
+                                    1% per month
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="unitCell">
+                            <span class="unitLabel">ADM DISTRICT :</span>
+                            {admDistrict}
+
+                            <div class="unitSubLine">
+                                <span class="unitLabel">ADM PLOT/UNIT NO. :</span>
+                                {admPlotNo}
+                            </div>
+                        </div>
+
+                        <div class="unitCell">
+                            <span class="unitLabel">UNIT/PLOT NO. :</span>
+                            {unitName}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- PAYMENT PLAN DETAIL -->
+            <div class="mintBlock">
+
+                <div class="sectionTitle">
+                    PAYMENT PLAN DETAIL
+                </div>
+
+                <div class="tableCard">
+                    <table class="soa-table">
+
+                        <thead>
+                            <tr>
+                                <th class="w11">Due Date</th>
+                                <th class="w5">Ins #</th>
+                                <th class="w8">Invoice No.</th>
+                                <th class="w4">%</th>
+                                <th class="w11">Amount (AED)</th>
+                                <th class="w15">Cheque/Transaction No.</th>
+                                <th class="w10">Cleared Date</th>
+                                <th class="w8">Status</th>
+                                <th class="w13">Amount<br/>Collected (AED)</th>
+                                <th class="w13">Amount<br/>Outstanding (AED)</th>
+                                <template if:true={showLpc}>
+                                    <th class="w12">Late Payment<br/>Charge (AED)</th>
+                                </template>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <template for:each={paymentRows} for:item="row">
+                                <tr key={row.rowKey} class={row.rowClass}>
+
+                                    <td data-label="Due Date">{row.dueDateDisplay}</td>
+                                    <td data-label="Ins #">{row.installmentNumberDisplay}</td>
+                                    <td data-label="Invoice No.">{row.invoiceNo}</td>
+                                    <td data-label="%">{row.milestonePercentDisplay}</td>
+                                    <td data-label="Amount (AED)">{row.amountDisplay}</td>
+
+                                    <td data-label="Cheque/Transaction No.">
+                                        <div class="allocLines">
+                                            <template for:each={row.allocations} for:item="alloc">
+                                                <div key={alloc.key} class="allocLine">{alloc.transactionNumber}</div>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Cleared Date">
+                                        <div class="allocLines">
+                                            <template for:each={row.allocations} for:item="alloc">
+                                                <div key={alloc.key} class="allocLine">{alloc.ebsClearingDateDisplay}</div>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Status">
+                                        <div class="allocLines">
+                                            <template for:each={row.allocations} for:item="alloc">
+                                                <div key={alloc.key} class="allocLine">{alloc.receiptStatus}</div>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Amount Collected (AED)">
+                                        <div class="allocLines">
+                                            <template for:each={row.allocations} for:item="alloc">
+                                                <div key={alloc.key} class="allocLine">{alloc.allocationAmountDisplay}</div>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Amount Outstanding (AED)">{row.outstandingDisplay}</td>
+
+                                    <template if:true={showLpc}>
+                                        <td data-label="Late Payment Charge (AED)">{row.lpcAmountDisplay}</td>
+                                    </template>
+                                </tr>
+                            </template>
+
+                            <!-- PAYMENT PLAN TOTAL ROW -->
+                            <tr class="total-row">
+                                <td colspan="4" class="totalCaption">Total (AED)</td>
+                                <td data-label="Amount (AED)">{totalAmountDisplay}</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td data-label="Amount Collected (AED)">{totalAmountCollectedDisplay}</td>
+                                <td data-label="Amount Outstanding (AED)">{totalAmountOutstandingDisplay}</td>
+                                <template if:true={showLpc}>
+                                    <td data-label="Late Payment Charge (AED)">{totalLatePaymentDisplay}</td>
+                                </template>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- OTHER PAYMENT DETAILS -->
+            <div class="mintBlockSmall">
+
+                <div class="sectionTitle">
+                    OTHER PAYMENT DETAILS
+                </div>
+
+                <div class="tableCard">
+                    <table class="soa-table">
+
+                        <thead>
+                            <tr>
+                                <th class="w12">Due Date</th>
+                                <th class="w12">Invoice No.</th>
+                                <th class="w16">Transaction Type</th>
+                                <th class="w13">Amount (AED)</th>
+                                <th class="w18">Cheque/Transaction No.</th>
+                                <th class="w10">Cleared Date</th>
+                                <th class="w10">Status</th>
+                                <th class="w15">Amount Collected (AED)</th>
+                                <th class="w14">Amount Outstanding (AED)</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <template for:each={otherPaymentRows} for:item="row">
+                                <tr key={row.rowKey} class={row.rowClass}>
+
+                                    <td data-label="Due Date">{row.dueDateDisplay}</td>
+                                    <td data-label="Invoice No.">{row.invoiceNo}</td>
+                                    <td data-label="Transaction Type">{row.transactionType}</td>
+                                    <td data-label="Amount (AED)">{row.amountDisplay}</td>
+
+                                    <td data-label="Cheque/Transaction No.">
+                                        <div class="allocLines">
+                                            <template for:each={row.allocations} for:item="alloc">
+                                                <div key={alloc.key} class="allocLine">{alloc.transactionNumber}</div>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Cleared Date">
+                                        <div class="allocLines">
+                                            <template for:each={row.allocations} for:item="alloc">
+                                                <div key={alloc.key} class="allocLine">{alloc.ebsClearingDateDisplay}</div>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Status">{row.invoiceStatus}</td>
+                                    <td data-label="Amount Collected (AED)">{row.amountCollectedDisplay}</td>
+                                    <td data-label="Amount Outstanding (AED)">{row.outstandingDisplay}</td>
+                                </tr>
+                            </template>
+
+                            <!-- OTHER PAYMENT TOTAL ROW (Amount total hidden, as on NewSOA) -->
+                            <tr class="total-row">
+                                <td colspan="3" class="totalCaption">Total (AED)</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td data-label="Amount Collected (AED)">{totalOtherAmountCollectedDisplay}</td>
+                                <td data-label="Amount Outstanding (AED)">{totalOtherAmountOutstandingDisplay}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- TOTAL OUTSTANDING -->
+            <div class="whiteBlock grandTotalBlock">
+                <div class="grandTotalCard">
+
+                    <template if:true={showUnclearedReceipts}>
+                        <div class="grandTotalRow">
+                            <span class="grandTotalLabel">Uncleared Receipts Amount (AED)</span>
+                            <span class="grandTotalValue">{unclearedReceiptsAmountDisplay}</span>
+                        </div>
+                    </template>
+
+                    <template if:true={showTotalExcess}>
+                        <div class="grandTotalRow">
+                            <span class="grandTotalLabel">Total Excess Amount (AED)</span>
+                            <span class="grandTotalValue">{totalExcessAmountDisplay}</span>
+                        </div>
+                    </template>
+
+                    <div class="grandTotalRow">
+                        <span class="grandTotalLabel">TOTAL OUTSTANDING (AED)</span>
+                        <span class="grandTotalValue">{grandTotalOutstandingDisplay}</span>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ESCROW ACCOUNT DETAILS -->
+            <div class="mintBlockSmall escrowSection">
+
+                <div class="sectionTitle">
+                    ESCROW ACCOUNT DETAILS
+                </div>
+
+                <div class="bankCard">
+                    <div class="bankRow">
+                        <div class="bankMode">Payable via : Cheque</div>
+                        <div class="bankDetail">
+                            Account Name :
+                            <b>{escrowAccountName}</b>
+                        </div>
+                    </div>
+
+                    <div class="bankRow">
+                        <div class="bankMode">Payable via : Bank Transfer</div>
+                        <div class="bankDetail">
+                            Bank Name : <b>{escrowBankName}</b><br/>
+                            Account Number : {virtualAccountNumber}<br/>
+                            IBAN : {virtualIbanNumber}<br/>
+                            Swift Code : <b>{swiftCode}</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- FOOTER / DISCLAIMER -->
+            <div class="footer">
+                <div class="footerLeft">
+                    <span class="footerDisclaimerTitle">Disclaimer:</span>
+                    <div class="footerDisclaimerLines">
+                        * Cheque payments will be applied only after the cheque has been successfully cleared.<br/>
+                        * For all modes of payment, please allow 3&#8211;5 working days for the payment to be reflected in the Statement of Account.<br/>
+                        * This is a system-generated document; therefore, no stamp or signature is required.
+                    </div>
+
+                    <div class="footerWebsite">
+                        www.modon.com
+                    </div>
+                </div>
+
+                <div class="footerRight">
+                    20th Floor, Al Maryah Tower,<br/>
+                    Abu Dhabi Global Market Square,<br/>
+                    Al Maryah Island, P.O. Box: 26866,<br/>
+                    Abu Dhabi, UAE<br/>
+                    T 800MODON | E customercare@modon.com
+                </div>
+            </div>
+
+        </div>
+
+    </template>
+
+</template>

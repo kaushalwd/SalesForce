@@ -1,0 +1,298 @@
+<template>
+    <!-- 1.12 - the confirmation moved to c-msc-settlement-header, which renders ABOVE
+         this component. Here it appeared below the figure, the two legs and the fee
+         formula: the most important thing that had happened to the booking, in the
+         middle of the card, under a heading still asking to be paid "to confirm this
+         booking". One statement of the fact, at the top, where it is read first. -->
+
+    <!-- 1.8 - the recap and the Due Now figure are gone.
+         The recap listed Unit, Project, Customer, Residency, Payment Plan and Total
+         Price. The summary rail lists the same six, and the collapsed cards above
+         list them a third time - so the agent read the same facts three times and
+         had to decide which copy to trust. The rail is the record of the booking.
+         Due Now went with it: c-msc-settlement-header now states the one figure this
+         step is about, and three totals on one screen is two too many. -->
+
+    <!-- 1.2 - THE BOOKING FEE, and the button that collects it.
+         Confirming used to write the Sales Order and reserve the unit without a
+         dirham changing hands - the fee lines were raised and then ignored. This
+         is the same gate unitBookingJourney puts on its Book button: what is
+         owed, what has landed, and no confirmation until they match. -->
+    <template lwc:if={showFees}>
+        <!-- 1.9 - the fee ROW LIST is gone, and so is the leading rule.
+             The list showed ADM + Dari and Down Payment with their amounts and
+             statuses - which is exactly what the settlement header states above it
+             and what the ledger states below it, so the same two obligations were
+             on screen three times. What is left here is the ACTION: hold the unit,
+             take the payment, and confirm once it lands.
+             The rule went with it; the parent now supplies the separation, and a
+             divider as the first element rendered a hairline directly under the
+             header with nothing between them. -->
+
+        <!-- 1.10 - ONE DECISION AT A TIME.
+             `lwc:else` used to hang off {showHold}, not off {confirmingPay} - so
+             pressing Take payment opened its own confirmation AND left the original
+             buttons rendered underneath it. Two white primary buttons on one screen,
+             with a live "Take payment" sitting below the prompt asking whether to
+             take payment. It also stranded the expired-hold case: that note tells the
+             agent to "Press Take payment", and the button was not rendered while
+             {showHold} was true.
+             Confirming now replaces the actions; everything else shows the hold (when
+             there is one) above the actions, so the instruction and the button it
+             names are always on screen together. -->
+        <!-- 1.15 - the DECIDING state is gone. Take payment used to open the hold
+             prompt with a Cancel beside it - one press to read the sentence, a second
+             to act on it. The prompt is now simply on screen in the idle state below,
+             with its one button, and Take payment inside the waiting strip acts at
+             once (its hint already says what it does). -->
+        <template lwc:if={waiting}>
+            <div class="paywait">
+                <div class="paywait__head">
+                    <span class="paywait__title">
+                        <span class={waitDotClass}></span>
+                        <span>{waitTitle}</span>
+                    </span>
+                    <!-- 1.7 - what is left of the hold, counted down. The static "10
+                         minutes" in the prompt is the LENGTH of the window; this is the
+                         remainder. It belongs here, beside what it is protecting. -->
+                    <template lwc:if={showHold}>
+                        <span class={holdClass}>
+                            <c-modon-icon name="clock" size="14" color="currentColor"></c-modon-icon>
+                            <span>{holdText}</span>
+                        </span>
+                    </template>
+                </div>
+
+                <p class="paywait__body">{waitBody}</p>
+
+                <!-- 1.21 - one quiet row per fee's payment link -->
+                <template lwc:if={showLinks}>
+                    <ul class="links" aria-label="Payment links">
+                        <template for:each={feeLinks} for:item="l">
+                            <li key={l.key} class="links__row">
+                                <span class="links__fee">{l.label}</span>
+                                <span class="links__amt">{l.amountText}</span>
+                                <span class={l.cls}>{l.statusText}</span>
+                                <span class="links__until">{l.untilText}</span>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+
+                <!-- 1.19 - the question before Release unit, in place of the link while it is open -->
+                <template lwc:if={askReleaseLive}>
+                    <div class="release" role="group" aria-label={labels.PAY_RELEASE_ASK} onkeydown={handleReleaseKey}>
+                        <span class="release__q">{labels.PAY_RELEASE_ASK}</span>
+                        <button class="btn btn-ghost btn-sm" type="button" disabled={cancellingHold} onclick={handleReleaseYes}>{labels.PAY_RELEASE_YES}</button>
+                        <button class="btn btn-link btn-sm" type="button" onclick={handleReleaseNo}>{labels.CTA_CANCEL}</button>
+                    </div>
+                </template>
+
+                <div class="paywait__actions">
+                    <!-- Giving the unit back is the least likely thing to be wanted, so
+                         it sits at the far left as a link rather than a third button
+                         competing with the two that move the booking forward. -->
+                    <template lwc:if={showCancelHold}>
+                        <button
+                            class="btn btn-link btn-sm"
+                            type="button"
+                            disabled={releaseDisabled}
+                            title={releaseTitle}
+                            onclick={handleCancelHold}
+                        >{cancelHoldLabel}</button>
+                    </template>
+                    <span class="paywait__gap"></span>
+                    <template lwc:if={showRefresh}>
+                        <button
+                            class="btn btn-ghost"
+                            type="button"
+                            title={refreshTitle}
+                            disabled={refreshDisabled}
+                            onclick={handleRefresh}
+                        >
+                            <span class={refreshIconClass}>
+                                <c-modon-icon name="refresh-cw" size="14" color="currentColor"></c-modon-icon>
+                            </span>
+                            <span>Check payment</span>
+                        </button>
+                    </template>
+                    <!-- Live, not disabled. An agent who closed the terminal tab - or who
+                         reopened this booking from Total Sales - had no way back to it. -->
+                    <button class="btn btn-primary" type="button" onclick={handlePayClick} disabled={payDisabled}>
+                        {payLabel}
+                    </button>
+                </div>
+                <!-- 1.21 - why Release unit cannot be pressed yet -->
+                <template lwc:if={showReleaseWait}>
+                    <p class="links__wait">{releaseWaitText}</p>
+                </template>
+                <p class="paywait__hint">{payHint}</p>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <!-- The LAPSED hold. A running one is inside the strip above; this is the
+                 case where the unit has gone back on sale, and the note tells the agent
+                 to press a button that 1.10 made sure is rendered right below it. -->
+            <!-- 1.14 - and it is TWO situations, not one. With money already
+                 collected the unit stays reserved (journey 07), so both the pill and
+                 the sentence follow the money rather than the clock. This used to be
+                 one hardcoded line telling every agent another agent could take the
+                 unit - including the ones whose customer had just paid for it. -->
+            <template lwc:if={showLapsedHold}>
+                <div class="row-between hold__row">
+                    <span class={lapsedHoldClass}>
+                        <c-modon-icon name="clock" size="14" color="currentColor"></c-modon-icon>
+                        <span>{lapsedHoldText}</span>
+                    </span>
+                    <!-- 1.19 - a lapsed hold can be given back too while nothing is paid (GR-10) -->
+                    <template lwc:if={showLapsedRelease}>
+                        <button
+                            class="btn btn-link btn-sm"
+                            type="button"
+                            disabled={releaseDisabled}
+                            title={releaseTitle}
+                            onclick={handleCancelHold}
+                        >{cancelHoldLabel}</button>
+                    </template>
+                </div>
+                <template lwc:if={askReleaseLapsed}>
+                    <div class="release" role="group" aria-label={labels.PAY_RELEASE_ASK} onkeydown={handleReleaseKey}>
+                        <span class="release__q">{labels.PAY_RELEASE_ASK}</span>
+                        <button class="btn btn-ghost btn-sm" type="button" disabled={cancellingHold} onclick={handleReleaseYes}>{labels.PAY_RELEASE_YES}</button>
+                        <button class="btn btn-link btn-sm" type="button" onclick={handleReleaseNo}>{labels.CTA_CANCEL}</button>
+                    </div>
+                </template>
+                <!-- 1.21 - the links that lapsed, so the rep sees which were sent -->
+                <template lwc:if={showLinks}>
+                    <ul class="links" aria-label="Payment links">
+                        <template for:each={feeLinks} for:item="l">
+                            <li key={l.key} class="links__row">
+                                <span class="links__fee">{l.label}</span>
+                                <span class="links__amt">{l.amountText}</span>
+                                <span class={l.cls}>{l.statusText}</span>
+                                <span class="links__until">{l.untilText}</span>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+                <template lwc:if={showReleaseWait}>
+                    <p class="links__wait">{releaseWaitText}</p>
+                </template>
+                <p class={lapsedNoteClass}>{lapsedNote}</p>
+            </template>
+
+            <!-- 1.13 - the row exists only if something is in it. Once the fee is
+                 settled both controls are gone: Check payment has nothing left to
+                 check, and Take payment used to become a disabled "Payment received"
+                 sitting directly above a live Confirm Booking - two stacked primaries
+                 with the dead one on top. -->
+            <!-- 1.15 - THE PROMPT IS THE ACTION. This used to be a Take payment button
+                 that opened the block below with a Cancel beside it. The block is on
+                 screen outright now and has one button. Check payment keeps the place
+                 it had - at the primary's left - so nothing else moves. -->
+            <template lwc:if={showActionRow}>
+                <div class="fees__actions">
+                    <template lwc:if={watchNote}>
+                        <p class="t-xs t-dim fees__note">{watchNote}</p>
+                    </template>
+                    <template lwc:if={showPayAction}>
+                        <div class="payprompt fees__prompt">
+                            <p class="payprompt__lead">
+                                <c-modon-icon name="info" size="15" color="var(--text-muted, #a3a3a3)"></c-modon-icon>
+                                <span>{holdPrompt}</span>
+                            </p>
+                            <p class="payprompt__note">{payNote}</p>
+                            <div class="payprompt__actions">
+                                <!-- 1.6 - the money arrives through a callback outside this
+                                     page, so the screen only knows when it asks. Same control
+                                     as the KYC refresh in mscCompliance, for the same reason. -->
+                                <template lwc:if={showRefresh}>
+                                    <button
+                                        class="btn btn-ghost"
+                                        type="button"
+                                        title={refreshTitle}
+                                        disabled={refreshDisabled}
+                                        onclick={handleRefresh}
+                                    >
+                                        <span class={refreshIconClass}>
+                                            <c-modon-icon name="refresh-cw" size="14" color="currentColor"></c-modon-icon>
+                                        </span>
+                                        <span>Check payment</span>
+                                    </button>
+                                </template>
+                                <button class="btn btn-primary" type="button" onclick={handlePayClick} disabled={payDisabled}>
+                                    {startLabel}
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </template>
+
+        <template lwc:if={feeBlockerText}>
+            <p class="t-xs t-dim fees__blocker">{feeBlockerText}</p>
+        </template>
+    </template>
+
+    <!-- Blockers name their own remedy, so the button being disabled is never
+         a dead end.
+         1.12 - and ONLY while confirming is still ahead. "Before confirming: ADM + Dari
+         has not been received yet" rendered directly BELOW "Booking confirmed", which
+         reads as though the booking had been made in error. The fee is still owed after
+         Confirm - the settlement header above says so - but it is no longer a blocker,
+         because there is nothing left for it to block. -->
+    <template lwc:if={showBlockers}>
+        <div class="banner banner--warn blockers">
+            <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #d97706)"></c-modon-icon>
+            <span>
+                <strong class="t-semi">Before confirming:</strong>
+                <ul class="blockers__list">
+                    <template for:each={blockerRows} for:item="b">
+                        <li key={b.key}>{b.text}</li>
+                    </template>
+                </ul>
+            </span>
+        </div>
+    </template>
+
+    <!-- 1.4 - hidden, not merely disabled, while a required booking fee is unpaid.
+         Confirming is the step AFTER the money lands, so offering it early describes a
+         sequence that does not exist. Take payment is the only action until it clears. -->
+    <template lwc:if={showConfirm}>
+        <!-- 1.9 - right-aligned by the container, not by an empty <span> holding the
+             other end of a space-between row. The spacer needed its own phone rule to
+             stop it claiming a blank line, which is a lot of machinery for "put the
+             button on the right". -->
+        <div class="confirm__actions">
+            <!-- 1.16 - the hold's state, where the ledger below used to say it. -->
+            <template lwc:if={showConfirmHold}>
+                <span class="confirm__hold-wrap">
+                    <span class={confirmHoldClass}>{confirmHoldText}</span>
+                    <template lwc:if={confirmHoldNote}>
+                        <span class="confirm__hold-note">{confirmHoldNote}</span>
+                    </template>
+                </span>
+            </template>
+            <!-- 1.18 - no booking fee: the unit's EOI deposit covers it -->
+            <template lwc:if={showEoiFeeNote}>
+                <span class="confirm__eoi-note">{labels.RC_FEE_BY_EOI}</span>
+            </template>
+            <!-- 1.20 - the Sales App's required tick before the sales order is generated -->
+            <label class="confirm__tick">
+                <input type="checkbox" checked={confirmAll} disabled={busy} onchange={handleConfirmAllChange} />
+                <span>{labels.RC_CONFIRM_ALL}</span>
+            </label>
+            <button class="btn btn-primary btn-confirm" type="button" onclick={handleConfirm} disabled={confirmDisabled}>
+                {confirmLabel}
+            </button>
+        </div>
+    </template>
+
+    <!-- 1.17 / MSC-098b - WHERE THE BOOKING GOES NEXT moved up. The advance strip
+         (note + rule + Continue to Verification) rendered here from 1.12; the button
+         now rides beside the settlement header's figure (c-msc-settlement-header
+         `advance`), the note and the rule retired with the strip, so the card ends
+         on the ledger instead of another stacked band. -->
+</template>

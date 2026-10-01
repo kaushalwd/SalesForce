@@ -1,0 +1,119 @@
+<template>
+    <lightning-card title="Broker Classification - Manual Run" icon-name="standard:scheduling">
+        <div class="slds-p-around_medium">
+            <!-- Instructions -->
+            <lightning-layout>
+                <lightning-layout-item padding="around-small" size="12">
+                    <div class="slds-box slds-theme_info slds-m-bottom_medium">
+                        <p class="slds-text-heading_small slds-m-bottom_x-small">
+                            <lightning-icon icon-name="utility:info_alt" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                            Before you run this
+                        </p>
+                        <ul class="slds-list_dotted">
+                            <li>Pick a <b>12-month window</b> — start and end month, exactly 12 months apart (e.g. Jan 2025 – Dec 2025).</li>
+                            <li>The end month must be a <b>completed month</b> — not the current month or later.</li>
+                            <li>Each broker account will show <b>only its most recent</b> classification after this runs.</li>
+                            <li>A historical performance record is <b>created</b> for a new period, or <b>updated</b> if one already exists.</li>
+                        </ul>
+                    </div>
+                </lightning-layout-item>
+            </lightning-layout>
+
+            <!-- Date Selection -->
+            <lightning-layout multiple-rows>
+                <lightning-layout-item padding="around-small" size="12" small-device-size="12" medium-device-size="6">
+                    <lightning-input
+                        type="month"
+                        name="startMonth"
+                        label="Start Month"
+                        value={startMonth}
+                        onchange={handleStartMonthChange}
+                        max={maxDate}
+                        required>
+                    </lightning-input>
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small" size="12" small-device-size="12" medium-device-size="6">
+                    <lightning-input
+                        type="month"
+                        name="endMonth"
+                        label="End Month"
+                        value={endMonth}
+                        onchange={handleEndMonthChange}
+                        max={maxDate}
+                        required>
+                    </lightning-input>
+                </lightning-layout-item>
+
+                <!-- Selected Period Display -->
+                <lightning-layout-item padding="around-small" size="12" if:true={startMonth}>
+                    <div class="slds-box slds-theme_shade slds-text-align_center">
+                        <p class="slds-text-body_small slds-m-bottom_xx-small">Selected period</p>
+                        <p class="slds-text-heading_medium">
+                            {startMonth} to {endMonth}
+                        </p>
+                    </div>
+                </lightning-layout-item>
+
+                <!-- Run Button -->
+                <lightning-layout-item padding="around-small" size="12" class="slds-text-align_center">
+                    <lightning-button
+                        variant="brand"
+                        label="Run Classification"
+                        title="Run broker classification for selected period"
+                        onclick={handleRunBatch}
+                        disabled={isLoading}
+                        class="slds-m-top_medium">
+                    </lightning-button>
+                </lightning-layout-item>
+            </lightning-layout>
+
+            <!-- Loading Spinner -->
+            <div if:true={isLoading} class="slds-is-relative slds-m-top_large">
+                <lightning-spinner alternative-text="Processing..." size="medium"></lightning-spinner>
+                <p class="slds-text-align_center slds-m-top_medium">Processing classifications... this can take a minute.</p>
+            </div>
+
+            <!-- Classification Summary -->
+            <div if:true={showSummary} class="slds-m-top_large">
+                <div class="slds-box slds-theme_success slds-m-bottom_medium">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <div>
+                            <p class="slds-text-heading_small">
+                                <lightning-icon icon-name="utility:success" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                Classification summary
+                            </p>
+                        </div>
+                        <div>
+                            <lightning-button
+                                label="Refresh"
+                                icon-name="utility:refresh"
+                                onclick={handleRefreshSummary}
+                                variant="neutral">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <lightning-layout multiple-rows class="summary-cards">
+                    <template for:each={summaryData} for:item="tier">
+                        <lightning-layout-item padding="around-small" size="12" small-device-size="6" medium-device-size="4" key={tier.tierName}>
+                            <div class="slds-box classification-card">
+                                <div class="tier-name">{tier.tierName}</div>
+                                <div class="tier-count">{tier.count}</div>
+                                <div class="tier-label">Brokers</div>
+                            </div>
+                        </lightning-layout-item>
+                    </template>
+                </lightning-layout>
+
+                <!-- Total -->
+                <div class="slds-box slds-theme_shade slds-text-align_center slds-m-top_medium">
+                    <p class="slds-text-body_small">Total broker accounts</p>
+                    <p class="slds-text-heading_large">{totalAccounts}</p>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>

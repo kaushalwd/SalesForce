@@ -1,0 +1,174 @@
+<template>
+    <lightning-card title="Associate Payment Installments" icon-name="utility:currency">
+
+        <lightning-button-icon slot="actions" icon-name={fullScreenIcon} alternative-text={fullScreenLabel}
+            title={fullScreenLabel} onclick={handleToggleFullScreen}>
+        </lightning-button-icon>
+
+        <div class="slds-p-around_medium pi-body">
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon icon-name="utility:error" variant="inverse" size="x-small"
+                        class="slds-m-right_x-small"></lightning-icon>
+                    {errorMessage}
+                </div>
+            </template>
+
+            <template if:false={hasError}>
+
+                <div
+                    class="slds-grid slds-grid_align-spread slds-wrap slds-m-bottom_small pi-toolbar slds-box slds-theme_shade">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                        <lightning-input type="search" label="Filter by Milestone Description"
+                            placeholder="Filter by Milestone Description" value={descriptionFilter}
+                            onchange={handleFilterChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-6">
+                        <lightning-input type="date" label="Milestone Date From" value={fromDateFilter}
+                            onchange={handleFromDateChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-6">
+                        <lightning-input type="date" label="Milestone Date To" value={toDateFilter}
+                            onchange={handleToDateChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-6 pi-toolbar-actions">
+                        <lightning-button label="Clear" icon-name="utility:clear" disabled={hasNoActiveFilters}
+                            onclick={handleClearFilters}>
+                        </lightning-button>
+                        <lightning-button class="slds-m-left_x-small" label="Download (Excel)"
+                            icon-name="utility:download" disabled={isDownloadDisabled} onclick={handleDownload}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                    <p class="slds-text-body_small slds-text-color_weak">{matchCountLabel} found</p>
+                    <p class="slds-text-body_small slds-text-color_weak">{selectedCountLabel}</p>
+                </div>
+
+                <template if:true={hasNoMatches}>
+                    <div class="slds-illustration slds-illustration_small slds-p-around_medium slds-text-align_center">
+                        <lightning-icon icon-name="utility:search" size="medium"
+                            class="slds-m-bottom_small"></lightning-icon>
+                        <p>No Payment Installments match the current filter.</p>
+                    </div>
+                </template>
+
+                <template if:false={hasNoMatches}>
+                    <div class="pi-table-wrapper slds-scrollable_y">
+                        <table
+                            class="slds-table slds-table_bordered slds-table_striped slds-max-medium-table_stacked-horizontal">
+                            <colgroup>
+                                <!-- 1. # (Index) -->
+                                <col style="width: 1.5rem;" />
+                                <!-- 2. Checkbox -->
+                                <col style="width: 1.5rem;" />
+                                <!-- 3. Name -->
+                                <col style="width: 17%;" />
+                                <!-- 4. Milestone # -->
+                                <col style="width: 10%;" />
+                                <!-- 5. Milestone Description (Allowed to wrap naturally) -->
+                                <col style="width: 20%;" />
+                                <!-- 6. Milestone Date -->
+                                <col style="width: 11%;" />
+                                <!-- 7. Project -->
+                                <col style="width: 13%;" />
+                                <!-- 8. Phase -->
+                                <col style="width: 13%;" />
+                                <!-- 9. Status -->
+                                <col style="width: 16%;" />
+                            </colgroup>
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="slds-text-align_center">#</th>
+                                    <th scope="col" class="slds-text-align_center">
+                                        <lightning-input type="checkbox" variant="label-hidden" label="Select All"
+                                            checked={isAllSelected} onchange={handleSelectAllChange}>
+                                        </lightning-input>
+                                    </th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col" class="slds-text-align_center">Milestone #</th>
+                                    <th scope="col">Milestone Description</th>
+                                    <th scope="col">Milestone Date</th>
+                                    <th scope="col">Project</th>
+                                    <th scope="col">Phase</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={displayRows} for:item="row">
+                                    <tr key={row.id} class={row.rowClass}>
+                                        <td class="slds-text-color_weak slds-text-align_center">{row.serialNumber}</td>
+                                        <td class="slds-text-align_center">
+                                            <lightning-input type="checkbox" variant="label-hidden" label="Select"
+                                                data-id={row.id} checked={row.isSelected}
+                                                onchange={handleRowCheckboxChange}>
+                                            </lightning-input>
+                                        </td>
+                                        <td title={row.name}>{row.name}</td>
+                                        <td class="slds-text-align_center">{row.milestoneNumber}</td>
+                                        <td class="slds-cell-wrap" title={row.milestoneDescription}>
+                                            {row.milestoneDescription}</td>
+                                        <td>{row.milestoneDate}</td>
+                                        <td title={row.projectName}>{row.projectName}</td>
+                                        <td title={row.phaseName}>{row.phaseName}</td>
+                                        <td>
+                                            <template if:true={row.pendingRemoval}>
+                                                <span class="slds-badge slds-theme_warning">
+                                                    <lightning-icon icon-name="utility:dash" variant="inverse"
+                                                        size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                    Will be removed
+                                                </span>
+                                            </template>
+                                            <template if:false={row.pendingRemoval}>
+                                                <template if:true={row.alreadyAssociated}>
+                                                    <span class="slds-badge slds-theme_success">
+                                                        <lightning-icon icon-name="utility:check" variant="inverse"
+                                                            size="xx-small"
+                                                            class="slds-m-right_xx-small"></lightning-icon>
+                                                        Associated
+                                                    </span>
+                                                </template>
+                                                <template if:true={row.pendingAddition}>
+                                                    <span class="slds-badge slds-theme_info">
+                                                        <lightning-icon icon-name="utility:add" variant="inverse"
+                                                            size="xx-small"
+                                                            class="slds-m-right_xx-small"></lightning-icon>
+                                                        Will be added
+                                                    </span>
+                                                </template>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+            </template>
+
+        </div>
+
+        <div slot="footer" class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+            <span class="slds-text-body_small slds-text-color_weak">{selectedCountLabel}</span>
+            <div>
+                <lightning-button label="Cancel" icon-name="utility:close" onclick={handleCancel}>
+                </lightning-button>
+                <lightning-button class="slds-m-left_x-small" variant="brand" label="Save Changes"
+                    icon-name="utility:check" disabled={isSaveDisabled} onclick={handleSave}>
+                </lightning-button>
+            </div>
+        </div>
+
+    </lightning-card>
+</template>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sales_user_cant_change_Passport_and_EID</fullName>
+    <active>true</active>
+    <errorConditionFormula>(CONTAINS($UserRole.DeveloperName, &apos;Sales_Associate&apos;) || CONTAINS($UserRole.DeveloperName, &apos;Sales_Manager&apos;) || CONTAINS($UserRole.DeveloperName, &apos;Sales_Director&apos;)) &amp;&amp; TEXT(Source_Entity__c) != &apos;Modon - Egypt&apos; &amp;&amp;
+NOT(ISNEW()) &amp;&amp;
+
+(
+(ISCHANGED( UAE_Resident_Status__c ) &amp;&amp; PRIORVALUE(UAE_Resident_Status__c) != &apos;&apos;) ||
+(ISCHANGED( En_PassportNumber__c ) &amp;&amp; PRIORVALUE(En_PassportNumber__c) != &apos;&apos;) ||
+(ISCHANGED( PassportIssueDate__c ) &amp;&amp; NOT(ISBLANK(PRIORVALUE((PassportIssueDate__c))))) ||
+(ISCHANGED( PassportExpiryDate__c ) &amp;&amp; NOT(ISBLANK(PRIORVALUE((PassportExpiryDate__c))))) ||
+(ISCHANGED( En_EIDNumber__c ) &amp;&amp; PRIORVALUE(En_EIDNumber__c) != &apos;&apos;) ||
+(ISCHANGED( EmiratesIDExpiryDate__c ) &amp;&amp; NOT(ISBLANK(PRIORVALUE((EmiratesIDExpiryDate__c)))))
+)</errorConditionFormula>
+    <errorMessage>Sales associate team is not allowed to change the Emirates Id and Passport details.</errorMessage>
+</ValidationRule>

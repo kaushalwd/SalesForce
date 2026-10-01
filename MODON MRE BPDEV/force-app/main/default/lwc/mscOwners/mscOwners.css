@@ -1,0 +1,377 @@
+/* c/mscStyles carries .chip, .pill and .eyebrow. Everything below is this panel's
+   own: the ownership meter, the party rows, the basket strip and the coverage
+   line. Every colour is a token from c/mscTokens - never a literal, and never
+   color-mix(), which nothing in this codebase uses. */
+@import "c/mscStyles";
+
+.ow {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ── head ─────────────────────────────────────────────────────────────── */
+.ow__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.ow__head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+/* The 5px dot a semantic chip carries. Inherits the chip's own colour, so it
+   never needs a rule per state. */
+.ow__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    display: block;
+    flex-shrink: 0;
+}
+.chip {
+    gap: 5px;
+}
+/* The relationship, which is a fact about the person rather than a status. Reads
+   as a label, not as a state - it must never be mistaken for a chip that moves. */
+.chip--role {
+    color: var(--text, #fafafa);
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+/* Semantic chips take their BORDER from --edge-*, not from --chip-*: the chip
+   colours are tuned to be read as 11px text, and the same value on a 1px edge
+   reads as an alert. */
+.ow__chip--green {
+    color: var(--chip-green, #4ade80);
+    border-color: var(--edge-green, rgba(74, 222, 128, 0.34));
+}
+.ow__chip--amber {
+    color: var(--chip-amber, #fbbf24);
+    border-color: var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+/* MSC-082 - a link that is out. Blue rather than green: the rep's part is done,
+   which is what the verification chain below says too, but the person has not
+   verified yet and green would claim they had. */
+.ow__chip--blue {
+    color: var(--chip-blue, #60a5fa);
+    border-color: var(--edge-blue, rgba(96, 165, 250, 0.34));
+}
+/* MSC-083 - compliance said no. The only red on this panel, and it is earned:
+   Rejected and Cancelled are the two states where the booking cannot proceed and
+   the rep has to go and talk to somebody. Requires Resubmission is amber, not
+   red - it is work to do, not a wall. */
+.ow__chip--red {
+    color: var(--chip-red, #f87171);
+    border-color: var(--edge-red, rgba(248, 113, 113, 0.34));
+}
+
+/* Actions. .pill in c/mscStyles is already the quiet, outlined form, so Edit
+   needs only a size; the panel's one primary action is lifted to --pill-border. */
+.ow__add {
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+    /* MSC-087 - pinned right whether or not the coverage line is beside it.
+       .ow__foot is space-between, which only puts this on the right while there are
+       two children; a single-unit booking has no coverage sentence, so the button
+       was the only child and space-between left it hard against the left edge. */
+    margin-left: auto;
+}
+.ow__edit,
+.ow__verify {
+    min-height: 30px;
+    padding: 3px 12px;
+    font-size: 12px;
+}
+.ow__add[disabled],
+.ow__edit[disabled],
+.ow__verify[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+/* MSC-082 - the row's verification action. Left as the quiet outlined .pill, one
+   step below the panel's Add: sending a link is routine and repeatable, and two
+   equally loud buttons on one row would make the rep choose between them. */
+.ow__verify {
+    white-space: nowrap;
+}
+.ow__lock {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-dim, #8a8a8a);
+    padding: 4px;
+}
+.ow__assistive {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* ── the basket strip ─────────────────────────────────────────────────── */
+.ow__units {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+.ow__unit {
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 9px;
+    padding: 9px 12px;
+    min-width: 112px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+.ow__unit-name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+}
+.ow__unit-cap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    margin-top: 3px;
+}
+/* One state, shown twice - on the tile and on the coverage line - so it survives
+   whichever of the two the rep happens to look at. */
+.ow__unit--empty {
+    border-color: var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+.ow__unit--empty .ow__unit-cap {
+    color: var(--chip-amber, #fbbf24);
+}
+.ow__unit--closed {
+    opacity: 0.55;
+}
+
+/* ── the ownership meter ──────────────────────────────────────────────── */
+.ow__meter {
+    display: flex;
+    gap: 2px;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 14px 0 9px;
+    background: var(--seg-free, rgba(250, 250, 250, 0.08));
+}
+.ow__seg {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    min-width: 2px;
+}
+.ow__seg--primary {
+    background: var(--gold, #a8a8a8);
+}
+.ow__seg--1 {
+    background: var(--seg-1, rgba(250, 250, 250, 0.46));
+}
+.ow__seg--2 {
+    background: var(--seg-2, rgba(250, 250, 250, 0.28));
+}
+.ow__seg--3 {
+    background: var(--seg-3, rgba(250, 250, 250, 0.18));
+}
+.ow__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+.ow__key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.ow__swatch {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    display: block;
+    flex-shrink: 0;
+}
+.ow__key-scope {
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* ── the people ───────────────────────────────────────────────────────── */
+.ow__rows {
+    margin-top: 6px;
+}
+.ow__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 16px;
+    align-items: baseline;
+    padding: 14px 0;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.ow__row:first-child {
+    border-top: 0;
+}
+.ow__name {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.ow__name > strong {
+    font-weight: 500;
+    font-size: 14.5px;
+    color: var(--text, #fafafa);
+}
+.ow__share {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+/* The same figure, for the one-column layout. Hidden here, shown under 768. */
+.ow__share-inline {
+    display: none;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text, #fafafa);
+    margin-left: auto;
+}
+.ow__facts {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    min-width: 0;
+}
+.ow__side {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+/* MSC-082 - why this person cannot be verified from here, when nothing on the row
+   can change that. Spans both columns: it is a sentence about the person, not a
+   caption on the right-hand controls. */
+.ow__why {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-dim, #8a8a8a);
+    max-width: 62ch;
+    margin-top: 2px;
+}
+
+/* ── notes and the coverage line ──────────────────────────────────────── */
+.ow__note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 9px;
+    padding: 11px 13px;
+    margin-top: 14px;
+}
+.ow__note--warn {
+    color: var(--chip-amber, #fbbf24);
+    border-color: var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+.ow__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    margin-top: 4px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.ow__cov {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    max-width: 56ch;
+    line-height: 1.45;
+}
+.ow__cov--ok {
+    color: var(--chip-green, #4ade80);
+}
+.ow__cov--warn {
+    color: var(--chip-amber, #fbbf24);
+}
+
+/* ── phone ────────────────────────────────────────────────────────────────
+   The share column moves onto the name line, the basket scrolls sideways rather
+   than wrapping into a wall, and every target reaches 44px. */
+@media (max-width: 767px) {
+    .ow__row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    .ow__share {
+        display: none;
+    }
+    .ow__share-inline {
+        display: inline;
+    }
+    .ow__name > strong {
+        font-size: 14px;
+    }
+    .ow__side {
+        justify-content: flex-start;
+        margin-top: 2px;
+    }
+    .ow__units {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .ow__units::-webkit-scrollbar {
+        display: none;
+    }
+    .ow__unit {
+        flex: 0 0 auto;
+        min-width: 104px;
+    }
+    .ow__foot {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .ow__add {
+        width: 100%;
+        min-height: 44px;
+        /* the footer is a column here, so there is no right to pin to */
+        margin-left: 0;
+    }
+    /* MSC-085 - 44px, not 36. The block above says "every target reaches 44px"
+       and these three did not, which made the comment the only place the standard
+       was actually kept. c/mscStyles' own .btn rule states it outright: "a 36px
+       control is a miss on a touch screen, and 44px is the iOS and Android
+       minimum." These are the controls a rep presses most on a phone - Send link,
+       Resend link, Add details, Check compliance and Edit - so they were the worst
+       three to leave short. The row already stacks at this width, so the taller
+       box costs no layout. */
+    .ow__edit,
+    .ow__verify {
+        min-height: 44px;
+    }
+}

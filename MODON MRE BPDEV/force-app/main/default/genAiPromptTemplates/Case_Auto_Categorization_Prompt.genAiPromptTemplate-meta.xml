@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <activeVersionIdentifier>JDBeMw6BejsYuZv0lxbl4QgDRMmqnX8ysMFNsBT5J9Y=_1</activeVersionIdentifier>
+    <developerName>Case_Auto_Categorization_Prompt</developerName>
+    <masterLabel>Case_Auto_Categorization_Prompt</masterLabel>
+    <overridable>false</overridable>
+    <templateVersions>
+        <content>You are an expert customer service triage agent for Modon Real Estate.
+Your task is to analyze the customer&apos;s support request and select the single most accurate Category Label and Sub_Vertical.
+
+### Customer Case Details:
+- Subject: {!$Input:Case.Subject}
+- Description: {!$Input:Case.Description}
+
+### Category Classification Rules:
+{!$Apex:CaseCategoryPromptGrounding.Prompt}
+### Output Format:
+Respond ONLY with a valid JSON object in this exact format with no extra text or markdown formatting:
+{
+ &quot;Category&quot;: &quot;&lt;Exact Label of the matching Category&gt;&quot;,
+ &quot;Sub_Vertical&quot;: &quot;&lt;Exact Sub_Vertical Name&gt;&quot;
+}
+
+</content>
+        <fileDroppingStrategy>{&quot;dropFilesBy&quot;:&quot;LAST_MODIFIED_DATE&quot;,&quot;dropFileStartingWith&quot;:&quot;OLDEST&quot;}</fileDroppingStrategy>
+        <inputs>
+            <apiName>Case</apiName>
+            <definition>SOBJECT://Case</definition>
+            <masterLabel>Case</masterLabel>
+            <referenceName>Input:Case</referenceName>
+            <required>true</required>
+        </inputs>
+        <isCitationEnabled>false</isCitationEnabled>
+        <primaryModel>sfdc_ai__DefaultGPT5Mini</primaryModel>
+        <status>Published</status>
+        <templateDataProviders>
+            <definition>apex://CaseCategoryPromptGrounding</definition>
+            <description>Fetches all Case_Config_Category__mdt records and formats them for AI prompt grounding</description>
+            <label>Get Case Categories for AI</label>
+            <parameters>
+                <definition>SOBJECT://Case</definition>
+                <isRequired>false</isRequired>
+                <parameterName>caseRecord</parameterName>
+                <valueExpression>{!$Input:Case}</valueExpression>
+            </parameters>
+            <referenceName>Apex:CaseCategoryPromptGrounding</referenceName>
+        </templateDataProviders>
+        <versionIdentifier>JDBeMw6BejsYuZv0lxbl4QgDRMmqnX8ysMFNsBT5J9Y=_1</versionIdentifier>
+    </templateVersions>
+    <type>einstein_gpt__flex</type>
+    <visibility>Global</visibility>
+</GenAiPromptTemplate>

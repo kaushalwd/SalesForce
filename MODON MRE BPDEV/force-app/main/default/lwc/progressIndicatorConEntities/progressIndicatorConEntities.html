@@ -1,0 +1,205 @@
+<template>
+    <template if:true={isSpinner}>
+        <div class="slds-is-relative" style="min-height: 50vh" if:true={isSpinner}>
+            <lightning-spinner alternative-text="Loading" 
+                               size="medium">
+            </lightning-spinner>
+        </div>
+    </template>
+
+    <template if:false={isSpinner}>
+        <lightning-modal-header 
+                    label="Entity Details">
+        </lightning-modal-header>
+        <lightning-modal-body>
+            <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+                <lightning-accordion-section name="Details" label="Details">
+                     <lightning-record-edit-form
+                        object-api-name="Contact"
+                        record-id={content.EntityRecordId}
+                        onsubmit={onSubmit}
+                        onload={handleOnLoad}
+                    >
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-output-field
+                                field-name="Name"
+                                name="Name"
+                                required
+                            ></lightning-output-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Birthdate"
+                                name="Birthdate"
+                            ></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Nationality__c"
+                                name="Nationality__c"  
+                            ></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="UAE_Resident_Status__c"
+                                name="UAE_Resident_Status__c"
+                                value={UAEResidentStatus}
+                                onchange={handleChangeUAEResidentStatus}   
+                            ></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="IdentityProof__c"
+                                name="IdentityProof__c"
+                                value={IdentityProof}
+                                onchange={handleChangeIdentityProof}
+                            ></lightning-input-field>
+                        </div>
+                        <template if:true={isNotPrimaryContact}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <template if:true={isResident}>
+                                    <lightning-input-field
+                                        field-name="EIDNumber__c"
+                                        name="EIDNumber__c"  
+                                    ></lightning-input-field>
+                                </template>
+                            
+                                <template if:false={isResident}>
+                                    <lightning-input-field
+                                        field-name="PassportNumber__c"
+                                        name="PassportNumber__c"  
+                                    ></lightning-input-field>
+                                </template>
+                            </div>
+                        </template>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="MobilePhone"
+                                name="MobilePhone" 
+                            ></lightning-input-field>
+                        </div>
+                        <template if:true={isNotPrimaryContact}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="Occupation__c"
+                                    name="Occupation__c" 
+                                ></lightning-input-field>
+                            </div>
+                        </template>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="EmployerBusinessName__c"
+                                name="EmployerBusinessName__c"
+                            ></lightning-input-field>
+                        </div>
+                        
+                            <template if:true={isNotPrimaryContact}>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="PaymentMethod__c"
+                                    name="PaymentMethod__c" 
+                                ></lightning-input-field>
+                                </div>
+                            </template>
+                            <template if:true={isNotPrimaryContact}>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="PurposeOfTransaction__c"
+                                    name="PurposeOfTransaction__c"
+                                ></lightning-input-field>
+                                </div>
+                            </template>
+                            <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Email"
+                                name="Email"
+                            ></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="AreYouPoliticallyExposedPersonPEP__c"
+                                name="AreYouPoliticallyExposedPersonPEP__c" 
+                            ></lightning-input-field>
+                            </div>
+                            <template if:true={isNotPrimaryContact}>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="SourceOfIncome__c"
+                                    name="SourceOfIncome__c"   
+                                ></lightning-input-field>
+                                </div>
+                                <template if:true={isOtherIncome}>
+                                    <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input-field
+                                        field-name="OtherSourceOfIncome__c"
+                                        name="OtherSourceOfIncome__c"
+                                    ></lightning-input-field>
+                                    </div>
+                                </template>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="DeliveryChannel__c"
+                                    name="DeliveryChannel__c"
+                                ></lightning-input-field>
+                                </div>
+                                </template>
+                                <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="NoOfPropertyPurchasedWithModon__c"
+                                    name="NoOfPropertyPurchasedWithModon__c"
+                                ></lightning-input-field>
+                                </div>
+                                <div class="slds-col slds-size_2-of-2">
+                                    <lightning-input-field
+                                        field-name="MailingAddress"
+                                        name="MailingAddress"
+                                    ></lightning-input-field>
+                                </div>
+                            </div>
+                    <!--This button is hidden, it is being clicked in the js, not directly from UI.-->
+                    <div class="slds-align_absolute-center slds-m-top_small slds-m-bottom_medium">
+                        <lightning-button
+                            class="slds-hidden slds-m-left_x-small submitButton"
+                            variant="brand"
+                            type="submit"
+                            name="submitButton"
+                            label="submitButton"
+                        ></lightning-button>
+                    </div>
+                </lightning-record-edit-form>
+            </lightning-accordion-section>
+            <lightning-accordion-section name="Documents" label="Documents">
+                <c-passfort-document-upload-lwc recordid={recordId}></c-passfort-document-upload-lwc>
+            </lightning-accordion-section>
+        </lightning-accordion>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <div class="slds-align_absolute-center slds-m-top_small slds-m-bottom_medium">
+            <lightning-button
+                class="slds-m-left_x-small"
+                label="Cancel"
+                onclick={handleClose}
+            ></lightning-button>
+            <lightning-button
+                class="slds-m-left_x-small"
+                variant="brand"
+                id="SaveAsDraft"
+                onclick={handleSubmit}
+                name="SaveAsDraft"
+                label="Save as Draft"
+            ></lightning-button>
+            <template if:true={showSubmitForCompliance}>
+                <lightning-button
+                    class="slds-m-left_x-small"
+                    variant="brand"
+                    onclick={handleSubmitForCompliance}
+                    name="SubmitForCompliance"
+                    label="Submit for Compliance"
+                ></lightning-button>
+            </template>
+        </div>
+    </lightning-modal-footer>
+    </template>
+    
+</template>

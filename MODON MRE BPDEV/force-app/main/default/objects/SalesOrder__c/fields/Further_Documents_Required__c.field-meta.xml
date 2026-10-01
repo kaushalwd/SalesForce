@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Further_Documents_Required__c</fullName>
+    <description>Indicates documentation or payment evidence is still outstanding before this booking can progress. A formula rather than a stored checkbox so it cannot drift, and so it adds no DML to an already heavily-triggered object. Document_Checklist__c relates by Lookup, not Master-Detail, so a roll-up of rejected checklist rows is not available; the signal comes instead from the fields the checklist automation writes back here - SalesOrderStatusAutomationHelper routes a rejection by setting Sub_Status__c back to the team that must act, and maintains the two fee statuses. If a stronger signal is needed, maintain a real checkbox inside DocumentChecklistController.sendToNextTeam - never from the console controller, since progression also happens from internal Lightning, from SalesOrderStatusApprovalTrigger and from batch jobs.</description>
+    <formula>OR(
+  ISPICKVAL(Sub_Status__c, &quot;Pending with Sales&quot;),
+  ISPICKVAL(Sub_Status__c, &quot;Pending With Sales.&quot;),
+  ISPICKVAL(Sub_Status__c, &quot;Pending With Sales Operation&quot;),
+  ISPICKVAL(Sub_Status__c, &quot;Pending with CM&quot;),
+  ISPICKVAL(Down_Payment_Status__c, &quot;Partially Collected&quot;),
+  ISPICKVAL(Down_Payment_Status__c, &quot;Partially Paid&quot;),
+  ISPICKVAL(ADM_Fees_and_Dari__c, &quot;Partially Collected&quot;),
+  ISPICKVAL(ADM_Fees_and_Dari__c, &quot;Partially Paid&quot;)
+)</formula>
+    <inlineHelpText>Documentation or payment evidence is still outstanding on this booking.</inlineHelpText>
+    <label>Further Documents Required</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

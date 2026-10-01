@@ -1,0 +1,264 @@
+<!--
+@description       : 
+@author            : Krishna Chaitanya
+@group             : 
+@last modified on  : 01-26-2026
+@last modified by  : Krishna Chaitanya
+-->
+<template>
+    <lightning-quick-action-panel header="SR Payment Readiness">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading"></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <div class="pmsr-toolbar slds-m-bottom_small">
+                <div class="slds-text-body_small">
+                    <span class="slds-text-title_bold">Milestone:</span>
+                    <span class="slds-m-left_x-small">{milestoneName}</span>
+
+                    <template if:true={hasRows}>
+                        <span class="slds-m-left_medium slds-text-title_bold">Total Installments:</span>
+                        <span class="slds-m-left_x-small">{totalInstallmentCount}</span>
+
+                        <span class="slds-m-left_medium slds-text-title_bold">Total Amount:</span>
+                        <span class="slds-m-left_x-small">
+                            <lightning-formatted-number value={totalInstallmentAmount}
+                                maximum-fraction-digits="2"></lightning-formatted-number>
+                        </span>
+
+                        <span class="slds-m-left_medium slds-text-title_bold">Collected Amount:</span>
+                        <span class="slds-m-left_x-small">
+                            <lightning-formatted-number value={totalCollectedAmount}
+                                maximum-fraction-digits="2"></lightning-formatted-number>
+                        </span>
+
+                        <span class="slds-m-left_medium slds-text-title_bold">Outstanding Amount:</span>
+                        <span class="slds-m-left_x-small">
+                            <lightning-formatted-number value={totalOutstandingAmount}
+                                maximum-fraction-digits="2"></lightning-formatted-number>
+                        </span>
+
+                        <span class="slds-m-left_medium slds-text-title_bold">Yes:</span>
+                        <span class="slds-m-left_x-small">{yesSelectedCount}</span>
+
+                        <span class="slds-m-left_medium slds-text-title_bold">No:</span>
+                        <span class="slds-m-left_x-small">{noSelectedCount}</span>
+
+                        <span class="slds-m-left_medium slds-text-title_bold">Not Selected:</span>
+                        <span class="slds-m-left_x-small">{notSelectedCount}</span>
+                    </template>
+                </div>
+
+                <lightning-button-icon icon-name={fullScreenIcon} alternative-text={fullScreenLabel}
+                    title={fullScreenLabel} variant="border-filled" onclick={handleToggleFullScreen}>
+                </lightning-button-icon>
+            </div>
+
+            <template if:true={businessProcessMessage}>
+                <div class="slds-notify slds-notify_alert slds-theme_success slds-m-bottom_small" role="alert">
+                    {businessProcessMessage}
+                </div>
+            </template>
+
+            <template if:true={hasRows}>
+                <div class={tableWrapperClass}>
+                    <table
+                        class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout slds-table_striped">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col" style="width: 60px;">
+                                    <div class="">#</div>
+                                </th>
+                                <th scope="col" style="width: 120px;">
+                                    <div class="slds-truncate">SOI</div>
+                                </th>
+                                <th scope="col" style="width: 110px;">
+                                    <div class="slds-truncate">Sales Order</div>
+                                </th>
+                                <th scope="col" style="width: 140px;">
+                                    <div class="slds-truncate">Unit Name</div>
+                                </th>
+                                <th scope="col" style="width: 200px;">
+                                    <div class="slds-wrap-lines">Customer</div>
+                                </th>
+                                <th scope="col" style="width: 100px;">
+                                    <div class="slds-truncate">Due Date</div>
+                                </th>
+                                <th scope="col" style="width: 80px;">
+                                    <div class="slds-truncate">Amount</div>
+                                </th>
+                                <th scope="col" style="width: 130px;">
+                                    <div class="slds-truncate">Mode of Payment</div>
+                                </th>
+                                <th scope="col" style="width: 125px;">
+                                    <div class="slds-truncate">Applied Amount</div>
+                                </th>
+                                <th scope="col" style="width: 40px; text-align:center;">
+                                    <div class="slds-truncate">Yes</div>
+                                </th>
+                                <th scope="col" style="width: 40px; text-align:center;">
+                                    <div class="slds-truncate">No</div>
+                                </th>
+                                <th scope="col" style="width: 260px;">
+                                    <div class="slds-truncate">Comments</div>
+                                </th>
+                                <th scope="col" style="width: 160px;">
+                                    <div class="slds-truncate">Business Process</div>
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <template for:each={rows} for:item="r">
+                                <tr key={r.soiId} class="slds-hint-parent">
+                                    <td>
+                                        <div class="slds-truncate">{r.sno}</div>
+                                    </td>
+                                    <!-- <td>
+                                    <div class="slds-truncate" title={r.soiName}>{r.soiName}</div>
+                                </td>-->
+                                    <td>
+                                        <lightning-formatted-url value={r.soiUrl} label={r.soiName} target="_blank">
+                                        </lightning-formatted-url>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title={r.salesOrderName}>{r.salesOrderName}</div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-wrap-lines" title={r.salesOrderName}>{r.unitName}</div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-wrap-lines" title={r.customerName}>{r.customerName}</div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate">
+                                            <template if:true={r.dueDate}>
+                                                <lightning-formatted-date-time value={r.dueDate} year="numeric"
+                                                    month="short" day="2-digit">
+                                                </lightning-formatted-date-time>
+                                            </template>
+                                            <template if:false={r.dueDate}>
+                                                <span class="slds-text-color_weak">—</span>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="slds-truncate">
+                                            <template if:true={r.amount}>
+                                                <lightning-formatted-number value={r.amount}
+                                                    maximum-fraction-digits="2"></lightning-formatted-number>
+                                            </template>
+                                            <template if:false={r.amount}>
+                                                <span class="slds-text-color_weak">—</span>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="slds-truncate">
+                                            <template if:true={r.modeOfPayment}>
+                                                {r.modeOfPayment}
+                                            </template>
+                                            <template if:false={r.modeOfPayment}>
+                                                <span class="slds-text-color_weak">—</span>
+                                            </template>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="slds-truncate">
+                                            <template if:true={r.appliedAmount}>
+                                                <lightning-formatted-number value={r.appliedAmount}
+                                                    maximum-fraction-digits="2">
+                                                </lightning-formatted-number>
+                                            </template>
+                                            <template if:false={r.appliedAmount}>
+                                                <span class="slds-text-color_weak">—</span>
+                                            </template>
+                                        </div>
+                                    </td>
+
+
+                                    <td style="text-align:center;">
+                                        <lightning-input type="checkbox" variant="label-hidden" data-id={r.soiId}
+                                            checked={r.yesChecked} disabled={r.hasBusinessProcess}
+                                            onchange={handleYesChange}>
+                                        </lightning-input>
+                                    </td>
+
+                                    <td style="text-align:center;">
+                                        <lightning-input type="checkbox" variant="label-hidden" data-id={r.soiId}
+                                            checked={r.noChecked} disabled={r.hasBusinessProcess}
+                                            onchange={handleNoChange}>
+                                        </lightning-input>
+                                    </td>
+
+                                    <td>
+                                        <lightning-textarea variant="label-hidden" placeholder="Enter comment..."
+                                            data-id={r.soiId} value={r.comment} required={r.noChecked}
+                                            field-level-help="Comment is mandatory when No is selected"
+                                            disabled={r.hasBusinessProcess} onchange={handleCommentChange}>
+                                        </lightning-textarea>
+                                        <template if:true={r.hasBusinessProcess}>
+                                            <div class="slds-text-color_weak slds-text-body_small">
+                                                <lightning-icon icon-name="utility:lock"
+                                                    size="xx-small"></lightning-icon>
+                                                Business Process already created
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate">
+                                            <template if:true={r.hasBusinessProcess}>
+                                                <lightning-formatted-url value={r.businessProcessUrl}
+                                                    label={r.businessProcessName} target="_blank">
+                                                </lightning-formatted-url>
+                                            </template>
+                                            <template if:false={r.hasBusinessProcess}>
+                                                <span class="slds-text-color_weak">—</span>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:false={hasRows}>
+                <div class="slds-text-color_weak slds-p-vertical_medium">
+                    No installments found for this milestone.
+                </div>
+            </template>
+        </template>
+
+        <div slot="footer" class="pmsr-footer slds-grid slds-grid_align-spread slds-wrap">
+            <div class="slds-text-body_small slds-text-color_weak">
+                <template if:true={hasRows}>Changed: {changedCount}</template>
+            </div>
+
+            <div class="pmsr-footer-actions">
+                <lightning-button label="Download Excel" icon-name="utility:download" onclick={handleDownloadExcel}>
+                </lightning-button>
+                <lightning-button label="Upload Excel" icon-name="utility:upload" onclick={handleUploadClick}>
+                </lightning-button>
+
+                <input type="file" accept=".csv,.xlsx,.xls" onchange={handleFileChange} style="display:none"
+                    class="fileInput" />
+            </div>
+
+            <div class="pmsr-footer-actions">
+                <lightning-button variant="neutral" label="Cancel" onclick={handleCancel}></lightning-button>
+                <lightning-button variant="brand" label="Save" onclick={handleSave}
+                    disabled={saveDisabled}></lightning-button>
+                <template if:true={hasEligibleNoRows}>
+                    <lightning-button variant="destructive" label="Initiate Installment Payment Confirmation"
+                        onclick={handleInitiateProcess}></lightning-button>
+                </template>
+            </div>
+        </div>
+    </lightning-quick-action-panel>
+</template>

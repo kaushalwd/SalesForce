@@ -1,0 +1,70 @@
+<template>
+    <!-- a touch screen keeps the phone's own date picker -->
+    <template lwc:if={isNative}>
+        <input type="date" class={nativeClass} aria-label={label} value={value} min={min} max={max}
+               readonly={readonly} disabled={disabled}
+               oninput={handleNative} onchange={handleNative} onblur={handleNativeBlur} />
+    </template>
+    <template lwc:else>
+        <div class="dp" onmousedown={handleInsideDown}>
+            <input type="text" class={fieldClass} aria-label={label} placeholder={placeholder}
+                   value={text} readonly={readonly} disabled={disabled}
+                   autocomplete="off" spellcheck="false" inputmode="numeric"
+                   aria-haspopup="dialog" aria-expanded={expandedAttr}
+                   oninput={handleText} onkeydown={handleTextKey} onblur={handleTextBlur} />
+            <template lwc:if={showIcon}>
+                <button type="button" class="dp__icon" aria-label="Open calendar" tabindex="-1"
+                        onmousedown={toggle}>
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                        <line x1="3.5" y1="10" x2="20.5" y2="10" stroke="currentColor" stroke-width="1.6"></line>
+                        <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+                        <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+                    </svg>
+                </button>
+            </template>
+            <template lwc:if={open}>
+                <div class="dp__panel" role="dialog" aria-label={label} tabindex="0" onkeydown={handlePanelKey}>
+                    <div class="dp__head">
+                        <button type="button" class="dp__nav" aria-label="Previous" onmousedown={handlePrev}>&lsaquo;</button>
+                        <button type="button" class="dp__title" onmousedown={handleTitle}>{title}</button>
+                        <button type="button" class="dp__nav" aria-label="Next" onmousedown={handleNext}>&rsaquo;</button>
+                    </div>
+                    <template lwc:if={isDays}>
+                        <div class="dp__grid dp__grid--week">
+                            <template for:each={weekdays} for:item="w">
+                                <span key={w.key} class="dp__wd">{w.label}</span>
+                            </template>
+                        </div>
+                        <div class="dp__grid" role="grid">
+                            <template for:each={days} for:item="d">
+                                <button key={d.key} type="button" class={d.cls} data-iso={d.iso} disabled={d.disabled}
+                                        aria-label={d.aria} aria-selected={d.selected} onmousedown={handleDay}>{d.label}</button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:if={isMonths}>
+                        <div class="dp__grid dp__grid--three">
+                            <template for:each={months} for:item="mo">
+                                <button key={mo.key} type="button" class={mo.cls} data-m={mo.m} disabled={mo.disabled}
+                                        onmousedown={handleMonth}>{mo.label}</button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:if={isYears}>
+                        <div class="dp__grid dp__grid--three">
+                            <template for:each={years} for:item="yr">
+                                <button key={yr.key} type="button" class={yr.cls} data-y={yr.y} disabled={yr.disabled}
+                                        onmousedown={handleYear}>{yr.label}</button>
+                            </template>
+                        </div>
+                    </template>
+                    <div class="dp__foot">
+                        <button type="button" class="dp__link" onmousedown={handleClear}>Clear</button>
+                        <button type="button" class="dp__link" disabled={todayDisabled} onmousedown={handleToday}>Today</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

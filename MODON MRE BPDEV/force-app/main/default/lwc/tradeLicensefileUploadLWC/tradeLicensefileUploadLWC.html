@@ -1,0 +1,46 @@
+<template>
+     <template if:true={isLoading}>
+         <c-guest-loader is-loading={isLoading}
+                  message={message}
+                  sub-message={subMessage}
+                  logo-url={logoUrl}
+                  dir="ltr">
+        </c-guest-loader>    
+    </template>
+
+        <div class="slds-p-around_medium">
+            <lightning-input
+                type="file"
+                label="Select a file"
+                accept=".pdf, .png, .jpg, .jpeg"
+                onchange={handleFileChange}
+            ></lightning-input>
+
+            <div class="slds-m-top_small">
+                <lightning-button
+                    label="Upload"
+                    variant="brand"
+                    onclick={handleUploadConfirmation}
+                    disabled={isUploadDisabled}
+                ></lightning-button>
+            </div>
+            
+            <template if:true={isLoading}>
+                <div class="slds-m-top_medium slds-text-align_center">
+                    <lightning-spinner alternative-text="Uploading file..."></lightning-spinner>
+                </div>
+            </template>
+            
+            <template if:true={fileName}>
+                <div class="slds-m-top_medium">
+                    <p>Selected File: <b>{fileName}</b></p>
+                </div>
+            </template>
+
+            <template if:true={message}>
+                <div class="slds-m-top_medium slds-text-align_center slds-text-color_error">
+                    {message}
+                </div>
+            </template>
+        </div>
+</template>

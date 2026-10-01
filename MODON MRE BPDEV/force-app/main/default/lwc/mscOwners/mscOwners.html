@@ -1,0 +1,189 @@
+<template>
+    <template lwc:if={showPanel}>
+        <div class="ow">
+            <!-- head: what this is · where it stands · the one action -->
+            <div class="ow__head">
+                <span class="eyebrow">
+                    <span class="eyebrow__dot"></span>
+                    <span class="eyebrow__label">{labels.JO_EYEBROW}</span>
+                </span>
+                <span class="ow__head-right">
+                    <span class={headChip.cls}>
+                        <template lwc:if={headChip.icon}>
+                            <c-modon-icon
+                                name={headChip.icon}
+                                size="12"
+                                color="currentColor"
+                            ></c-modon-icon>
+                        </template>
+                        <template lwc:if={headChip.dot}>
+                            <i class="ow__dot"></i>
+                        </template>
+                        <span>{headChip.text}</span>
+                    </span>
+                    <!-- MSC-082/083 - how far these people have got. A second
+                         question about the same population, so a second chip
+                         rather than a contest for the first one's slot - and one
+                         chip for the whole chain, naming whichever stage is
+                         still outstanding. -->
+                    <template lwc:if={stageChip}>
+                        <span class={stageChip.cls}>
+                            <span>{stageChip.text}</span>
+                        </span>
+                    </template>
+                </span>
+            </div>
+
+            <!-- the server's own sentence, never a paraphrase of it -->
+            <template lwc:if={blockedReason}>
+                <div class="ow__note">
+                    <c-modon-icon name="info" size="14" color="currentColor"></c-modon-icon>
+                    <span>{blockedReason}</span>
+                </div>
+            </template>
+
+            <!-- the basket, on a multi-unit booking only -->
+            <template lwc:if={showUnits}>
+                <div class="ow__units" role="list">
+                    <template for:each={unitTiles} for:item="u">
+                        <div key={u.key} class={u.cls} role="listitem">
+                            <div class="ow__unit-name">{u.name}</div>
+                            <div class="ow__unit-cap">
+                                <template lwc:if={u.icon}>
+                                    <c-modon-icon
+                                        name={u.icon}
+                                        size="11"
+                                        color="currentColor"
+                                    ></c-modon-icon>
+                                </template>
+                                <span>{u.caption}</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- the ownership meter. Ownership is what this panel is about, so it
+                 gets the one decorated element. -->
+            <template lwc:if={showMeter}>
+                <div class="ow__meter" role="img" aria-label={meterLabel}>
+                    <template for:each={meter} for:item="m">
+                        <b key={m.key} class={m.cls} style={m.style}></b>
+                    </template>
+                </div>
+                <div class="ow__key">
+                    <template for:each={meterKey} for:item="k">
+                        <span key={k.key} class="ow__key-item">
+                            <i class={k.cls}></i>
+                            <span>{k.text}</span>
+                        </span>
+                    </template>
+                    <template lwc:if={meterScope}>
+                        <span class="ow__key-scope">{meterScope}</span>
+                    </template>
+                </div>
+            </template>
+
+            <!-- the people. The primary owner is a row, not a heading. -->
+            <div class="ow__rows">
+                <template for:each={rows} for:item="r">
+                    <div key={r.key} class="ow__row">
+                        <div class="ow__name">
+                            <strong>{r.name}</strong>
+                            <span class="chip chip--role">{r.role}</span>
+                            <span class="ow__share-inline">{r.shareText}</span>
+                        </div>
+                        <div class="ow__share">{r.shareText}</div>
+                        <div class="ow__facts">{r.facts}</div>
+                        <div class="ow__side">
+                            <template lwc:if={r.statusText}>
+                                <span class={r.statusClass}>
+                                    <i class="ow__dot"></i>
+                                    <span>{r.statusText}</span>
+                                </span>
+                            </template>
+                            <!-- MSC-082 - Send link / Resend link / Add details.
+                                 At most one, and never one that cannot work. -->
+                            <template lwc:if={r.action}>
+                                <button
+                                    class="pill ow__verify"
+                                    type="button"
+                                    data-account={r.accountId}
+                                    data-kind={r.action.kind}
+                                    title={r.action.title}
+                                    disabled={r.action.disabled}
+                                    onclick={handleVerifyAction}
+                                >
+                                    {r.action.text}
+                                </button>
+                            </template>
+                            <template lwc:if={r.canEdit}>
+                                <button
+                                    class="pill ow__edit"
+                                    type="button"
+                                    data-account={r.accountId}
+                                    disabled={busy}
+                                    onclick={handleEdit}
+                                >
+                                    {labels.JO_EDIT}
+                                </button>
+                            </template>
+                            <template lwc:elseif={r.locked}>
+                                <span class="ow__lock" title={r.lockTitle}>
+                                    <c-modon-icon
+                                        name="lock"
+                                        size="12"
+                                        color="currentColor"
+                                    ></c-modon-icon>
+                                    <span class="ow__assistive">{r.lockTitle}</span>
+                                </span>
+                            </template>
+                        </div>
+                        <!-- Only where there is nothing to press. See `why`. -->
+                        <template lwc:if={r.why}>
+                            <div class="ow__why">{r.why}</div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- something succeeded but is worth saying -->
+            <template lwc:if={noticeText}>
+                <div class="ow__note ow__note--warn">
+                    <c-modon-icon name="alert-triangle" size="14" color="currentColor"></c-modon-icon>
+                    <span>{noticeText}</span>
+                </div>
+            </template>
+
+            <!-- the footer reports; it only acts while the panel is empty -->
+            <template lwc:if={showFoot}>
+            <div class="ow__foot">
+                <template lwc:if={coverage}>
+                    <div class={coverage.cls}>
+                        <template lwc:if={coverage.icon}>
+                            <c-modon-icon name={coverage.icon} size="14" color="currentColor"></c-modon-icon>
+                        </template>
+                        <span>{coverage.text}</span>
+                    </div>
+                </template>
+                <!-- MSC-087 - ONE Add, always here and always saying the same thing.
+                     It was in the head once somebody was on the booking and in the
+                     footer while nobody was, so the control a rep reaches for moved
+                     the moment they used it, and wore a shorter word in one of the
+                     two places. -->
+                <template lwc:if={showFootAdd}>
+                    <button
+                        class="pill ow__add"
+                        type="button"
+                        disabled={busy}
+                        onclick={handleAdd}
+                    >
+                        <c-modon-icon name="plus" size="14" color="currentColor"></c-modon-icon>
+                        <span>{labels.JO_ADD}</span>
+                    </button>
+                </template>
+            </div>
+            </template>
+        </div>
+    </template>
+</template>

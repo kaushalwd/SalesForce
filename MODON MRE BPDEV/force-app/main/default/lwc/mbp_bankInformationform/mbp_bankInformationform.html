@@ -1,0 +1,283 @@
+<template>
+    <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+    <!-- Spinner with overlay -->
+    <template if:true={isLoading}>
+        <div class="spinner-overlay">
+            <div class="spinner-container">
+                <lightning-spinner alternative-text="Loading form..." size="medium"></lightning-spinner>
+            </div>
+        </div>
+    </template>
+
+    <lightning-messages></lightning-messages>
+
+    <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+        <div class="slds-content-align_center">
+            <h1 for="Company Information" class="mt-2 section-Title">Bank Information</h1>
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+                <lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    type="text"
+                    name="Bank_Name__c"
+                    label="Bank Name"
+                    value={registrationRec.Bank_Name__c}
+                    disabled={isDisabled}
+                    required
+                    onchange={handleFieldChange}
+                    message-when-value-missing="Please enter Bank Name"
+                ></lightning-input>
+                <lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    type="text"
+                    name="IBAN_Country_Bank_Code__c"
+                    label="IBAN Number"
+                    value={registrationRec.IBAN_Country_Bank_Code__c}
+                    disabled={isDisabled}
+                    required
+                    onchange={handleFieldChange}
+                    message-when-value-missing="Please enter IBAN/Country Bank Code"
+                ></lightning-input>
+            </div>
+
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+                <lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    type="text"
+                    name="Account_Number__c"
+                    label="Account Number"
+                    value={registrationRec.Account_Number__c}
+                    disabled={isDisabled}
+                    required
+                    inputmode="numeric"
+                    onchange={handleFieldChange}
+                    onblur={handleNumericInput}
+                    message-when-value-missing="Please enter Account Number"
+                    message-when-pattern-mismatch="Please enter only numbers"
+                ></lightning-input>
+                <lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    type="text"
+                    name="SWIFT_Sort_Code__c"
+                    label="SWIFT"
+                    value={registrationRec.SWIFT_Sort_Code__c}
+                    disabled={isDisabled}
+                    required
+                    onchange={handleFieldChange}
+                    message-when-value-missing="Please enter SWIFT/Sort Code"
+                ></lightning-input>
+            </div>
+
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+                <!-- Beneficiary Name -->
+                <lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    type="text"
+                    name="Beneficiary_Name__c"
+                    label="Beneficiary Name"
+                    value={registrationRec.Beneficiary_Name__c}
+                    disabled={isDisabled}
+                    required
+                    onchange={handleFieldChange}
+                    message-when-value-missing="Please enter Beneficiary Name"
+                ></lightning-input>
+
+                <!-- Bank Branch Name -->
+                <lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    type="text"
+                    name="Bank_Branch_Name__c"
+                    label="Bank Branch Name"
+                    value={registrationRec.Bank_Branch_Name__c}
+                    disabled={isDisabled}
+                    required
+                    onchange={handleFieldChange}
+                    message-when-value-missing="Please enter Bank Branch Name"
+                ></lightning-input>
+
+                <!-- Bank Branch Type -->
+                <lightning-combobox
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    name="Bank_Branch_Type__c"
+                    label="Bank Branch Type"
+                    value={registrationRec.Bank_Branch_Type__c}
+                    placeholder="--Select--"
+                    options={bankBranchTypeOptions}
+                    disabled={isDisabled}
+                    required
+                    onchange={handleFieldChange}
+                    message-when-value-missing="Please select Bank Branch Type"
+                ></lightning-combobox>
+            </div>
+
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+                <lightning-combobox
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect"
+                    name="Bank_Country__c"
+                    label="Bank Country"
+                    placeholder="--Select--"
+                    value={registrationRec.Bank_Country__c}
+                    options={countryOptions}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    message-when-value-missing="Please select Bank Country"
+                    aria-required="true"
+                ></lightning-combobox>
+            </div>
+
+            <!-- Document Uploads -->
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+                <template if:false={isIbanUploaded}>
+                    <lightning-input
+                        class="slds-p-around_x-small placeholder "
+                        type="file"
+                        label="IBAN Copy"
+                        accept=".pdf,.jpg"
+                        disabled={isDisabled}
+                        onchange={handleIbanChange}
+                    ></lightning-input>
+                </template>
+
+                <template if:true={isIbanUploaded}>
+                    <div class="slds-p-around_x-small placeholder ">
+                        <p>
+                            <strong>Uploaded File:</strong>  
+                            <a href="javascript:void(0);" onclick={openIbanPreviewPopup}>{ibanFileName}</a>
+                            <lightning-icon
+                                icon-name="action:preview"
+                                size="xx-small"
+                                alternative-text="Preview IBAN Copy"
+                                onclick={openIbanPreviewPopup}
+                                class="slds-m-left_small lwc-icon-small"
+                            ></lightning-icon>
+                            <template if:true={showDeleteIcon}>
+                            <lightning-icon
+                                icon-name="action:delete"
+                                size="xx-small"
+                                alternative-text="Remove IBAN Copy"
+                                onclick={handleRemoveIban}
+                                class="slds-m-left_small lwc-icon-small"
+                            ></lightning-icon>
+                            </template>
+                        </p>
+                    </div>
+                </template>
+
+                <template if:true={isOtherUploaded}>
+                    <div class="slds-p-around_x-small">
+                        <p>
+                            <strong>Uploaded File:</strong>  
+                            <a href="javascript:void(0);" onclick={openOtherPreviewPopup}>{otherFileName}</a>
+                            <lightning-icon
+                                icon-name="action:preview"
+                                size="xx-small"
+                                alternative-text="Preview Other Related Document"
+                                onclick={openOtherPreviewPopup}
+                                class="slds-m-left_small lwc-icon-small"
+                            ></lightning-icon>
+                             <template if:true={showDeleteIcon}>
+                            <lightning-icon
+                                icon-name="action:delete"
+                                size="xx-small"
+                                alternative-text="Remove Other Documents"
+                                onclick={handleRemoveOther}
+                                class="slds-m-left_small lwc-icon-small"
+                            ></lightning-icon>
+                            </template>
+                        </p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <template if:true={showConfirmationModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open small-confirmation-modal">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header slds-text-align_center">
+                        <h2 class="slds-modal__title">Consent</h2>
+                    </header>
+                   <div class="slds-modal__content slds-p-around_medium"> 
+            <p style="font-weight:bold; font-size:1rem;">
+                Your broker registration will proceed based on the following terms:
+            </p>
+            <ul style="padding-left: 1.25rem; font-size: 0.85rem;">
+                <li>This submission is final - please ensure all information is accurate.</li>
+                <li>Bank and document details must be correct - incomplete or invalid data may lead to disqualification.</li>
+                <li>Only one registration is allowed per entity.</li>
+                <li>Fake or misleading uploads will result in blacklisting.</li>
+                <li>Modon will review all registrations.</li>
+                <li>Any data mismatch will delay the approval process.</li>
+                <li>We may contact you for additional details, if required.</li>
+                <li>Please ensure your email address is active and accessible - all decisions and updates will be communicated via email.</li>
+            </ul>
+        </div>
+
+                    <footer class="slds-modal__footer slds-text-align_center">
+                        <lightning-button variant="brand" label="Accept" onclick={handleAcceptTerms} class="slds-button slds-button_brand"></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <template if:true={showOtpModal}> 
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open small-confirmation-modal" style="margin:100px auto;">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 class="slds-modal__title">Verify OTP</h2>
+                    </header>
+
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p class="email-info">
+                            Enter the 6-digit OTP sent to your email: 
+                            <strong>{sentToEmail}</strong>
+                        </p>
+
+                        <input
+                            type="text"
+                            name="otp"
+                            maxlength="6"
+                            class="otp-input-box"
+                            placeholder="●●●●●●"
+                            value={enteredOtp}
+                            oninput={handleOtpChange}
+                        />
+                    </div>
+
+                    <footer class="slds-text-align_center">
+                        <lightning-button label="Cancel" onclick={closeOtpModal}></lightning-button>
+                        <button onclick={verifyOtp} class="black-button">Verify OTP</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </lightning-accordion>
+
+  <template if:true={showCelebration}>
+    <template if:true={isDraftMode}>
+        <div class="simple-celebration-overlay">
+            <div class="simple-message">
+                <h1>📝 Draft Saved Successfully</h1>
+                <p>Your registration draft has been completed and saved successfully.</p>
+                <p>The next steps in the process will be shared with you via email shortly.</p>
+                <p class="sr">SR Number: {srNumber}</p>
+            </div>
+            <canvas class="confetti-canvas"></canvas>
+        </div>
+    </template>
+
+    <template if:false={isDraftMode}>
+        <div class="simple-celebration-overlay">
+            <div class="simple-message">
+                <h1>🎉 Registration Successful!</h1>
+                <p>Your registration has been successfully completed. We will now proceed with the next steps.</p>
+                <p>An email has been sent to your primary email address with further instructions.</p>
+                <p class="sr">SR Number: {srNumber}</p>
+            </div>
+            <canvas class="confetti-canvas"></canvas>
+        </div>
+    </template>
+</template>
+</template>

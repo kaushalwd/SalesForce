@@ -1,0 +1,153 @@
+<template>
+  <!-- Full-page overlay spinner -->
+  <template if:true={isLoading}>
+    <div class="loading-backdrop">
+      <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+    </div>
+  </template>
+
+  <lightning-card>
+    <div class="slds-p-around_medium">
+      <div class="header-row slds-grid slds-grid_align-spread slds-m-bottom_small">
+        <!-- LEFT CONTROLS -->
+        <div class="controls slds-grid slds-grid_vertical-align-center slds-wrap">
+
+          <!-- Created Date -->
+          <lightning-combobox
+            class="slds-m-right_small"
+            name="dateRange"
+            label="Created Date"
+            value={selectedDateRange}
+            options={dateRangeOptions}
+            onchange={handleDateRangeChange}>
+          </lightning-combobox>
+
+          <!-- Unit Allocated Status -->
+          <lightning-combobox
+            class="slds-m-right_small"
+            name="allocStatus"
+            label="Unit Allocated Status"
+            value={selectedAllocStatus}
+            options={allocStatusOptions}
+            onchange={handleAllocStatusChange}>
+          </lightning-combobox>
+
+          <!-- Converted filter -->
+          <lightning-combobox
+            class="slds-m-right_small"
+            name="convertedFilter"
+            label="Converted"
+            value={selectedConverted}
+            options={convertedOptions}
+            onchange={handleConvertedChange}>
+          </lightning-combobox>
+
+          <!-- Project Name -->
+          <lightning-combobox
+            class="slds-m-right_small"
+            name="projectName"
+            label="Project Name"
+            value={selectedProject}
+            options={projectNameOptions}
+            onchange={handleProjectDropdownChange}>
+          </lightning-combobox>
+
+          <!-- Unit (single line) -->
+          <lightning-input
+            class="slds-m-right_small"
+            type="text"
+            name="unitName"
+            label="Unit"
+            value={unitFilterText}
+            onchange={handleUnitFilterChange}>
+          </lightning-input>
+        </div>
+
+        <!-- RIGHT CONTROLS -->
+        <lightning-button
+          variant="brand"
+          label="Create Lead"
+          onclick={navigateToTab}
+          class="slds-m-right_small">
+        </lightning-button>
+      </div>
+
+      <div class="table-wrapper">
+        <lightning-datatable
+          key-field="Id"
+          data={pagedData}
+          columns={columns}
+          onrowaction={handleRowAction}
+          hide-checkbox-column={isHideCheckboxColumn}>
+        </lightning-datatable>
+      </div>
+
+      <div class="pagination slds-grid slds-grid_align-spread slds-m-top_small slds-align_absolute-center">
+        <div class="slds-text-body_small">Showing {startRow} - {endRow} of {totalRows}</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="slds-grid slds-grid_vertical-align-center">
+          <lightning-button variant="neutral" label="Previous" onclick={prevPage} disabled={isFirstPage} class="slds-m-right_x-small"></lightning-button>
+          <div class="page-info slds-p-horizontal_small">Page {currentPage} / {totalPages}</div>
+          <lightning-button variant="neutral" label="Next" onclick={nextPage} disabled={isLastPage} class="slds-m-left_x-small"></lightning-button>
+        </div>
+      </div>
+    </div>
+  </lightning-card>
+
+  <!-- Reassign Modal -->
+  <template if:true={isReassignModalOpen}>
+    <template if:true={isLoading}>
+      <div class="loading-backdrop">
+        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+      </div>
+    </template>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" aria-modal="true">
+      <div class="slds-modal__container" style="max-width:48rem;">
+        <header class="slds-modal__header">
+          <h2 class="slds-text-heading_medium">Re-Assign Lead</h2>
+        </header>
+
+        <div class="slds-modal__content slds-p-around_medium">
+          <p class="slds-m-bottom_small" style="text-align: center;">
+            Reassign Lead <b>{reassignTargetName}</b> to a new Sales Manager / Agent.
+          </p>
+
+          <template if:true={reassignTargetOwnerName}>
+            <div class="slds-m-bottom_small slds-text-color_weak" style="text-align:center;">
+              Current Owner: <b>{reassignTargetOwnerName}</b>
+            </div>
+          </template>
+
+          <lightning-record-picker
+            label="Select Sales Manager / Agent"
+            placeholder="Search users by name or email"
+            object-api-name="User"
+            value={selectedUserId}
+            onchange={handleUserPicked}>
+          </lightning-record-picker>
+
+          <!-- Blocked Until -->
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-vertical_x-small">
+            <lightning-input
+              type="dateTime-local"
+              label="Blocked Until"
+              value={blockedUntil}
+              onchange={handleBlockedUntilChange}>
+            </lightning-input>
+        </div>
+
+          <template if:true={selectedOwnerPreview}>
+            <div class="slds-m-top_small slds-text-color_weak">
+              Selected: {selectedOwnerPreview}
+            </div>
+          </template>
+        </div>
+
+        <footer class="slds-modal__footer slds-grid slds-grid_align-end">
+          <lightning-button variant="neutral" label="Cancel" onclick={closeReassignModal}></lightning-button>
+          <lightning-button variant="brand" label="Apply to Single" onclick={applyReassignToSingle} class="slds-m-left_x-small" disabled={isApplyDisabled}></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

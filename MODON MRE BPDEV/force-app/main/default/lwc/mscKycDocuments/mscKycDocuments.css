@@ -1,0 +1,179 @@
+@import "c/mscStyles";
+
+/*
+  A list inside the KYC panel: a hairline above it, no second surface. The only colour is the
+  muted green of a tick on a row that has a file; a missing row is a hollow grey circle.
+  1.4 (29 Sep 2026): the replace question's line under its row, and the lock line. Grey only.
+*/
+:host { display: block; }
+
+.kycd {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.kycd--compact { margin-top: 8px; padding-top: 8px; }
+
+.kycd__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.kycd__title,
+.kycd__grp-h {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+.kycd__grp-h {
+    margin: 8px 0 4px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+    font-weight: 500;
+}
+.kycd__grp:first-of-type .kycd__grp-h { margin-top: 0; }
+
+.kycd__counter {
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+}
+.kycd--done .kycd__counter { color: var(--chip-green, #4ade80); }
+.kycd__counter--foot { margin: 4px 0 0; }
+
+.kycd__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.kycd__row {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) auto auto;
+    align-items: center;
+    column-gap: 10px;
+    min-height: 30px;
+    padding: 3px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.kycd__row:first-child { border-top: 0; }
+.kycd__row--alt .kycd__name { color: var(--text-dim, #8a8a8a); }
+
+/* The mark: a hollow grey circle until a file is on the row, then a quiet green tick. */
+.kycd__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--text-dim, #8a8a8a);
+    color: transparent;
+}
+.kycd__mark--ok {
+    border-color: var(--edge-green, rgba(74, 222, 128, 0.34));
+    background: var(--edge-green, rgba(74, 222, 128, 0.18));
+    color: var(--chip-green, #4ade80);
+}
+
+.kycd__name {
+    font-size: 12px;
+    color: var(--text, #fafafa);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.kycd__fact {
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+}
+.kycd__fact--ok { color: var(--text-muted, #a3a3a3); }
+
+.kycd__act {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+.kycd__btn {
+    padding: 3px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: var(--text, #fafafa);
+    font-size: 11px;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+}
+.kycd__btn:hover { background: rgba(255, 255, 255, 0.05); }
+
+/* 1.1 - the real input is off-screen; the ghost button is the control. */
+.kycd__file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.kycd__btn:disabled { opacity: 0.5; cursor: default; }
+
+/* 1.4 - "Replace the current file?": a quiet line under its row (column 2 in both grids). */
+.kycd__confirm {
+    grid-column: 2 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin: 4px 0 2px;
+    padding: 2px 0 2px 8px;
+    border-left: 2px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.kycd__confirm-q {
+    font-size: 11px;
+    color: var(--text-muted, #a3a3a3);
+}
+.kycd__btn--quiet {
+    border-color: transparent;
+    color: var(--text-muted, #a3a3a3);
+}
+.kycd__btn--quiet:hover { color: var(--text, #fafafa); }
+
+.kycd__note {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+.kycd__blocked {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--chip-amber, #fbbf24);
+}
+.kycd__problem {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--chip-red, #f87171);
+}
+
+/* 1.4 - the lock line reads as the note above it, one step quieter in weight only */
+.kycd__note--lock { margin-top: 4px; }
+
+@media (max-width: 640px) {
+    .kycd__row {
+        grid-template-columns: 16px minmax(0, 1fr);
+        grid-template-areas: "mark name" ". fact" ". act";
+        row-gap: 2px;
+        padding: 6px 0;
+    }
+    .kycd__mark { grid-area: mark; }
+    .kycd__name { grid-area: name; white-space: normal; }
+    .kycd__fact { grid-area: fact; }
+    .kycd__act  { grid-area: act; justify-content: flex-start; }
+}

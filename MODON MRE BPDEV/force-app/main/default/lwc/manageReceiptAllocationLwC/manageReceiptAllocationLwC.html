@@ -1,0 +1,146 @@
+<template>
+    <template lwc:if={showLoading}>
+        <lightning-spinner variant="brand"></lightning-spinner>
+    </template>
+    <template lwc:else>
+        <template lwc:if={recordId}>
+            <div class="slds-card slds-m-around_medium">
+                <div class="slds-card__header slds-card__header-title">
+                    
+                    <span style="font-size: 22px;font-weight: 600;">Receipt Allocation</span>
+                </div>
+                <div class="slds-card__body slds-card__body_inner">
+                    <!--Existing allocation section-->
+                    <div class="slds-card slds-card_boundary">
+                        <div class="slds-card__header slds-card__header-title">
+                            Existing Allocations
+                        </div>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <template lwc:if={showReceiptAllocationSection}>
+                                <div class="slds-scrollable" style="height:14rem;">
+                                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                        <thead>
+                                            <tr class="slds-line-height_reset">
+                                                <th class="" scope="col">
+                                                    <div class="slds-truncate">Allocation Number</div>
+                                                </th>
+                                                <th class="" scope="col">
+                                                    <div class="slds-truncate">Receipt No</div>
+                                                </th>
+                                                <th class="" scope="col">
+                                                    <div class="slds-truncate">Mode of payment</div>
+                                                </th>
+                                                <th class="" scope="col">
+                                                    <div class="slds-truncate">Invoice No</div>
+                                                </th>
+                                                <th class="" scope="col">
+                                                    <div class="slds-truncate">Allocated Amount</div>
+                                                </th>
+                                                <th class="" scope="col">
+                                                    <div class="slds-truncate">Action</div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={allocationLst} for:item="allObj" for:index="index">
+                                                <tr class="slds-hint-parent" key={allObj.Id}>
+                                                    <td data-label="Account Name">
+                                                        <div class="slds-truncate" title="Cloudhub">{allObj.Name}</div>
+                                                    </td>
+                                                    <td data-label="Account Name">
+                                                        <div class="slds-truncate" title="Cloudhub">{allObj.Receipt__r.Name}</div>
+                                                    </td>
+                                                    <td data-label="Account Name">
+                                                        <div class="slds-truncate" title="Cloudhub">{allObj.Receipt__r.Modeofpayment__c}</div>
+                                                    </td>
+                                                    <td data-label="Account Name">
+                                                        <div class="slds-truncate" title="Cloudhub">
+                                                            <template lwc:if={allObj.Invoice__r.Expressionofinterest__c}>
+                                                                {allObj.Invoice__r.Expressionofinterest__r.Name}
+                                                            </template>
+                                                            <template lwc:elseif={allObj.Invoice__r.SalesOrderInstallment__c}>
+                                                                {allObj.Invoice__r.SalesOrderInstallment__r.SalesOrder__r.Name} / {allObj.Invoice__r.SalesOrderInstallment__r.MilestoneNumber__c}
+                                                            </template>
+                                                            <template lwc:else>
+                                                                {allObj.Invoice__r.Name}
+                                                            </template>
+                                                        </div>
+                                                    </td>
+                                                    <td data-label="Account Name">
+                                                        <div class="slds-truncate" title="Cloudhub">{allObj.AllocationAmount__c}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span data-allid={allObj.Id} onclick={unapplyAllocation} style="cursor: pointer;">
+                                                            <lightning-icon icon-name="utility:error" alternative-text="Delete" title="Delete"></lightning-icon>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-size_1-of-1">
+                                        Allocation not exist for the account at the moment.
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!--Existing allocation section end-->
+                    <template lwc:if={showAllocationButton}>
+                        <!--Add allocation button-->
+                        <div class="slds-grid slds-wrap slds-m-top_medium">
+                            <lightning-button name="Add Allocation" label="Add Allocation" onclick={showAllocationForm} variant="brand-outline" class="slds-m-left_medium"></lightning-button>  
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <!--Add allocation button end-->
+                        <div class="slds-grid slds-wrap slds-m-top_medium">
+                            <div class="slds-card slds-card_boundary slds-size_1-of-1">
+                                <div class="slds-card__header slds-card__header-title">
+                                    Add New Allocation
+                                </div>
+                                <div class="slds-card__body slds-card__body_inner">
+                                    <div class="slds-grid slds-wrap">
+                                        <div class="slds-size_1-of-2 slds-p-around_small">
+                                            <label data-main-label="true" class=""><span style="font-weight:600;">Open Receipts</span></label>
+                                            <lightning-combobox variant="label-hidden" name="ReceiptOption" onchange={manageReceiptChange} options={receiptOptions} value={selectedReceipt} label="Available Receipts" class="" style="margin-top: 7px;" required="true" placeholder="Select an option"></lightning-combobox>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-around_small">
+                                            <div><label data-main-label="true" class=""><span style="font-weight:600;">Remaining Amount</span></label></div>
+                                            <lightning-formatted-number value={selectedReceiptRcrd.RemainingAmount__c}>&nbsp;</lightning-formatted-number>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-around_small">
+                                            <div><label data-main-label="true" class=""><span style="font-weight:600;">Receipt Date</span></label></div>
+                                            <lightning-formatted-date-time value={selectedReceiptRcrd.ReceiptDate__c} year="2-digit" month="2-digit" day="2-digit"></lightning-formatted-date-time>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-around_small">
+                                            <div><label data-main-label="true" class=""><span style="font-weight:600;">Mode of payment</span></label></div>
+                                            <lightning-formatted-text value={selectedReceiptRcrd.Modeofpayment__c} ></lightning-formatted-text>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-around_small">
+                                            <label data-main-label="true" class=""><span style="font-weight:600;">Open Invoices</span></label>
+                                            <lightning-combobox variant="label-hidden" name="InvoiceOption" onchange={manageInvoiceChange} options={invoiceOptions} value={selectedInvoice} label="Available Invoices" class="" style="margin-top: 7px;" required="true" placeholder="Select an option"></lightning-combobox>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-around_small">
+                                            <div><label data-main-label="true" class=""><span style="font-weight:600;">Amount to allocate</span></label></div>
+                                            <lightning-input style="margin-top: 6px;" variant="label-hidden" max={maxAllocationAmount} message-when-range-overflow={patterMismatchMsg} type="number" name="Amount to allocate" label="Amount to allocate" value={amountToAllocate} onchange={updateAmountToAllocate}></lightning-input>
+                                        </div>
+                                        <div class="slds-size_3-of-4 slds-p-around_small"></div>
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <lightning-button name="Save Allocation" label="Save" onclick={saveAllocationForm} variant="brand" class=""></lightning-button>  
+                                            <lightning-button name="Cancel Allocation" label="Cancel" onclick={cancelAllocationForm} variant="brand-outline" class="slds-m-left_medium"></lightning-button>  
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </template>
+</template>

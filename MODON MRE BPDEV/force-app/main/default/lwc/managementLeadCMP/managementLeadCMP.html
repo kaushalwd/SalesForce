@@ -1,0 +1,475 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="loading-backdrop">
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+        </div>
+    </template>
+
+    <lightning-card>
+        <div class="slds-card__header slds-grid slds-wrap slds-grid_align-spread slds-p-horizontal_small slds-p-vertical_x-small">
+            
+            <div class="slds-media slds-media_center slds-col slds-size_1-of-1 slds-m-bottom_small slds-medium-m-bottom_none">
+                <div class="slds-media__figure">
+                    <lightning-icon icon-name="standard:lead" alternative-text="Lead" size="small"></lightning-icon>
+                </div>
+                <template if:true={isDesktop}>
+                <div class="slds-media__body slds-m-left_small">
+                    <h2 class="slds-text-heading_small">Create Lead</h2>
+                </div>
+                </template>
+                <!--div class="header-actions slds-grid slds-grid_align-end slds-p-around_small"-->
+                <!--div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-grid_align-end slds-gutters_x-small"-->
+
+                    <!-- Show these two ONLY on desktop -->
+                    <template if:true={isDesktop}>
+                        <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_x-small slds-medium-m-bottom_none"-->
+                            <lightning-button
+                                label="Upload Leads (CSV)"
+                                variant="brand-outline"
+                                onclick={openCsvModal}
+                              
+                            ></lightning-button>&nbsp;&nbsp;
+                        <!--/div-->
+
+                        <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_x-small slds-medium-m-bottom_none"-->
+                            <lightning-button
+                                variant="destructive"
+                                label="View Management Leads"
+                                class="red-button"
+                                onclick={navigateToTab}
+                            ></lightning-button>&nbsp;&nbsp;
+                        <!--/div-->
+                    </template>
+
+                    <!-- This one is ALWAYS visible (mobile, tab, desktop) -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_x-small slds-medium-m-bottom_none">
+                        <lightning-button
+                            variant="brand"
+                            label="Create Lead"
+                            onclick={handleCreateClick}
+                            
+                        ></lightning-button>
+                    </div>
+
+                </div>
+            </div>
+
+        <div class="slds-p-around_medium">
+            <div class="form-grid slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_x-small">
+                    <lightning-input
+                        label="First Name"
+                        value={firstName}
+                        data-id="first"
+                        onchange={handleInputChange}
+                        required
+                    ></lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_x-small">
+                    <lightning-input
+                        label="Last Name"
+                        value={lastName}
+                        data-id="last"
+                        onchange={handleInputChange}
+                        required
+                    ></lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_x-small">
+                    <lightning-input
+                        type="email"
+                        label="Email"
+                        value={email}
+                        data-id="email"
+                        onchange={handleInputChange}
+                    ></lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_x-small">
+                    <lightning-input
+                        type="tel"
+                        label="Mobile"
+                        value={mobile}
+                        data-id="mobile"
+                        onchange={handleInputChange}
+                        required
+                    ></lightning-input>
+                </div>
+            </div>
+
+            <div class="table-section slds-card slds-m-top_small">
+                <div class="slds-card__header slds-grid slds-wrap slds-p-horizontal_small slds-p-vertical_x-small">
+                    
+                    <div class="filters slds-grid slds-wrap slds-gutters slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small slds-medium-m-bottom_none">
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                            <lightning-combobox
+                                name="projectFilter"
+                                label="Project"
+                                value={selectedProject}
+                                options={projectOptions}
+                                placeholder="-- All Projects --"
+                                onchange={handleProjectFilterChange}
+                            ></lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                            <lightning-combobox
+                                name="phaseFilter"
+                                label="Phase"
+                                value={selectedPhase}
+                                options={phaseOptions}
+                                placeholder="-- All Phases --"
+                                onchange={handlePhaseChange}
+                            ></lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                            <lightning-input
+                                type="search"
+                                label="Search Unit"
+                                value={unitSearch}
+                                placeholder="Search by Unit"
+                                onchange={handleUnitSearch}
+                            ></lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-grid slds-wrap slds-grid_vertical-align-end slds-gutters_x-small">
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <div class="slds-text-heading_small slds-text-align_left slds-m-bottom_x-small slds-m-top_x-small slds-medium-m-top_none">
+                                &nbsp;&nbsp;&nbsp;<b>Available Units</b>
+                            </div>
+                        </div>
+
+                        <div class="slds-form-element slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <div class="slds-form-element__control">
+                                <div class="slds-combobox_container combobox-relative">
+                                    <div
+                                        class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click"
+                                        aria-expanded={isDropdownOpen}
+                                        aria-haspopup="listbox"
+                                        role="combobox"
+                                    >
+                                        <div
+                                            class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+                                            role="none"
+                                        >
+                                            <lightning-input
+                                                class="lookup-input"
+                                                type="search"
+                                                value={searchTerm}
+                                                label="Allocate to Sales Manager / Agent"
+                                                onfocus={handleFocus}
+                                                onblur={handleBlur}
+                                                onchange={handleSearch}
+                                                placeholder="Search users..."
+                                                disabled={hasSelection}
+                                            ></lightning-input>
+
+                                            <template if:true={hasSelection}>
+                                                <span
+                                                    class="lookup-clear-icon"
+                                                    title="Clear selection"
+                                                    role="button"
+                                                    tabindex="0"
+                                                    onclick={handleClearSelection}
+                                                >
+                                                    <lightning-icon
+                                                        icon-name="utility:clear"
+                                                        alternative-text="Clear selection"
+                                                        size="x-small"
+                                                    ></lightning-icon>
+                                                </span>
+                                            </template>
+                                        </div>
+
+                                        <template if:true={isDropdownOpen}>
+                                            <div id="listbox-id-1" role="listbox" class="lookup-dropdown">
+                                                <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                                    <template for:each={users} for:item="user">
+                                                        <li key={user.Id} class="slds-listbox__item" role="presentation">
+                                                            <div
+                                                                class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta"
+                                                                role="option"
+                                                                onmousedown={handleSelect}
+                                                                data-id={user.Id}
+                                                                data-name={user.Name}
+                                                            >
+                                                                <span class="slds-media__figure">
+                                                                    <lightning-icon icon-name="standard:user" size="small"></lightning-icon>
+                                                                </span>
+                                                                <span class="slds-media__body">
+                                                                    <span class="slds-listbox__option-text slds-listbox__option-text_entity">
+                                                                        {user.Name}
+                                                                    </span>
+                                                                </span>
+                                                            </div>
+                                                        </li>
+                                                    </template>
+                                                </ul>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                     <lightning-input
+                            type="dateTime"
+                            name="blockedUntil"
+                            label="Blocked Until Date"
+                            value={blockedUntil}
+                            onchange={handleDateChange}>
+                        </lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                       
+                    </div>
+                    
+                </div>
+
+                <div class="slds-p-around_small slds-scrollable_x">
+                     <template if:true={isDesktop}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={pagedData}
+                            columns={columns}
+                            onrowselection={handleRowSelection}
+                            selected-rows={selectedRowsForTable}
+                        ></lightning-datatable>
+                    </template>
+                    <template if:false={isDesktop}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={pagedData}
+                            columns={mobilecolumns}
+                            onrowselection={handleRowSelection}
+                            selected-rows={selectedRowsForTable}
+                        ></lightning-datatable>
+                    </template>
+                    <div class="slds-m-top_small slds-grid slds-grid_align-center slds-align_absolute-center">
+                        <lightning-button
+                            variant="neutral"
+                            label="Previous"
+                            onclick={prevPage}
+                            disabled={isFirstPage}
+                        ></lightning-button>
+                        <div class="page-info slds-p-horizontal_small">
+                            Page {currentPage} of {totalPages}
+                        </div>
+                        <lightning-button
+                            variant="neutral"
+                            label="Next"
+                            onclick={nextPage}
+                            disabled={isLastPage}
+                        ></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+
+    <template if:true={isModalOpen}>
+        <template if:true={isLoading}>
+            <div class="loading-backdrop">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+        <section
+            role="dialog"
+            tabindex="-1"
+            class="slds-modal slds-fade-in-open slds-modal_large"
+            aria-labelledby="modal-heading-01"
+            aria-modal="true"
+        >
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-m-left_small">
+                        Confirm Create &amp; Assign
+                    </h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p class="slds-m-bottom_medium slds-text-align_center">
+                        Review selected units below. You can remove any unit before confirming.
+                    </p>
+
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-vertical_x-small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Lead Name</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-text-body_regular">{fullName}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-vertical_x-small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Email</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-text-body_regular">{email}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-vertical_x-small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Mobile</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-text-body_regular">{mobile}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-vertical_x-small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Sales Manager / Agent</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-text-body_regular">{salesPersonName}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-vertical_x-small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Blocked Until</label>
+                                <div class="slds-form-element__control">
+                                    <lightning-formatted-date-time
+                                        value={blockedUntil}
+                                        year="numeric"
+                                        month="2-digit"
+                                        day="2-digit"
+                                        hour="2-digit"
+                                        minute="2-digit"
+                                        second="2-digit">
+                                    </lightning-formatted-date-time>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <template if:true={selectedUnitsList.length}>
+                        <div class="selected-units-table">
+                            <table
+                                class="slds-table slds-table_bordered slds-table_cell-buffer slds-max-medium-table_stacked"
+                            >
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th scope="col"><div class="slds-truncate">Unit</div></th>
+                                        <th scope="col"><div class="slds-truncate">Project</div></th>
+                                        <th scope="col"><div class="slds-truncate">Phase</div></th>
+                                        <th scope="col"><div class="slds-truncate">Status</div></th>
+                                        <th scope="col"><div class="slds-truncate">Price</div></th>
+                                        <th scope="col"><div class="slds-truncate">Remove</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={selectedUnitsList} for:item="unit">
+                                        <tr key={unit.Id}>
+                                            <td data-label="Unit">
+                                                <div class="slds-truncate" title={unit.Name}>{unit.Name}</div>
+                                            </td>
+                                            <td data-label="Project">
+                                                <div class="slds-truncate" title={unit.Project_Name__c}>
+                                                    {unit.Project_Name__c}
+                                                </div>
+                                            </td>
+                                            <td data-label="Phase">
+                                                <div class="slds-truncate" title={unit.Phase_Name__c}>
+                                                    {unit.Phase_Name__c}
+                                                </div>
+                                            </td>
+                                            <td data-label="Status">
+                                                <div class="slds-truncate" title={unit.Status__c}>
+                                                    {unit.Status__c}
+                                                </div>
+                                            </td>
+                                            <td data-label="Price">
+                                                <div class="slds-truncate" title={unit.TotalPrice__c}>
+                                                    {unit.TotalPrice__c}
+                                                </div>
+                                            </td>
+                                            <td data-label="Remove">
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Remove"
+                                                    title="Remove"
+                                                    data-id={unit.Id}
+                                                    onclick={handleRemoveSelectedUnit}
+                                                ></lightning-button-icon>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                    <template if:false={selectedUnitsList.length}>
+                        <div class="slds-p-vertical_medium slds-text-align_center">
+                            <b>No units selected.</b>
+                        </div>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer slds-grid slds-grid_align-end slds-wrap">
+                    <lightning-button
+                        variant="neutral"
+                        label="Cancel"
+                        onclick={handleCancelModal}
+                        class="slds-m-top_x-small slds-m-bottom_x-small slds-small-size_1-of-1 slds-medium-m-top_none slds-medium-m-bottom_none"
+                    ></lightning-button>
+                    <lightning-button
+                        variant="brand"
+                        label="Confirm &amp; Create"
+                        onclick={handleConfirmCreate}
+                        class="slds-m-left_small slds-m-top_x-small slds-medium-m-top_none slds-small-size_1-of-1"
+                    ></lightning-button>
+                </footer>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isModalOpenCSV}>
+        <template if:true={isLoading}>
+            <div class="loading-backdrop">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        class="slds-modal__close"
+                        alternative-text="Close"
+                        title="Close"
+                        onclick={closeModal}
+                    ></lightning-button-icon>
+                    <h2 class="slds-text-heading_medium">Upload Leads</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-csv-lead-uploader
+                        oncreateleads={handleCreateLeads}
+                        onreassign={handleReassign}
+                        ondeletedall={handleDeletedAll}
+                        onrowdeleted={handleRowDeleted}
+                    ></c-csv-lead-uploader>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        variant="neutral"
+                        label="Cancel"
+                        onclick={closeModal}
+                        class="slds-size_1-of-1 slds-medium-size_auto"
+                    ></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    </template>

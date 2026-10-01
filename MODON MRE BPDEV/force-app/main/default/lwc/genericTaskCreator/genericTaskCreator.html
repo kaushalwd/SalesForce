@@ -1,0 +1,213 @@
+<template>
+<lightning-card>
+    <div slot="title" class="slds-grid slds-align_absolute-center">
+        <lightning-icon
+            icon-name="standard:task"
+            size="small"
+            alternative-text="Task"
+            class="header-icon">
+        </lightning-icon>
+        <span class="slds-m-left_small">Task Management</span>
+    </div>
+
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Saving..." size="medium" variant="brand">
+        </lightning-spinner>
+    </template>
+
+    <template if:false={hasData}>
+        <div class="empty-state slds-p-around_large slds-align_absolute-center">
+            <div>
+                <lightning-icon
+                    icon-name="utility:warning"
+                    size="small"
+                    alternative-text="No Data">
+                </lightning-icon>
+                <p class="slds-m-top_small">No Records Available</p>
+            </div>
+        </div>
+    </template>
+
+    <template if:true={hasData}>
+        <div class="slds-p-around_medium">
+
+            <!-- Closed Tasks Section -->
+            <template if:true={hasClosedTasks}>
+                <section class="section-box closed-section slds-m-bottom_large">
+                    <div class="section-header slds-grid slds-grid_align-spread slds-m-bottom_small">
+                        <div class="slds-grid slds-align_absolute-center">
+                            <lightning-icon
+                                icon-name="standard:task2"
+                                size="small"
+                                alternative-text="Closed Tasks"
+                                class="section-icon">
+                            </lightning-icon>
+                            <h3 class="slds-text-heading_small slds-m-left_small">Closed Tasks</h3>
+                        </div>
+
+                        <lightning-badge label={closedTaskCountLabel}></lightning-badge>
+                    </div>
+
+                    <div class="slds-scrollable_x">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered custom-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Subject">Subject</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Status">Status</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Priority">Priority</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Due Date">Due Date</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Comments">Comments</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={closedTasks} for:item="task">
+                                    <tr key={task.Id}>
+                                        <td>
+                                            <div class="slds-truncate" title={task.Subject}>
+                                                <lightning-icon
+                                                    icon-name="utility:check"
+                                                    size="xx-small"
+                                                    alternative-text="Closed"
+                                                    class="table-inline-icon">
+                                                </lightning-icon>
+                                                <span class="slds-m-left_x-small">{task.Subject}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <lightning-badge label={task.Status}></lightning-badge>
+                                        </td>
+                                        <td>
+                                            <div class="slds-truncate" title={task.Priority}>{task.Priority}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-truncate" title={task.ActivityDate}>{task.ActivityDate}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-truncate" title={task.Description}>{task.Description}</div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </template>
+
+            <!-- Current Open Task -->
+            <template if:true={currentTaskAvailable}>
+                <section class="section-box open-section">
+                    <div class="section-header slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                        <div class="slds-grid slds-align_absolute-center">
+                            <lightning-icon
+                                icon-name="standard:task"
+                                size="small"
+                                alternative-text="Current Open Task"
+                                class="section-icon">
+                            </lightning-icon>
+                            <h3 class="slds-text-heading_small slds-m-left_small">Current Open Task</h3>
+                        </div>
+
+                        <lightning-badge label="Editable"></lightning-badge>
+                    </div>
+
+                    <div class="slds-grid slds-wrap slds-gutters">
+
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input
+                                label="Subject"
+                                value={subject}
+                                readonly
+                                class="slds-m-bottom_small">
+                            </lightning-input>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input
+                                type="date"
+                                label="Due Date"
+                                value={activityDate}
+                                readonly
+                                class="slds-m-bottom_small">
+                            </lightning-input>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-combobox
+                                label="Status"
+                                value={status}
+                                options={statusOptions}
+                                onchange={handleStatusChange}
+                                class="slds-m-bottom_small">
+                            </lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input
+                                label="Priority"
+                                value={priority}
+                                readonly
+                                class="slds-m-bottom_small">
+                            </lightning-input>
+                        </div>
+
+                        <template if:true={showDiscussionOutcome}>
+                                                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            label="Customer Discussion Outcome"
+                            value={discussionOutcome}
+                            options={discussionOutcomeOptions}
+                            onchange={handleDiscussionOutcomeChange}
+                            class="slds-m-bottom_small">
+                        </lightning-combobox>
+                        </div>
+                        </template>
+
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-textarea
+                                label="Comments"
+                                value={comments}
+                                onchange={handleCommentsChange}
+                                class="slds-m-top_small">
+                            </lightning-textarea>
+                        </div>
+                    </div>
+
+                    <div class="divider-space"></div>
+
+                    <div class="slds-align_absolute-center">
+                        <lightning-button
+                            label="Save Task"
+                            icon-name="utility:save"
+                            variant="brand"
+                            onclick={saveTask}
+                            disabled={isLoading}>
+                        </lightning-button>
+                    </div>
+                </section>
+            </template>
+
+            <template if:false={currentTaskAvailable}>
+                <div class="empty-open-task slds-m-top_medium">
+                    <lightning-icon
+                        icon-name="utility:info"
+                        size="small"
+                        alternative-text="Info">
+                    </lightning-icon>
+                    <p class="slds-m-top_small">No Open Task Available</p>
+                </div>
+            </template>
+
+        </div>
+    </template>
+</lightning-card>
+</template>

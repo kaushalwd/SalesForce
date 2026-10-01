@@ -1,0 +1,214 @@
+/*
+ * The Direct Debit Console palette, carried across from the design artifact.
+ *
+ * Two things it deliberately does not do. The artifact sets Public Sans, Newsreader and IBM Plex
+ * Mono; Lightning cannot load Google Fonts without a CSP Trusted Site, so the Salesforce typeface
+ * stands and only the colour and the panel chrome carry over. And lightning-datatable renders in
+ * shadow DOM, so the rows stay SLDS - what is styled here is everything around them.
+ */
+:host {
+    --ground: #f5f7f5;
+    --surface: #ffffff;
+    --surface-2: #ecf0ee;
+    --ink: #12262e;
+    --ink-2: #45585f;
+    --ink-3: #7a8a8f;
+    --rule: #d4dbd7;
+    --rule-strong: #b6c1bc;
+    --accent: #0b5d7a;
+    --accent-soft: #dce9f0;
+    --ok: #2e6b4f;
+    --ok-soft: #dbebe1;
+    --warn: #8a6a1f;
+    --warn-soft: #f1e8d1;
+    --bad: #9b3226;
+    --bad-soft: #f2ded9;
+    --shadow: 0 1px 2px rgba(18, 38, 46, 0.06), 0 8px 24px rgba(18, 38, 46, 0.05);
+
+    display: block;
+    background: var(--ground);
+    color: var(--ink);
+}
+
+.dd-panel {
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.dd-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+}
+
+.dd-body {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.dd-heading {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.25;
+}
+
+.dd-sub {
+    font-size: 0.82rem;
+    color: var(--ink-3);
+}
+
+/* A note carries its meaning in the left rule, so the severity reads before the sentence does. */
+.dd-note {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 14px 18px;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+}
+
+.dd-note_bad {
+    border-left-color: var(--bad);
+    background: var(--bad-soft);
+    color: var(--bad);
+}
+
+.dd-note_warn {
+    border-left-color: var(--warn);
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
+.dd-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 9px;
+    border-radius: 100px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+/* Under three hours the pill stops being information and starts being a warning. */
+.dd-pill_warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+    font-weight: 600;
+}
+
+.dd-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 18px;
+}
+
+.dd-controls > .dd-date {
+    min-width: 13rem;
+}
+
+/* Wider than the date: project names run long and a truncated one is the wrong filter chosen. */
+.dd-controls > .dd-project {
+    min-width: 18rem;
+}
+
+/* The summary and the export sit on one line: the count is what tells you whether the export is
+   worth taking, so the two belong beside each other rather than at opposite ends of the screen. */
+.dd-tablehead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dd-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 0.8rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dd-export:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+}
+
+.dd-table {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dd-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.dd-empty {
+    padding: 44px 0;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 0.9rem;
+}
+
+.dd-section {
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/*
+ * Dark is not a nicety here. Salesforce ships a dark theme and an unstyled panel would keep a white
+ * ground under light text, so every token is redefined rather than only the obvious ones.
+ */
+@media (prefers-color-scheme: dark) {
+    :host {
+        --ground: #0d1a1e;
+        --surface: #142429;
+        --surface-2: #1b2e34;
+        --ink: #e3ece9;
+        --ink-2: #a6b9bd;
+        --ink-3: #71868b;
+        --rule: #25393f;
+        --rule-strong: #375054;
+        --accent: #5cadca;
+        --accent-soft: #16323d;
+        --ok: #7fc79f;
+        --ok-soft: #163023;
+        --warn: #d8b45e;
+        --warn-soft: #33280f;
+        --bad: #e08b7d;
+        --bad-soft: #381d18;
+    }
+}

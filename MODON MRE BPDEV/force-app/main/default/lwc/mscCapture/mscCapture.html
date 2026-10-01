@@ -1,0 +1,103 @@
+<template>
+    <div class="cap">
+        <!-- Modes 2 and 3. Always present; the camera path falls back to it. -->
+        <!--
+          `capture` is set imperatively in renderedCallback: the LWC template
+          compiler rejects it as a static attribute on <input> (LWC1057), even
+          though it is valid HTML.
+        -->
+        <input
+            type="file"
+            class="cap__input"
+            accept={accept}
+            onchange={handleFilePick}
+        />
+
+        <template lwc:if={isIdle}>
+            <div class="cap__idle">
+                <div class="cap__actions">
+                    <template lwc:if={showCameraButton}>
+                        <button
+                            class="btn btn-primary"
+                            type="button"
+                            disabled={actionsDisabled}
+                            onclick={startCamera}
+                        >
+                            <c-modon-icon name="eye" size="14"></c-modon-icon>
+                            <span>{label}</span>
+                        </button>
+                    </template>
+                    <button
+                        class="btn btn--ghost"
+                        type="button"
+                        disabled={actionsDisabled}
+                        onclick={openFilePicker}
+                    >
+                        <c-modon-icon name="upload" size="14"></c-modon-icon>
+                        <span>Upload a file</span>
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:if={isLive}>
+            <div class="cap__stage">
+                <video class="cap__video" playsinline muted></video>
+                <!-- Framing guide. Purely visual; nothing is cropped to it. -->
+                <div class="cap__guide" style={guideStyle}>
+                    <span class="cap__corner cap__corner--tl"></span>
+                    <span class="cap__corner cap__corner--tr"></span>
+                    <span class="cap__corner cap__corner--bl"></span>
+                    <span class="cap__corner cap__corner--br"></span>
+                </div>
+                <p class="cap__hint t-xs">{hint}</p>
+            </div>
+            <div class="cap__actions">
+                <button class="btn btn--ghost" type="button" onclick={handleCancel}>
+                    Cancel
+                </button>
+                <button
+                    class="btn btn-primary cap__shutter"
+                    type="button"
+                    disabled={actionsDisabled}
+                    onclick={handleShutter}
+                >
+                    <c-modon-icon name="circle" size="16"></c-modon-icon>
+                    <span>Capture</span>
+                </button>
+            </div>
+        </template>
+
+        <template lwc:if={isPreview}>
+            <div class="cap__stage">
+                <img class="cap__shot" src={previewSrc} alt="Captured image" />
+            </div>
+            <div class="cap__actions">
+                <button class="btn btn--ghost" type="button" onclick={handleRetake}>
+                    <c-modon-icon name="refresh-cw" size="14"></c-modon-icon>
+                    <span>Retake</span>
+                </button>
+                <button
+                    class="btn btn-primary"
+                    type="button"
+                    disabled={actionsDisabled}
+                    onclick={handleAccept}
+                >
+                    <c-modon-icon name="check" size="14"></c-modon-icon>
+                    <span>Use this</span>
+                </button>
+            </div>
+        </template>
+
+        <template lwc:if={cameraError}>
+            <div class="banner banner--warn">
+                <c-modon-icon
+                    name="alert-triangle"
+                    size="15"
+                    color="var(--chip-amber, #d97706)"
+                ></c-modon-icon>
+                <span>{cameraError}</span>
+            </div>
+        </template>
+    </div>
+</template>

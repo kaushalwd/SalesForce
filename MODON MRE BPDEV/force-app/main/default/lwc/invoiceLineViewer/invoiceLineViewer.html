@@ -1,0 +1,125 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 06-11-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+    <lightning-card title="Invoice Lines">
+        <div class="slds-box slds-theme_default slds-p-around_medium slds-m-around_medium">
+            <template if:true={paginatedLines}>
+                <div class="slds-scrollable_x">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                    </template>
+                 <div class="slds-m-top_medium slds-text-align_right">
+                    <lightning-button variant="brand" label="Go To Invoice Bundle" onclick={navigateBack} class="slds-m-right_small"></lightning-button>
+                    <lightning-button variant="brand" label="Previous" onclick={handlePrev} class="slds-m-right_small" disabled={prevPageDisabled}></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleNext} class="slds-m-right_small" disabled={nextPageDisabled}></lightning-button>
+                </div><br/>
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-scrollable_x" style="min-width: 1200px;">
+                        <thead>
+                            <tr>
+                                <th>Hold/Release</th>
+                                <th data-field="Unit_Name__c" onclick={handleSort}>
+                                    Unit Name <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Commission_Line_Name__c" onclick={handleSort}>
+                                    Commission Line <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Sales_Agent__c" onclick={handleSort}>Sales Agent
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Sales_Agent__c" onclick={handleSort}>Sales Manager
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Category_Of_Sale__c" onclick={handleSort}>Category Of Sale
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Commission_Type__c" onclick={handleSort}>Commission Type
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Total_Unit_Price__c" onclick={handleSort}>Total Unit Price
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Total_Commission_Amount__c" onclick={handleSort}>Total Commission Amount
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                 <th data-field="Commission_Payout_Percent__c" onclick={handleSort}>Commission Payout Percent   
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Current_Commission_Payout_Now__c" onclick={handleSort}>Current Commission Amount Payout Now
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Pending_Commission_Amount__c" onclick={handleSort}>Pending Commission Amount
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th data-field="Commission_Amount_Already_Paid__c" onclick={handleSort}>Paid Commission Amount
+                                    <lightning-icon icon-name="utility:arrowdown" size="xx-small"></lightning-icon>
+                                </th>
+                                <th>Hold Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={paginatedLines} for:item="line">
+                                <tr key={line.Id}>
+                                    <td>
+                                        <lightning-button 
+                                            variant={line.buttonVariant} 
+                                            label={line.holdButtonLabel} 
+                                            data-id={line.Id}
+                                            onclick={handleHoldClick}>
+                                        </lightning-button>
+                                    </td>
+                                    <td>{line.Unit_Name__c}</td>
+                                    <td>{line.Commission_Line_Name__c}</td>
+                                    <td>{line.Sales_Agent__c}</td>
+                                    <td>{line.Sales_Manager__c}</td>
+                                    <td>{line.Category_Of_Sale__c}</td>
+                                    <td>{line.Type_Of_Commission__c}</td>
+                                    <td>{line.formattedUnitPrice}</td>
+                                    <td>{line.formattedCommission}</td>
+                                    <td>{line.formattedPaymentPercent}</td>
+                                    <td>{line.formattedPayout}</td>
+                                    <td>{line.formattedPayoutPending}</td>
+                                    <td>{line.formattedPayoutPaid}</td>
+                                    <td>{line.Hold_Reason__c}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slds-m-top_medium slds-text-align_right">
+                    <lightning-button variant="brand" label="Go To Invoice Bundle" onclick={navigateBack} class="slds-m-right_small"></lightning-button>
+                    <lightning-button variant="brand" label="Previous" onclick={handlePrev} class="slds-m-right_small" disabled={prevPageDisabled}></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleNext} class="slds-m-right_small" disabled={nextPageDisabled}></lightning-button>
+                </div>
+            </template>
+            <template if:true={isModalOpen}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <h2 class="slds-modal__title">Enter Reason for Hold</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <lightning-textarea 
+                                label="Reason" 
+                                value={holdReason} 
+                                onchange={handleReasonChange}>
+                            </lightning-textarea>
+                            <template if:true={error}>
+                                <div class="slds-text-color_error">{error}</div>
+                            </template>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Cancel" onclick={closeModal} class="slds-m-right_small"></lightning-button>
+                            <lightning-button label="Hold" variant="brand" onclick={submitHold}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

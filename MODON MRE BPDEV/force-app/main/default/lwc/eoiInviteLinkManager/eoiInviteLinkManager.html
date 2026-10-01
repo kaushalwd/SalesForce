@@ -1,0 +1,48 @@
+<template>
+    <lightning-card title="Public Invite Link" icon-name="utility:link">
+        <div class="slds-p-around_medium">
+
+            <template lwc:if={hasResult}>
+                <template lwc:if={isLocked}>
+                    <div class="slds-box slds-theme_alert-texture slds-theme_warning slds-m-bottom_small">
+                        <p><strong>Already confirmed</strong> on {formattedConfirmedAt}. Further links will not change the selection unless Site Confirmed is cleared.</p>
+                    </div>
+                </template>
+
+                <p class="slds-m-bottom_x-small"><strong>URL</strong></p>
+                <lightning-input type="url" value={result.url} read-only label="Invite URL" variant="label-hidden"></lightning-input>
+
+                <p class="slds-m-top_small slds-text-color_weak">Expires: {formattedExpiresAt}</p>
+
+                <div class="slds-m-top_medium slds-grid slds-gutters">
+                    <div class="slds-col">
+                        <lightning-button label="Copy URL" icon-name="utility:copy" onclick={handleCopy}></lightning-button>
+                    </div>
+                    <div class="slds-col">
+                        <lightning-button label="Share via WhatsApp" icon-name="utility:share" variant="brand" onclick={handleWhatsApp}></lightning-button>
+                    </div>
+                </div>
+            </template>
+
+            <template lwc:else>
+                <p class="slds-m-bottom_small">Generate a one-time-use confirmation link for this lead. The link is HMAC-signed and expires after 5 days.</p>
+            </template>
+
+            <template lwc:if={errorMessage}>
+                <p class="slds-text-color_error slds-m-top_small">{errorMessage}</p>
+            </template>
+
+            <div class="slds-m-top_medium">
+                <lightning-button
+                    label="Generate Invite Link"
+                    variant="brand"
+                    onclick={handleGenerate}
+                    disabled={isLoading}>
+                </lightning-button>
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Generating" size="small"></lightning-spinner>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>

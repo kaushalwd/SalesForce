@@ -1,0 +1,97 @@
+<template>
+	<template if:true={showLoading}>
+        <lightning-spinner
+            alternative-text="Loading"
+            size="medium">
+        </lightning-spinner>
+    </template>
+	<template if:true={displayUI}>
+	 <lightning-record-edit-form object-api-name="DirectDebitRequest__c" onsuccess={handleSuccess}
+		onsubmit={handleSubmit} onerror={handleError}>
+		<lightning-modal-header label="New Direct Debit Request Creation"></lightning-modal-header>
+
+        <lightning-modal-body class="directdebitbody">
+			<div style="height: 325px;">
+				<div class="slds-grid slds-wrap">
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-combobox name="Account" label="Payer Account" value={defaultPayerAccount}
+							placeholder="Select Payer Account" options={AccountList} onchange={handlePayerAccountChange}
+							variant="label-inline" required="true">
+						</lightning-combobox>
+					</div>
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="Customer_Id_Type__c" onchange={onCustIdTypeChange}
+							required="true" value={customerIdType}>
+
+						</lightning-input-field>
+					</div>
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="Customer_ID_Number__c" required="true"
+							value={customerIDNumber} disabled>
+						</lightning-input-field>
+					</div>
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="Customer_Bank_Account_Type__c" required="true"
+							value={customerBankAccountType} >
+						</lightning-input-field>
+					</div>
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="CustomerAccountName__c" required="true"
+							value={customerAccountName}>
+						</lightning-input-field>
+					</div>					
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="Customer_Bank_Account_Name__c" required="true"
+						                        onchange={handleCustomerAccChange}></lightning-input-field>
+						<template if:true={errorCustomerAccMessage}>
+							<div class="slds-text-color_error slds-m-top_x-small">{errorCustomerAccMessage}</div>
+						</template>						
+					</div>
+					
+					<div class="slds-col slds-size_1-of-2">
+						<!--lightning-combobox name="CustomerBankName" value={customerBankName} label="Customer Bank Name" variant="label-inline"
+                            placeholder="Customer Bank Name" options={customerBankNamePickListValues} onchange={handleCustomerBankNameChange}>
+                        </lightning-combobox-->
+								<lightning-input-field
+								field-name="Customer_Bank_Name__c"
+								value={customerBankName}
+								onchange={handleCustomerBankNameChange}
+								>
+							</lightning-input-field>
+					</div>
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="Customer_IBAN_Number__c" required="true" value={customerIBANNumber}
+						                       onchange={handleCustomerIBANChange}></lightning-input-field>
+						<template if:true={errorCustomerIBANMessage}>
+							<div class="slds-text-color_error slds-m-top_x-small">{errorCustomerIBANMessage}</div>
+						</template>					   
+					</div>
+					<lightning-input-field field-name="Replicate_same_on_other_Sales_Order__c"></lightning-input-field>
+					<div class="slds-col slds-size_1-of-2">
+						<lightning-input-field field-name="Comments__c"></lightning-input-field>
+					</div>
+				</div>
+				<div class="slds-grid slds-hide">
+					<lightning-input-field field-name="Customer_Mobile__c" value={customerMobile}></lightning-input-field>
+					<lightning-input-field field-name="Request_Type__c" value="New Registration"></lightning-input-field>
+					<lightning-input-field field-name="Customer_Bank_Name__c" value={customerBankName}></lightning-input-field>
+					<lightning-input-field field-name="Account__c" value={accountId}></lightning-input-field>
+					<lightning-input-field field-name="SalesOrder__c" value={salesOrderId}></lightning-input-field>					
+				</div>
+			</div>
+		</lightning-modal-body>
+		<lightning-modal-footer>
+			<lightning-button class="slds-button" label="Cancel" onclick={handleCloseClick}>
+			</lightning-button>
+			<lightning-button class="slds-button" variant="brand" type="submit" label="Save">
+			</lightning-button>
+		</lightning-modal-footer>
+	</lightning-record-edit-form>
+ </template>
+	<template if:true={isLoading}>
+		<lightning-spinner class="slds-is-relative" alternative-text="Loading..." style="position: absolute;"
+			size="medium">
+		</lightning-spinner>
+	</template>
+
+</template>

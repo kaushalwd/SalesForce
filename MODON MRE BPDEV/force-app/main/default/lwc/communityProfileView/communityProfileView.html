@@ -1,0 +1,231 @@
+<!--
+  @description       : 
+  @author            : Krishna Chaitanya
+  @group             : 
+  @last modified on  : 05-02-2025
+  @last modified by  : Krishna Chaitanya
+-->
+<template>
+  <template if:true={isLoading}>
+    <div class="spinner-backdrop">
+        <lightning-spinner alternative-text="Loading..." size="large"></lightning-spinner>
+    </div>
+</template>
+  <c-custom-toast></c-custom-toast>
+
+
+    <header class="header slds-grid slds-grid_align-spread slds-p-around_medium slds-box">
+      <div class="slds-col">
+          <img src={logowhiteUrl} onclick={homepage} class="logo" alt="Modon Logo" />
+      </div>
+      <div class="slds-col ">
+          <div class="slds-grid slds-grid_align-end slds-gutters_x-small slds-align-middle slds-button__icon_Image">
+              <div class="slds-col slds-is-relative">
+                <lightning-button-icon
+                icon-name="utility:home"
+                alternative-text="Home"
+                title="Home"
+                value="home" data-id="home"
+                onclick={handleMenuSelect}
+                variant="bare" size="large">
+              </lightning-button-icon>
+          </div>
+          <div class="slds-col slds-is-relative">
+            <lightning-button-icon
+            icon-name="utility:user"
+            alternative-text="User Profile"
+            onclick={toggleMenu}
+            variant="bare" size="large">
+          </lightning-button-icon>
+          <template if:true={menuOpen}>
+            <div class="slds-box slds-dropdown slds-dropdown_center slds-dropdown_small">
+              <ul class="slds-dropdown__list" role="menu">
+                <li class="slds-dropdown__item" role="presentation">
+                  <a value="logout" data-id="logout" role="menuitem" onclick={handleMenuSelect}>Log Out</a>
+                </li>
+              </ul>
+            </div>
+          </template>
+
+
+          </div>
+          </div>
+      </div>
+  </header>
+  <br />
+  <br />
+
+  <div class="slds-grid slds-wrap slds-p-around_small">
+    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-text-align_center">
+      <div class="slds-avatar slds-avatar_circle slds-m-bottom_small slds-is-relative" style="width:160px; height:160px;">
+        <img src={avatarUrl} alt="User Avatar" onclick={triggerFileUpload} style="cursor:pointer; width: 100%; height: 100%; border-radius: 50%;" />
+        <lightning-icon 
+          icon-name="utility:upload" 
+          size="x-small" 
+          class="slds-is-absolute" 
+          style="bottom:0; left:50%; transform:translateX(-50%);" 
+          alternative-text="Edit Avatar" 
+          onclick={triggerFileUpload}>
+        </lightning-icon>
+      </div>
+
+      <input type="file" accept="image/*" onchange={handleFileChange} class="slds-hide" />
+      <h2 class="slds-text-heading_medium">Mr. {userName}</h2>
+      <p class="slds-text-body_small">{email}</p>
+      <p class="slds-text-body_small">{mobile}</p>
+      <div class="slds-m-top_medium slds-grid slds-wrap slds-grid_vertical-align-center">
+        <lightning-button 
+            label="&nbsp;Update Profile&nbsp;" 
+            variant="neutral" 
+            disabled={editProfileDisabled}
+            class="custom-button"
+            onclick={handleEditProfile}>
+        </lightning-button>
+    
+        <lightning-button 
+            label="Reset Password" 
+            variant="neutral" 
+            disabled={resetPasswordDisabled}
+            class="custom-button"
+            onclick={handleResetPassword}>
+        </lightning-button>
+    
+        <lightning-button 
+            label="Help & Support" 
+            variant="brand-outline" 
+            disabled={supportCase}
+            class="custom-button"
+            onclick={handleCreateCase}>
+        </lightning-button>
+    
+        <lightning-button 
+            label="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Logout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" 
+            variant="destructive" 
+            class="custom-button"
+            onclick={handleLogout}>
+        </lightning-button>
+    </div>
+    
+    </div>
+    <template if:true={isPasswordReset}>
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+        <lightning-card>
+          <div class="slds-p-around_small">
+  
+            <h2 class="slds-text-heading_small">Reset Your Password</h2> 
+            <h3 class="slds-text-heading_small slds-m-top_small pwd-ctn">*We recommend using a strong, unique password with at least 8 characters, including uppercase and lowercase letters, numbers, and special characters.</h3>
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+              <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small" label="New Password" value={newPassword} name="newPassword" onchange={handleFormInputChange} type="password" required></lightning-input>
+              <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small" label="Confirm Password" value={confirmPassword} name="confirmPassword" onchange={handleFormInputChange} type="password" required></lightning-input>
+            </div>
+  
+        
+  
+            <template if:true={isPasswordReset}>
+              <div class="slds-text-align_right slds-m-top_small slds-grid slds-wrap slds-grid_align-end">
+                <lightning-button label="Reset Password" variant="brand" class="slds-m-right_x-small" onclick={callPasswordRestHandler}></lightning-button>
+                <lightning-button label="Cancel" variant="neutral" onclick={handleCancelPasswordReset}></lightning-button>
+              </div>
+            </template>
+  
+          </div>
+        </lightning-card>
+      </div>
+    </template>
+    <template if:true={detailPageVisibility}>
+    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+      <lightning-card>
+        <div class="slds-p-around_small">
+          <template if:true={profileUpdateInprogress}>
+              <p class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small prof-msg">{profileMessage}</p>
+          </template>
+          <template if:true={caseCreationDone}>
+            <p class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small prof-msg">{caseMessage}</p>
+        </template>
+          <h2 class="slds-text-heading_small">Personal Information</h2>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="First Name" value={firstName} name="firstName" onchange={handleFormInputChange} disabled></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Last Name" value={lastName} name="lastName" onchange={handleFormInputChange} disabled></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Emirates ID Number" value={emiratesId} disabled></lightning-input>
+          </div>
+
+          <h2 class="slds-text-heading_small slds-m-top_small">Contact Information</h2>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Phone" value={phone} name="phone" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Email" value={email} name="email" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Street" value={street} name="street" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="City" value={city} name="city" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="State" value={state} name="state" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Postal Code" value={zipCode} name="zipCode" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_xx-small" label="Country" value={country} name="country" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+          </div>
+
+          <template if:true={editProfile}>
+            <div class="slds-text-align_right slds-m-top_small slds-grid slds-wrap slds-grid_align-end">
+              <lightning-button label="Save Changes" variant="brand" class="slds-m-right_x-small" onclick={handleSaveChanges}></lightning-button>
+              <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}></lightning-button>
+            </div>
+          </template>
+
+        </div>
+      </lightning-card>
+    </div>
+    </template>
+    <!-- Case Creation -->
+     <template if:true={isCaseCreationOpen}>
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+        <lightning-card>
+          <div class="slds-p-around_small">
+  
+            <h2 class="slds-text-heading_small">Support Case Details</h2>
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+              <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small" label="Subject" value={subject} name="subject" onchange={handleFormInputChange} required></lightning-input>
+              <lightning-textarea class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small" name="caseDescription" label="Case Description" value={caseDescription} onchange={handleFormInputChange} required></lightning-textarea>
+              <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small" label="Phone" value={phone} name="phone" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+              <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_xx-small" label="Email" value={email} name="email" onchange={handleFormInputChange} disabled={disableFields}></lightning-input>
+            </div>
+  
+        
+  
+            <template if:true={isCaseCreationOpen}>
+              <div class="slds-text-align_right slds-m-top_small slds-grid slds-wrap slds-grid_align-end">
+                <lightning-button label="Create Case" variant="brand" class="slds-m-right_x-small" onclick={caseCreationHandler}></lightning-button>
+                <lightning-button label="Cancel" variant="neutral" onclick={handleCancelCaseCreation}></lightning-button>
+              </div>
+            </template>
+  
+          </div>
+        </lightning-card>
+      </div>
+     </template>
+  </div>
+
+  <br/>
+ <footer class="footer">
+        <p style="float:left">© Modon 2025 — All rights reserved</p>
+        <div class="slds-grid slds-wrap slds-text-body_small">
+            <!-- <div  class="slds-col slds-size_2-of-8 slds-p-around_x-small slds-text-color_inverse ">
+                <a href="#" style="color: aliceblue;" class="slds-align_absolute-center" onclick={handleContactUs}><b>Contact Us &nbsp;</b></a>
+            </div> -->
+          <!-- Row 1 -->
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={instagramUrl} alt="Instagram" class="slds-icon" onclick={handleinstagram} />
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={youtubeiconUrl} alt="Youtube" class="slds-icon" onclick={handleyoutube}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={linkediniconUrl} alt="Ln" class="slds-icon" onclick={handlelinkedin}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={facebookUrl} alt="Facebook" class="slds-icon" onclick={handlefacebook}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={twitterxUrl} alt="X" class="slds-icon" onclick={handletwitterx}/>
+          </div>
+          <!-- You can add more fields here if needed -->
+      </div>
+    </footer>
+  
+</template>

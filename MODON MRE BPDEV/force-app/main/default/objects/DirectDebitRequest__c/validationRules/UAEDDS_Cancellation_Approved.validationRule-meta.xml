@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>UAEDDS_Cancellation_Approved</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Gateway__c, &quot;UAEDDS&quot;),
+
+    OR(
+        AND(
+            ISCHANGED(Cancellation_Approved__c),
+            Cancellation_Approved__c = TRUE
+        ),
+        AND(
+            ISCHANGED(Cancellation_Initiated__c),
+            Cancellation_Initiated__c = TRUE
+        )
+    ),
+
+    OR(
+        Bank_Status_Code__c &lt;&gt; &quot;ACCP&quot;,
+        ISBLANK(TEXT(Cancellation_Reason_Code__c))
+    )
+)</errorConditionFormula>
+    <errorMessage>Please review the Errors: 
+1. Cancellation can be Initiated or Approved If only DD approved by Bank.
+2. Cancellation Reason Code is Required</errorMessage>
+</ValidationRule>

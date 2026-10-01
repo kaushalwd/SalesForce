@@ -1,0 +1,37 @@
+/* Identity document fields. Owns no visual language of its own: fields, labels,
+   errors and hints are c/mscStyles primitives, so these read identically to the
+   fields around them in every screen and in both themes. */
+@import "c/mscStyles";
+
+/* MSC-111 - ONE grid, not two. This component used to open its own .field-grid
+   inside the shadow root, and auto-fit computed its columns INDEPENDENTLY of the
+   parent form's: at the console form's ~470px the two grids happened to agree,
+   anywhere wider two identity fields stretched to halves above a form set in
+   thirds, and a non-resident's third field sat beside a dead cell. display:
+   contents dissolves the host and the wrapper out of layout, so the .field
+   blocks become items of WHICHEVER grid the parent provides - the parent's
+   columns and these can never disagree again, and a blank-residency host costs
+   no empty row. Every render site provides a grid (mscConsole 2.13,
+   mscLeadList 1.8). */
+:host {
+    display: contents;
+}
+.idf-fields {
+    display: contents;
+}
+
+/* The reason a stored value was not enough. Amber, not red: the record is stale,
+   the rep did nothing wrong, and red under a field they have not touched reads as
+   a fault. Layered like .banner--warn, but at text weight - one line, not a box. */
+.idf-why {
+    color: var(--chip-amber, #d97706);
+}
+
+/* A locked value came off a record the org already holds. READONLY, never
+   disabled - c/mscStyles has no :disabled rule for .field__input, so a disabled
+   field falls to the browser grey, which neither theme can carry. Same rule and
+   same reasoning as the create form's company name (mscConsole 2.11). */
+.field__input[readonly] {
+    color: var(--text-muted, #a3a3a3);
+    cursor: default;
+}

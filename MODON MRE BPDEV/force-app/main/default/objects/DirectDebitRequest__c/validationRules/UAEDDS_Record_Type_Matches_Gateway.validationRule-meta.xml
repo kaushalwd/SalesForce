@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>UAEDDS_Record_Type_Matches_Gateway</fullName>
+    <active>true</active>
+    <description>Gateway is the single source of truth and every query filters on it; the record type only drives the page and the action bar. This stops the two drifting apart. Silent on a record carrying neither type, so no one is blocked by record type access.</description>
+    <errorConditionFormula>OR(
+  AND(
+    RecordType.DeveloperName = &quot;UAEDDS&quot;,
+    NOT(ISPICKVAL(Gateway__c, &quot;UAEDDS&quot;))
+  ),
+  AND(
+    RecordType.DeveloperName = &quot;FAB_Legacy&quot;,
+    NOT(ISPICKVAL(Gateway__c, &quot;FAB Legacy&quot;))
+  )
+)</errorConditionFormula>
+    <errorMessage>The record type does not match the Gateway. A UAEDDS mandate needs the UAEDDS record type and a FAB mandate needs FAB Legacy, because the record type is what decides which screen and which actions this record gets.</errorMessage>
+</ValidationRule>

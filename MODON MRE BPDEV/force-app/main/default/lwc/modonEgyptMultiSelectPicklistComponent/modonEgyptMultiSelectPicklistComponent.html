@@ -1,0 +1,65 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="loading-overlay">
+            <lightning-spinner alternative-text="Loading" size="medium" variant="brand"></lightning-spinner>
+        </div>
+    </template>
+
+    <div class="slds-col slds-size_7-of-7 slds-small-size_3-of-7">
+        <lightning-input type="search" variant="standard" value={searchValue} onchange={handleSearchChange}
+            class="slds-m-bottom--medium" name="Search" label="Search User" placeholder="Search User"></lightning-input>
+    </div>
+    <div class="slds-form-element" role="group" aria-labelledby="picklist-group-label">
+        <div class="slds-form-element__control">
+            <div class="slds-dueling-list">
+                <div class="slds-assistive-text" id="drag-live-region" aria-live="assertive"></div>
+                <div class="slds-assistive-text" id="option-drag-label">Press space bar when on an item, to move it
+                    within the list. Cmd/Ctrl plus left and right arrow keys, to move items between lists.</div>
+                <div class="slds-dueling-list__column slds-dueling-list__column_responsive">
+                    <span class="slds-form-element__label" id="label-105">Available Users</span>
+                    <div class="slds-dueling-list__options">
+                        <ul aria-describedby="option-drag-label" aria-labelledby="label-105" aria-multiselectable="true"
+                            class="slds-listbox slds-listbox_vertical" role="listbox">
+                            <template for:each={standardsOptions} for:item="opt">
+                                <li key={opt.value} data-id={opt.value} role="presentation" class="slds-listbox__item"
+                                    onclick={handleSelectionLi}>
+                                    <div class={opt.liClass} aria-selected={opt.isSelected} role="option" tabindex="-1">
+                                        <span class="slds-media__body">
+                                            <span class="slds-truncate" title="Arabic">{opt.label}</span>
+                                        </span>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slds-dueling-list__column">
+                    <lightning-button-icon class="slds-p-horizontal--medium slds-p-top--medium"
+                        icon-name="utility:right" variant="bare" alternative-text="Move Selection to Selected Users"
+                        title="right" onclick={handleSelection}></lightning-button-icon>
+                    <lightning-button-icon class="slds-p-horizontal--medium" icon-name="utility:left" variant="bare"
+                        alternative-text="Move Selected Users to Selection" title="left"
+                        onclick={handleUnSelection}></lightning-button-icon>
+                </div>
+                <div class="slds-dueling-list__column slds-dueling-list__column_responsive">
+                    <span class="slds-form-element__label" id="label-106">Selected Users</span>
+                    <div class="slds-dueling-list__options">
+                        <ul aria-describedby="option-drag-label" aria-labelledby="label-106" aria-multiselectable="true"
+                            class="slds-listbox slds-listbox_vertical" role="listbox">
+                            <template for:each={selectedOptions} for:item="opt">
+                                <li key={opt.value} data-id={opt.value} role="presentation" class="slds-listbox__item"
+                                    onclick={handleUnSelectionLi}>
+                                    <div class={opt.liClass} aria-selected={opt.isSelected} role="option" tabindex="0">
+                                        <span class="slds-media__body">
+                                            <span class="slds-truncate" title="Chinese">{opt.label}</span>
+                                        </span>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

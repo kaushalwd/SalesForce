@@ -1,0 +1,250 @@
+<template>
+
+    <lightning-card title="Payment Plan Change" icon-name="standard:orders">
+
+        <div class="container">
+
+            <!-- Payment Plan Selection -->
+
+            <div class="selection-box">
+
+                <lightning-combobox label="Select Revised Payment Plan" value={selectedPaymentPlan}
+                    options={paymentPlanOptions} onchange={handlePlanChange} disabled={isReadOnly}>
+                </lightning-combobox>
+
+                <template if:true={selectedPaymentPlanName}>
+                    <div class="selected-plan">
+
+                        <lightning-icon icon-name="utility:check" size="x-small">
+                        </lightning-icon>
+
+                        <span>
+                            Selected Plan :
+                            <strong>{selectedPaymentPlanName}</strong>
+                        </span>
+
+                    </div>
+                </template>
+
+            </div>
+
+            <!-- Existing Plan -->
+
+            <div class="section-card">
+
+                <div class="section-header existing-header">
+
+                    <lightning-icon icon-name="utility:table" size="x-small">
+                    </lightning-icon>
+
+                    <span>Existing Payment Plan</span>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer custom-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Milestone No</th>
+                                <th>Name</th>
+                                <th>Milestone %</th>
+                                <th>Amount</th>
+                                <th>Milestone Date</th>
+                                <th>Status</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <template for:each={existingPlan} for:item="item">
+
+                                <tr key={item.installmentId}>
+
+                                    <td>{item.milestoneNumber}</td>
+                                    <td>{item.milestoneName}</td>
+                                    <td>{item.milestone}</td>
+                                    <td>{item.amount}</td>
+                                    <td>{item.milestoneDate}</td>
+
+                                    <td>
+
+                                        <template if:true={item.paymentStatus}>
+                                            <span class="status-pill">
+                                                {item.paymentStatus}
+                                            </span>
+                                        </template>
+
+                                    </td>
+
+                                </tr>
+
+                            </template>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Processing..." size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Revised Plan -->
+
+            <div class="section-card">
+
+                <div class="section-header revised-header">
+
+                    <lightning-icon icon-name="utility:change_owner" size="x-small">
+                    </lightning-icon>
+
+                    <span>Revised Payment Plan</span>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer custom-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Milestone No</th>
+                                <th>Name</th>
+                                <th>Milestone %</th>
+                                <th>Amount</th>
+                                <th>Milestone Date</th>
+                                <th>Status</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <!--template for:each={revisedPlan} for:item="item">
+
+                                <tr key={item.installmentId} class={item.rowClass}>
+
+                                    <td>{item.milestoneNumber}</td>
+                                    <td>{item.milestoneName}</td>
+                                    <td>{item.milestone}</td>
+                                    <td>{item.amount}</td>
+                                    <td>{item.milestoneDate}</td>
+
+                                    <td>
+
+                                        <span class="status-pill">
+                                            {item.paymentStatus}
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            </template-->
+
+
+
+                            <template iterator:it={revisedPlan}>
+
+                                <tr key={it.value.installmentId} class={it.value.rowClass}>
+
+                                    <td>{it.value.milestoneNumber}</td>
+
+                                    <td>{it.value.milestoneName}</td>
+
+                                    <td>{it.value.milestone}</td>
+
+                                    <td>{it.value.amount}</td>
+
+                                    <td>
+
+                                        <template if:true={it.value.isEditable}>
+
+                                            <lightning-input type="date" variant="label-hidden"
+                                                value={it.value.milestoneDate} data-index={it.index}
+                                                disabled={isReadOnly}
+                                                onchange={handleDateChange}>
+                                            </lightning-input>
+
+                                        </template>
+
+                                        <template if:false={it.value.isEditable}>
+
+                                            {it.value.milestoneDate}
+
+                                        </template>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="status-pill">
+
+                    {it.value.paymentStatus}
+
+                </span>
+
+                                    </td>
+
+                                </tr>
+
+                            </template>
+
+
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <!-- Action Buttons -->
+
+            <div class="action-section">
+
+                <template if:true={showSaveButton}>
+
+                    <lightning-button variant="brand" label="Submit For Approval" icon-name="utility:approval"
+                        onclick={handleSave} disabled={enableBtn}>
+                    </lightning-button>
+
+                </template>
+
+
+                <!--template if:true={showApproveButton}>
+
+                    <lightning-button variant="brand" label="Approve" icon-name="utility:check" onclick={handleApprove}>
+                    </lightning-button>
+
+                </template-->
+
+                <!--template if:true={showCreatePlanButton}>
+
+                    <lightning-button variant="success" label="Create Plan" icon-name="utility:new"
+                        onclick={handleCreatePlan}>
+                    </lightning-button>
+
+                </template-->
+
+            </div>
+
+        </div>
+
+    </lightning-card>
+
+</template>

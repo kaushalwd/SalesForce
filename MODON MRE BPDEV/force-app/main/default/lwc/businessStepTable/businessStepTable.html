@@ -1,0 +1,299 @@
+<template>
+    <div class="responsive-wrapper">
+
+        <template if:true={isLoading}>
+            <div class="loader-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                <div class="loader-text">Loading data, please wait...</div>
+            </div>
+        </template>
+
+        <lightning-card title="Assigned Service Request Steps" icon-name="standard:process">
+
+
+            <!--
+        <c-paginator if:true={records} records={records}
+            total-records={records.length} show-search-box="true"
+            onpaginatorchange={handlePaginatorChange} lwc:ref="paginator">
+        </c-paginator>
+       -->
+
+            <div class="slds-p-around_medium slds-m-top-large">
+                <!-- Filter Section -->
+                <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+                    <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5">
+                    <lightning-input
+                        type="date"
+                        label="Start Date"
+                        value={startDate}
+                        onchange={handleStartDate}>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5">
+                    <lightning-input
+                        type="date"
+                        label="End Date"
+                        value={endDate}
+                        onchange={handleEndDate}>
+                    </lightning-input>
+                </div>-->
+                    <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5">
+                    <lightning-combobox
+                        label="Business Process"
+                        options={flowOptions}
+                        value={selectedFlow}
+                        onchange={handleFlowChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5">
+                    <lightning-combobox
+                        label="Step"
+                        options={stepOptions}
+                        value={selectedStep}
+                        onchange={handleStepChange}>
+                    </lightning-combobox>
+                </div>-->
+
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4" style="margin-top: 30px !important;">
+                        <h2 class="sales-text">
+                            Service Request
+                        </h2>
+                        <c-generic-lookup-lwc objname="Process_Flow__c" iconname="standard:account"
+                            onlookupselectedname={handleProcessFlowSelectionName}
+                            onlookupselected={handleProcessFlowSelection} onclearlookup={handleProcessFlowClear}>
+                        </c-generic-lookup-lwc>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4" style="margin-top: 30px !important;">
+                        <h2 class="sales-text">
+                            Service Request Step
+                        </h2>
+                        <c-generic-lookup-lwc objname="Process_Flow_Step__c" iconname="standard:account"
+                            filter={stepfilter} onlookupselectedname={handleFlowStepSelectionName}
+                            onlookupselected={handleFlowStepSelection} onclearlookup={handleFlowStepClear}
+                            display-field="Step_Name__c">
+                        </c-generic-lookup-lwc>
+                    </div>
+                    <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4" style="margin-top: 30px !important;">
+                        <h2 class="sales-text">
+                            Project
+                        </h2>
+                        <c-generic-lookup-lwc objname="Project__c" iconname="standard:account"
+                            onlookupselected={handleProjectSelection} onclearlookup={handleProjectClear}>
+                        </c-generic-lookup-lwc>
+                    </div-->
+                    <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4" style="margin-top: 30px !important;">
+                    <h2 class="sales-text">
+                        Tower
+                    </h2>
+                    <c-generic-lookup-lwc objname="Tower__c" iconname="standard:account" display-field="Name"
+                            onlookupselected={handleTowerSelection} onclearlookup={handleTowerClear}>
+                    </c-generic-lookup-lwc>
+                </div-->
+
+                    <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+                        <lightning-combobox name="status" label="Status" value={selectedStatus} options={statusOptions}
+                            onchange={handleStatusChange}>
+                        </lightning-combobox>
+                    </div-->
+
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+                        <lightning-combobox name="Step Assignment Status" label="Step Assignment Status"
+                            value={selectedStepAssignmentStatus} options={stepAssignmentStatusOptions}
+                            onchange={handleAssignmentStatusChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+                    <lightning-combobox
+                        name="bpnNumber"
+                        label="BPN Number"
+                        value={bpnNumber}
+                        options={bpnOptions}
+                        onchange={handleBpnNumberChange}
+                        placeholder="Select BPN Number"
+                        class="slds-m-bottom_medium">
+                    </lightning-combobox>
+                </div-->
+
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+                        <lightning-input type="number" label="Select First N Rows" value={rowCountToSelect}
+                            onchange={handleRowCountChange} min="1">
+                        </lightning-input>
+                    </div>
+                     <div class="slds-col slds-size_1-of-1 slds-medium-size_5-of-12 slds-m-top_xx-large">
+                                <template if:false={noRecordsFound}>
+                                    <c-generic-master-search-lwc columns={columns} records={records}
+                                        onfiltered={handleMasterSearchFilter}
+                                        placeholder="Search across all columns...">
+                                    </c-generic-master-search-lwc>
+                                </template>
+                            </div>
+                    <!--commented By Artee on 07-07-25 asked by Siva-->
+                    <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-6 slds-m-top_large"> 
+                    <lightning-input type="file" label="Select Unit CSV File" onchange={handleUnitFileChange} accept=".csv"></lightning-input>
+                    <template if:true={unitFileName}>
+                        <p class="slds-m-top_medium">{unitFileName}</p>
+                    </template>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-6 slds-m-top_large"> 
+                    <lightning-input type="file" label="Select Booking CSV File" onchange={handleBookingFileChange} accept=".csv"></lightning-input>
+                    <template if:true={bookingFileName}>
+                        <p class="slds-m-top_medium">{bookingFileName}</p>
+                    </template>
+                </div>-->
+
+                    <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                    <lightning-input
+                        type="search"
+                        label="Search"
+                        placeholder="Business Process / Booking / Name"
+                        value={searchKey}
+                        onchange={handleSearch}>
+                    </lightning-input>
+                </div>-->
+                    <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-bottom slds-m-top_xx-large">
+                    <lightning-button
+                        variant="brand"
+                        label="Apply"
+                        onclick={loadData}
+                        class="slds-m-top_small">
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-bottom slds-m-top_xx-large">
+                     <lightning-button
+                        variant="brand"
+                        label="Refresh"
+                        onclick={handleRefresh}
+                        class="slds-m-top_small">
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-bottom slds-m-top_xx-large">
+                     <lightning-button
+                        variant="brand"
+                        label="Clear"
+                        onclick={handleClear}
+                        class="slds-m-top_small">
+                    </lightning-button>
+                </div>-->
+                    <div class="slds-col slds-size_1-of-1 slds-m-top_large">
+                        <div class="slds-grid slds-wrap slds-gutters slds-align_absolute-center">
+
+                            <!-- 🔍 Search Box (Left Side) -->
+                           
+
+                            <!-- 🎯 Buttons (Right Side) -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_7-of-12 slds-text-align_right">
+
+                                <lightning-button variant="brand" label="Apply" onclick={loadData}></lightning-button>
+
+                                <lightning-button variant="neutral" label="Refresh" onclick={handleRefresh}
+                                    class="slds-m-left_x-small"></lightning-button>
+
+                                <lightning-button variant="destructive" label="Clear" onclick={handleClear}
+                                    class="slds-m-left_x-small"></lightning-button>
+
+                                <template if:true={showAssignSection}>
+                                    <lightning-button variant="success" label="Accept" onclick={handleAssign}
+                                        class="slds-m-left_x-small"></lightning-button>
+                                </template>
+
+                                <template if:true={showApproverRejectionButton}>
+                                    <lightning-button variant="brand" label="Approve/Reject" onclick={openApprovalModal}
+                                        class="slds-m-left_x-small"></lightning-button>
+                                </template>
+
+                                <template if:true={showUploadBPNButton}>
+                                    <lightning-button variant="brand" label="Upload Approved BPN"
+                                        onclick={openUploadBPNModal} class="slds-m-left_x-small"></lightning-button>
+                                </template>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <template if:true={noRecordsFound}>
+                    <div class="slds-align_absolute-center slds-p-around_large">
+                        <lightning-icon icon-name="utility:info" size="small" class="slds-m-right_x-small">
+                        </lightning-icon>
+                        No records found matching your criteria. Please check the Filters
+                    </div>
+                </template>
+
+                <template if:false={noRecordsFound}>
+                    <lightning-datatable key-field="id" data={sortedData} onsort={handleSort} sorted-by={sortBy}
+                        sorted-direction={sortDirection} columns={columns} class="slds-scrollable_x"
+                        onrowselection={handleRowSelection} row-number-offset={rowNumberOffset}>
+                    </lightning-datatable>
+                </template>
+
+                <template if:true={showApproveModal}>
+                    <c-lwc-approval-reject-mass-steps step-ids={stepIds} step-name={selectedStepName}
+                        process-name={selectedFlowName} total-dld-amount={totalDldAmount} onsubmit={handleModalSubmit}
+                        onclose={handleModalClose}>
+                    </c-lwc-approval-reject-mass-steps>
+                </template>
+
+
+
+
+                <template if:true={showUploadBPNModal}>
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            <header class="slds-modal__header">
+                                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeUploadBPNModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                            </button>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Upload
+                                    Document</h2>
+                            </header>
+
+                            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                                <lightning-combobox name="documentType" label="Document Type"
+                                    value={selectedDocumentType} options={documentTypeOptions}
+                                    onchange={handleDocumentTypeChange} class="slds-m-bottom_medium">
+                                </lightning-combobox>
+
+
+                                <lightning-file-upload label="Upload Document" name="bpnUploader"
+                                    accept={acceptedFormats} record-id={firstStepId}
+                                    onuploadfinished={handleBPNUploadFinished} multiple="false" variant="label-stacked">
+                                </lightning-file-upload>
+
+
+                                <div if:true={uploadedFileName} class="slds-m-top_small">
+                                    Selected file: {uploadedFileName}
+                                </div>
+                            </div>
+
+                            <footer class="slds-modal__footer">
+                                <lightning-button variant="neutral" label="Cancel" onclick={closeUploadBPNModal}
+                                    class="slds-m-right_small"></lightning-button>
+                                <lightning-button variant="brand" label="Save" onclick={saveBPNDocument}
+                                    disabled={isSaveDisabled}></lightning-button>
+                            </footer>
+
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                </template>
+
+
+
+                <!-- Error Message -->
+                <template if:true={error}>
+                    <div class="slds-text-color_error slds-m-top_medium">
+                        {error}
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+    </div>
+</template>

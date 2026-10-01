@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Cases_cannot_be_created_with_Legacy_Data</fullName>
+    <active>true</active>
+    <description>Cases cannot be created with Legacy Data Category</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    OR(
+    AND(
+        ISNEW(),
+        ISPICKVAL(CaseCategory__c , &quot;Legacy Data&quot;)
+    ),
+    AND(
+        NOT(ISNEW()),
+        ISPICKVAL(CaseCategory__c , &quot;Legacy Data&quot;),
+        DATEVALUE(CreatedDate) &gt; DATE(2026,3,5)
+    )
+)
+
+/*AND(
+    ISPICKVAL(CaseCategory__c , &quot;Legacy Data&quot;),
+    TODAY() &gt;= DATE(2026, 2, 18)
+)*/
+)</errorConditionFormula>
+    <errorDisplayField>CaseCategory__c</errorDisplayField>
+    <errorMessage>Cases cannot be created with Legacy Data Category</errorMessage>
+</ValidationRule>

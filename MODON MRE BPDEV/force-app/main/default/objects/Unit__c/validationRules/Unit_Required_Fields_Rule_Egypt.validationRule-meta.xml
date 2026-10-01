@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Unit_Required_Fields_Rule_Egypt</fullName>
+    <active>false</active>
+    <description>This rule will restrict all users which don&apos;t have the custom permission &apos;Unit Editor&apos; from updating the Unit Name, Plot No, Unit Classification and Number of Bedrooms fields on Unit.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL( Source_Entity__c , &quot;Modon - Egypt&quot;),
+    NOT( $Profile.Name = &quot;System Administrator&quot;),
+    NOT($Permission.Unit_Editor_Egypt) ,
+    OR(
+         ISCHANGED( Name ) ,
+         ISCHANGED( PlotNo__c ) ,
+         ISCHANGED( UnitClassification__c ),
+         ISCHANGED( Number_of_Bedrooms__c )
+    )
+)</errorConditionFormula>
+    <errorMessage>You are not allowed to edit unit records.</errorMessage>
+</ValidationRule>

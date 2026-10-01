@@ -1,0 +1,275 @@
+<template>
+    <div class="jn">
+        <!-- ── Top strip: way out, progress, context ─────────────────────── -->
+        <header class="jn__top">
+            <button class="btn btn-ghost btn-sm jn__back" type="button" onclick={handleExitRequest}>
+                <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                <span>Back to list</span>
+            </button>
+
+            <ol class="stepper" aria-label="EOI journey progress">
+                <template for:each={steps} for:item="s">
+                    <li key={s.key} class={s.cls} aria-current={s.isActive}>
+                        <span class="stp__dot">
+                            <template lwc:if={s.isDone}>
+                                <c-modon-icon name="check" size="11" color="currentColor"></c-modon-icon>
+                            </template>
+                            <template lwc:else>{s.n}</template>
+                        </span>
+                        <span class="stp__label">{s.label}</span>
+                    </li>
+                </template>
+            </ol>
+
+            <template lwc:if={selectedProjectName}>
+                <span class="jn__ctx" title={selectedProjectName}>
+                    <c-modon-icon name="building" size="12" color="currentColor"></c-modon-icon>
+                    <span class="jn__ctx-text">{selectedProjectName}</span>
+                </span>
+            </template>
+        </header>
+
+        <!-- ── Feedback ──────────────────────────────────────────────────── -->
+        <div class="jn__feedback" aria-live="polite">
+            <template lwc:if={notice}>
+                <div class={noticeClass}>
+                    <c-modon-icon name={noticeIcon} size="15" color="currentColor"></c-modon-icon>
+                    <span class="jn__banner-text">{notice.text}</span>
+                    <button class="jn__banner-x" type="button" onclick={handleDismissNotice} aria-label="Dismiss">
+                        <c-modon-icon name="x" size="13" color="currentColor"></c-modon-icon>
+                    </button>
+                </div>
+            </template>
+            <template lwc:if={errorMsg}>
+                <div class="banner banner--error jn__banner" role="alert">
+                    <c-modon-icon name="alert-circle" size="15" color="var(--chip-red, #f87171)"></c-modon-icon>
+                    <span class="jn__banner-text">{errorMsg}</span>
+                </div>
+            </template>
+        </div>
+
+        <!-- ── Discard guard ─────────────────────────────────────────────── -->
+        <template lwc:if={discardPrompt}>
+            <div class="glass jn__discard" role="alertdialog" aria-label="Discard this EOI?">
+                <div class="jn__discard-body">
+                    <p class="jn__discard-title">Leave this EOI?</p>
+                    <p class="jn__discard-text">Progress on this journey will be lost. Records that were already created stay as they are.</p>
+                </div>
+                <div class="jn__discard-actions">
+                    <button class="btn btn-sm" type="button" onclick={handleDiscardCancel}>Keep going</button>
+                    <button class="btn btn-primary btn-sm" type="button" onclick={handleDiscardConfirm}>Leave</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Steps ─────────────────────────────────────────────────────── -->
+        <section class="jn__body">
+            <template lwc:if={isIdentify}>
+                <c-msc-eoi-identity
+                    class="jn__step"
+                    project-options={projectOptions}
+                    selected-project-id={selectedProjectId}
+                    project-closed={isProjectClosed}
+                    project-closed-text={projectClosedText}
+                    quota-text={quotaText}
+                    customer={customer}
+                    lookup={lookup}
+                    identity-verified={identityVerified}
+                    customer-source={customerSource}
+                    is-customer-editable={isCustomerEditable}
+                    matches={matches}
+                    locked-fields={lockedFields}
+                    match-message={matchMessage}
+                    lookup-error={lookupError}
+                    contact={contact}
+                    nationality-options={nationalityOptions}
+                    country-options={countryOptions}
+                    busy={busy}
+                    next-disabled={identityNextDisabled}
+                    onprojectchange={handleProjectChange}
+                    oncustomertype={handleCustomerType}
+                    onlookupchange={handleLookupChange}
+                    onfieldchange={handleFieldChange}
+                    oncontactblur={handleContactBlur}
+                    onfind={handleFind}
+                    onclearidentity={handleClearIdentity}
+                    onselectmatch={handleSelectMatch}
+                    onnext={handleIdentityNext}
+                ></c-msc-eoi-identity>
+            </template>
+
+            <template lwc:if={isVerify}>
+                <c-msc-eoi-verify
+                    class="jn__step"
+                    method={verificationMethod}
+                    email-target={verificationEmailTarget}
+                    phone-target={verificationPhoneTarget}
+                    request-id={verificationRequestId}
+                    is-verified={isVerified}
+                    message={verificationMessage}
+                    sending={isSendingVerification}
+                    cooldown-seconds={resendCooldownSeconds}
+                    max-resend-reached={maxResendReached}
+                    reset-token={otpResetToken}
+                    busy={busy}
+                    next-disabled={verifyNextDisabled}
+                    onsendcode={handleSendCode}
+                    onresend={handleResend}
+                    onotpchange={handleOtpChange}
+                    onback={handleBack}
+                    onnext={handleVerifyNext}
+                ></c-msc-eoi-verify>
+            </template>
+
+            <template lwc:if={isDetails}>
+                <c-msc-eoi-details
+                    class="jn__step"
+                    project-name={selectedProjectName}
+                    customer-name={doneCustomerName}
+                    phase-options={phaseOptions}
+                    selections={selections}
+                    active-key={activeSelectionKey}
+                    payment-type={paymentType}
+                    payment-type-options={paymentTypeOptions}
+                    checkout-method={effectiveCheckoutMethod}
+                    sent-links={sentLinks}
+                    link-errors={linkErrors}
+                    total-label={totalAmountLabel}
+                    quota-text={quotaText}
+                    quota-count-error={hasQuotaCountError}
+                    quota-count-error-text={quotaCountErrorText}
+                    project-closed={isProjectClosed}
+                    project-closed-text={projectClosedText}
+                    add-disabled={addSelectionDisabled}
+                    submit-disabled={detailsSubmitDisabled}
+                    busy={busy}
+                    onselectionchange={handleSelectionChange}
+                    onaddselection={handleAddSelection}
+                    onremoveselection={handleRemoveSelection}
+                    onactivate={handleActivateSelection}
+                    onpaymentchange={handlePaymentChange}
+                    oncheckoutmethod={handleCheckoutMethod}
+                    onsubmit={handleDetailsSubmit}
+                ></c-msc-eoi-details>
+            </template>
+
+            <template lwc:if={isDone}>
+                <div class="jn__step jn__done">
+                    <div class="glass jn__done-card">
+                        <span class="jn__done-icon">
+                            <c-modon-icon name={doneIcon} size="28" color="currentColor"></c-modon-icon>
+                        </span>
+                        <h2 class="jn__done-title">{doneTitle}</h2>
+                        <p class="jn__done-sub">{doneSubtitle}</p>
+
+                        <template lwc:if={doneHasReferences}>
+                            <div class="jn__refs">
+                                <template for:each={doneReferences} for:item="r">
+                                    <span key={r.key} class="jn__ref">{r.label}</span>
+                                </template>
+                            </div>
+                        </template>
+
+                        <dl class="jn__facts">
+                            <template lwc:if={doneCustomerName}>
+                                <div class="jn__fact">
+                                    <dt>Customer</dt>
+                                    <dd>{doneCustomerName}</dd>
+                                </div>
+                            </template>
+                            <template lwc:if={selectedProjectName}>
+                                <div class="jn__fact">
+                                    <dt>Project</dt>
+                                    <dd>{selectedProjectName}</dd>
+                                </div>
+                            </template>
+                            <template lwc:if={doneShowTotal}>
+                                <div class="jn__fact">
+                                    <dt>Amount</dt>
+                                    <dd class="jn__fact-amt">{done.total}</dd>
+                                </div>
+                            </template>
+                            <template lwc:if={done.paymentType}>
+                                <div class="jn__fact">
+                                    <dt>Payment</dt>
+                                    <dd>{done.paymentType}</dd>
+                                </div>
+                            </template>
+                        </dl>
+
+                        <!-- MSC-227: the ModonPay handoff - the terminal link per created EOI,
+                             then a read-back of whatever the org holds. Stored fields only. -->
+                        <template lwc:if={doneIsModonPay}>
+                            <template lwc:if={hasModonPayLinks}>
+                                <div class="jn__mp">
+                                    <template for:each={modonPayRows} for:item="m">
+                                        <template lwc:if={m.hasLink}>
+                                            <a key={m.key} class="btn btn-sm jn__mp-open" href={m.terminalUrl} target="_blank" rel="noopener noreferrer">
+                                                <c-modon-icon name="link" size="13" color="currentColor"></c-modon-icon>
+                                                <span>Open ModonPay · {m.name}</span>
+                                            </a>
+                                        </template>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <template lwc:if={payState}>
+                                <div class="jn__pay" aria-live="polite">
+                                    <p class="jn__pay-checked">{payCheckedLabel}</p>
+                                    <template for:each={payStateRows} for:item="s">
+                                        <div key={s.key} class="jn__pay-eoi">
+                                            <div class="jn__pay-head">
+                                                <span class="jn__pay-name">{s.name}</span>
+                                                <template lwc:if={s.status}>
+                                                    <span class="chip">{s.status}</span>
+                                                </template>
+                                                <template lwc:if={s.paymentStatus}>
+                                                    <span class="chip">{s.paymentStatus}</span>
+                                                </template>
+                                            </div>
+                                            <template lwc:if={s.hasReceipts}>
+                                                <template for:each={s.receipts} for:item="r">
+                                                    <div key={r.key} class="jn__pay-receipt">
+                                                        <c-modon-icon name="banknote" size="13" color="currentColor"></c-modon-icon>
+                                                        <span class="jn__pay-rname">{r.name}</span>
+                                                        <span class="jn__pay-ramt">{r.amountText}</span>
+                                                        <span class="jn__pay-rstatus">{r.status}</span>
+                                                        <span class="jn__pay-rmode">{r.mode}</span>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                            <template lwc:else>
+                                                <p class="jn__pay-none">No payment yet.</p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+
+                        <div class="jn__done-actions">
+                            <template lwc:if={doneIsModonPay}>
+                                <button class="btn btn-sm" type="button" onclick={handleCheckPayment} disabled={busyPayCheck}>
+                                    <c-modon-icon name="refresh-cw" size="13" color="currentColor"></c-modon-icon>
+                                    <span>{checkPaymentLabel}</span>
+                                </button>
+                            </template>
+                            <template lwc:if={doneIsPending}>
+                                <button class="btn btn-sm" type="button" onclick={handleCheckAgain} disabled={busy}>
+                                    <c-modon-icon name="refresh-cw" size="13" color="currentColor"></c-modon-icon>
+                                    <span>Check again</span>
+                                </button>
+                            </template>
+                            <button class="btn btn-primary" type="button" onclick={handleViewList}>View in list</button>
+                            <button class="btn" type="button" onclick={handleRaiseAnother}>Raise another</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </section>
+
+        <template lwc:if={busy}>
+            <c-msc-loader label={busyLabel}></c-msc-loader>
+        </template>
+    </div>
+</template>

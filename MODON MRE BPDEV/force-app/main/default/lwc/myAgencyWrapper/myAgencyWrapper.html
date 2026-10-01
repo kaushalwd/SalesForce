@@ -1,0 +1,480 @@
+<template>
+  <div class="properties-container">
+
+    <!-- Mobile View Titles - UPDATED -->
+    <template if:true={isMobile}>
+      <div class="mobile-tab-titles">
+        <div class="mobile-tab-title" onclick={showAgencyTab}>
+          <!--  <h2 class:active-title={showAgency}>Agency Info</h2>-->
+        </div>
+
+        <template if:false={isLimitedOnly}>
+          <template if:false={hideMyAgentsTab}>
+            <div class="mobile-tab-title" onclick={showAgentTab}>
+              <!--        <h2 class:active-title={showAgents}>My Agents</h2>-->
+            </div>
+          </template>
+        </template>
+      </div>
+    </template>
+
+    <!-- Custom Tab Buttons - UPDATED -->
+
+
+    <div class="tab-content">
+      <!-- Agency Tab -->
+
+
+      <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+
+      <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+
+      <!-- Agents Tab -->
+
+
+      <!-- Mobile Cards View -->
+      <!-- Mobile Cards View -->
+      <template if:true={isMobile}>
+        <template if:false={showmobilecontent}>
+          <label>You don't have the necessary access to perform this action.</label>
+        </template>
+        <template if:true={showmobilecontent}>
+        <div class="mobile-cards-container">
+          <div class="card-container">
+            <template for:each={paginatedMobileAgents} for:item="agent">
+              <div key={agent.contactId} class="agent-card">
+                <div class="card-header">
+                  <div class="agent-avatar">
+                    <template if:true={agent.profilePicPreview}>
+                      <img src={agent.profilePicPreview} alt="Profile" class="avatar" />
+                    </template>
+                    <template if:false={agent.profilePicPreview}>
+                      <div class="avatar-placeholder">
+                        {agent.initials}
+                      </div>
+                    </template>
+                  </div>
+
+                  <div class="agent-status">
+                    <span class={agent.statusClass}>{agent.active}</span>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <div class="agent-name-container">
+                    <h3 class="agent-name">{agent.displayName}</h3>
+                
+                  </div>
+
+                  <div class="agent-details">
+                    <p class="detail-item"><strong>Email:</strong> {agent.emailId}</p>
+                    <p class="detail-item"><strong>Role:</strong> {agent.role}</p>
+                    <p class="detail-item"><strong>Phone:</strong> {agent.phoneNumber}</p>
+                    <p class="detail-item"><strong>Agent ID:</strong> {agent.agentId}</p>
+                    <p class="detail-item"><strong>Region:</strong> {agent.region}</p>
+                  </div>
+
+                             <div class="action-icons">
+                
+                      <!-- Edit Icon -->
+                      <button class="icon-btn" data-id={agent.contactId} data-action="edit"
+                            onclick={handleIconClick} title="Edit Agent">
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM21.41 
+                                     6.34c.39-.39.39-1.02 0-1.41L19.07 2.6a1 1 0 0 0-1.41 0
+                                     l-1.83 1.83 3.75 3.75 1.83-1.84z"/>
+                        </svg>
+                     </button>
+                
+                      <!-- Lock Icon -->
+                      <button class="icon-btn" data-id={agent.contactId} data-action="reset"
+                            onclick={handleIconClick} title="Reset Password">
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <path d="M12 17a2 2 0 0 0 2-2v-2a2 2 0 
+                                     0 0-4 0v2a2 2 0 0 0 2 2zm6-8h-1V7a5 
+                                     5 0 0 0-10 0v2H6a2 2 0 0 0-2 
+                                     2v10a2 2 0 0 0 2 2h12a2 2 
+                                     0 0 0 2-2V11a2 2 0 0 0-2-2zm-3 
+                                     0H9V7a3 3 0 0 1 6 0v2z"/>
+                        </svg>
+                     </button>
+                
+                      <!-- Profile Icon -->
+                      <button class="icon-btn" data-id={agent.contactId} data-action="toggle"
+                            onclick={handleIconClick} title={agent.toggleTooltip}>
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 
+                                     9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2
+                                     c0-3.2-6.4-4.8-9.6-4.8z"/>
+                        </svg>
+                     </button>
+                
+                    </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Mobile Pagination -->
+          <template if:true={showPagination}>
+            <div class="mobile-pagination">
+              <button class="nav-btn" onclick={handlePrevPage} disabled={disablePrev}>⬅ Previous</button>
+              <span class="page-info">Page {currentPage} of {totalPages}</span>
+              <button class="nav-btn" onclick={handleNextPage} disabled={disableNext}>Next ➡</button>
+            </div>
+          </template>
+
+          <div class="mobile-bottom-buttons">
+            <button class="slds-button slds-button_brand" onclick={handleAddAgent}>Add Agent</button>
+            <button class="slds-button slds-button_neutral" onclick={handleExport}>Export</button>
+          </div>
+
+       
+        </div>
+        </template>
+      </template>
+
+
+
+      <!-- Desktop View -->
+      <template if:false={isMobile}>
+        <div class="tab-content mt-2">
+          <div class="overview-wrapper">
+            <div class="tree-grid-wrapper">
+              <c-mbp_adaptivedata-table title="Broker Agents" records={paginatedAgents} columns={columns}
+                onrowaction={handleRowAction}></c-mbp_adaptivedata-table>
+
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Modal for Add/Edit Agent - MOVED OUTSIDE OF DESKTOP ONLY TEMPLATE -->
+<template if:true={showModal}>
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+        <div class="modal-backdrop">
+            <div class="sidenav">
+                <div class="modal">
+                    <!-- Mobile Close Button - Only on Mobile -->
+                    <template if:true={isMobile}>
+                        <div class="mobile-modal-header">
+                            <button class="mobile-close-btn" onclick={closeModal}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 6L6 18M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                    
+                    <header class="modal-header">
+                        <h4 class="modal-title">{modalHeader}</h4>
+                    </header>
+
+                <div class="modal-body slds-p-around_medium">
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <template if:true={titlePicklist.data}>
+                        <lightning-combobox class="placeholder" placeholder="Title*" data-id="title"
+                          options={titlePicklist.data.values} value={title} onchange={handleInputChange} label="Title"
+                          required disabled={disableForm}>
+                        </lightning-combobox>
+                      </template>
+                    </div>
+                    <div class="right-side" style="flex: 1;"></div>
+                  </div>
+
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <lightning-input type="text" class="placeholder" placeholder="First Name*" data-id="firstName"
+                        value={firstName} onchange={handleInputChange} label="First Name" required
+                        disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                    <div class="right-side" style="flex: 1;">
+                      <lightning-input type="text" class="placeholder" placeholder="Last Name*" data-id="lastName"
+                        value={lastName} label="Last Name" onchange={handleInputChange} required disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                  </div>
+
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <lightning-input class="otpEmail placeholder" type="text" name="email" placeholder="Email ID*"
+                        value={email} data-id="email" onchange={handleInputChange} label="Email ID" required
+                        read-only={disableEmailAndMobile} disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                    <div class="right-side" style="flex: 1;">
+                      <button class="slds-button slds-button_brand slds-botton-top-40" onclick={handleEmailValidation} disabled={emailValidating}>
+                          {emailButtonLabel}
+                        </button>
+                    </div>
+                  </div>
+
+                  <div class="row" style="gap: 1rem;">
+                    <div class="left-side" style="display: flex; flex: 1;">
+                      <template if:true={mobCountryOptions}>
+                        <lightning-combobox options={mobCountryOptions} class="with-label placeholder input-small"
+                          label="Code" data-id="countryCode" value={countryCode} onchange={handleInputChange}
+                          placeholder="Code" style="width: 40% !important; margin-right:15px" required
+                          read-only={disableEmailAndMobile} disabled={disableForm}>
+                        </lightning-combobox>
+                      </template>
+
+                      <lightning-input class="otpMobile placeholder" name="phone" data-id="phone" value={phone}
+                        onchange={handleInputChange} type="tel" placeholder="Mobile Number*" label="Mobile Number"
+                        style="width: 40% !important; margin-right:15px" required read-only={disableEmailAndMobile}
+                        disabled={disableForm}>
+                      </lightning-input>
+
+                      <button class="slds-button slds-button_brand validatephone" onclick={handleMobileValidation} disabled={mobileValidating}>
+                          {mobileButtonLabel}
+                        </button>
+                    </div>
+
+                    <div class="right-side" style="flex: 1;">
+                      <template if:true={isSMSOTPTrue}>
+                        <template if:true={showMobileVerifiedButton}>
+                          <button class="slds-button slds-button_brand" onclick={verifyMobile} title={verifyMobileButtonText} disabled={disabledMobileVarify} style="float: left; min-width: 100px;">
+                              {verifyMobileButtonText}
+                            </button>
+                        </template>
+                        <br />
+                      </template>
+                    </div>
+                  </div>
+
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <lightning-input class="placeholder" type="date" placeholder="Date of Birth*"
+                        data-id="dateOfBirth" value={birthdate} label="Date of Birth" onchange={handleInputChange}
+                        required disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                    <div class="right-side" style="flex: 1;">
+                      <template if:true={brokerTypePicklist.data}>
+                        <lightning-combobox class="placeholder" placeholder="Role*" data-id="role"
+                          options={brokerTypePicklist.data.values} label="Role" value={role}
+                          onchange={handleInputChange} required disabled={disableForm}>
+                        </lightning-combobox>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- Always show Is Broker -->
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <template if:true={showPrimaryOwner}>
+                      <div class="left-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="checkbox" data-id="isBroker" checked={isBroker}
+                          label="Is Broker" onchange={handleInputChange1} disabled={disableForm}>
+                        </lightning-input>
+                      </div>
+                    </template>
+
+                    <!-- Conditionally show Primary Owner/Admin next to Is Broker -->
+                    <template if:true={showPrimaryOwner}>
+                      <div class="right-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="checkbox" data-id="isPrimaryOwner"
+                          checked={isPrimaryOwner} label="Primary Owner" onchange={handleInputChange}
+                          disabled={disableForm}>
+                        </lightning-input>
+                      </div>
+                    </template>
+
+                    <template if:true={showPrimaryAdmin}>
+                      <div class="right-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="checkbox" data-id="isPrimaryAgencyAdmin"
+                          checked={isPrimaryAgencyAdmin} label="Primary Agency Admin" onchange={handleInputChange}
+                          disabled={disableForm}>
+                        </lightning-input>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Broker-only section -->
+                  <template if:true={isBroker}>
+                    <div class="row" style="display: flex; gap: 1rem;">
+                      <div class="left-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="text" data-id="brokerCertificateNumber"
+                          label="Broker Certificate Number" value={brokerCertificateNumber} onchange={handleInputChange}
+                          disabled={disableForm} required>
+                        </lightning-input>
+                      </div>
+
+                      <div class="right-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="text" data-id="issuingAuthority"
+                          label="Issuing Authority" value={issuingAuthority} onchange={handleInputChange}
+                          disabled={disableForm} required>
+                        </lightning-input>
+                      </div>
+                    </div>
+
+                    <div class="row" style="display: flex; gap: 1rem;">
+                      <div class="left-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="date" data-id="brokerCertificateIssueDate"
+                          label="Broker Certificate Issue Date" value={brokerCertificateIssueDate}
+                          onchange={handleInputChange} disabled={disableForm} required>
+                        </lightning-input>
+                      </div>
+
+                      <div class="right-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="date" data-id="brokerCertificateExpiryDate"
+                          label="Broker Certificate Expiry Date" value={brokerCertificateExpiryDate}
+                          onchange={handleInputChange} disabled={disableForm} required>
+                        </lightning-input>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Emirates ID Section -->
+                  <template if:true={showEmirates}>
+                    <div class="row" style="display: flex; gap: 1rem;">
+                      <div class="left-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="text" name="emiratesID" data-id="emiratesID"
+                          value={emiratesID} label="Emirates ID" required onchange={handleInputChange}
+                          disabled={disableForm}>
+                        </lightning-input>
+                      </div>
+                      <div class="right-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="date" name="expiryDate" data-id="expiryDate"
+                          value={expiryDate} label="EID Expiry Date" required onchange={handleInputChange}
+                          disabled={disableForm}>
+                        </lightning-input>
+                      </div>
+                    </div>
+
+                    <div class="row" style="display: flex; gap: 1rem;">
+                      <div class="left-side" style="flex: 1;">
+                        <lightning-input class="placeholder" type="date" placeholder="EID Issue Date*"
+                          data-id="eidIssueDate" value={eidIssueDate} label="EID Issue Date"
+                          onchange={handleInputChange} required disabled={disableForm}>
+                        </lightning-input>
+                      </div>
+                      <div class="right-side" style="flex: 1;">
+                        <!-- Empty space to maintain layout -->
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Passport Section -->
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <lightning-input class="placeholder" type="text" placeholder="Passport Number*"
+                        data-id="passportNumber" value={passportNumber} label="Passport Number"
+                        onchange={handleInputChange} required disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                    <div class="right-side" style="flex: 1;">
+                      <lightning-input class="placeholder" type="date" name="passportExpiryDate"
+                        data-id="passportExpiryDate" value={passportExpiryDate} label="Passport Expiry Date" required
+                        onchange={handleInputChange} disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                  </div>
+
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <lightning-input class="placeholder" type="date" placeholder="Passport Issue Date*"
+                        data-id="passportIssueDate" value={passportIssueDate} label="Passport Issue Date"
+                        onchange={handleInputChange} required disabled={disableForm}>
+                      </lightning-input>
+                    </div>
+                    <div class="right-side" style="flex: 1;">
+                      <!-- Empty space to maintain layout -->
+                    </div>
+                  </div>
+
+                  <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="left-side" style="flex: 1;">
+                      <lightning-combobox class="placeholder" placeholder="None" data-id="nationality"
+                        options={nationalityOptions} label="Nationality*" value={nationality}
+                        onchange={handleInputChange} required disabled={disableForm}>
+                      </lightning-combobox>
+                    </div>
+                    <div class="right-side" style="flex: 1;"></div>
+                  </div>
+
+                  <!-- Uploads -->
+                  <div class="row upload-row">
+                    <p><b>* Attachments (max file size for all attachments should not be more than 2MB)</b></p>
+                    <div class="upload-main-container">
+                      <template if:true={showEmirates}>
+                        <lightning-input name="emirate" label="Emirate Id/ Residence Visa"
+                          class="modon-upload-field placeholder" type="file" accept={acceptedFormats}
+                          data-id="uploadedFiles" onchange={openfileUpload} multiple="false" disabled={disableForm}>
+                        </lightning-input>
+
+                        <lightning-input name="passport" label="Passport Page" class="modon-upload-field" type="file"
+                          accept={acceptedFormats} data-id="uploadedFiles" onchange={openfileUpload} multiple="false"
+                          disabled={disableForm}>
+                        </lightning-input>
+
+                        <template if:true={isRERA_ADM_toShow}>
+                          <template lwc:if={isDubaiBroker}>
+                            <lightning-input name="rera" label="RERA Broker Card" class="modon-upload-field placeholder"
+                              type="file" accept={acceptedFormats} data-id="uploadedFiles" onchange={openfileUpload}
+                              multiple="false" disabled={disableForm}>
+                            </lightning-input>
+                          </template>
+                          <template lwc:elseif={isAbuDhabiBroker}>
+                            <lightning-input name="adm" label="ADM Card" class="modon-upload-field placeholder"
+                              type="file" accept={acceptedFormats} data-id="uploadedFiles" onchange={openfileUpload}
+                              multiple="false" disabled={disableForm}>
+                            </lightning-input>
+                          </template>
+                        </template>
+
+                        <p><b>* Emirates ID(both sides)</b> and <b>Residence Visa Page</b> are mandatory to upload.
+                        </p>
+                        <p><b>* Passport Page</b> is mandatory to upload.</p>
+
+                        <template if:true={isRERA_ADM_toShow}>
+                          <template lwc:if={isDubaiBroker}>
+                            <p><b>* RERA Broker Card is mandatory for Dubai Brokers to upload.</b></p>
+                          </template>
+                          <template lwc:elseif={isAbuDhabiBroker}>
+                            <p><b>* ADM Card is mandatory for Abu Dhabi Brokers to upload.</b></p>
+                          </template>
+                        </template>
+                      </template>
+
+                      <template if:false={showEmirates}>
+                        <lightning-input name="passport" label="Passport Page" class="placeholder" type="file"
+                          accept={acceptedFormats} data-id="uploadedFiles" onchange={openfileUpload} multiple="false"
+                          disabled={disableForm}>
+                        </lightning-input>
+                        <p><b>* Passport Page</b> is mandatory to upload.</p>
+                      </template>
+
+                      <div class="uploaded-file-names-container">
+                        <template for:each={files} for:item="file">
+                          <div key={file.filename} class="uploaded-file-item">
+                            <img src={uploadeFileIcon} class="uploaded-file-icon" alt="file icon" />
+                            <p class="uploaded-file-name-txt">{file.filename}</p>
+                            <lightning-icon class="delete-icon remove-file-wrapper" icon-name="utility:delete"
+                              alternative-text="Delete" title="Delete File" onclick={removeFile} size="x-small"
+                              data-id={file.filename} data-listname="files">
+                            </lightning-icon>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <footer class="modal-footer">
+                  <button class="slds-button slds-button_outline-brand" onclick={closeModal}>Cancel</button>
+                  <button class="slds-button slds-button_brand" onclick={submitEdit} disabled={disableForm}>Submit</button>
+                </footer>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+
+    </div>
+  </div>
+</template>

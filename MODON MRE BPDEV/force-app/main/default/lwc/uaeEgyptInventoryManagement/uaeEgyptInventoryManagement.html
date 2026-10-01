@@ -1,0 +1,360 @@
+<template>
+    <lightning-card title="Egypt Inventory Management" icon-name="standard:asset_relationship">
+
+        <div class="slds-p-around_medium">
+
+            <!-- ============ Action toolbar ============ -->
+            <div class="inv-toolbar slds-grid slds-wrap slds-grid_align-spread slds-m-bottom_medium">
+                <div class="inv-toolbar-group slds-grid slds-wrap">
+                    <lightning-button
+                        label="Refresh"
+                        icon-name="utility:refresh"
+                        onclick={handleRefresh}
+                        class="slds-m-right_x-small slds-m-bottom_x-small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Clear Filters"
+                        icon-name="utility:clear"
+                        onclick={handleClearFilters}
+                        class="slds-m-right_x-small slds-m-bottom_x-small">
+                    </lightning-button>
+                </div>
+                <div class="inv-toolbar-group slds-grid slds-wrap">
+                    <lightning-button
+                        label="Update Status to CCMD"
+                        variant="brand"
+                        icon-name="utility:edit"
+                        onclick={handleUpdateStatusClick}
+                        disabled={isUpdateDisabled}
+                        class="slds-m-bottom_x-small inv-primary-action">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- ============ Filter Panel ============ -->
+            <div class="inv-filter-panel slds-box slds-theme_shade slds-m-bottom_medium">
+                <div class="slds-grid slds-wrap slds-gutters_small">
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Project"
+                            placeholder="-- All --"
+                            options={filterOptions.project}
+                            value={filters.project}
+                            data-filter="project"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Phase"
+                            placeholder="-- All --"
+                            options={filterOptions.phase}
+                            value={filters.phase}
+                            data-filter="phase"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Zone"
+                            placeholder="-- All --"
+                            options={filterOptions.zone}
+                            value={filters.zone}
+                            data-filter="zone"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Bucket"
+                            placeholder="-- All --"
+                            options={filterOptions.bucket}
+                            value={filters.bucket}
+                            data-filter="bucket"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Unit Classification"
+                            placeholder="-- All --"
+                            options={filterOptions.unitClassification}
+                            value={filters.unitClassification}
+                            data-filter="unitClassification"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Number of Bedrooms"
+                            placeholder="-- All --"
+                            options={filterOptions.bedrooms}
+                            value={filters.bedrooms}
+                            data-filter="bedrooms"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Unit Quality"
+                            placeholder="-- All --"
+                            options={filterOptions.unitQuality}
+                            value={filters.unitQuality}
+                            data-filter="unitQuality"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- GFA Range filter (replaces the old raw-value GFA combobox) -->
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Gross Floor Area (sqm)"
+                            placeholder="-- All --"
+                            options={filterOptions.grossFloorAreaRanges}
+                            value={filters.gfaRange}
+                            data-filter="gfaRange"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Floor"
+                            placeholder="-- All --"
+                            options={filterOptions.floor}
+                            value={filters.floor}
+                            data-filter="floor"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            label="Unit Status"
+                            placeholder="-- All --"
+                            options={filterOptions.status}
+                            value={filters.status}
+                            data-filter="status"
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Search box (full-width on mobile, half on desktop) -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                        <lightning-input
+                            type="search"
+                            label="Search by Unit Name"
+                            placeholder="Type a unit name…"
+                            data-id="search-input"
+                            onchange={handleSearchChange}>
+                        </lightning-input>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ============ Stats bar ============
+                 Shows three numbers at a glance:
+                 Total units in UAE + Egypt buckets | Units matching current filters | Selected
+            -->
+            <div class="inv-stats-bar slds-grid slds-wrap slds-m-bottom_small">
+
+                <div class="inv-stat-pill slds-m-right_small slds-m-bottom_x-small">
+                    <span class="inv-stat-label">Total (UAE &amp; Shared Units)</span>
+                    <span class="inv-stat-value">{grandTotal}</span>
+                </div>
+
+                <div class="inv-stat-pill slds-m-right_small slds-m-bottom_x-small">
+                    <span class="inv-stat-label">Matching Filters</span>
+                    <span class="inv-stat-value">{filteredTotal}</span>
+                </div>
+
+                <div class="inv-stat-pill inv-stat-pill_loaded slds-m-right_small slds-m-bottom_x-small">
+                    <span class="inv-stat-label">Loaded</span>
+                    <span class="inv-stat-value">{loadedCount}</span>
+                </div>
+
+                <div class="inv-stat-pill inv-stat-pill_selected slds-m-bottom_x-small">
+                    <span class="inv-stat-label">Selected</span>
+                    <span class="inv-stat-value">{selectedCount}</span>
+                </div>
+
+            </div>
+
+            <!-- ============ Mobile column-mode toggle ============ -->
+            <template if:true={isMobile}>
+                <div class="inv-column-toggle slds-m-bottom_small">
+                    <lightning-button-group>
+                        <lightning-button
+                            label="Compact"
+                            variant={compactButtonVariant}
+                            onclick={handleColumnModeChange}
+                            data-mode="compact">
+                        </lightning-button>
+                        <lightning-button
+                            label="Scroll"
+                            variant={scrollButtonVariant}
+                            onclick={handleColumnModeChange}
+                            data-mode="scroll">
+                        </lightning-button>
+                    </lightning-button-group>
+                </div>
+            </template>
+
+            <!-- ============ Datatable / Loading / Empty states ============ -->
+            <div class="inv-table-container">
+
+                <!-- Initial load spinner -->
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative inv-spinner-region">
+                        <lightning-spinner
+                            alternative-text="Loading inventory..."
+                            size="medium">
+                        </lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}>
+
+                    <!-- Records exist: show datatable -->
+                    <template if:true={hasRecords}>
+                        <div class="inv-datatable-wrapper">
+                            <lightning-datatable
+                                key-field="Id"
+                                data={inventoryUnits}
+                                columns={columns}
+                                selected-rows={selectedRowKeys}
+                                disabled-rows={ccmdRowIds}
+                                onrowselection={handleRowSelection}
+                                onrowaction={handleRowAction}
+                                enable-infinite-loading
+                                onloadmore={handleLoadMore}>
+                            </lightning-datatable>
+                        </div>
+
+                        <!-- Infinite-scroll end-of-records notice -->
+                        <template if:true={allRecordsLoaded}>
+                            <p class="slds-text-body_small slds-text-color_weak slds-p-top_x-small slds-text-align_center">
+                                ✓ All {filteredTotal} matching records loaded.
+                            </p>
+                        </template>
+
+                        <!-- Compact-mode hint -->
+                        <template if:true={isCompactMode}>
+                            <p class="slds-text-body_small slds-text-color_weak slds-p-top_x-small">
+                                Tap the row menu and choose "View Details" to see all fields.
+                            </p>
+                        </template>
+                    </template>
+
+                    <!-- No records state -->
+                    <template if:true={showNoRecords}>
+                        <div class="slds-illustration slds-illustration_small slds-p-around_large slds-text-align_center">
+                            <lightning-icon
+                                icon-name="utility:search"
+                                size="large"
+                                class="slds-m-bottom_small">
+                            </lightning-icon>
+                            <h3 class="slds-text-heading_medium">No Records Found</h3>
+                            <p class="slds-text-body_regular slds-text-color_weak">
+                                Try adjusting your filters or search term.
+                            </p>
+                        </div>
+                    </template>
+
+                </template>
+            </div><!-- /inv-table-container -->
+
+        </div>
+    </lightning-card>
+
+    <!-- ============ Row detail panel (mobile compact mode) ============ -->
+    <template if:true={detailRecord}>
+        <section
+            class="slds-modal slds-fade-in-open slds-modal_small"
+            role="dialog"
+            tabindex="-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close"
+                        onclick={handleCloseDetail}>
+                        <lightning-icon icon-name="utility:close" size="small" variant="inverse">
+                        </lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium slds-hyphenate">Unit Details</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <template for:each={detailFields} for:item="field">
+                        <div key={field.key}
+                             class="slds-grid slds-wrap slds-m-bottom_small inv-detail-row">
+                            <div class="slds-col slds-size_1-of-2 slds-text-color_weak">
+                                {field.label}
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                {field.value}
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Close" onclick={handleCloseDetail}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- ============ Confirmation modal (bulk update) ============ -->
+    <template if:true={showConfirmModal}>
+        <section
+            class="slds-modal slds-fade-in-open slds-modal_small"
+            role="alertdialog"
+            tabindex="-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium slds-hyphenate">
+                        Confirm Status Update
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{confirmMessage}</p>
+
+                    <lightning-textarea
+                        name="blockComments"
+                        label="Block Comments"
+                        value={blockComments}
+                        onchange={handleBlockChanges}
+                        class="slds-m-vertical_medium">
+                    >
+                    </lightning-textarea>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCancelConfirm}
+                        class="slds-m-right_x-small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Update to CCMD"
+                        variant="brand"
+                        onclick={handleConfirmUpdate}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

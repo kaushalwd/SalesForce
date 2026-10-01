@@ -1,0 +1,67 @@
+<template>
+    <p class="m-sub">Here is everything you&rsquo;ve registered with us. Add another interest, or manage a payment.</p>
+
+    <template lwc:if={errorMessage}>
+        <p class="error" role="alert">{errorMessage}</p>
+    </template>
+
+    <p class="m-panelcap">{ledgerCap}</p>
+    <div class="m-ledger">
+        <template for:each={viewCards} for:item="c">
+            <div key={c.reference} class="m-lgroup">
+                <div class={c.rowClass}>
+                    <div class="m-wrow__info">
+                        <!-- MEOI-CARD (13 Sep 2026, Mridul): the EOI number is the card's title; the typology
+                             name only stands in until the EOI exists. The EOI number line below is gone. -->
+                        <p class="m-lrow__name">{c.title}</p>
+                        <p class="m-lrow__meta">{c.meta}</p>
+                        <!-- MEOI-10: the payment reference is no longer shown. It stays in
+                             data-reference below, which is what the refund call keys on. -->
+                        <template lwc:if={c.hasSub}><p class="m-wrow__sub"><template lwc:if={c.canRequestRefund}><button class="m-quiet refundlink" type="button" data-reference={c.reference} onclick={askRefund} disabled={isBusy}>Request refund</button></template><template lwc:if={c.showNoteSep}> &middot; </template><template lwc:if={c.subNote}>{c.subNote}</template></p></template>
+                    </div>
+                    <div class="m-wrow__right">
+                        <div class="m-wrow__actions">
+                        <!-- MEOI-CANCEL: only while the payment is still a hold -->
+                        <template lwc:if={c.canCancel}>
+                            <button class="m-cardbtn ghost cancelbtn" type="button" data-reference={c.reference} onclick={askCancel} disabled={isBusy}>Cancel</button>
+                        </template>
+                        <span class={c.chipClass}>
+                            <template lwc:if={c.isRegistered}>
+                                <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6.2 5 9l5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </template>
+                            {c.chipLabel}
+                        </span>
+                        </div>
+                        <p class="m-wrow__amt"><small>AED</small>{c.formattedAmount}</p>
+                    </div>
+                </div>
+                <template lwc:if={c.confirming}>
+                    <div class="m-confirm" role="alertdialog" aria-label="Confirm refund request">
+                        <p>Request a refund of <b>AED {c.formattedAmount}</b> for <b>{c.name}</b>? Our team will process the refund and this registration will be cancelled.</p>
+                        <div class="m-confirm__row">
+                            <button class="m-cardbtn confirm__yes" type="button" data-reference={c.reference} onclick={confirmRefund} disabled={isBusy}>Request refund</button>
+                            <button class="m-cardbtn ghost confirm__no" type="button" onclick={cancelConfirm} disabled={isBusy}>Cancel</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+
+    <button class="m-btn cta" type="button" onclick={registerAnother} disabled={isBusy}>
+        Register another interest <span class="arr" aria-hidden="true">&#10230;</span>
+    </button>
+
+    <!-- MEOI-CANCEL: confirm before the hold is released -->
+    <template lwc:if={cancelling}>
+        <div class="m-scrim" onclick={keepRegistration}></div>
+        <div class="m-modal" role="dialog" aria-modal="true" aria-labelledby="cx-title">
+            <p id="cx-title" class="m-modal__t">Cancel this registration?</p>
+            <p class="m-modal__p">{cancelText}</p>
+            <div class="m-modal__row">
+                <button class="m-cardbtn ghost" type="button" onclick={keepRegistration} disabled={isBusy}>No, keep it</button>
+                <button class="m-cardbtn" type="button" onclick={confirmCancel} disabled={isBusy}>Yes, cancel registration</button>
+            </div>
+        </div>
+    </template>
+</template>

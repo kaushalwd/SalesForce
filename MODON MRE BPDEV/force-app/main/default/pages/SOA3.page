@@ -1,0 +1,959 @@
+<!--
+@description       : 
+@author            : Krishna Chaitanya
+@group             : 
+@last modified on  : 02-13-2026
+@last modified by  : Krishna Chaitanya
+@last modified by  : Krishna Chaitanya
+@last modified on  : 02-13-2026
+@last modified by  : Krishna Chaitanya
+@last modified on  : 02-13-2026
+@last modified by  : Krishna Chaitanya
+-->
+<apex:page renderAs="pdf" applyBodyTag="false" controller="StatementOfAccountController" showHeader="false"
+    applyHtmlTag="false" standardStylesheets="false" cache="true">
+    <html>
+
+    <head>
+        <style type="text/css">
+            @page {
+                size: A4;
+                margin: 10mm 10mm 20mm 10mm;
+
+                @top-center {
+                    content: element(header);
+                }
+
+                @bottom-center {
+                    content: element(footer);
+                }
+            }
+
+            body {
+                font-size: 12px !important;
+                font-family: Calibri, sans-serif;
+            }
+
+            tr,
+            td,
+            th {}
+
+            .pull-left {
+                text-align: left;
+            }
+
+            .pull-right {
+                text-align: right;
+            }
+
+            .pull-center {
+                text-align: center;
+            }
+
+            .headers {
+                font-weight: bold;
+            }
+
+            .bolded {
+                font-weight: bold;
+            }
+
+            .inline {
+                display: inline;
+            }
+
+            .underline {
+                text-decoration: underline;
+            }
+
+            .data-table {
+                border-collapse: collapse;
+                border: 1px solid black;
+            }
+
+            .data-table thead th {
+                font-weight: bold;
+                font-size: 8px;
+            }
+
+            .data-table thead th,
+            .data-table tbody tr td,
+            .data-table tbody td,
+            .tablestyle {
+                border-spacing: 0px;
+                border: 1px solid black;
+                padding: 1px;
+            }
+
+            table.fixed {
+                table-layout: fixed;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .tablecolor {
+                background-color: #dcdedd;
+            }
+
+            .tableheader {
+                background-color: black;
+                color: white;
+            }
+
+            .bordered-table {
+                border: 1px solid black;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            .bordered-table th,
+            .bordered-table td,
+            .bordered-table tr {
+                border: 1px solid black;
+                padding: 4px;
+            }
+
+            div.right {
+                position: absolute;
+                right: 0;
+            }
+
+            div.content {
+                padding-top: 130px;
+            }
+
+            .header {
+
+                text-align: center;
+            }
+
+            .footer {
+                position: running(footer);
+
+                font-size: 12px;
+                padding: 10px;
+                color: black;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+
+            .pagenumber:before {
+                content: counter(page);
+            }
+
+            .pagecount:before {
+                content: counter(pages);
+            }
+
+            .column_ft {
+                float: left;
+                margin-top: 0px;
+                height: 10px;
+                font-family: sans-serif;
+                font-size: 12px;
+            }
+
+            .column_sec {
+                margin-top: 0px;
+                height: 10px;
+                font-family: sans-serif;
+                font-size: 10px;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+
+            /* Zebra striping for the data tables (renderer ignores :nth-child,
+               so alternate classes are toggled per row in the markup). */
+            .zebra-a td {
+                background-color: #EEF3F8;
+            }
+
+            .zebra-b td {
+                background-color: #FFFFFF;
+            }
+        </style>
+    </head>
+
+    <body style="font-family: Calibri, sans-serif; margin: 0; padding: 4px;">
+        <!--<apex:form >-->
+
+        <!-- HEADER for PDF -->
+        <div class="header" style="text-align: center;">
+            <img src="{!URLFOR($Resource.modonLogoPlain)}" width="200px" style="margin: 0 auto;" />
+        </div>
+        <div class="footer">
+            <table width="100%">
+                <tr>
+                    <td width="40%"> <b>www.modon.com</b></td>
+                    <td style="60%"> <b style="margin-right:3%;font-size:5px">21st Floor, Al Maryah Tower,Abu Dhabi
+                            Global Market Square,Al Maryah Island, P.O. Box: 26866,Abu Dhabi, UAE, T 800MODON | E
+                            customermanagement@modon.com</b>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <div class="main">
+
+
+            <!-- PAGE CONTENT START -->
+            <div style="width:100%;">
+                <table style="width: 100%; font-size: 10px; margin-bottom: 10px;">
+                    <!--V2-->
+                    <tr>
+                        <td><b>Date</b>:&nbsp;
+                            <apex:outputText value="{0,date,dd MMM, yyyy}">
+                                <apex:param value="{!Today}" />
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Customer Name</b>: {!salesOrder.CustomerAccount__r.Name}</td>
+                    </tr>
+                    <!-- Joint Owners (only if present) -->
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(jointOwnerNames))}" layout="none">
+                        <tr>
+                            <td><b>Joint Owner(s)</b>: {!jointOwnerNames}</td>
+                        </tr>
+                    </apex:outputPanel>
+
+                    <!--<tr>
+<td><b>Customer MID</b>: {!salesOrder.CustomerAccount__r.Customer_MID__c}</td>
+</tr>-->
+                    <tr>
+                        <td><b>Subject</b>
+                            : Statement of Account as of &nbsp;<apex:outputText value="{0,date,dd MMM yyyy}">
+                                <apex:param value="{!Today}" />
+                            </apex:outputText> for {!salesOrder.ProjectName__c}</td>
+                    </tr>
+                </table>
+
+
+                <p style="font-weight: bold; text-decoration: underline; font-size: 10px;">UNIT SPECIFICATION:</p>
+                <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 25%;"><b>SPA Date</b></td>
+                        <td style="width: 25%;">:&nbsp;<apex:outputText value="{0,date,dd-MMM-yy}">
+                                <apex:param value="{!salesOrder.SOCreationDate__c}" />
+                            </apex:outputText>
+                        </td>
+                        <td style="width: 25%;"><b>Project</b></td>
+                        <td style="width: 25%;">: {!salesOrder.ProjectName__c}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Type</b></td>
+                        <td>: {!salesOrder.Unit__r.Type__c}</td>
+                        <td><b>Unit/Plot No</b></td>
+                        <td>: {!salesOrder.Unit__r.Name}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Price (AED)</b></td>
+                        <td>: <apex:outputText value="{0, number, ###,##0.00}">
+                                <apex:param value="{!salesOrder.TotalAmount__c}" />
+                            </apex:outputText>
+                        </td>
+                        <td><b>ADM District</b></td>
+                        <td>: {!salesOrder.Unit__r.District__c}</td>
+                    </tr>
+                    <!--V2-->
+                    <tr>
+                        <!--<td><b>Late Payment Charges</b></td> ****  Removed "Latepayment Charges Coloumn & Line" requested by CCO ****
+<td>: 1% per month</td>-->
+                        <td></td>
+                        <td></td>
+                        <td><b>ADM Plot/Unit No</b></td>
+                        <td>: {!salesOrder.Unit__r.PlotNo__c}</td>
+                    </tr>
+                </table>
+                <!-- PAYMENT DETAILS SECTION -->
+                <div style="margin-top: 10px;">
+                    <div style="font-weight: bold; text-decoration: underline; font-size: 10px;">
+                        PAYMENT DETAILS
+                    </div>
+                </div>
+                <br />
+                <table width="100%"
+                    style="border: 1px solid black; border-top: 3px solid #2FA9E0; font-size: 8px; width: 100%; border-collapse: collapse; margin-bottom: 0px;">
+                    <apex:variable var="Counter" value="{!0}" />
+                    <thead>
+                        <tr style="border:1px solid black">
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Due Date</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 5%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Ins #</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 8%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Invoice No</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 5%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                %</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Amount (AED)</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 10%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Cheque/Transaction Number</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 10%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Status</th>
+                            <!--<th style ="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;" >Received Date</th>
+-->
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Amount Collected (AED)</th>
+                            <apex:outputPanel layout="none" rendered="{!showLPC}">
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Late Payment Charges (AED)</th>
+                            </apex:outputPanel>
+                            <!--  back to placed "Latepayment Charges Coloumn & Line" requested by Saeeda -->
+                            <!--  LPC column now shown only when custom label IsActivateLPCOnSOA = TRUE -->
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Amount Outstanding (AED)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!--Added below on 28-12-2025-->
+                        <!--1.1 Start-->
+                        <apex:variable var="totalCount" value="{!PayemntSalesList.size}" />
+                        <!--End-->
+                        <apex:repeat value="{!PayemntSalesList}" var="payement">
+                            <!-- Increment the counter -->
+                            <apex:variable var="Counter" value="{!Counter + 1}" />
+
+                            <tr class="{!IF(MOD(Counter,2)==0, 'zebra-b', 'zebra-a')}">
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputPanel rendered="{!NOT(payement.SalesOrderInstallment__r.IsHandoverPayment__c)  && Counter != totalCount}">
+                                        <apex:outputText value="{0,date,dd-MMM-yy}">
+                                            <apex:param value="{!payement.SalesOrderInstallment__r.MilestoneDate__c}" />
+                                        </apex:outputText>
+                                    </apex:outputPanel>
+                                    <!--Added below on 28-12-2025-->
+                                    <!--1.1 Start-->
+                                    <apex:outputPanel rendered="{!Counter == totalCount}"> Handover </apex:outputPanel>
+                                    <!--End-->
+                                </td>
+                                <!--<td  style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;" >{!payement.SalesOrderInstallment__r.MilestoneDescription__c}</td>-->
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0}">
+                                        <apex:param value="{!payement.SalesOrderInstallment__r.MilestoneNumber__c}" />
+                                    </apex:outputText>
+                                </td>
+
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputText value="{!IF(AND(NOT(ISBLANK(payement.SalesOrderInstallment__r.MilestoneDate__c)), 
+                                                            payement.SalesOrderInstallment__r.MilestoneDate__c < TODAY()), 
+                                                            payement.Name, 
+                                                            'TBI')}" />
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0}">
+                                        <apex:param value="{!payement.SalesOrderInstallment__r.Milestone__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!payement.InvoiceAmount__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <table>
+                                        <apex:repeat value="{!payement.Allocations__r}" var="Allocated">
+                                            <tr>
+                                                <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                    class="pull-center">
+                                                    <apex:outputPanel rendered="{!AND(NOT(ISBLANK(Allocated.AllocationDate__c)), Allocated.AllocationDate__c <= TODAY())}">
+                                                        <apex:outputText value="{!
+                                                                                IF(
+                                                                                AND(
+                                                                                ISBLANK(Allocated.Receipt__r.TransactionNumber__c),
+                                                                                Allocated.Receipt__r.Modeofpayment__c = 'Equity Transfer'
+                                                                                ),
+                                                                                'ET-'+Allocated.Receipt__r.Name,
+                                                                                Allocated.Receipt__r.TransactionNumber__c
+                                                                                )
+                                                                                }" />
+                                                    </apex:outputPanel>
+
+                                                    <apex:outputPanel rendered="{!OR(ISBLANK(Allocated.AllocationDate__c), Allocated.AllocationDate__c > TODAY())}">
+                                                        <apex:outputText />
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <table>
+                                        <apex:repeat value="{!payement.Allocations__r}" var="Allocated">
+                                            <tr>
+                                                <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                    class="pull-center">
+                                                    <apex:outputText value="{!Allocated.Receipt__r.Status__c}" />
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <table>
+                                        <apex:repeat value="{!payement.Allocations__r}" var="Allocated">
+                                            <tr>
+                                                <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                    class="pull-center">
+                                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                                        <apex:param value="{!Allocated.AllocationAmount__c}" />
+                                                    </apex:outputText>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+                                <apex:outputPanel layout="none" rendered="{!showLPC}">
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                </td>
+                                </apex:outputPanel>
+                                <!-- ****V3 back to placed "Latepayment Charges Coloumn & Line" requested by Saeeda*** ->
+
+<!--<td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">{!payement.Applied_Percentage__c} %</td> -->
+                                <td
+                                    style="font-family: Arial; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputPanel rendered="{!AND(NOT(ISBLANK(payement.SalesOrderInstallment__r.MilestoneDate__c)), payement.InvoiceBalance__c != 0, payement.SalesOrderInstallment__r.MilestoneDate__c < TODAY())}">
+                                        <apex:outputText value="{0, number, ###,##0.00}">
+                                            <apex:param value="{!invoiceClearedBalanceMap[payement.Id]}" />
+                                        </apex:outputText>
+                                    </apex:outputPanel>
+
+                                    <apex:outputPanel rendered="{!OR(ISBLANK(payement.SalesOrderInstallment__r.MilestoneDate__c), NOT(AND(payement.InvoiceBalance__c != 0, payement.SalesOrderInstallment__r.MilestoneDate__c < TODAY())))}">
+                                        <apex:outputText ></apex:outputText>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                        <tr width="100%" class="headers pull-right tablestyle">
+                            <td colspan="4"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                Total (AED):</td>
+
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalAmount}" />
+                                </apex:outputText>
+                            </td>
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                            </td>
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                            </td>
+                            <!--<td class="pull-right" style ="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;" >
+</td>-->
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalAmountCollected}" />
+                                </apex:outputText>
+                            </td>
+                            <apex:outputPanel layout="none" rendered="{!showLPC}">
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalLatePayment}" />
+                                </apex:outputText>
+                            </td>
+                            </apex:outputPanel>
+                            <!-- ***V3 back to placed "Latepayment Charges Coloumn & Line" requested by Saeeda**** -->
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalAmountOutstanding}" />
+                                </apex:outputText>
+                            </td>
+
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- OTHER PAYMENT DETAILS -->
+                <div style="margin-top: 10px;">
+                    <div style="font-weight: bold; text-decoration: underline; font-size: 10px;">OTHER PAYMENT DETAILS
+                    </div>
+                </div>
+                <br />
+                <table width="100%"
+                    style="font-family: sans-serif; border: 1px solid black; border-top: 3px solid #2FA9E0; font-size: 8px; width: 100%; border-collapse: collapse; margin-bottom:5px;">
+                    <apex:variable var="otherCount" value="{!0}" />
+                    <thead>
+                        <tr style="border:1px solid black">
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Due Date</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 10%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Invoice No</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Transaction Type</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Amount (AED)</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 10%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Cheque/Transaction Number</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 10%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Status</th>
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Amount Collected (AED)</th>
+                            <!--<th style ="font-family: sans-serif;padding: 2px; font-size: 8px; width: 12%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;" >Received Date</th>-->
+                            <th
+                                style="font-family: sans-serif;padding: 2px; font-size: 8px; width: 10%; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white;">
+                                Amount Outstanding (AED)</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:repeat value="{!OtherPayemntSalesList}" var="otherCharge">
+                            <apex:variable var="otherCount" value="{!otherCount + 1}" />
+                            <tr class="{!IF(MOD(otherCount,2)==0, 'zebra-b', 'zebra-a')}">
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0,date,dd-MMM-yy}">
+                                        <apex:param value="{!otherCharge.InvoiceDate__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    {!otherCharge.Name}</td>
+
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{!IF(otherCharge.Is_ADM_Fees_and_Dari_charges__c, 'ADM/Dari Fee', otherCharge.Charge__r.Name)}" />
+
+                                </td>
+
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!otherCharge.InvoiceAmount__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <table>
+                                        <apex:repeat value="{!otherCharge.Allocations__r}" var="Allocated">
+                                            <tr>
+                                                <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                    class="pull-center">
+                                                    <apex:outputPanel rendered="{!AND(NOT(ISBLANK(Allocated.AllocationDate__c)), Allocated.AllocationDate__c <= TODAY())}">
+                                                        {!Allocated.Receipt__r.TransactionNumber__c}
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!AND(NOT(ISBLANK(Allocated.AllocationDate__c)), Allocated.AllocationDate__c > TODAY())}">
+                                                        <apex:outputText >
+                                                        </apex:outputText>
+                                                    </apex:outputPanel>
+
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <table>
+                                        <apex:repeat value="{!otherCharge.Allocations__r}" var="Allocated">
+                                            <tr>
+                                                <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                    class="pull-center">
+                                                    <apex:outputText value="{!Allocated.Receipt__r.Status__c}" />
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <table>
+                                        <apex:repeat value="{!otherCharge.Allocations__r}" var="Allocated">
+                                            <tr>
+                                                <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                    class="pull-center">
+                                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                                        <apex:param value="{!Allocated.AllocationAmount__c}" />
+                                                    </apex:outputText>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+
+                                <td
+                                    style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!otherCharge.InvoiceBalance__c}" />
+                                    </apex:outputText>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+
+                        <!-- Dynamic Late Payment Charges row (mirrors NewSOA) -->
+                        <apex:outputPanel layout="none" rendered="{!showDynamicLpcRow}">
+                            <apex:variable var="otherCount" value="{!otherCount + 1}" />
+                            <tr class="{!IF(MOD(otherCount,2)==0, 'zebra-b', 'zebra-a')}">
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0,date,dd-MMM-yy}">
+                                        <apex:param value="{!Today}" />
+                                    </apex:outputText>
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    TBI
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    Late Payment Charges
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!dynamicLpcAmount}" />
+                                    </apex:outputText>
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    Pending
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    0.00
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!dynamicLpcAmount}" />
+                                    </apex:outputText>
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+
+                        <apex:repeat value="{!FutureMilestoneOtherPayments}" var="futureCharge">
+
+                            <apex:outputPanel layout="none"
+                                rendered="{!NOT(ISNULL(futureCharge.Allocations__r)) && (futureCharge.Allocations__r.size > 0)}">
+
+                                <apex:variable var="otherCount" value="{!otherCount + 1}" />
+                                <tr class="{!IF(MOD(otherCount,2)==0, 'zebra-b', 'zebra-a')}">
+                                    <!-- Due Date -->
+                                    <!-- Due Date -->
+<td style="font-family: sans-serif; border:1px solid black; padding:10px; text-align:center;">
+    <table style="width:100%; border-collapse:collapse;">
+        <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+            <tr>
+                <td style="font-family:sans-serif; padding:8px; text-align:center;">
+
+                    <!-- If receipt is cleared (and not an excess receipt) show EBS clearing date -->
+                    <apex:outputText rendered="{!NOT(ISBLANK(alloc.Receipt__c)) && alloc.Receipt__r.Status__c = 'Cleared' && (ISBLANK(alloc.Receipt__r.Receipt_Excess_Amount__c) || alloc.Receipt__r.Receipt_Excess_Amount__c == 0)}"
+                        value="{0,date,dd-MMM-yy}">
+                        <apex:param value="{!alloc.Receipt__r.EBS_Clearing_Date__c}" />
+                    </apex:outputText>
+
+                    <!-- Else show cheque date, falling back to transaction date -->
+                    <apex:outputText rendered="{!(ISBLANK(alloc.Receipt__c) || alloc.Receipt__r.Status__c != 'Cleared') && NOT(ISBLANK(alloc.Receipt__r.ChequeDate__c))}"
+                        value="{0,date,dd-MMM-yy}">
+                        <apex:param value="{!alloc.Receipt__r.ChequeDate__c}" />
+                    </apex:outputText>
+
+                    <apex:outputText rendered="{!(ISBLANK(alloc.Receipt__c) || alloc.Receipt__r.Status__c != 'Cleared') && ISBLANK(alloc.Receipt__r.ChequeDate__c)}"
+                        value="{0,date,dd-MMM-yy}">
+                        <apex:param value="{!alloc.Receipt__r.TransactionDate__c}" />
+                    </apex:outputText>
+
+                </td>
+            </tr>
+        </apex:repeat>
+    </table>
+</td>
+
+
+                                    <!-- Invoice No -->
+                                   <!-- Invoice No -->
+<td style="font-family: sans-serif; border:1px solid black; padding:10px; text-align:center;">
+    <table style="width:100%; border-collapse:collapse;">
+        <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+            <tr>
+                <td style="font-family:sans-serif; padding:8px; text-align:center;">
+
+                    <apex:outputText rendered="{!NOT(ISBLANK(alloc.Receipt__c)) && alloc.Receipt__r.Status__c = 'Cleared' && (ISBLANK(alloc.Receipt__r.Receipt_Excess_Amount__c) || alloc.Receipt__r.Receipt_Excess_Amount__c == 0)}"
+                        value="{!alloc.Receipt__r.Name}" />
+
+                    <apex:outputText rendered="{!ISBLANK(alloc.Receipt__c) || alloc.Receipt__r.Status__c != 'Cleared'}"
+                        value="TBI" />
+
+                </td>
+            </tr>
+        </apex:repeat>
+    </table>
+</td>
+
+
+                                    <!-- Transaction Type -->
+                                    <!-- Invoice No -->
+<td style="font-family: sans-serif; border:1px solid black; padding:10px; text-align:center;">
+    <table style="width:100%; border-collapse:collapse;">
+        <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+            <tr>
+                <td style="font-family:sans-serif; padding:8px; text-align:center;">
+
+                    <apex:outputText rendered="{!NOT(ISBLANK(alloc.Receipt__c)) && alloc.Receipt__r.Status__c = 'Cleared' && (ISBLANK(alloc.Receipt__r.Receipt_Excess_Amount__c) || alloc.Receipt__r.Receipt_Excess_Amount__c == 0)}"
+                        value="Receipt" />
+
+                    <apex:outputText rendered="{!NOT(ISBLANK(alloc.Receipt__c)) && alloc.Receipt__r.Status__c = 'Cleared' && NOT(ISBLANK(alloc.Receipt__r.Receipt_Excess_Amount__c)) && alloc.Receipt__r.Receipt_Excess_Amount__c != 0}"
+                        value="{!IF(ISBLANK(alloc.Receipt__r.Modeofpayment__c), 'Receipt', 'Receipt - ' + alloc.Receipt__r.Modeofpayment__c)}" />
+
+                    <apex:outputText rendered="{!ISBLANK(alloc.Receipt__c) || alloc.Receipt__r.Status__c != 'Cleared'}"
+                        value="{!IF(ISBLANK(alloc.Receipt__r.Modeofpayment__c), 'PDC', alloc.Receipt__r.Modeofpayment__c)}" />
+
+                </td>
+            </tr>
+        </apex:repeat>
+    </table>
+</td>
+
+
+                                    <!-- Invoice Amount -->
+                                    <td
+                                        style="font-family: sans-serif; border:1px solid black; padding:10px; text-align:center;">
+                                        <table>
+                                            <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+                                                <tr>
+                                                    <td
+                                                        style="font-family: sans-serif; padding:8px; text-align:center;">
+                                                        <apex:outputText rendered="{!ISBLANK(alloc.Receipt__c) || alloc.Receipt__r.Status__c = 'Cleared' || alloc.Receipt__r.Status__c = 'In Progress'}"
+                                                            value="{!alloc.Receipt__r.Receipt_Amount__c}" />
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </table>
+                                    </td>
+
+                                    <!-- Transaction Number -->
+                                    <td
+                                        style="font-family: sans-serif; border:1px solid black; padding:8px; text-align:center;">
+                                        <table>
+                                            <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+                                                <tr>
+                                                    <td
+                                                        style="font-family: sans-serif; padding:8px; text-align:center;">
+                                                        {!alloc.Receipt__r.TransactionNumber__c}
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </table>
+                                    </td>
+                                    <td
+                                        style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                        <table>
+                                            <apex:repeat value="{!futureCharge.Allocations__r}" var="Allocated">
+                                                <tr>
+                                                    <td style="font-family: sans-serif; padding: 8px; text-align: center;"
+                                                        class="pull-center">
+                                                         <apex:outputText rendered="{!NOT(ISBLANK(Allocated.Receipt__c)) && Allocated.Receipt__r.Status__c = 'Cleared'}"
+                                                            value="Cleared" />
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </table>
+                                    </td>
+                                    <!-- Amount Collected -->
+                                    <td
+                                        style="font-family: sans-serif; border:1px solid black; padding:8px; text-align:center;">
+                                        <table>
+                                            <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+                                                <tr>
+                                                    <td
+                                                        style="font-family: sans-serif; padding:8px; text-align:center;">
+                                                        <apex:outputText rendered="{!NOT(ISBLANK(alloc.Receipt__c))
+                                                                    && alloc.Receipt__r.Status__c = 'Cleared'
+                                                                    && ISBLANK(alloc.Receipt__r.Receipt_Excess_Amount__c)}" value="{0, number, ###,##0.00}" >
+                                                            <apex:param value="{!alloc.AllocationAmount__c}" />
+                                                        </apex:outputText>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </table>
+                                    </td>
+
+                                    <!-- Outstanding -->
+                                    <td
+                                        style="font-family: sans-serif; border:1px solid black; padding:10px; text-align:center;">
+                                        <table>
+                                            <apex:repeat value="{!futureCharge.Allocations__r}" var="alloc">
+                                                <tr>
+                                                    <td
+                                                        style="font-family: sans-serif; padding:8px; text-align:center;">
+                                                        <apex:outputText rendered="{!NOT(ISBLANK(alloc.Receipt__c))
+                                                                    && alloc.Receipt__r.Status__c = 'Cleared'
+                                                                    && NOT(ISBLANK(alloc.Receipt__r.Receipt_Excess_Amount__c))
+                                                                    && alloc.Receipt__r.Receipt_Excess_Amount__c != 0}"
+                                                        value="{0, number, ###,##0.00}">
+                                                        -<apex:param value="{!alloc.Receipt__r.Receipt_Excess_Amount__c}" />
+                                                    </apex:outputText>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                            </apex:outputPanel>
+
+                        </apex:repeat>
+
+                        <!-- Receipts with Excess Amount, linked directly to the Sales Order
+							V2.0 changes -->
+                        <apex:repeat value="{!ExcessReceiptsList}" var="excessReceipt">
+                            <apex:variable var="otherCount" value="{!otherCount + 1}" />
+                            <tr class="{!IF(MOD(otherCount,2)==0, 'zebra-b', 'zebra-a')}">
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{!IF(ISBLANK(excessReceipt.Modeofpayment__c), 'Receipt', 'Receipt - ' + excessReceipt.Modeofpayment__c)}" />
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!excessReceipt.Receipt_Amount__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    {!excessReceipt.TransactionNumber__c}
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    {!excessReceipt.Status__c}
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 8px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!excessReceipt.AppliedAmount__c}" />
+                                    </apex:outputText>
+                                </td>
+                                <td style="font-family: sans-serif; border: 1px solid black; padding: 10px; text-align: center;">
+                                    <apex:outputText value="{0, number, ###,##0.00}">-<apex:param value="{!excessReceipt.Receipt_Excess_Amount__c}" /></apex:outputText>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+
+                        <tr width="100%" class="headers pull-right tablestyle">
+                            <td colspan="3"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                Total (AED):</td>
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalOtherAmount}" />
+                                </apex:outputText>
+                            </td>
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                            </td>
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                            </td>
+                            <td class="pull-right"
+                                style="font-family: sans-serif;border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalOtherAmountCollected}" />
+                                </apex:outputText>
+                            </td>
+
+                            <td class="pull-right"
+                                style="font-family: sans-serif; border:1px solid black; font-weight: bold; text-align: center; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!totalOtherAmountOutstanding}" />
+                                </apex:outputText>
+                            </td>
+                        </tr>
+                    </tbody>
+
+
+                </table>
+            </div>
+            <br />
+            <div style="width:100% ">
+                <table width="100%"
+                    style="border: 1px solid black; font-size: 8px; width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+
+                   
+                    <tr style="border:1px solid black">
+                        <td colspan="4"
+                            style="border:1px solid black; font-weight: bold; text-align: right; background-color: black; color: white; padding: 2px; font-size: 8px;">
+                            TOTAL OUTSTANDING</td>
+                        <td
+                            style="border:1px solid black; font-weight: bold; text-align: right; background-color: black; color: white; padding: 2px; font-size: 8px;">
+                            <apex:outputText value="{0, number, ###,##0.00}">
+                                <apex:param value="{!grandTotalOutstanding}" />
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                </table>
+               
+                <!-- Escrow Account Details -->
+                <div
+                    style="font-family: sans-serif; border:1px solid black; font-weight: bold; text-align: left; background-color: black; color: white; padding: 2px; font-size: 10px;">
+                    Escrow Account Details
+                </div>
+
+                <table style="width:100%; font-size:10px; border-collapse:collapse; border:1px solid #000;">
+                    <tr>
+                        <td
+                            style="width:35%; border:1px solid #000; padding:6px; font-weight:bold; vertical-align:top;">
+                            Payable via : Cheque
+                        </td>
+                        <td style="width:65%; border:1px solid #000; padding:6px; vertical-align:top;">
+                            Account Name : {!salesOrder.VirtualAccount__r.ESCROWAccountName__c}<br />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; padding:6px; font-weight:bold; vertical-align:top;">
+                            Payable via : Bank Transfer
+                        </td>
+                        <td style="border:1px solid #000; padding:6px; vertical-align:top;">
+                            Bank Name : {!salesOrder.VirtualAccount__r.Escrow_Bank_Name__c}<br />
+                            Account Number : {!salesOrder.VirtualAccount__r.VirtualAccountNumber__c}<br />
+                            IBAN : {!salesOrder.VirtualAccount__r.VirtualIBANNumber__c}<br />
+                            Swift Code : {!salesOrder.VirtualAccount__r.Swift_Code__c}
+                        </td>
+                    </tr>
+                </table>
+
+
+                <!--<br/> v2-->
+
+            </div>
+            <!-- FOOTER -->
+            <p style="font-size: 8px; margin-top: 5px;">
+                * Please allow 3–5 business days for the payment to reflect.Physical Signature is not required as this
+                is a system generated document.
+            </p>
+
+
+            <!--</apex:form>-->
+        </div>
+    </body>
+
+    </html>
+</apex:page>

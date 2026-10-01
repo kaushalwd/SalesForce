@@ -1,0 +1,118 @@
+<template>
+    <template lwc:if={showPanel}>
+        <div class="ot">
+            <!-- head: what this is, and the one figure that sums it -->
+            <div class="ot__head">
+                <span class="eyebrow">
+                    <span class="eyebrow__dot"></span>
+                    <span class="eyebrow__label">{labels.OT_EYEBROW}</span>
+                </span>
+                <template lwc:if={headChip}>
+                    <span class="chip">{headChip}</span>
+                </template>
+            </div>
+
+            <!-- the server's own sentence -->
+            <template lwc:if={blockedReason}>
+                <div class="ot__note">
+                    <c-modon-icon name="info" size="14" color="currentColor"></c-modon-icon>
+                    <span>{blockedReason}</span>
+                </div>
+            </template>
+
+            <template lwc:if={showRecord}>
+                <!-- the split of the booking -->
+                <div class="ot__meter" role="img" aria-label={meterLabel}>
+                    <template for:each={meterSegments} for:item="m">
+                        <b key={m.key} class={m.cls} style={m.style}></b>
+                    </template>
+                </div>
+                <div class="ot__key">
+                    <template for:each={meterKey} for:item="k">
+                        <span key={k.key} class="ot__key-item">
+                            <i class={k.cls}></i>
+                            <span class="ot__key-name">{k.name}</span>
+                            <b class="ot__key-share">{k.share}</b>
+                        </span>
+                    </template>
+                </div>
+
+                <div class="ot__scroll">
+                    <table class="ot__tbl">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="ot__c-owner">{labels.OT_COL_OWNER}</th>
+                                <th scope="col" class="ot__c-role">{labels.OT_COL_ROLE}</th>
+                                <th scope="col" class="ot__c-res">{labels.OT_COL_RESIDENCY}</th>
+                                <th scope="col" class="ot__c-unit">{unitColumnLabel}</th>
+                                <th scope="col" class="ot__c-share">{labels.OT_COL_SHARE}</th>
+                                <th scope="col" class="ot__c-go">
+                                    <span class="ot__sr">{labels.OT_COL_OWNER}</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={rows} for:item="r">
+                                <tr
+                                    key={r.key}
+                                    class={r.rowClass}
+                                    data-account={r.accountId}
+                                    onclick={handleOpen}
+                                >
+                                    <td class="ot__c-owner"><span class="ot__name">{r.name}</span></td>
+                                    <td class="ot__c-role">{r.role}</td>
+                                    <td class="ot__c-res">{r.residency}</td>
+                                    <td class="ot__c-unit" title={r.unitText}>{r.unitText}</td>
+                                    <td class="ot__c-share">{r.shareText}</td>
+                                    <td class="ot__c-go">
+                                        <template lwc:if={r.canOpen}>
+                                            <button
+                                                class="ot__go"
+                                                type="button"
+                                                aria-label={r.openLabel}
+                                            >
+                                                <c-modon-icon
+                                                    name="chevron-right"
+                                                    size="16"
+                                                    color="currentColor"
+                                                ></c-modon-icon>
+                                            </button>
+                                        </template>
+                                        <template lwc:elseif={r.showLock}>
+                                            <span class="ot__lock" title={r.lockTitle}>
+                                                <c-modon-icon
+                                                    name="lock"
+                                                    size="13"
+                                                    color="currentColor"
+                                                ></c-modon-icon>
+                                            </span>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template lwc:if={showFoot}>
+                <div class="ot__foot">
+                    <template lwc:if={coverageLine}>
+                        <span class="ot__cov">{coverageLine}</span>
+                    </template>
+                    <template lwc:if={canAdd}>
+                        <button
+                            class="pill ot__add"
+                            type="button"
+                            disabled={busy}
+                            onclick={handleAdd}
+                        >
+                            <c-modon-icon name="plus" size="14" color="currentColor"></c-modon-icon>
+                            <span>{labels.JO_ADD}</span>
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

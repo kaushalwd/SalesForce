@@ -1,0 +1,138 @@
+<template>
+<lightning-quick-action-panel header="Select For Default SR">
+
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+    </template>
+
+    <template if:false={isLoading}>
+
+        <div class="slds-m-bottom_small slds-text-body_small">
+            <span class="slds-text-title_bold">Milestone:</span>
+            <span class="slds-m-left_x-small">{milestoneName}</span>
+        </div>
+
+        <template if:true={hasRows}>
+            <div style="max-height:55vh;overflow:auto;">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+
+                    <thead>
+                        <tr>
+
+                            <!-- Select All -->
+                            <th style="width:60px;">
+                                <lightning-input
+                                    type="checkbox"
+                                    variant="label-hidden"
+                                    onchange={handleSelectAll}>
+                                </lightning-input>
+                            </th>
+
+                            <th>SOI</th>
+                            <th>Sales Order</th>
+                            <th>Customer</th>
+                            <th>Due Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+
+                            <!-- NEW COLUMN -->
+                            <th>Exclude Default</th>
+                            <th>Exclude Default Comments</th>
+
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <template for:each={rows} for:item="r">
+
+                            <tr key={r.soiId}>
+
+                                <!-- Row Select -->
+                                <td>
+                                    <lightning-input
+                                        type="checkbox"
+                                        variant="label-hidden"
+                                        data-id={r.soiId}
+                                        checked={r.selected}
+                                        onchange={handleSelect}>
+                                    </lightning-input>
+                                </td>
+
+                                <td>{r.soiName}</td>
+                                <td>{r.salesOrderName}</td>
+                                <td>{r.customerName}</td>
+
+                                <td>
+                                    <lightning-formatted-date-time
+                                        value={r.dueDate}
+                                        year="numeric"
+                                        month="short"
+                                        day="2-digit">
+                                    </lightning-formatted-date-time>
+                                </td>
+
+                                <td>
+                                    <lightning-formatted-number
+                                        value={r.amount}
+                                        maximum-fraction-digits="2">
+                                    </lightning-formatted-number>
+                                </td>
+
+                                <td>{r.PaymentStatus}</td>
+
+                                <!-- DEFAULT SR CHECKBOX -->
+                                <td>
+                                    <lightning-input
+                                        type="checkbox"
+                                        variant="label-hidden"
+                                        data-id={r.soiId}
+                                        checked={r.defaultSR}
+                                        onchange={handleDefaultSR}>
+                                    </lightning-input>
+                                </td>
+                                <td>
+    <lightning-textarea
+        variant="label-hidden"
+        data-id={r.soiId}
+        value={r.defaultComments}
+        onchange={handleCommentChange}>
+    </lightning-textarea>
+</td>
+
+                            </tr>
+
+                        </template>
+                    </tbody>
+
+                </table>
+            </div>
+        </template>
+
+        <template if:false={hasRows}>
+            <div class="slds-text-color_weak slds-p-vertical_medium">
+                No unpaid installments found.
+            </div>
+        </template>
+
+    </template>
+
+    <!-- FOOTER -->
+    <div slot="footer" class="slds-grid slds-grid_align-end">
+
+        <lightning-button
+            label="Cancel"
+            onclick={handleCancel}>
+        </lightning-button>
+
+        <lightning-button
+            class="slds-m-left_small"
+            variant="brand"
+            label="Save"
+            onclick={handleSave}
+            disabled={createDisabled}>
+        </lightning-button>
+
+    </div>
+
+</lightning-quick-action-panel>
+</template>

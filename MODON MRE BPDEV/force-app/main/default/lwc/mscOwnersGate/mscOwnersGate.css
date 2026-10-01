@@ -1,0 +1,109 @@
+/* c/mscStyles for .pill and .eyebrow. The layer is built exactly as
+   c/mscComplianceCheck's - it is mounted at the same place, for the same reason. */
+@import "c/mscStyles";
+
+.og__layer {
+    position: fixed;
+    inset: 0;
+    z-index: 72;
+    display: grid;
+    place-items: center;
+    padding: clamp(12px, 2vw, 28px);
+}
+.og__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.74);
+    backdrop-filter: blur(8px);
+    animation: og-scrim-in 220ms ease-out both;
+}
+@supports not (backdrop-filter: blur(1px)) {
+    .og__scrim {
+        background: rgba(0, 0, 0, 0.86);
+    }
+}
+.og__panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(430px, 100%);
+    max-height: 100%;
+    border-radius: 16px;
+    background: var(--surface, rgba(15, 15, 15, 0.68));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(22px);
+    color: var(--text, #fafafa);
+    overflow: hidden;
+    animation: og-panel-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes og-scrim-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes og-panel-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.99); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .og__scrim,
+    .og__panel {
+        animation: none;
+    }
+}
+
+.og__body {
+    padding: 20px;
+}
+.og__eyebrow {
+    margin-bottom: 12px;
+}
+.og__title {
+    font-size: 1.25rem;
+    font-weight: 300;
+    margin: 0 0 10px;
+    color: var(--text, #fafafa);
+}
+.og__units {
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    margin: 0;
+}
+.og__body-text {
+    font-size: 12.5px;
+    color: var(--text-dim, #8a8a8a);
+    margin: 12px 0 0;
+    line-height: 1.5;
+}
+.og__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 15px 20px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+.og__go {
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.og__sm,
+.og__go {
+    min-height: 34px;
+    padding: 5px 14px;
+    font-size: 12.5px;
+}
+
+@media (max-width: 767px) {
+    .og__foot {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .og__foot .pill {
+        width: 100%;
+        min-height: 44px;
+    }
+}

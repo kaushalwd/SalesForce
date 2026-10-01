@@ -1,0 +1,153 @@
+<template>
+    <lightning-card title="Documents" icon-name="standard:document" >
+        <div class="slds-table slds-table_cell-buffer slds-table_bordered">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+            <template if:false={isLoading}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col">
+                                <div class="slds-truncate" title="Document Name">Document Name</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Status">Status</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Created By">Created By</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Created Date">Created Date</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Actions">Actions</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={lstOfDocuments} for:item="item">
+                            <tr key={item.docId} class="slds-hint-parent">
+                                <td data-label="Document Name">
+                                    <div class="slds-truncate" title={item.docName}>{item.docName}</div>
+                                </td>
+                                <td data-label="Status">
+                                    <div class="slds-truncate" title={item.docStatus}>{item.docStatus}</div>
+                                </td>
+                               <td data-label="Created By">
+                                    <div class="slds-truncate" title={item.contcontentVersion.createdBy}>{item.contcontentVersion.createdBy}</div>
+                                </td>
+                                <td data-label="Created Date">
+                                    <lightning-formatted-date-time value={item.contcontentVersion.createdDate} year="numeric" month="2-digit" day="2-digit"></lightning-formatted-date-time>
+                                </td>
+                                <td data-label="Actions">
+                                    <template if:true={item.isSystemUpload}>
+<!-- Wrap lightning-file-upload around the icon -->
+ <!--
+<lightning-file-upload
+    record-id={item.docId}
+    accept=".pdf,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.html,.htm,.xml,.zip,.mp3,.wav,.mp4,.mov,.avi,.bmp,.gif,.jpeg,.jpg,.svg,.tif,.tiff,.css,.js,.ics,.vsd,.gpg,.swf,.mpeg,.mpg,.vi,.xsl,.xslt,.mdb,.pps,.ppsx,.sxc,.sxi,.sxw"
+    onuploadfinished={handleFileChange}
+    style="display:inline-block; background:none; border:none; padding:0;">
+
+    <lightning-icon 
+        size="x-small" 
+        icon-name="action:upload"  
+        alternative-text="Upload File"
+        data-itemid={item.docId}
+        data-itemname={item.docName}
+        data-itemcontid={item.contcontentVersion.contentDocumentId}
+        data-itemrecname={item.recordName}
+        onclick={handleFileClick}>
+    </lightning-icon>
+
+</lightning-file-upload>
+
+
+
+
+--> 
+
+<!-- Show lightning-file-upload if Document name = Signed SPA (Customer) -->
+ 
+<template if:true={item.isSignedSPA}>
+   <lightning-file-upload
+    record-id={item.docId}
+    accept=".pdf,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.html,.htm,.xml,.zip,.mp3,.wav,.mp4,.mov,.avi,.bmp,.gif,.jpeg,.jpg,.svg,.tif,.tiff,.css,.js,.ics,.vsd,.gpg,.swf,.mpeg,.mpg,.vi,.xsl,.xslt,.mdb,.pps,.ppsx,.sxc,.sxi,.sxw"
+    onuploadfinished={handleFileChange}
+    style="display:inline-block; background:none; border:none; padding:0;">
+
+    <lightning-icon 
+        size="x-small" 
+        icon-name="action:upload"  
+        alternative-text="Upload File"
+        data-itemid={item.docId}
+        data-itemname={item.docName}
+        data-itemcontid={item.contcontentVersion.contentDocumentId}
+        data-itemrecname={item.recordName}
+        onclick={handleFileClick}>
+    </lightning-icon>
+
+</lightning-file-upload>
+</template>
+
+<!-- Show plain icon + input if Document name = Not Signed SPA (Customer) -->
+<template if:false={item.isSignedSPA}>
+    <lightning-icon size="x-small" icon-name="action:upload"  alternative-text="Upload File" data-itemid={item.docId} data-itemname={item.docName} data-itemcontid={item.contcontentVersion.contentDocumentId}  data-itemrecname={item.recordName} onclick={handleFileClick}></lightning-icon>&nbsp;&nbsp;
+                                        <input type="file" accept=".pdf,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.html,.htm,.xml,.zip,.mp3,.wav,.mp4,.mov,.avi,.bmp,.gif,.jpeg,.jpg,.svg,.tif,.tiff,.css,.js,.ics,.vsd,.gpg,.swf,.mpeg,.mpg,.vi,.xsl,.xslt,.mdb,.pps,.ppsx,.sxc,.sxi,.sxw" onchange={handleFileChange} style="display:none" ref="fileInput"/>
+                                    
+</template>
+
+
+
+
+                                        <!-- Wrap lightning-file-upload around the icon -->
+
+
+                                      <!-- <lightning-icon size="x-small" icon-name="action:upload"  alternative-text="Upload File" data-itemid={item.docId} data-itemname={item.docName} data-itemcontid={item.contcontentVersion.contentDocumentId}  data-itemrecname={item.recordName} onclick={handleFileClick}></lightning-icon>&nbsp;&nbsp;
+                                        <input type="file" accept=".pdf,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.html,.htm,.xml,.zip,.mp3,.wav,.mp4,.mov,.avi,.bmp,.gif,.jpeg,.jpg,.svg,.tif,.tiff,.css,.js,.ics,.vsd,.gpg,.swf,.mpeg,.mpg,.vi,.xsl,.xslt,.mdb,.pps,.ppsx,.sxc,.sxi,.sxw" onchange={handleFileChange} style="display:none" ref="fileInput"/>
+                                    
+                                        <lightning-file-upload
+        record-id={item.docId}
+        accept=".pdf,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.html,.htm,.xml,.zip,.mp3,.wav,.mp4,.mov,.avi,.bmp,.gif,.jpeg,.jpg,.svg,.tif,.tiff,.css,.js,.ics,.vsd,.gpg,.swf,.mpeg,.mpg,.vi,.xsl,.xslt,.mdb,.pps,.ppsx,.sxc,.sxi,.sxw"
+        onuploadfinished={handleFileChange}
+        style="display:inline-block; background:none; border:none; padding:0;"
+    >
+        <lightning-icon 
+            size="x-small" 
+            icon-name="action:upload"  
+            alternative-text="Upload File"
+            data-itemid={item.docId}
+            data-itemname={item.docName}
+            data-itemcontid={item.contcontentVersion.contentDocumentId}
+            data-itemrecname={item.recordName}>
+        </lightning-icon>
+    </lightning-file-upload>  -->
+
+ <!--   <lightning-file-upload
+    record-id={item.docId}
+    accept=".pdf,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.html,.htm,.xml,.zip,.mp3,.wav,.mp4,.mov,.avi,.bmp,.gif,.jpeg,.jpg,.svg,.tif,.tiff,.css,.js,.ics,.vsd,.gpg,.swf,.mpeg,.mpg,.vi,.xsl,.xslt,.mdb,.pps,.ppsx,.sxc,.sxi,.sxw"
+    onuploadfinished={handleFileChange}
+    class="icon-only-upload"
+></lightning-file-upload> -->
+                                        
+                                    </template> 
+                                    <template if:false={item.contcontentVersion.contentDocumentId}>
+                                        <lightning-button-icon  icon-name="action:preview"></lightning-button-icon>&nbsp;&nbsp;
+                                        <lightning-button-icon icon-name="action:download"></lightning-button-icon>&nbsp;&nbsp;
+                                        <lightning-button-icon icon-name="action:delete"></lightning-button-icon>
+                                    </template>
+                                    <template if:true={item.contcontentVersion.contentDocumentId}>
+                                        <lightning-icon size="x-small" icon-name="action:preview" onclick={handlepreviewFile} data-id={item.contcontentVersion.contentDocumentId}></lightning-icon>&nbsp;&nbsp;
+                                        <lightning-icon  size="x-small" icon-name="action:download" onclick={handleDownload} data-id={item.contcontentVersion.contentDocumentId}></lightning-icon>&nbsp;&nbsp;
+                                        <lightning-icon if:true={isAdminUser} size="x-small" icon-name="action:delete" onclick={handleDelete} data-id={item.contcontentVersion.contentDocumentId}></lightning-icon>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+        </div>
+    </lightning-card>
+</template>

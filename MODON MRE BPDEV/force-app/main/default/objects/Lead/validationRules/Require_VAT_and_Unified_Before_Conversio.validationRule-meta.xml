@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Require_VAT_and_Unified_Before_Conversio</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+ISCHANGED(IsConverted),
+IsConverted = TRUE,
+NOT(ISBLANK(Company)),
+OR(
+ISBLANK(UnifiedNumber__c),
+ISBLANK(UAEVATRegisterNumber__c)
+),
+ISPICKVAL(VAT_Certificate_Type__c, &apos;VAT Registration Certificate&apos;),
+NOT(ISPICKVAL( Source_Entity__c , &apos;Modon - Egypt&apos;) )
+)</errorConditionFormula>
+    <errorMessage>Please enter UAE VAT Number and Unified Number before converting this Lead.</errorMessage>
+</ValidationRule>

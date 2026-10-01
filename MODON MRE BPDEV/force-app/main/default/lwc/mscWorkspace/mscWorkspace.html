@@ -1,0 +1,165 @@
+<template>
+  <div class="page">
+    <!-- the hub is never unmounted: with a sheet over it, it scales back and dims -->
+    <div class={hubClass}>
+      <div class="head">
+        <div class="head-main">
+          <div class="eyebrow">
+            <span class="eyebrow__dot">●</span>
+            <span class="eyebrow__label">Modon Sales Console</span>
+          </div>
+          <h1 class="h1">{greeting}</h1>
+        </div>
+        <p class="date">{todayLabel}</p>
+      </div>
+
+      <div class="cards" role="list" aria-label="Sales console sections">
+        <template for:each={cards} for:item="c">
+          <button
+            key={c.key}
+            class={c.cls}
+            data-card={c.key}
+            onclick={handleCardSelect}
+            role="listitem"
+          >
+            <div class="card-top">
+              <span class="card-label">{c.label}</span>
+              <c-modon-icon
+                name={c.icon}
+                size="15"
+                color={c.iconColor}
+              ></c-modon-icon>
+            </div>
+            <div class="card-value">{c.value}</div>
+            <div class="card-caption">{c.caption}</div>
+          </button>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.2: one sheet per card, like modonSalesWorkspace. c-modon-sheet fires closerequest and closed, not close; open must be bound; Learning is a drawer. Sheets are siblings of .page, never inside .hub (scale and blur make a containing block for position:fixed). -->
+  <!-- 1.4: Available Units opens the booking journey at unit selection, no picker in front; getAllProjects' blank-id break is fixed in SalesConsoleController.getProjects -->
+  <!-- 1.13 (MSC-216): the four card workspaces close only through their own close button -
+       a stray click outside (or Escape) must not lose half-done work. Learning and Alerts
+       keep light dismiss. -->
+  <template lwc:if={isUnits}>
+    <c-modon-sheet
+      open={sheetOpen}
+      size="immersive"
+      explicit-close
+      title={unitsSheetTitle}
+      subtitle={unitsSheetSubtitle}
+      oncloserequest={requestSheetClose}
+      onclosed={handleSheetClosed}
+    >
+      <!-- 1.4: the journey immediately; record-id only when the customer is already known -->
+      <!-- 1.5: booking-id is the Sales Order the journey was opened on; the mount flag remounts the page when switching to a sibling order -->
+      <!-- 1.11 (MSC-212): lead-id seeds a "Book a unit" journey opened from the lead drawer -->
+      <template lwc:if={journeyMounted}>
+        <c-msc-booking-page
+          embedded
+          theme={theme}
+          record-id={opportunityId}
+          booking-id={bookingId}
+          lead-id={leadId}
+          eoi-id={eoiId}
+          onopportunitychange={handleOpportunityChange}
+          onbookingopened={handleBookingOpened}
+          onopensibling={handleOpenSibling}
+        ></c-msc-booking-page>
+      </template>
+    </c-modon-sheet>
+  </template>
+
+  <template lwc:elseif={isLeads}>
+    <c-modon-sheet
+      open={sheetOpen}
+      explicit-close
+      title={activeCardLabel}
+      subtitle={activeCardCaption}
+      oncloserequest={requestSheetClose}
+      onclosed={handleSheetClosed}
+    >
+      <!-- 1.7: alerts hand the list a starting filter or a lead to open; null otherwise -->
+      <!-- 1.10: a lead write moves the hub's own count; the event keeps bubbling to the shell,
+           which refreshes the bell badge with it -->
+      <c-msc-lead-list
+        class="pane"
+        initial-filter={leadsSeedFilter}
+        open-lead-id={leadsSeedLeadId}
+        onstartbooking={handleStartFromLead}
+        onleadschanged={handleLeadsChanged}
+      ></c-msc-lead-list>
+    </c-modon-sheet>
+  </template>
+
+  <!-- Learning is a drawer in the PoC -->
+  <template lwc:elseif={isLearning}>
+    <c-modon-sheet
+      open={sheetOpen}
+      variant="drawer"
+      title={activeCardLabel}
+      subtitle={activeCardCaption}
+      oncloserequest={requestSheetClose}
+      onclosed={handleSheetClosed}
+    >
+      <c-msc-learning class="pane"></c-msc-learning>
+    </c-modon-sheet>
+  </template>
+
+  <template lwc:elseif={isRevenue}>
+    <!-- 1.14 (MSC-222): the same room Available Units gets. Seven columns of booking data
+         need the width, and the pane sizes its own page to whatever height it is given. -->
+    <c-modon-sheet
+      open={sheetOpen}
+      explicit-close
+      size="immersive"
+      title={activeCardLabel}
+      subtitle={activeCardCaption}
+      oncloserequest={requestSheetClose}
+      onclosed={handleSheetClosed}
+    >
+      <!-- 1.9: alerts hand the pane a booking to open on its Verification tab; null otherwise -->
+      <c-msc-bookings
+        class="pane"
+        open-sales-order-id={bookingsSeedOrderId}
+        initial-tab={bookingsSeedTab}
+        onresumebooking={handleResumeBooking}
+      ></c-msc-bookings>
+    </c-modon-sheet>
+  </template>
+
+  <template lwc:elseif={isEoi}>
+    <c-modon-sheet
+      open={sheetOpen}
+      explicit-close
+      title={activeCardLabel}
+      subtitle={activeCardCaption}
+      oncloserequest={requestSheetClose}
+      onclosed={handleSheetClosed}
+    >
+      <!-- oneoicreated: a new EOI re-reads the hub metric -->
+      <c-msc-eoi class="pane" oneoicreated={refreshMetrics} onbookunit={handleBookFromEoi}></c-msc-eoi>
+    </c-modon-sheet>
+  </template>
+
+  <!-- not in the PoC: the bell opens this over the hub -->
+  <template lwc:elseif={isAlerts}>
+    <c-modon-sheet
+      open={sheetOpen}
+      variant="drawer"
+      title={activeCardLabel}
+      subtitle={activeCardCaption}
+      oncloserequest={requestSheetClose}
+      onclosed={handleSheetClosed}
+    >
+      <!-- 1.7: a lead card lands the rep on the console's own list or drawer -->
+      <c-msc-notifications
+        class="pane"
+        onopenleads={handleOpenLeads}
+        onopenbooking={handleOpenBookingAlert}
+      ></c-msc-notifications>
+    </c-modon-sheet>
+  </template>
+</template>

@@ -1,0 +1,290 @@
+<template>
+    <div class="attendee-wrapper">
+        <lightning-record-edit-form
+            record-id={recordId}
+            object-api-name="Handover_Details__c"
+            onsubmit={handleSubmit}
+            onsuccess={handleSuccess}
+            onerror={handleError}
+        >
+            <!-- ── HOME ORIENTATION ─────────────────────────────────── -->
+            <template lwc:if={isHO}>
+                <div class="mode-banner">
+                    <span class="mode-banner__icon">&#127968;</span>
+                    <div>
+                        <p class="mode-banner__title">Home Orientation</p>
+                        <p class="mode-banner__sub">Select who will attend the Home Orientation appointment</p>
+                    </div>
+                </div>
+
+                <div class="field-block">
+                    <lightning-input-field
+                        field-name="Home_Orientation_Attended_By__c"
+                        onchange={handleAttendedByChange}
+                    ></lightning-input-field>
+                </div>
+
+                <!-- Owner -->
+                <template lwc:if={isOwner}>
+                    <template lwc:if={ownerAvailable}>
+                        <div class="info-strip info-strip--ok">
+                            <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                            <span>The property owner will attend. No additional details required.</span>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="info-strip info-strip--err">
+                            <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                            <span>No Owner account is linked to this record. Please select another option.</span>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- Joint Owner -->
+                <template lwc:if={isJointOwner}>
+                    <div class="section-card">
+                        <p class="section-card__title">Joint Owner Selection</p>
+                        <template lwc:if={hasJointOwners}>
+                            <div class="jo-grid">
+                                <template for:each={jointOwners} for:item="jo">
+                                    <button
+                                        key={jo.Id}
+                                        type="button"
+                                        class={jo.cardClass}
+                                        onclick={handleJOSelect}
+                                        data-id={jo.Id}
+                                        title={jo.Name}
+                                    >
+                                        <lightning-icon icon-name="standard:contact" size="medium" class="jo-card__icon"></lightning-icon>
+                                        <span class="jo-card__name">{jo.Name}</span>
+                                        <template lwc:if={jo.isSelected}>
+                                            <span class="jo-card__check">&#10003;</span>
+                                        </template>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="info-strip info-strip--err">
+                                <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                                <span>No Joint Owner is available. Please select another option.</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- POA -->
+                <template lwc:if={isPOA}>
+                    <div class="section-card">
+                        <p class="section-card__title">POA Details</p>
+                        <div class="two-col">
+                            <div class="two-col__left">
+                                <lightning-input-field field-name="HO_Attendee_POA_Name__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Attendee_POA_Email_Address__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Attendee_POA_Mobile_Number__c" required></lightning-input-field>
+                            </div>
+                            <div class="two-col__right">
+                                <lightning-input-field
+                                    field-name="HO_Attendee_POA_Resident_Status__c"
+                                    onchange={handleResidentStatusChange}
+                                    required
+                                ></lightning-input-field>
+                                <template lwc:if={isUAEResident}>
+                                    <lightning-input-field field-name="HO_Attendee_Emirates_Id__c" required></lightning-input-field>
+                                </template>
+                                <template lwc:if={isNonResident}>
+                                    <lightning-input-field field-name="HO_Attendee_Passport_Number__c" required></lightning-input-field>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Authorised Person -->
+                <template lwc:if={isAuthorisedPerson}>
+                    <div class="section-card">
+                        <p class="section-card__title">Authorized Person Details</p>
+                        <div class="two-col">
+                            <div class="two-col__left">
+                                <lightning-input-field field-name="HO_Authorized_Person_Name__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Authorized_Person_Email__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Authorized_Person_Phone__c" required></lightning-input-field>
+                            </div>
+                            <div class="two-col__right">
+                                <lightning-input-field
+                                    field-name="HO_Type_of_Authorized_Party__c"
+                                    onchange={handleAuthPartyTypeChange}
+                                    required
+                                ></lightning-input-field>
+                                <template lwc:if={isCompany}>
+                                    <lightning-input-field field-name="HO_Authorized_Company_Name__c" required></lightning-input-field>
+                                    <lightning-input-field field-name="HO_Authorized_Company_Trade_License__c" required></lightning-input-field>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Third Party -->
+                <template lwc:if={isThirdParty}>
+                    <div class="section-card">
+                        <p class="section-card__title">Third Party Details</p>
+                        <div class="two-col">
+                            <div class="two-col__left">
+                                <lightning-input-field field-name="HO_Attendee_Third_Party_Engineer_Name__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Attendee_Third_Party_Engineer_Email__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Attendee_Third_Party_Engineer_Mobile__c" required></lightning-input-field>
+                            </div>
+                            <div class="two-col__right">
+                                <lightning-input-field field-name="HO_Attendee_Company_Name__c" required></lightning-input-field>
+                                <lightning-input-field field-name="HO_Attendee_Trade_License__c" required></lightning-input-field>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Document upload (not shown for Owner or Joint Owner) -->
+                <template lwc:if={showHODocUpload}>
+                    <div class="section-card">
+                        <p class="section-card__title">Attendee Document</p>
+                        <lightning-file-upload
+                            label="Upload Home Orientation Attendee Document"
+                            name="hoDoc"
+                            accept={acceptedFormats}
+                            record-id={docRelatedId}
+                            multiple
+                        ></lightning-file-upload>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ── DE-SNAGGING ──────────────────────────────────────── -->
+            <template lwc:if={isDS}>
+                <div class="mode-banner">
+                    <span class="mode-banner__icon">&#128295;</span>
+                    <div>
+                        <p class="mode-banner__title">De-Snagging</p>
+                        <p class="mode-banner__sub">Select who will attend the De-Snagging appointment</p>
+                    </div>
+                </div>
+
+                <div class="field-block">
+                    <lightning-input-field
+                        field-name="De_Snagging_Attended_By__c"
+                        onchange={handleAttendedByChange}
+                    ></lightning-input-field>
+                </div>
+
+                <!-- Owner -->
+                <template lwc:if={isOwner}>
+                    <template lwc:if={ownerAvailable}>
+                        <div class="info-strip info-strip--ok">
+                            <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                            <span>The property owner will attend. No additional details required.</span>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="info-strip info-strip--err">
+                            <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                            <span>No Owner account is linked to this record. Please select another option.</span>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- Joint Owner -->
+                <template lwc:if={isJointOwner}>
+                    <div class="section-card">
+                        <p class="section-card__title">Joint Owner Selection</p>
+                        <template lwc:if={hasJointOwners}>
+                            <div class="jo-grid">
+                                <template for:each={jointOwners} for:item="jo">
+                                    <button
+                                        key={jo.Id}
+                                        type="button"
+                                        class={jo.cardClass}
+                                        onclick={handleJOSelect}
+                                        data-id={jo.Id}
+                                        title={jo.Name}
+                                    >
+                                        <lightning-icon icon-name="standard:contact" size="medium" class="jo-card__icon"></lightning-icon>
+                                        <span class="jo-card__name">{jo.Name}</span>
+                                        <template lwc:if={jo.isSelected}>
+                                            <span class="jo-card__check">&#10003;</span>
+                                        </template>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="info-strip info-strip--err">
+                                <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                                <span>No Joint Owner is available. Please select another option.</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- POA -->
+                <template lwc:if={isPOA}>
+                    <div class="section-card">
+                        <p class="section-card__title">POA Details</p>
+                        <div class="two-col">
+                            <div class="two-col__left">
+                                <lightning-input-field field-name="De_Snagging_Attendee_POA_Name__c" required></lightning-input-field>
+                                <lightning-input-field field-name="De_Snagging_Attendee_POA_Email_Address__c" required></lightning-input-field>
+                                <lightning-input-field field-name="De_Snagging_Attendee_POA_Mobile_Number__c" required></lightning-input-field>
+                                <div class="upload-inline">
+                                    <lightning-file-upload
+                                        label="Upload De-Snagging Attendee Document"
+                                        name="dsDoc"
+                                        accept={acceptedFormats}
+                                        record-id={docRelatedId}
+                                        multiple
+                                    ></lightning-file-upload>
+                                </div>
+                            </div>
+                            <div class="two-col__right">
+                                <lightning-input-field
+                                    field-name="De_Snagging_Attendee_POA_Resident_Status__c"
+                                    onchange={handleResidentStatusChange}
+                                    required
+                                ></lightning-input-field>
+                                <template lwc:if={isUAEResident}>
+                                    <lightning-input-field field-name="De_Snagging_Attendee_Emirates_Id__c" required></lightning-input-field>
+                                </template>
+                                <template lwc:if={isNonResident}>
+                                    <lightning-input-field field-name="De_Snagging_Attendee_Passport_Number__c" required></lightning-input-field>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ── ERROR ───────────────────────────────────────────── -->
+            <template lwc:if={errorMessage}>
+                <div class="info-strip info-strip--err form-err">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- ── NAV BUTTONS ─────────────────────────────────────── -->
+            <div class="nav-row">
+                <lightning-button
+                    label="Back"
+                    icon-name="utility:chevronleft"
+                    onclick={handleBack}
+                ></lightning-button>
+                <lightning-button
+                    type="submit"
+                    label="Save &amp; Continue"
+                    variant="brand"
+                    icon-name="utility:chevronright"
+                    icon-position="right"
+                    disabled={isNextDisabled}
+                ></lightning-button>
+            </div>
+        </lightning-record-edit-form>
+    </div>
+</template>

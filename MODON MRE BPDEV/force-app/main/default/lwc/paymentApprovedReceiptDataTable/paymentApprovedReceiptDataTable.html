@@ -1,0 +1,54 @@
+<!--
+  @description       : 
+  @author            : Kumaravel Mathivanan
+  @Created on        : 10-06-2025
+  @version           : 1.0
+  @group             : 
+  @lastmodified on   : 01-18-2026    
+  @last modifiedby   : Manoj Kumar
+  @last modified on  : 01-23-2026
+  @last modified by  : Manoj
+  @version           : 2.0
+  @change description: Add the spinner
+-->
+<template>
+    <!--2.0 Spinner -->
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Working..." size="medium"></lightning-spinner>
+    </template>
+
+    <!-- Batch Progress -->
+    <template if:true={showProgress}>
+        <div class="slds-p-around_medium slds-m-bottom_small">
+            <lightning-progress-bar value={progressValue}></lightning-progress-bar>
+            <div class="slds-text-body_small slds-m-top_x-small">{progressStatusText}</div>
+        </div>
+    </template>
+
+    <div class="slds-grid slds-grid_align-center slds-m-bottom_medium">
+        <lightning-button
+            label="Approve"
+            onclick={handleBulkUpdate}
+            disabled={isButtonDisabled}>
+        </lightning-button>
+    </div>
+
+    <template if:true={hasRecords}>
+        <lightning-datatable
+            key-field="Id"
+            data={records}
+            draft-values={draftValues}
+            selected-rows={selectedRowIds}
+            columns={columns}
+            onrowselection={handleRowSelection}
+            onrowaction={handleRowAction}
+            onsave={handleSave}>
+        </lightning-datatable>
+    </template>
+
+    <template if:false={hasRecords}>
+        <p class="slds-text-color_weak slds-p-around_medium">
+            No receipts found for selected filters.
+        </p>
+    </template>
+</template>

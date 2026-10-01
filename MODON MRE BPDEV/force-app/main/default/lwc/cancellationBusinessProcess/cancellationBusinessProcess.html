@@ -1,0 +1,497 @@
+<template>
+
+    <!-- =========================================================
+         LOADING
+         ========================================================= -->
+    <template if:true={showLoading}>
+        <lightning-spinner
+            alternative-text="Loading"
+            size="medium">
+        </lightning-spinner>
+    </template>
+
+
+    <!-- =========================================================
+         MAIN FORM
+         ========================================================= -->
+    <template if:true={showForm}>
+
+        <div class="cancellation-container">
+
+            <!-- =================================================
+                 HEADER
+                 ================================================= -->
+            <div class="cancellation-header slds-m-bottom_medium">
+
+                <h2 class="slds-text-heading_medium">
+                    {modalHeader}
+                </h2>
+
+            </div>
+
+
+            <!-- =================================================
+                 INFORMATION
+                 TWO COLUMN LAYOUT
+                 ================================================= -->
+            <div class="slds-section slds-is-open">
+
+                <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                    <strong>Information</strong>
+                </h3>
+
+
+                <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+
+                    <!-- ================= LEFT COLUMN ================= -->
+                    <div class="slds-col slds-size_1-of-2">
+
+                        <lightning-input
+                            label="Sales Order"
+                            value={salesOrderName}
+                            readonly>
+                        </lightning-input>
+
+
+                        <lightning-input
+                            label="Unit"
+                            value={unitName}
+                            readonly>
+                        </lightning-input>
+
+
+                        <lightning-input
+                            label="Account"
+                            value={accountName}
+                            readonly>
+                        </lightning-input>
+
+
+                        <lightning-combobox
+                            label="Cancellation Type"
+                            value={cancellationType}
+                            options={cancellationTypeOptions}
+                            onchange={handleCancellationTypeChange}
+                            required>
+                        </lightning-combobox>
+
+
+                        <lightning-input
+                            label="Reason for Cancellation"
+                            value={cancellationReason}
+                            onchange={handleCancellationReasonChange}
+                            maxlength="255"
+                            required>
+                        </lightning-input>
+
+                    </div>
+
+
+                    <!-- ================= RIGHT COLUMN ================= -->
+                    <div class="slds-col slds-size_1-of-2">
+
+                        <lightning-combobox
+                            label="Is ADM Refund Needed?"
+                            value={admRefundValue}
+                            options={admRefundOptions}
+                            onchange={handleAdmRefundChange}>
+                        </lightning-combobox>
+
+
+                        <lightning-input
+                            label="ADM Status"
+                            value={admStatus}
+                            readonly>
+                        </lightning-input>
+
+
+                        <lightning-input
+                            label="Down Payment Status"
+                            value={downPaymentStatus}
+                            readonly>
+                        </lightning-input>
+
+                    </div>
+
+
+                    <!-- ================= FULL WIDTH: MANAGEMENT JUSTIFICATION ================= -->
+                    <div class="slds-col slds-size_1-of-1">
+
+                        <lightning-textarea
+                            label="Management Justification"
+                            value={managementJustification}
+                            onchange={handleManagementJustificationChange}
+                            required>
+                        </lightning-textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 CUSTOMER FINANCIALS
+                 TWO COLUMN LAYOUT
+                 ================================================= -->
+            <template if:false={isPostCancellation}>
+
+                <div class="slds-section slds-is-open slds-m-top_medium">
+
+                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                        <strong>Customer Financials</strong>
+                    </h3>
+
+
+                    <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+
+                        <!-- ================= LEFT ================= -->
+                        <div class="slds-col slds-size_1-of-2">
+
+                            <lightning-input
+                                label="ADM Amount"
+                                value={admPaidAmount}
+                                readonly>
+                            </lightning-input>
+
+                        </div>
+
+
+                        <!-- ================= RIGHT ================= -->
+                        <div class="slds-col slds-size_1-of-2">
+
+                            <lightning-input
+                                label="Down Payment Amount"
+                                value={downPaymentAmount}
+                                readonly>
+                            </lightning-input>
+
+
+                            <template if:true={showPayableAmount}>
+
+                                <lightning-input
+                                    label="Payable to Customer"
+                                    value={totalRefundAmount}
+                                    readonly>
+                                </lightning-input>
+
+                            </template>
+
+                        </div>
+
+
+                        <!-- ================= REFUND TYPE ================= -->
+                        <div class="slds-col slds-size_1-of-2">
+
+                            <template if:true={showAdmRefundField}>
+
+                                <lightning-combobox
+                                    label="Refund Type"
+                                    value={admRefundValue}
+                                    options={admRefundOptions}
+                                    onchange={handleAdmRefundChange}
+                                    required>
+                                </lightning-combobox>
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+
+            <!-- =================================================
+                 BANK DETAILS (Cancellation with Refund only)
+                 TWO COLUMN LAYOUT
+                 ================================================= -->
+            <template if:true={showBankDetailsSection}>
+
+                <div class="slds-section slds-is-open slds-m-top_medium">
+
+                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                        <strong>Bank Details</strong>
+                    </h3>
+
+                    <div class="slds-p-around_small">
+
+                        <lightning-input
+                            type="checkbox"
+                            label="Bank Details Available"
+                            checked={bankDetailsAvailable}
+                            onchange={handleBankDetailsAvailableChange}>
+                        </lightning-input>
+
+                    </div>
+
+                    <template if:true={bankDetailsAvailable}>
+
+                        <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+
+                            <!-- ================= LEFT COLUMN ================= -->
+                            <div class="slds-col slds-size_1-of-2">
+
+                                <lightning-input
+                                    label="Bank Name"
+                                    value={bankName}
+                                    onchange={handleBankNameChange}
+                                    required>
+                                </lightning-input>
+
+                                <lightning-input
+                                    label="Beneficiary Name"
+                                    value={beneficiaryName}
+                                    onchange={handleBeneficiaryNameChange}
+                                    required>
+                                </lightning-input>
+
+                                <lightning-input
+                                    label="Bank Account Number"
+                                    value={bankAccountNumber}
+                                    onchange={handleBankAccountNumberChange}
+                                    required>
+                                </lightning-input>
+
+                                <lightning-input
+                                    label="IBAN Number"
+                                    value={ibanNumber}
+                                    onchange={handleIbanNumberChange}
+                                    required>
+                                </lightning-input>
+
+                            </div>
+
+                            <!-- ================= RIGHT COLUMN ================= -->
+                            <div class="slds-col slds-size_1-of-2">
+
+                                <lightning-input
+                                    label="Bank Branch Name"
+                                    value={bankBranchName}
+                                    onchange={handleBankBranchNameChange}
+                                    required>
+                                </lightning-input>
+
+                                <lightning-input
+                                    label="Swift Code"
+                                    value={swiftCode}
+                                    onchange={handleSwiftCodeChange}
+                                    required>
+                                </lightning-input>
+
+                                <lightning-combobox
+                                    label="Bank Country"
+                                    value={bankCountry}
+                                    options={bankCountryOptions}
+                                    onchange={handleBankCountryChange}
+                                    required>
+                                </lightning-combobox>
+
+                            </div>
+
+                            <!-- ================= FULL WIDTH: IBAN DOCUMENT ================= -->
+                            <div class="slds-col slds-size_1-of-1">
+
+                                <lightning-file-upload
+                                    label="Upload IBAN Document"
+                                    record-id={recordId}
+                                    onuploadfinished={handleIbanUploadFinished}
+                                    accept=".pdf,.doc,.docx,.jpg,.png">
+                                </lightning-file-upload>
+
+                                <template if:true={ibanDocument}>
+
+                                    <div class="slds-pill slds-m-top_x-small slds-grid slds-grid_align-spread slds-p-around_x-small">
+
+                                        <span class="slds-pill__label">
+                                            {ibanDocument.name}
+                                        </span>
+
+                                        <lightning-button-icon
+                                            icon-name="utility:close"
+                                            alternative-text="Remove"
+                                            title="Remove IBAN Document"
+                                            size="x-small"
+                                            onclick={removeIbanDocument}>
+                                        </lightning-button-icon>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+            </template>
+
+
+            <!-- =================================================
+                 SUPPORTING DOCUMENT
+                 TWO COLUMN LAYOUT
+                 ================================================= -->
+            <div class="slds-section slds-is-open slds-m-top_medium">
+
+                <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                    <strong>Supporting Document</strong>
+                </h3>
+
+
+                <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+
+                    <!-- ================= LEFT COLUMN ================= -->
+                    <div class="slds-col slds-size_1-of-2">
+
+                        <lightning-file-upload
+                            label="Upload Supporting Document"
+                            record-id={recordId}
+                            onuploadfinished={handleUploadFinished}
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            required>
+                        </lightning-file-upload>
+
+                    </div>
+
+
+                    <!-- ================= RIGHT COLUMN ================= -->
+                    <div class="slds-col slds-size_1-of-2">
+
+                        <template if:true={uploadedFiles.length}>
+
+                            <p class="slds-text-title_bold slds-m-bottom_x-small">
+                                Uploaded Files
+                            </p>
+
+
+                            <template
+                                for:each={uploadedFiles}
+                                for:item="file">
+
+                                <div
+                                    key={file.documentId}
+                                    class="slds-pill slds-m-top_x-small slds-grid slds-grid_align-spread slds-p-around_x-small">
+
+                                    <span class="slds-pill__label">
+                                        {file.name}
+                                    </span>
+
+
+                                    <lightning-button-icon
+                                        icon-name="utility:close"
+                                        alternative-text="Remove"
+                                        title="Remove File"
+                                        size="x-small"
+                                        data-id={file.documentId}
+                                        onclick={removeFile}>
+                                    </lightning-button-icon>
+
+                                </div>
+
+                            </template>
+
+                        </template>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 CONSOLIDATION TABLE
+                 FULL WIDTH
+                 ================================================= -->
+            <template if:true={showConsolidationTable}>
+
+                <div class="slds-section slds-is-open slds-m-top_large">
+
+                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                        <strong>Unit Consolidation</strong>
+                    </h3>
+
+
+                    <!-- EXPECTED TOTAL -->
+                    <template if:true={totalRefundAmount}>
+
+                        <div class="slds-box slds-theme_info slds-m-around_small slds-p-around_small">
+
+                            <p>
+
+                                <strong>
+                                    Expected Total Transfer Amount:
+                                </strong>
+
+                                <lightning-formatted-number
+                                    value={consolidationTotalAmount}
+                                    format-style="currency"
+                                    currency-code="AED"
+                                    minimum-fraction-digits="2">
+                                </lightning-formatted-number>
+
+                                <span class="slds-m-left_x-small">
+                                    — the sum of all selected rows must match this amount.
+                                </span>
+
+                            </p>
+
+                        </div>
+
+                    </template>
+
+
+                    <!-- DATATABLE -->
+                    <div class="slds-p-around_small">
+
+                        <lightning-datatable
+                            key-field="Id"
+                            data={salesOrders}
+                            columns={columns}
+                            draft-values={draftValues}
+                            onsave={handleDatatableSave}
+                            hide-checkbox-column="true">
+                        </lightning-datatable>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+
+            <!-- =================================================
+                 ACTION BUTTONS
+                 ================================================= -->
+            <div class="slds-m-top_large slds-grid slds-grid_align-end">
+
+                <lightning-button
+                    variant="neutral"
+                    label="Cancel"
+                    onclick={handleCancel}
+                    class="slds-m-right_x-small"
+                    title="Cancel">
+                </lightning-button>
+
+
+                <lightning-button
+                    variant="brand"
+                    label="Create Business Process"
+                    onclick={handleSave}
+                    disabled={disableCreateButton}
+                    title="Create Business Process">
+                </lightning-button>
+
+            </div>
+
+        </div>
+
+    </template>
+
+</template>

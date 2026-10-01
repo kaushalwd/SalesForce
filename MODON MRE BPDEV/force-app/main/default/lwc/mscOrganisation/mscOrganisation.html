@@ -1,0 +1,72 @@
+<template>
+    <template lwc:if={isOrganisation}>
+        <!-- 1.3 - this block used to open straight on "Trade licence", directly under
+             the address form's Save button, so the two right-aligned controls read as
+             one broken row and the company fields looked like more address fields. -->
+        <hr class="divider" />
+        <p class="org__section">{labels.ORG_SECTION}</p>
+
+        <!-- ── trade licence ─────────────────────────────────────────────── -->
+        <div class="row-between org__head">
+            <span class="field__label">{labels.ORG_LICENCE_DOC} *</span>
+            <template lwc:if={showLicenceChip}>
+                <span class={licenceChipClass}>{licenceStatusText}</span>
+            </template>
+        </div>
+
+        <p class="org__hint">{labels.ORG_LICENCE_HINT}</p>
+
+        <!-- 1.3 - the native picker rendered a light grey "Choose file | No file
+             chosen" in the middle of a dark form. The input still does the work and
+             still takes focus; the label is what is seen. -->
+        <div class="org__upload">
+            <input
+                id="licence"
+                class="org__file"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                onchange={handleFile}
+                disabled={uploading}
+            />
+            <label class="btn btn-ghost org__choose" for="licence">
+                <c-modon-icon name="upload" size="14" color="currentColor"></c-modon-icon>
+                <span>{labels.ORG_LICENCE_CHOOSE}</span>
+            </label>
+            <template lwc:if={pickedFileName}>
+                <span class="org__filename">{pickedFileName}</span>
+            </template>
+        </div>
+
+        <!-- 1.9 - the shareholder block (and the divider that introduced it)
+             that stood here is gone (GAP 10): MODON retired the feature and the
+             rows it wrote go nowhere now. Without a block below it the divider
+             was a dangling line at the card's foot. -->
+
+        <!-- ── what is still missing ─────────────────────────────────────── -->
+        <template lwc:if={hasOutstanding}>
+            <div class="banner org__outstanding">
+                <c-modon-icon name="clock" size="15" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+                <div>
+                    <p class="org__outstanding-lede">{labels.ORG_OUTSTANDING}</p>
+                    <ul class="org__list">
+                        <template for:each={outstanding} for:item="o">
+                            <li key={o}>{o}</li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:if={errorMsg}>
+            <div class="banner banner--error org__warn">
+                <c-modon-icon name="alert-circle" size="15" color="var(--chip-red, #f87171)"></c-modon-icon>
+                <span>{errorMsg}</span>
+            </div>
+        </template>
+    </template>
+    <!-- The wait is shown and blocked: c-msc-loader covers the viewport, so a
+         second press cannot land while the first call is still running. -->
+    <template lwc:if={isBusy}>
+        <c-msc-loader></c-msc-loader>
+    </template>
+</template>

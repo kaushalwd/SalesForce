@@ -1,0 +1,264 @@
+<template>
+    <template if:true={isOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container custom-modal-container">
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <h2 class="slds-modal__title">Approval - {step.Name}</h2>
+                </header>
+                <!-- Modal Content -->
+                <div class="slds-modal__content custom-modal-content">
+
+                    <template if:true={showAcceptButton}>
+                        <p class="slds-text-color_error slds-text-title_bold"> This step is unassigned. Click "Accept"
+                            to take ownership. </p>
+                    </template>
+
+                    <!-- Checklist Component -->
+                    <template if:true={showCheckList}>
+                        <c-maker-checker-checklist parent-id={step.parentId}></c-maker-checker-checklist>
+                    </template>
+                    <template if:true={showChecklistItemDisplay}>
+                        <c-checklist-item-display record-id={step.parentId}></c-checklist-item-display>
+                    </template>
+                    <template if:true={showVerificationSection}>
+                        <div class="slds-box slds-m-bottom_medium">
+                            <h3 class="slds-text-heading_medium slds-m-bottom_medium">Business Verification Steps</h3>
+                            <p class="slds-text-color_weak slds-m-bottom_medium"> Please verify each of the following
+                                items before proceeding with approval.</p>
+                            <template for:each={verificationSteps} for:item="verificationStep">
+                                <div key={verificationStep.Id} class="slds-m-bottom_medium">
+                                    <p class="slds-text-heading_small slds-m-bottom_x-small">{verificationStep.Name}</p>
+                                    <lightning-combobox name={verificationStep.Id} label="Verification Status"
+                                        value={verificationStep.selectedStatus} options={verificationStatusOptions}
+                                        onchange={handleVerificationStatusChange} data-id={verificationStep.Id}
+                                        required>
+                                    </lightning-combobox>
+                                </div>
+                            </template>
+                            <lightning-button label="Complete Verification" variant="brand"
+                                onclick={handleCompleteVerification}>
+                            </lightning-button>
+                        </div>
+                    </template>
+
+                    <!-- Spinner Here -->
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+                    </template>
+
+                    <template if:true={showReviewerComments}>
+                        <template if:true={step.viewReviewComments}>
+                            <c-view-reviewer-comments-table step-id={step.Id}></c-view-reviewer-comments-table>
+                        </template>
+                        <template if:true={step.isReviewCommentsReq}>
+                            <c-reviewer-comments-table step-id={step.Id}></c-reviewer-comments-table>
+                        </template>
+                    </template>
+
+                    <!-- Approval Options -->
+                    <template if:true={showApprovalOptions}>
+
+                        <template if:true={showDynamicForm}>
+
+                            <div class="slds-grid slds-wrap slds-gutters">
+
+                                <template for:each={fields} for:item="field">
+
+                                    <div key={field.Field_API_Name__c}
+                                        class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+
+                                        <!-- TEXT -->
+                                        <template if:true={field.isText}>
+                                            <lightning-input label={field.Field_Label__c} value={field.value}
+                                                data-field={field.Field_API_Name__c} required={field.Required__c}
+                                                onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <!-- NUMBER -->
+                                        <template if:true={field.isNumber}>
+                                            <lightning-input type="number" label={field.Field_Label__c}
+                                                value={field.value} data-field={field.Field_API_Name__c}
+                                                required={field.Required__c} onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <!-- DATE -->
+                                        <template if:true={field.isDate}>
+                                            <lightning-input type="date" label={field.Field_Label__c}
+                                                value={field.value} data-field={field.Field_API_Name__c}
+                                                onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <!-- PICKLIST -->
+                                        <template if:true={field.isPicklist}>
+                                            <lightning-combobox label={field.Field_Label__c} value={field.value}
+                                                data-field={field.Field_API_Name__c} options={field.options}
+                                                onchange={handleFieldChange}>
+                                            </lightning-combobox>
+                                        </template>
+
+                                        <!-- CHECKBOX -->
+                                        <template if:true={field.isCheckbox}>
+                                            <lightning-input type="checkbox" label={field.Field_Label__c}
+                                                checked={field.value} data-field={field.Field_API_Name__c}
+                                                onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                        </template>
+
+                        <template if:false={isProjectTeamStep}>
+                        <template if:true={documents}>
+
+                            <div class="slds-grid slds-wrap slds-gutters">
+
+                                <template for:each={documents} for:item="doc">
+
+                                    <div key={doc.Id} class="slds-col slds-size_1-of-2 slds-p-around_small">
+
+                                        <div class="slds-box">
+
+                                            <div class="slds-m-bottom_small">
+                                                <b>{doc.Name}</b>
+                                            </div>
+
+                                            <div class="slds-grid slds-align_absolute-center">
+
+                                                <lightning-file-upload label="Upload" record-id={doc.Id}
+                                                    data-id={doc.Id} onuploadfinished={handleUploadFinished}>
+                                                </lightning-file-upload>
+
+                                                <!-- File name -->
+                                                <template if:true={doc.fileName}>
+                                                    <div class="slds-m-left_small slds-text-color_success">
+                                                        {doc.fileName}
+                                                    </div>
+                                                </template>
+
+                                                <!-- View Icon -->
+                                                <template if:true={doc.fileName}>
+                                                    <lightning-button-icon icon-name="utility:preview"
+                                                        class="slds-m-left_small" data-id={doc.Id} onclick={viewFile}
+                                                        alternative-text="View File">
+                                                    </lightning-button-icon>
+                                                </template>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                        </template>
+                        </template>
+                        <template if:true={showPayReadiness}>
+                            <c-payment-milestone-s-r record-id={recordId}>
+                            </c-payment-milestone-s-r>
+                        </template>
+
+                        <template if:true={showPaymentPrcess}>
+                            <!--c-default-s-r-creator record-id={recordId}>
+                            </c-default-s-r-creator-->
+                        </template>
+
+                    <template if:true={isProjectTeamStep}>
+                        <c-project-team-confirm-date
+                            record-id={recordId}
+                            ondatapayload={handleChildData}>
+                        </c-project-team-confirm-date>
+                    </template>
+
+                        <lightning-radio-group name="radioGroup" label="Select Action" options={radioOptions}
+                            value={radioValue} onchange={handleRadioChange} type="radio">
+                        </lightning-radio-group>
+                        <lightning-input type="text" label="Comment" value={comment} onchange={handleCommentChange}
+                            required={isCommentRequired}>
+                        </lightning-input>
+
+                        <template if:true={showAssignSection}>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-8"
+                                style="margin-top: 30px !important;">
+                                <lightning-combobox label="Assign To User" options={assignToUserOptions}
+                                    onchange={handleAssignChange}>
+                                </lightning-combobox>
+                            </div>
+                        </template>
+                        <template if:true={showStep}>
+                            <lightning-combobox name="progress" label="Reject To" value={stepValue}
+                                placeholder="Select Step" options={stepOptions} onchange={handleStepChange}>
+                            </lightning-combobox>
+                        </template>
+
+
+
+                        <!-- multistep select -->
+                        <!--template if:true={showMultiStep}>
+                            <lightning-dual-listbox name="multiStepSelect" label="Reject To Steps"
+                                source-label="Available Steps" selected-label="Selected Steps"
+                                field-level-help="Select one or more previous steps" options={stepOptions}
+                                value={multiStepValues} onchange={handleMultiStepChange}>
+                            </lightning-dual-listbox>
+                        </template-->
+
+                        <template if:true={showMultiStep}>
+                            <div class="slds-m-top_small">
+                                <lightning-datatable key-field="Id" data={stepData} columns={columns}
+                                    onrowselection={handleRowSelection} draft-values={draftValues}
+                                    onsave={handleDraftSave}>
+                                </lightning-datatable>
+                            </div>
+                        </template>
+
+
+                        <template if:true={showAssignToStep}>
+                            <lightning-combobox name="progress" label="Assigned To" value={assinedTostepValue}
+                                placeholder="Select Step" options={assignedTostepOptions}
+                                onchange={handleAssignedTOStepChange}>
+                            </lightning-combobox>
+                        </template>
+
+                    </template>
+                </div>
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <template if:true={showCheckList}>
+                        <lightning-button variant="neutral" label="Next" onclick={handleNext}></lightning-button>
+                    </template>
+                    <template if:true={showReviewerComments}>
+                        <lightning-button variant="neutral" label="Next" onclick={handleNext}></lightning-button>
+                    </template>
+                    <template if:true={showApprovalOptions}>
+                        <template if:true={showPrevious}>
+                            <lightning-button class="slds-m-right_small" variant="brand" label="Previous"
+                                onclick={handlePrevious}></lightning-button>
+                        </template>
+                    </template>
+
+                    <lightning-button class="slds-m-right_small" variant="neutral" label="Cancel"
+                        onclick={handleCancel}></lightning-button>
+
+                    <template if:true={showAcceptButton}>
+                        <lightning-button variant="brand" label="Accept" onclick={handleAccept}></lightning-button>
+                    </template>
+                    <template if:true={showApprovalOptions}>
+                        <lightning-button variant="brand" label="Submit" onclick={handleSubmit}></lightning-button>
+                    </template>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

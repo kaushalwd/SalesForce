@@ -1,0 +1,116 @@
+<messaging:emailTemplate subject="Post Unit Cancellation Closed" 
+    recipientType="Contact" 
+    relatedToType="ServiceRequest__c">
+
+<messaging:htmlEmailBody >
+
+<html>
+  <body style="font-family: Arial, sans-serif; margin:0; padding:0; background-color:#f4f6f8;">
+
+    <!-- Header -->
+    <div style="background-color:#000000; padding:15px 20px;">
+      <img src="{!$Label.Customer_Communication_Modon_Logo}" 
+           alt="Company Logo" 
+           style="height:20px;" />
+    </div>
+
+    <!-- Title Section -->
+    <div style="background-color:#ffffff; padding:20px;">
+      <h2 style="margin:0; color:#333333;">
+        Service Request Closed
+      </h2>
+    </div>
+
+    <!-- Body -->
+    <div style="background-color:#ffffff; padding:20px; margin-top:10px;">
+
+      <p>Dear {!relatedTo.Salesorder__r.CustomerAccount__r.Name},</p>
+
+      <p>
+        We would like to inform you that your service request has been 
+        <b>successfully completed and closed</b>.
+      </p>
+
+      <p>Below are the details of your request:</p>
+
+      <!-- Details Table -->
+      <table style="width:100%; border-collapse:collapse; font-size:14px;">
+
+        <tr>
+          <td style="padding:8px; font-weight:bold;">Request Number:</td>
+          <td style="padding:8px;">{!relatedTo.Name}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px; font-weight:bold;">Project Name:</td>
+          <td style="padding:8px;">
+            {!relatedTo.Salesorder__r.ProjectName__c}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px; font-weight:bold;">Phase Name:</td>
+          <td style="padding:8px;">
+            {!relatedTo.Salesorder__r.Phase_Name__c}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px; font-weight:bold;">Unit Name:</td>
+          <td style="padding:8px;">
+            <apex:outputText value="{!IF(NOT(ISBLANK(relatedTo.Salesorder__r.Unit__r.name)), relatedTo.Salesorder__r.Unit__r.name, 'N/A')}" />
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px; font-weight:bold;">Request Type:</td>
+          <td style="padding:8px;">
+            {!relatedTo.RecordType.Name}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px; font-weight:bold;">Closed On:</td>
+          <td style="padding:8px;">
+            {!TEXT(relatedTo.CloseDate__c)}
+          </td>
+        </tr>
+
+      </table>
+
+      <!-- Optional Description -->
+      <apex:outputPanel rendered="{!NOT(ISBLANK(relatedTo.Description__c))}">
+        <p style="margin-top:15px;">
+          <b>Remarks:</b><br/>
+          {!relatedTo.Description__c}
+        </p>
+      </apex:outputPanel>
+
+      <!-- Message -->
+      <p style="margin-top:20px;">
+        If you have any further questions or need additional assistance, 
+        please feel free to contact us. We are always happy to help.
+      </p>
+
+      <p>
+        Thank you for choosing us.
+      </p>
+
+      <p>
+        Warm regards,<br/>
+        <b>Customer Support Team</b>
+      </p>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="background-color:#f2f2f2; padding:15px; font-size:13px; text-align:center; color:#555;">
+      <b>modon.com</b><br/>
+      Delivering Excellence in Customer Experience
+    </div>
+
+  </body>
+</html>
+
+</messaging:htmlEmailBody>
+</messaging:emailTemplate>

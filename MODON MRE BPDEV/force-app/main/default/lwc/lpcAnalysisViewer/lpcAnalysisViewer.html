@@ -1,0 +1,271 @@
+<template>
+        <div class="viewer-wrapper">
+            <div class="main-title">LPC Analysis Viewer</div>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading LPC Analysis"></lightning-spinner>
+            </template>
+
+            <template if:true={analysis}>
+                <div class="page">
+
+                    <section class="summary-card">
+                        <div class="summary-title">Details</div>
+
+                        <div class="summary-grid compact-grid">
+                            <div>
+                                <div class="label bold">Project Name</div>
+                                <div class="value">{analysis.projectName}</div>
+                            </div>
+
+                            <div>
+                                <div class="label bold">Sales Order</div>
+                                <div class="value">{analysis.salesOrderName}</div>
+                            </div>
+
+                            <div>
+                                <div class="label bold">Unit Name</div>
+                                <div class="value">{analysis.unitName}</div>
+                            </div>
+
+                            <div>
+                                <div class="label bold">Total LPC</div>
+                                <div class="value amount">{analysis.totalLpc}</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <template if:true={analysis.hasWaiverProcesses}>
+                        <section class="summary-card">
+                            <div class="summary-title">LPC Waiver Business Processes</div>
+
+                            <div class="table-scroll">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>LPC Collected Amount</th>
+                                            <th>LPC Waiver %</th>
+                                            <th>LPC Waiver Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={analysis.waiverProcesses} for:item="wp">
+                                            <tr key={wp.businessProcessId}>
+                                                <td>{wp.name}</td>
+                                                <td class="amount">{wp.lpcCollectedAmount}</td>
+                                                <td>{wp.waiverPercentage}</td>
+                                                <td class="amount">{wp.lpcWaiverAmount}</td>
+                                                <td>{wp.status}</td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </template>
+
+                    <template for:each={analysis.installments} for:item="ins">
+                        <section key={ins.installmentId} class="installment-card">
+
+                            <div class="installment-header">
+                                <div>
+                                    <div class="tiny-label bold">Milestone Number</div>
+                                    <div class="main-value">{ins.milestoneDisplay}</div>
+                                </div>
+
+                                <div>
+                                    <div class="tiny-label bold">Installment</div>
+                                    <div class="main-value">{ins.installmentName}</div>
+                                </div>
+
+                                <div>
+                                    <div class="tiny-label bold">Invoice Amount</div>
+                                    <div class="main-value">{ins.invoiceAmount}</div>
+                                </div>
+
+                                <div>
+                                    <div class="tiny-label bold">Balance Amount</div>
+                                    <div class="main-value">{ins.balanceAmount}</div>
+                                </div>
+
+                                <div class="date-col">
+                                    <div class="tiny-label bold">Milestone / Extension / RFO Date</div>
+                                    <div class="date-stack">
+                                        <span>{ins.milestoneDate}</span>
+                                        <span class="date-divider">/</span>
+                                        <span>{ins.extensionDate}</span>
+                                        <span class="date-divider">/</span>
+                                        <span>{ins.rfoDate}</span>
+                                    </div>
+                                </div>
+
+                                <div class="date-col">
+                                    <div class="tiny-label bold">LPC Start Date</div>
+                                    <div class="main-value">{ins.lpcStartBaseDate}</div>
+                                </div>
+
+                                <div class="date-col">
+                                    <div class="tiny-label bold">LPC Freeze Start / End</div>
+                                    <div class="date-stack">
+                                        <span>{ins.lpcFreezeStartDate}</span>
+                                        <span class="date-divider">/</span>
+                                        <span>{ins.lpcFreezeEndDate}</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="tiny-label bold">LPC Amount</div>
+                                    <div class="main-value amount">{ins.lpcAmount}</div>
+                                </div>
+                            </div>
+
+                            <div class={ins.lpcApplicableClass}>
+                                <span class="bold">LPC Applicable :</span> {ins.lpcApplicable}
+                                <span class="separator">|</span>
+                                <span class="bold">Total Installment LPC :</span> {ins.lpcAmount}
+                                <span class="sub-text">(Sum of all chargeable brackets, freeze brackets excluded)</span>
+                            </div>
+
+                            <details class="accordion-box">
+                                <summary>
+                                    <span class="accordion-icon"></span>
+                                    Allocation Details
+                                    <span class="hint-text">Click to expand / collapse full allocation details</span>
+                                </summary>
+
+                                <div class="table-scroll">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Allocation</th>
+                                                <th>Applied Amount</th>
+                                                <th>Allocation Status</th>
+                                                <th>Receipt Name</th>
+                                                <th>Receipt Status</th>
+                                                <th>EBS Cleared Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template if:true={ins.allocations.length}>
+                                                <template for:each={ins.allocations} for:item="alloc">
+                                                    <tr key={alloc.allocationId}>
+                                                        <td>{alloc.sequence}</td>
+                                                        <td>{alloc.appliedAmount}</td>
+                                                        <td>{alloc.allocationStatus}</td>
+                                                        <td>{alloc.receiptName}</td>
+                                                        <td>{alloc.receiptStatus}</td>
+                                                        <td>{alloc.ebsClearedDate}</td>
+                                                    </tr>
+                                                </template>
+                                            </template>
+
+                                            <template if:false={ins.allocations.length}>
+                                                <tr>
+                                                    <td colspan="6" class="empty">No allocation records found</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+
+                            <template if:true={ins.hasBrackets}>
+                                <details class="accordion-box">
+                                    <summary>
+                                        <span class="accordion-icon"></span>
+                                        LPC Brackets
+                                        <span class="hint-text">Includes chargeable brackets and freeze-excluded brackets</span>
+                                    </summary>
+
+                                    <div class="table-scroll">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Bracket Type</th>
+                                                    <th>Amount Considered for LPC</th>
+                                                    <th>LPC Start Date</th>
+                                                    <th>LPC End Date</th>
+                                                    <th>Days</th>
+                                                    <th>LPC Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={ins.brackets} for:item="bracket">
+                                                    <tr key={bracket.sequence} class={bracket.rowClass}>
+                                                        <td>{bracket.bracketType}</td>
+                                                        <td>{bracket.amountConsideredForLpc}</td>
+                                                        <td>{bracket.lpcStartDate}</td>
+                                                        <td>{bracket.lpcEndDate}</td>
+                                                        <td>{bracket.days}</td>
+                                                        <td class="amount">{bracket.lpcAmount}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+                            </template>
+
+                            <template if:true={ins.hasFreezeSections}>
+                                <details class="accordion-box">
+                                    <summary>
+                                        <span class="accordion-icon"></span>
+                                        LPC Freeze Section
+                                        <span class="hint-text">Shows amount excluded from LPC during freeze period</span>
+                                    </summary>
+
+                                    <div class="table-scroll">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Freeze Start Date</th>
+                                                    <th>Freeze End Date</th>
+                                                    <th>Amount Not Calculated for LPC</th>
+                                                    <th>Freeze Days</th>
+                                                    <th>LPC Amount Excluded</th>
+                                                    <th>Remarks</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={ins.freezeSections} for:item="freeze">
+                                                    <tr key={freeze.sequence} class="freeze-row">
+                                                        <td>{freeze.sequence}</td>
+                                                        <td>{freeze.freezeStartDate}</td>
+                                                        <td>{freeze.freezeEndDate}</td>
+                                                        <td>{freeze.amountNotCalculatedForLpc}</td>
+                                                        <td>{freeze.freezeDays}</td>
+                                                        <td class="amount">{freeze.lpcAmountExcluded}</td>
+                                                        <td>{freeze.remarks}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+                            </template>
+
+                            <details class="log-box">
+                                <summary>
+                                    <span class="accordion-icon"></span>
+                                    View Calculation Logs
+                                    <span class="hint-text">Click to view / hide calculation reasoning</span>
+                                </summary>
+
+                                <template for:each={ins.logs} for:item="log">
+                                    <div key={log} class="log-line">{log}</div>
+                                </template>
+                            </details>
+
+                        </section>
+                    </template>
+                </div>
+            </template>
+
+            <template if:true={error}>
+                <div class="error">{error}</div>
+            </template>
+        </div>
+    </template>

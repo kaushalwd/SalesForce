@@ -1,0 +1,731 @@
+<template>
+    <div class="dashboard-container">
+        <template if:true={isLoading}>
+            <div class="spinner-backdrop">
+                <lightning-spinner alternative-text="Applying Filters..." size="medium" variant="brand">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <div class="customer-header">
+            <!-- <img src={profileicon} class="customer-logo" /> -->
+            
+            <h1 class="customer-title">
+                <span class="title-line">
+                  <!-- <lightning-icon icon-name='standard:customer_360' alternative-text='customer_360' size='large' title='customer_360' ></lightning-icon>-->  
+                  Customer 360 Dashboard
+
+                    <template if:true={isSignaturePremier}>
+    <span class="signature">
+        <span class="signature-separator">-</span>      
+
+        <span class="signature-text" >Signature Premier</span>
+         <lightning-icon
+            icon-name="utility:success"
+            size="x-small"
+            class="signature-icon">
+        </lightning-icon>
+    </span>
+</template>
+                </span>
+
+                <span class="owner-name">
+                    Customer Name :&nbsp;{headerName}
+                </span>
+            </h1>
+            <div class="modon-header">
+            <img src={modonLogo} alt="Modon Logo" class="modon-logo" />
+        </div>
+
+
+        </div>
+
+        
+        <!-- ===== Tabs ===== -->
+        <div class="tab-container">
+            <div class={individualTabClass}>Individual</div>
+            <div class={organizationTabClass}>Organization</div>
+        </div>
+
+        <!-- ===== Filter Section ===== -->
+        <div class="filter-bar">
+        <!-- LEFT SIDE -->
+        <div class="filter-left">
+            <label class="filter-title">Filter By:</label>
+
+            <div class="custom-date-group">
+            <input type="date" class="custom-date-input" value={startDate} onchange={handleStartChange} style={calendarStyle}/>
+            </div>
+
+            <div class="custom-date-group">
+            <input type="date" class="custom-date-input" value={endDate} onchange={handleEndChange} style={calendarStyle}/>
+            </div>
+
+            <div class="custom-select-container">
+            <select class="custom-date-input" onchange={handleProjectChange} style={dropdownStyle}>
+                <option value="">Select Project</option>
+                <template for:each={projectOptions} for:item="proj">
+                <option key={proj.value} value={proj.value}>{proj.label}</option>
+                </template>
+            </select>
+            </div>
+
+            <div class="custom-select-container">
+            <select class="custom-date-input" onchange={handleUnitChange} disabled={isUnitDisabled} style={unitdropdownStyle}>
+                <option value="">Select Unit</option>
+                <template for:each={unitOptions} for:item="unit">
+                <option key={unit.value} value={unit.value}>{unit.label}</option>
+                </template>
+            </select>
+            </div>
+
+            <button class="black-btn btn-with-icon" onclick={applyFilters} style={applyfilterStyle}>                
+                <span>Apply Filters</span>
+            </button>
+
+            <button class="black-btn btn-with-icon" onclick={handleReset} >            
+            <span> Reset All</span>
+            <lightning-icon icon-name="utility:refresh" size="x-small" class="btn-icon">                
+            </lightning-icon>
+            </button>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="filter-right">
+            
+            <!--<button class="black-btn btn-with-icon" onclick={handleExportPdf}>
+                <lightning-icon icon-name="doctype:pdf" size="x-small" class="btn-icon"></lightning-icon>
+                <span>Export as PDF</span>
+                </button>-->
+            <button class="black-btn btn-with-icon" onclick={handleDownloadSOA}>                
+                <span>Download SOA</span>
+                <lightning-icon icon-name="utility:download" size="x-small" class="btn-icon"></lightning-icon>
+            </button>
+        </div>
+        </div>
+
+        </br>
+
+        <!-- ===== Row 1 ===== -->
+        <div class="row row-1">
+            <div class="section-card-executive personal-info">
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Saving..." size="medium"></lightning-spinner>
+                </template>
+
+                <div class={cardClass}>
+                    <div class="header">
+                        <div class="title">{executiveSummaryTitle}</div>
+                        <!--<div class="signature">
+                            <img src={customertickicon} class="signature-icon" />
+                            Signature Premier
+                        </div>-->
+                    </div>
+
+                    <div class="content">
+                        <!-- <div class="avatar-placeholder">
+                            <img src={profileImageToShow} class="customer-avatar" />
+                        </div> -->
+
+                        <div class="info-section">
+                            <template for:each={groupedFields} for:item="field">
+                                <div key={field.label} class="info-item">
+                                    <span class="label">{field.label}:</span>
+                                    <span class={field.cssClass}>{field.value}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <template if:true={showExpiryWarning}>
+                            <div class="warning">
+                                <img src={warningicon} class="warning-icon" />
+                                {expiryWarningText}
+                            </div>
+
+                            <button class="update-button" onclick={handleUpdateClick}>
+                                <img src={updateiocn} class="update-icon" />
+                                Update {modalType}
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Modal -->
+                <template if:true={showModal}>
+                    <section role="dialog" class="modal-overlay">
+                        <div class="modern-modal">
+                            <div class="modal-header">
+                                <h2>Update {modalType}</h2>
+                                <button class="close-btn" onclick={handleCloseModal}>×</button>
+                            </div>
+
+                            <div class="modal-body">
+                                <lightning-input
+                                    class="modal-input"
+                                    label={modalNumberLabel}
+                                    value={modalNumber}
+                                    onchange={handleNumberChange}
+                                >
+                                </lightning-input>
+
+                                <lightning-input
+                                    class="modal-input"
+                                    type="date"
+                                    label={modalExpiryLabel}
+                                    value={modalExpiryDate}
+                                    onchange={handleExpiryChange}
+                                >
+                                </lightning-input>
+
+                                <!-- Emirates Section -->
+                                <template if:true={isEmiratesId}>
+                                    <div class="upload-section">
+                                        <label>Emirates ID Front Copy</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            data-type="front"
+                                            onchange={handleUploadFileChange}
+                                        />
+
+                                        <template if:true={eidFrontUrl}>
+                                            <div class="file-preview">
+                                                <iframe src={eidFrontUrl} class="file-frame"></iframe>
+                                                <div class="file-actions">
+                                                    <button class="preview-btn" onclick={handlePreview} data-url={eidFrontUrl}>
+                                                        Preview
+                                                    </button>
+
+                                                    <lightning-icon
+                                                        icon-name="utility:delete"
+                                                        alternative-text="Delete"
+                                                        data-type="front"
+                                                        onclick={handleDeleteFile}
+                                                        size="x-small"
+                                                        class="delete-icon"
+                                                    >
+                                                    </lightning-icon>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <label>Emirates ID Back Copy</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            data-type="back"
+                                            onchange={handleUploadFileChange}
+                                        />
+
+                                        <template if:true={eidBackUrl}>
+                                            <div class="file-preview">
+                                                <iframe src={eidBackUrl} class="file-frame"></iframe>
+                                                <div class="file-actions">
+                                                    <button class="preview-btn" onclick={handlePreview} data-url={eidBackUrl}>
+                                                        Preview
+                                                    </button>
+
+                                                    <lightning-icon
+                                                        icon-name="utility:delete"
+                                                        alternative-text="Delete"
+                                                        data-type="back"
+                                                        onclick={handleDeleteFile}
+                                                        size="x-small"
+                                                        class="delete-icon"
+                                                    >
+                                                    </lightning-icon>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Passport Section -->
+                                <template if:true={isPassport}>
+                                    <div class="upload-section">
+                                        <label>Passport Copy</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            data-type="passport"
+                                            onchange={handleUploadFileChange}
+                                        />
+
+                                        <template if:true={passportUrl}>
+                                            <div class="file-preview">
+                                                <iframe src={passportUrl} class="file-frame"></iframe>
+                                                <div class="file-actions">
+                                                    <button class="preview-btn" onclick={handlePreview} data-url={passportUrl}>
+                                                        Preview
+                                                    </button>
+
+                                                    <lightning-icon
+                                                        icon-name="utility:delete"
+                                                        alternative-text="Delete"
+                                                        data-type="passport"
+                                                        onclick={handleDeleteFile}
+                                                        size="x-small"
+                                                        class="delete-icon"
+                                                    >
+                                                    </lightning-icon>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class="save-btn" onclick={handleSave}>Save</button>
+                                <button class="cancel-btn" onclick={handleCloseModal}>Cancel</button>
+                            </div>
+                        </div>
+                    </section>
+                </template>
+            </div>
+
+            <div class="section-card internal-info">
+                <c-internal-info record-id={recordId} start-date={appliedStartDate} end-date={appliedEndDate}>
+                </c-internal-info>
+            </div>
+
+            <div class="section-card case-history">
+                <c-case-history
+                    record-id={recordId}
+                    start-date={appliedStartDate}
+                    end-date={appliedEndDate}
+                    onopencasedrawer={handleOpenCaseDrawer}
+                >
+                </c-case-history>
+            </div>
+
+            <div class="section-card service-request-summary">
+                <c-service-request-summary
+                    record-id={recordId}
+                    start-date={appliedStartDate}
+                    end-date={appliedEndDate}
+                    onopensrdrawer={handleOpenSrDrawer}
+                >
+                </c-service-request-summary>
+            </div>
+        </div>
+
+        <!-- ===== Row 2 ===== -->
+        <div class="row row-2">
+            <div class="section-card sales-order-dropdown">
+                <c-sales-order-dropdown
+                    record-id={recordId}
+                    start-date={appliedStartDate}
+                    project-name={appliedProject}
+                    unit-name={appliedUnit}
+                    end-date={appliedEndDate}
+                >
+                </c-sales-order-dropdown>
+            </div>
+
+            <div class="section-card communications">
+                <div class="communications-container">
+                    <h2 class="communications-title">Communications</h2>
+
+                    <div class="communications-grid">
+                        <!-- Emails Card -->
+                        <div class="comm-card" onclick={openEmailDrawer}>
+                            <div class="comm-icon">
+                                <img src={emailImage} alt="Emails" class="comm-img" />
+                            </div>
+                            <div class="comm-details">
+                                <div class="comm-label">Emails</div>
+                                <div class="comm-value">{emailCount}</div>
+                            </div>
+                        </div>
+
+                        <!-- Documents Card -->
+                        <div class="comm-card" onclick={openDocumentModal}>
+                            <div class="comm-icon">
+                                <img src={documentImage} alt="Documents" class="comm-img" />
+                            </div>
+                            <div class="comm-details">
+                                <div class="comm-label">List of Documents</div>
+                                <div class="comm-value">{documentCount}</div>
+                            </div>
+                        </div>
+
+                        <!-- Voice Calls Card -->
+                        <div class="comm-card" onclick={openVoiceCallModal}>
+                            <div class="comm-icon">
+                                <img src={voiceCallImage} alt="Voice Calls" class="comm-img" />
+                            </div>
+                            <div class="comm-details">
+                                <div class="comm-label">Voice Calls Records</div>
+                                <div class="comm-value">{voiceCallCount}</div>
+                            </div>
+                        </div>
+
+                        <!-- Chats Card -->
+                        <div class="comm-card" onclick={openChatModal}>
+                            <div class="comm-icon">
+                                <img src={chatImage} alt="Chats" class="comm-img" />
+                            </div>
+                            <div class="comm-details">
+                                <div class="comm-label">Chats Records</div>
+                                <div class="comm-value">{chatCount}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card-pad-zero sales-order-aging-chart">
+                <c-sales-order-aging-chart
+                    record-id={recordId}
+                    start-date={appliedStartDate}
+                    project-name={appliedProject}
+                    unit-name={appliedUnit}
+                    end-date={appliedEndDate}
+                >
+                </c-sales-order-aging-chart>
+            </div>
+        </div>
+
+        <!-- Chat Drawer -->
+        <template if:true={showChatModal}>
+            <div class="drawer-backdrop" onclick={closeChatModal}></div>
+            <div class="drawer-container">
+                <div class="drawer-header">
+                    <h2>Chats</h2>
+                    <button class="close-btn" onclick={closeChatModal}>×</button>
+                </div>
+                <div class="drawer-body">
+                    <p class="no-data-text">Chat records coming soon...</p>
+                </div>
+            </div>
+        </template>
+
+        <!-- Voice Calls Drawer -->
+        <template if:true={showVoiceCallModal}>
+            <div class="drawer-backdrop" onclick={closeVoiceCallModal}></div>
+            <div class="drawer-container">
+                <div class="drawer-header">
+                    <h2>Voice Calls</h2>
+                    <button class="close-btn" onclick={closeVoiceCallModal}>×</button>
+                </div>
+
+                <div class="drawer-body">
+                    <template if:true={voiceCalls.length}>
+                        <template for:each={voiceCalls} for:item="call">
+                            <div key={call.Id} class="email-card">
+                                <div class="email-header">
+                                    <span class="mobiledate">
+                                        <img src={mobileiocn} alt="Preview" class="mobileview" />
+                                        {call.CallStartDateTime}
+                                    </span>
+                                </div>
+
+                                <div class="email-subject">🕓 Call End Time: {call.CallEndDateTime} sec</div>
+                                <div class="email-subject">🕓 Duration: {call.Duration} sec</div>
+                                <div class="email-category">Resolution: {call.Resolution}</div>
+
+                                <div class="email-content">
+                                    <strong>Summary:</strong> {call.Summary}
+                                </div>
+
+                                <div class="email-footer">
+                                    👤 <strong>Customer Call Picked by:</strong> {call.OwnerName}
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:false={voiceCalls.length}>
+                        <p class="no-data-text">No voice call records found.</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- 📂 Document Drawer -->
+        <template if:true={showDocumentModal}>
+            <div class="drawer-backdrop" onclick={closeDocumentModal}></div>
+
+            <div class="drawer-container">
+                <div class="drawer-header">
+                    <h2>All Documents Control</h2>
+                    <button class="close-btn" onclick={closeDocumentModal}>×</button>
+                </div>
+
+                <div class="drawer-body">
+                    <!-- Emirates ID Section -->
+                    <template if:true={hasEmiratesDocuments}>
+                        <div class="docSection">
+                            <h3 class="docSectionTitle">Emirates ID: {emiratesId}</h3>
+
+                            <template for:each={emiratesDocuments} for:item="doc">
+                                <div key={doc.Id}>
+                                    <template if:true={doc.Files.length}>
+                                        <ul class="docFileList">
+                                            <template for:each={doc.Files} for:item="file">
+                                                <li key={file.Title} class="docFileItem">
+                                                    <div class="docFileInfo">
+                                                        <span class="docFileName">{file.Title}</span>
+                                                    </div>
+
+                                                    <div class="docFileActions">
+                                                        <a href={file.PreviewUrl} target="_blank" title="Preview">
+                                                            <img src={previewicon} alt="Preview" class="docIcon" />
+                                                        </a>
+
+                                                        <!--<a href={file.DownloadUrl} target="_blank" title="Download">
+                                                            <img src={downoldicon} alt="Download" class="docIcon" />
+                                                        </a>-->
+                                                    </div>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </template>
+
+                                    <template if:false={doc.Files.length}>
+                                        <p class="no-data-text">No files attached.</p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Passport Section -->
+                    <template if:true={hasPassportDocuments}>
+                        <div class="docSection">
+                            <h3 class="docSectionTitle">Passport No: {passportNumber}</h3>
+
+                            <template for:each={passportDocuments} for:item="doc">
+                                <div key={doc.Id}>
+                                    <template if:true={doc.Files.length}>
+                                        <ul class="docFileList">
+                                            <template for:each={doc.Files} for:item="file">
+                                                <li key={file.Title} class="docFileItem">
+                                                    <div class="docFileInfo">
+                                                        <span class="docFileName">{file.Title}</span>
+                                                    </div>
+
+                                                    <div class="docFileActions">
+                                                        <a href={file.PreviewUrl} target="_blank" title="Preview">
+                                                            <img src={previewicon} alt="Preview" class="docIcon" />
+                                                        </a>
+
+                                                        <!--<a href={file.DownloadUrl} target="_blank" title="Download">
+                                                            <img src={downoldicon} alt="Download" class="docIcon" />
+                                                        </a>-->
+                                                    </div>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </template>
+
+                                    <template if:false={doc.Files.length}>
+                                        <p class="no-data-text">No files attached.</p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- No Documents -->
+                    <template if:false={documents.length}>
+                        <p class="no-data-text">No documents found.</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Email Drawer -->
+        <template if:true={showEmailDrawer}>
+            <div class="drawer-backdrop" onclick={closeEmailDrawer}></div>
+            <div class="drawer-container">
+                <div class="drawer-header">
+                    <h2>All Inboxes</h2>
+                    <div class="yearFilter">
+                        <label class="yearLabel">Year</label>
+                        <select class="yearSelect" value={selectedYear} onchange={handleYearChange}>
+                        <template for:each={yearOptions} for:item="y">
+                            <option key={y.value} value={y.value}>{y.label}</option>
+                        </template>
+                        </select>
+                    </div>
+                    <button class="close-btn" onclick={closeEmailDrawer}>×</button>
+                </div>
+
+                <div class="drawer-body">
+                    <template if:true={displayedEmails.length}>
+                        <template for:each={displayedEmails} for:item="email">
+                            <div key={email.Id} class="email-card">
+
+                                <!-- ✅ Header: date top-right (like Cases) -->
+                                <div class="email-header">
+                                    <span class="email-to"><b class="label">To:</b> {email.reciver}</span>
+                                    <span class="emailclass">{email.CreatedDate}</span>
+                                </div>
+
+                                <!-- ✅ Body: same line styles as Cases -->
+                                <!--<div class="email-subject">
+                                To: {email.reciver}
+                                </div>-->
+
+                                <div class="emailclass">
+                                <b class="label">Subject: </b> <a href={email.link} target="_blank" rel="noopener noreferrer">
+                                 {email.Subject}
+                            </a>
+                                </div>
+
+                                <div class="emailclass">
+                                <b class="label">Category:</b> {email.Category}
+                                </div>
+
+                                <!-- Optional content -->
+                                <div class="email-content hidden" lwc:dom="manual" data-id={email.Id}></div>
+
+                            </div>
+                        </template>
+
+                        <template if:true={showViewMore}>
+                        <div class="viewMoreRow">
+                            <a href="javascript:void(0)" onclick={handleViewMore}>View More</a>
+                        </div>
+                        </template>
+                    </template>
+
+                    <template if:false={emails.length}>
+                        <p class="no-data-text">No email communications found.</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Service Request Drawer -->
+        <template if:true={showSrDrawer}>
+            <div class="drawer-backdrop" onclick={closeSrDrawer}></div>
+            <div class="drawer-container">
+                <div class="drawer-header">
+                    <h2>{srDrawerTitle}</h2>
+                    <button class="close-btn" onclick={closeSrDrawer}>×</button>
+                </div>
+
+                <div class="drawer-body">
+                    <template if:true={serviceRequests.length}>
+                        <template for:each={serviceRequests} for:item="sr">
+                            <div key={sr.Id} class="email-card">
+                                <div class="email-header">
+                                    <span class="emailclass">
+                                       <b class="label"> SR:</b> <a href={sr.link} target="_blank"> {sr.Name}</a>
+                                    </span>
+                                    <span class="emailclass">{sr.CreatedDateFormatted}</span>
+                                </div>
+
+                                <div class="emailclass"><b class="label">Subject:</b> {sr.Subject__c}</div>
+                                <div class="emailclass"><b class="label">Status:</b> {sr.Status__c}</div>
+                                <div class="emailclass"><b class="label">Type:</b> {sr.RecordTypeName}</div>
+                                <div class="emailclass"><b class="label">Owner:</b> {sr.OwnerName}</div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:false={serviceRequests.length}>
+                        <p class="no-data-text">No service requests found.</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Case Drawer -->
+        <template if:true={showCaseDrawer}>
+            <div class="drawer-backdrop" onclick={closeCaseDrawer}></div>
+            <div class="drawer-container">
+                <div class="drawer-header">
+                    <h2>Cases</h2>
+                    <button class="close-btn" onclick={closeCaseDrawer}>×</button>
+                </div>
+
+                <div class="drawer-body">
+                    <template if:true={cases.length}>
+                        <template for:each={cases} for:item="cs">
+                            <div key={cs.Id} class="email-card">
+                                <div class="email-header">
+                                    <span class="emailclass">
+                                       <b class="label">Case:</b> <a href={cs.link} target="_blank"> {cs.CaseNumber}</a>
+                                    </span>
+                                    <span class="emailclass">{cs.CreatedDate}</span>
+                                </div>
+
+                                <div class="emailclass"><b class="label">Subject:</b> {cs.Subject}</div>
+                                <div class="emailclass"><b class="label">Category:</b> {cs.CaseCategory__c}</div>
+                                <div class="emailclass"><b class="label">Status:</b> {cs.Status}</div>
+                                <div class="emailclass"><b class="label">Owner:</b> {cs.OwnerName}</div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:false={cases.length}>
+                        <p class="no-data-text">No cases found.</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- ===== Row 3 ===== -->
+        <div class="row row-3">
+            <div class="section-card investment-summary-card">
+                <div class="investment-summary-container">
+                    <div class="investment-summary-header">
+                        <h2 class="investment-summary-title">Investment Summary</h2>
+                        <!-- <img src={coinicon} alt="Coin Icon" class="investment-summary-icon" /> -->
+                    </div>
+
+                    <div class="investment-summary-row">
+                        <div class="investment-card">
+                            <c-investmentsummery
+                                record-id={recordId}
+                                project-name={appliedProject}
+                                unit-name={appliedUnit}
+                                start-date={appliedStartDate}
+                                end-date={appliedEndDate}
+                            >
+                            </c-investmentsummery>
+                        </div>
+
+                        <div class="investment-card">
+                            <c-investmentsummery-units
+                                record-id={recordId}
+                                project-name={appliedProject}
+                                unit-name={appliedUnit}
+                                start-date={appliedStartDate}
+                                end-date={appliedEndDate}
+                            >
+                            </c-investmentsummery-units>
+                        </div>
+
+                        <div class="investment-card">
+                            <c-collection-insight
+                                record-id={recordId}
+                                project-name={appliedProject}
+                                unit-name={appliedUnit}
+                                start-date={appliedStartDate}
+                                end-date={appliedEndDate}
+                            >
+                            </c-collection-insight>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card specialcases-chart">
+                <c-specialcases-chart record-id={recordId} start-date={appliedStartDate} end-date={appliedEndDate}>
+                </c-specialcases-chart>
+            </div>
+        </div>
+
+        <!-- ===== Row 4 ===== -->
+        <div class="row row-4"></div>
+
+        <!-- ===== Row 5 : Investment Summary ===== -->
+    </div>
+</template>

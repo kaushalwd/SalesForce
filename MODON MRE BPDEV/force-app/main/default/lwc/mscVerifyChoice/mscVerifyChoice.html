@@ -1,0 +1,70 @@
+<template>
+    <!--
+      The scrim is inert - no onclick. Every way out is a labelled button, and
+      Escape is handled on the dialog. A backdrop click would be an unlabelled
+      third way to make a decision the rep is being asked to take deliberately,
+      and once a link is out it would be a way past the gate entirely.
+    -->
+    <div class="scrim" role="presentation"></div>
+
+    <section
+        class="choice"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="verify-choice-title"
+        onkeydown={handleKeydown}
+    >
+        <!-- ── phase 1: the choice ─────────────────────────────────────
+             One line and two buttons. The buttons name the two outcomes
+             exactly, so a heading that restates them and a paragraph under
+             each was three ways of saying one thing to a rep with a customer
+             waiting. -->
+        <template lwc:if={showChoice}>
+            <h3 id="verify-choice-title" class="choice__title">{labels.VERIFY_CHOICE_TITLE}</h3>
+
+            <div class="choice__actions">
+                <button
+                    class="btn btn-primary choice__cta choice__cta--send"
+                    type="button"
+                    disabled={sendDisabled}
+                    onclick={handleSend}
+                >{sendLabel}</button>
+                <button
+                    class="btn btn-ghost choice__cta choice__cta--later"
+                    type="button"
+                    disabled={busy}
+                    onclick={handleLater}
+                >{labels.VERIFY_LATER_CTA}</button>
+            </div>
+
+            <!--
+              The ONE exception to "nothing else", and only when Send is
+              disabled. Without it the rep meets a dead button with no way to
+              know that a missing mobile number is what stopped it. The
+              server's own sentence names the field.
+            -->
+            <template lwc:if={showBlockedReason}>
+                <p class="choice__blocked">{blockedReason}</p>
+            </template>
+        </template>
+
+        <!-- ── phase 2: sent, and waiting ──────────────────────────────────
+             The same strip step 2 falls back to, rather than a second
+             rendering of the same three states. It already knows how to say
+             "waiting" and "expired", count down to expiry, and offer the way
+             out; the dialog only has to host it and route its events. -->
+        <template lwc:else>
+            <div class="choice__waiting">
+                <c-msc-verify-gate
+                    state={state}
+                    customer-name={customerName}
+                    busy={busy}
+                    refreshing={refreshing}
+                    onrefresh={handleRefresh}
+                    onresend={handleResend}
+                    oninbranch={handleInBranch}
+                ></c-msc-verify-gate>
+            </div>
+        </template>
+    </section>
+</template>

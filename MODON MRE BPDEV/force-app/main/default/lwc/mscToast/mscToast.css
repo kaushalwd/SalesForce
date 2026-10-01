@@ -1,0 +1,113 @@
+/* The console's own toast. Themed from c/mscStyles' tokens, so it follows the
+   theme the rep chose rather than carrying a palette of its own. */
+@import "c/mscStyles";
+
+/* 1.1 - TOP CENTRE, which is where Salesforce puts a toast: lightning-toast-container
+   defaults to toastPosition="top-center" with containerPosition="fixed". A rep who
+   uses Salesforce all day looks up, not down.
+
+   Fixed, not absolute: the card underneath reflows as fields turn read-only and the
+   Save button retires, and a toast that moved with it would read as part of the form.
+
+   THE OFFSET IS COUPLED TO c/mscBookingPage's .topbar (min-height 56px + the
+   safe-area inset) - the same constant .navbar already repeats, and for the same
+   reason. It docks the toast just below the brand row, exactly as Salesforce docks
+   its own below the global header. It does pass over the step nav for four seconds;
+   so does the standard one, and z-index still sits under a modal sheet, which has to
+   be able to cover it. */
+.toast__layer {
+    position: fixed;
+    top: calc(56px + env(safe-area-inset-top) + 12px);
+    left: 0;
+    right: 0;
+    z-index: 9000;
+    display: flex;
+    justify-content: center;
+    padding: 0 16px;
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: min(380px, calc(100vw - 32px));
+    padding: 12px 12px 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: var(--surface, rgba(15, 15, 15, 0.68));
+    /* The card surface is translucent by design; a toast over moving content
+       needs its own backdrop or the text reads through it. */
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+    color: var(--text, #fafafa);
+    font-size: 13px;
+    line-height: 1.45;
+    pointer-events: auto;
+    opacity: 0;
+    /* 1.1 - in from above, since it now arrives from above. */
+    transform: translateY(-10px);
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.toast--in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* The same tint the banners use for the same two meanings, over the same
+   surface, so a confirmation and a warning are recognisable across the console. */
+.toast--ok {
+    background:
+        linear-gradient(rgba(22, 163, 74, 0.14), rgba(22, 163, 74, 0.14)),
+        var(--surface, rgba(15, 15, 15, 0.68));
+}
+.toast--error {
+    background:
+        linear-gradient(rgba(220, 38, 38, 0.14), rgba(220, 38, 38, 0.14)),
+        var(--surface, rgba(15, 15, 15, 0.68));
+}
+
+.toast__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Small, quiet, and 28px square - a dismiss the rep may never need, but a toast
+   that cannot be closed is in the way on a narrow screen. */
+.toast__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--text-dim, #8a8a8a);
+    cursor: pointer;
+}
+.toast__close:hover,
+.toast__close:focus-visible {
+    color: var(--text, #fafafa);
+    background: var(--hover, rgba(255, 255, 255, 0.06));
+}
+
+/* Full width on a phone: 380px beside a 360px viewport is the whole screen with
+   a ragged margin. The layer already carries the 16px gutter. */
+@media (max-width: 480px) {
+    .toast {
+        max-width: none;
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        transition: none;
+        transform: none;
+    }
+}

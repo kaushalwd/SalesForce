@@ -1,0 +1,389 @@
+<!--*******************************************************************************************************************
+* Name			: ProgressIndicator.html
+* Description	: LWC component to show progress indicator                                
+* Created Date	: 14/01/2025
+* Created By	: Krishna Chaitanya Ramadugu
+* *********************************************************************************************************************
+* Version		Author		Date		    Comment   
+* 1.0           KC       14/01/2025      Initial Draft
+* 1.1           Chandu       14/04/2026      Added pre and post unit buttons
+********************************************************************************************************************-->
+<template>
+    <lightning-card>
+        <lightning-accordion allow-multiple-sections-open active-section-name={accordionSection}
+            onsectiontoggle={handleToggleSection}>
+            <lightning-accordion-section name="Action Panel" label="Action Panel">
+                <div>
+                    <div class="steps-section">
+                        <ul class="htimeline">
+                            <template for:each={lstGroupWrap} for:item="grp">
+                                <li key={grp.GroupLabel} class="li-timeline" style={timelineWidth}>
+                                    <c-progress-indicator-data-binding is-timeline-badge="true"
+                                        current-group={grp.CurrentGroup} passed-group={grp.Passed_Group}
+                                        timeline-badge-data={grp.GroupShortLabel}>
+                                    </c-progress-indicator-data-binding>
+                                    <div class="timeline-descr">{grp.GroupLabel}</div>
+                                    <ul class="stepsList" type="square">
+                                        <template for:each={grp.lstChilds} for:item="chld">
+                                            <li key={chld.StepId} class="childli">
+                                                <table style="width:100%">
+                                                    <tbody>
+                                                    <tr>
+                                                        <td class="td-timeline-descr">
+                                                            <div class="slds-p-left_none">
+                                                                <div class="timeline-descr" style="padding-top: 2px;">
+                                                                    <template if:false={chld.hasStep}>
+                                                                        {chld.StepSummary}
+                                                                    </template>
+                                                                    <template if:true={chld.hasStep}>
+                                                                        <c-progress-indicator-data-binding
+                                                                            render-step-name="true"
+                                                                            step-id={chld.StepId} is-open={chld.IsOpen}
+                                                                            task-id={chld.TaskId} status={chld.status}
+                                                                            step-summary={chld.StepSummary}
+                                                                            nextstep={chld.nextstep}
+                                                                            loop-task-no={chld.StepLoop}
+                                                                            client-step={chld.clientstep}
+                                                                            step-loop={chld.StepLoop}
+                                                                            closed-date={chld.closedDate}
+                                                                            re-submission-date={chld.reSubmissionDate}
+                                                                            onhandleclick={navigateStep}>
+                                                                        </c-progress-indicator-data-binding>
+                                                                    </template>
+                                                                    <template if:true={chld.SLA}>
+                                                                        &nbsp; <span
+                                                                            class="txtcolor">({chld.SLA})</span>
+                                                                    </template>
+                                                                </div>
+
+                                                                <template if:true={chld.stpNotes}>
+                                                                    &nbsp;&nbsp;
+                                                                    <lightning-icon style="margin-top: 4px;"
+                                                                        class="comment-icon"
+                                                                        icon-name="utility:comments" size="x-small"
+                                                                        title={chld.stpNotes}></lightning-icon>
+                                                                </template>
+                                                                <template if:true={chld.IsOpen}>
+                                                                    <template if:false={chld.nextstep}>&nbsp;&nbsp;
+                                                                        <img style="height:16px; margin-top: 4px;"
+                                                                            src={hourglass} width="20" /></template>
+                                                                </template>
+                                                                <template if:false={chld.IsOpen}>
+                                                                    <template if:false={chld.nextstep}>&nbsp;&nbsp;
+                                                                        <lightning-icon class="tickcolor"
+                                                                            style="margin-top: 4px;"
+                                                                            icon-name="utility:check" size="x-small"
+                                                                            alternative-text="Closed"></lightning-icon><br>
+                                                                        <!--<span class="closeDate">{closedDate}</span> -->
+                                                                        <!-- <template if:true={closedDate}>
+                                                                        <lightning-formatted-date-time value={closedDate} year="numeric" month="numeric" day="numeric"></lightning-formatted-date-time> 
+                                                                    </template> -->
+                                                                    </template>
+                                                                </template>
+                                                                <!-- <template if:false={chld.IsOpen}>
+                                                                    &nbsp;&nbsp;
+                                                                    <c-progress-indicator-data-binding
+                                                                        render-check-icon="true" is-open={chld.IsOpen}
+                                                                        status={chld.status}
+                                                                        closed-date={chld.closedDate}
+                                                                        step-loop={chld.StepLoop}>
+                                                                    </c-progress-indicator-data-binding>
+                                                                </template> -->
+
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </li>
+                            </template>
+                        </ul>
+                        <!-- <template if:true={openModal}>
+                            <c-quick-step-transition is-modal-open={openModal} sr-id={recordId} record-id={stepId}
+                                onclose={closeQuickActionModal} onnavigate={navigateToRecord}></c-quick-step-transition>
+                        </template> -->
+                        <div class="sla-section">
+                            <span class="srStatus"> Status: {srStatus}</span>
+                        </div>
+                    </div>
+                </div>
+            </lightning-accordion-section>
+        </lightning-accordion>
+    </lightning-card>
+    
+    <template if:true={isModalOpen}>
+        <section class="slds-modal slds-fade-in-open slds-modal_medium" style="height: auto;"
+            aria-labelledby="modal-heading" aria-describedby="modal-content">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading" class="slds-text-heading_medium">Edit Task</h2>
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close"
+                            variant="bare"></lightning-icon>
+                    </button>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium custom-modal-content" id="modal-content">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading Task"></lightning-spinner>
+                    </template>
+                    <template if:false={isLoading}>
+                        <template if:true={taskRecord.Id}>
+                            <div class="slds-grid ">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <!-- Subject Field -->
+                                    <lightning-input label="Subject" name="Subject" value={taskRecord.Subject}
+                                        onchange={handleInputChange} disabled="true">
+                                    </lightning-input>
+
+                                    <!-- Due Date Field -->
+                                    <lightning-input type="date" label="Due Date" name="ActivityDate"
+                                        value={taskRecord.ActivityDate} onchange={handleInputChange} disabled="true">
+                                    </lightning-input>
+
+
+                                    <lightning-input label="Priority" name="Priority" value={taskRecord.Priority}
+                                        onchange={handleInputChange} disabled="true">
+                                    </lightning-input>
+                                </div>
+                                &nbsp;&nbsp;
+                                <div class="slds-col slds-size_1-of-2">
+                                    <!-- Status Field -->
+                                    <lightning-combobox label="Status" name="Status" value={taskRecord.Status}
+                                        options={taskoptions} onchange={handleInputChange} disabled={closednotvalid} 
+                                        if:false={isBrokerRegistrationSR}>
+                                    </lightning-combobox>
+
+                                    <!-- Due Date Field -->
+                                    <lightning-combobox label="KYC Status" name="KYC_Status__c"
+                                        value={taskRecord.KYC_Status__c} options={kycOptions}
+                                        onchange={handleInputChange} if:true={getKYCTask} required="true">
+                                    </lightning-combobox> 
+                                    <lightning-combobox
+                                    name="unitStatus"
+                                    label="Unit Status"
+                                    value={selectedUnitStatus}
+                                    placeholder="Select Status"
+                                    options={unitStatusOptions}
+                                    onchange={handleUnitChange} if:true={getUnitStatus} >
+                                </lightning-combobox>
+
+                                <lightning-combobox
+                                    name="DecisionType"
+                                    label="Decision Type"
+                                    value={selectedDecisiontype}
+                                    placeholder="Select Decision Type"
+                                    options={collectiondecisionOptions}
+                                    onchange={handleDecisionChange} if:true={getDecisionType} >
+                                </lightning-combobox>
+
+                                <lightning-combobox
+                                    name="legalDecission"
+                                    label="Legal Action"
+                                    value={selectedLegalStatus}
+                                    placeholder="Select Status"
+                                    options={legalActionOptions}
+                                    onchange={handleLegalOptionChange} if:true={getLegalActionStatus} >
+                                </lightning-combobox>
+
+                                    <lightning-combobox
+                                                name="Extended_NOC_Approval_Status__c"
+                                                label="NOC Extension Status"
+                                                value={taskRecord.Extended_NOC_Approval_Status__c}
+                                                options={extensionOptions}
+                                                onchange={handleInputChange} if:true={getExtensionStatus}
+                                                required>
+                                            </lightning-combobox>
+                                            <lightning-combobox
+                                                name="Mortgage_Application_Status__c"
+                                                label="Mortgage Application Status"
+                                                value={taskRecord.Mortgage_Application_Status__c}
+                                                options={MortgageAppOptions}
+                                                onchange={handleInputChange} if:true={getMortgageAppStatus}
+                                                required>
+                                            </lightning-combobox>
+<lightning-input label="Sr Rejection Reason" name="Description" value={srRejectionReason}
+                                        onchange={handleSrRejctionReason} if:true={mrAppStatus} require="true">
+                                    </lightning-input>
+                                    <lightning-combobox label="NOC Status" name="NOC_Doc_Status__c"
+                                    value={taskRecord.NOC_Doc_Status__c} options={NocOptions}
+                                    onchange={handleInputChange} if:true={getNOCTask} required="true">
+                                </lightning-combobox>
+                 <lightning-input if:true={showCancellationDateVal}  type="date" label="Cancellation Date"
+                                            name="CancellationDate" value={cancellationDateValue}   min={minDate} required
+                                            onchange={handleCancelDateInputChange}>
+                                            </lightning-input>
+                                
+                                    <!-- Status Field -->
+                                    <lightning-input label="Comments" name="Description" value={taskRecord.Description}
+                                        onchange={handleInputChange} if:false={isBrokerRegistrationSR}>
+                                    </lightning-input>
+
+                                    <lightning-input label="SR Closure Comments" name="Desccomments" value={srClosure}
+                                        onchange={handleSrCommentsChange} if:true={showSrCommentsField} >
+                                    </lightning-input>
+
+                                    <!-- Broker Registration SR Changes-->
+                                     
+                                        <!--template if:true={showApprovalSection}-->
+                                        <lightning-combobox label="Action Status" name="Broker_Registration_Status__c" value={taskRecord.Broker_Registration_Status__c}
+                                            options={taskActionStatuses} onchange={handleInputChange} required={isBrokerRegistrationSR} if:true={isBrokerRegistrationSR}>
+                                        </lightning-combobox>
+
+                                        <lightning-textarea label="Registration Comments" name="Description" value={taskRecord.Description}
+                                           onchange={handleInputChange} required={isBrCommentsIsRequired} if:true={isBrokerRegistrationSR}>
+                                        </lightning-textarea>
+                                         <lightning-combobox label="Requested From" name="Requested_From__c"
+                                        value={taskRecord.Requested_From__c} options={reqoptions}
+                                        onchange={handleInputChange} if:true={getreqTitleDeedTask} required="true">
+                                    </lightning-combobox>   
+                                    <lightning-input
+                    type="number"
+                    label="Outstanding Amount"
+                    value={outStandingChargeAmount}
+                    onchange={handleAmountOustandingChange}
+                    if:true={showOutstandingCharge}>
+                </lightning-input>
+                                        <!--/template-->
+                                   
+
+                                   <!--<lightning-combobox
+                                                name="cancellationreason"
+                                                label="Cancellation Reason"
+                                                value={srComments}
+                                                options={cancelationReasonOptions}
+                                                onchange={handleCommentsInputChange} if:true={geCancellationComments}
+                                                required>
+                                            </lightning-combobox> -->
+                                            <lightning-input if:true={showExtendNocDateField}  type="date" label="Extend NOC Date"
+                                            name="ExtendNocDate" value={extndNOCDate} required={isExtendNocRequired}
+                                            onchange={handleExtendNocInputChange} disabled={isExtendNOCDateDisabled}>
+                                            </lightning-input>
+                                            <lightning-input if:true={hpdatetimebool}
+                                                type="datetime"
+                                                label="Home Preview Date/Time"
+                                                name="HPDate"
+                                                value={hpdateval}
+                                                required
+                                                onchange={homepreviewdatechange}>
+                                            </lightning-input>
+                                            <lightning-input if:true={showApprovedExtendNocDateField}  type="date" label="Approved Extended NOC Date"
+                                            name="ApprovedExtendNocDate" value={approvedExtndNOCDate} required={isapprovedExtndNOCRequired}                                         
+                                            onchange={handleApprovedExtendNocInputChange}>
+                                            </lightning-input>            
+                                    
+                                </div>
+                            </div>
+                            <lightning-input if:true={showDariFields} type="date" label="Dari Application Submitted Date"
+                                name="DariApplicationSubmittedDate" value={DariDate} required={isRequired}
+                                onchange={handleDariInputChange}>
+                            </lightning-input>
+                            <lightning-input if:true={showDariFields} type="string" label="Dari Application Number"
+                                name="DariApplicationNumber" value={DariNumber} required={isRequired}
+                                onchange={handleDariAppNumberChange}>
+                            </lightning-input>
+                                            
+                            
+                            <lightning-input if:true={showPlotHandoverTitleDeed} type="date" label="Title Deed Application Date"
+                                name="TitleDeedDate" value={TitledeedDate} required={isRequired}
+                                onchange={handleTitledeedDateChange}>
+                            </lightning-input>
+                            <lightning-input if:true={showPlotHandoverTitleDeed} type="string" label="Title Deed Application Number"
+                                name="TitleApplicationNumber" value={TitledeedNumber} required={isRequired}
+                                onchange={handleTitledeedNumberChange}>
+                            </lightning-input> 
+                        </template>
+                        <template if:true={error}>
+                            <p class="slds-text-color_error">Error: {error.body.message}</p>
+                        </template>
+                    </template>
+                </div>
+
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={handleCloseModal}></lightning-button>
+                    &nbsp;&nbsp;
+
+                    <lightning-button label="Save" variant="brand" onclick={handleSave}></lightning-button>
+                    &nbsp;&nbsp;
+                    <lightning-button if:true={showEventForm} label="Book Appointment" variant="brand"
+                        onclick={toggleEventForm}></lightning-button>
+                        <lightning-button if:true={showExecute} label="Execute Property Transfer" variant="brand"
+                        onclick={handletransfer} disabled={executioncomplete}></lightning-button>
+
+                          <lightning-button if:true={showSendEmailForMortgage} label="Send Email" variant="brand"
+                        onclick={handleSendEmailForMortgage} disabled={executioncomplete}></lightning-button>
+
+                         <lightning-button if:true={showSendEmail} label="Send Default Notice" variant="brand"
+                        onclick={handlesendEmail} disabled={executioncomplete}></lightning-button>
+
+                         <lightning-button if:true={showSendEmail2} label="Send Default Notice2" variant="brand"
+                        onclick={handlesendEmail2} disabled={executioncomplete}></lightning-button>
+
+
+                        <lightning-button if:true={showPtDeedExecute} label="Execute Property Transfer Title deed" variant="brand"
+                        onclick={handletransferPtDeed} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showmilestoneupdate} label="Execute Milestone Update" variant="brand"
+                        onclick={handlemilestone} disabled={executioncomplete}></lightning-button>
+
+                         <lightning-button if:true={showSendReceiptEmail} label="Send Receipt" variant="brand"
+                        onclick={handleSendEmailForTitleDeed} disabled={executioncomplete}></lightning-button>
+
+  <lightning-button if:true={showSendNOCInvoiceEmail} label="Send Invoice" variant="brand"
+                        onclick={handleSendEmailForNOCInv} disabled={executioncomplete}></lightning-button>
+
+                        <lightning-button if:true={showPSExecute} label="Execute Payment Plan Swap" variant="brand"
+                        onclick={handlePStransfer} disabled={executioncomplete}></lightning-button>
+                       
+                        <lightning-button if:true={showPEExecute} label="Execute Payment Extension" variant="brand"
+                        onclick={handlePEtransfer} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={JoAddition} label="Execute JO Addition" variant="brand"
+                        onclick={handleJOAddition} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={JoDeletion} label="Execute JO Deletion" variant="brand"
+                        onclick={handleJODeletion} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={ManageJo} label="Execute Manage JO" variant="brand"
+                        onclick={handleJOManage} disabled={executioncomplete}></lightning-button>
+                         <lightning-button if:true={showExecuteUC} label="Execute Unit Consolidation" variant="brand"
+                        onclick={handleUCtransfer} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showExecuteUtUpgde} label="Execute Unit Upgrade" variant="brand"
+                        onclick={handletransfer} disabled={executioncomplete}></lightning-button>
+                       <lightning-button if:true={showExecuteUntSwp} label="Execute Unit Swap" variant="brand"
+                        onclick={handletransfer} disabled={executioncomplete}></lightning-button>
+                
+                        <lightning-button if:true={showPlotHandoverExecute} label="Execute Plot Handover" variant="brand"
+                        onclick={executePlotHandover} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showUnitHandoverExecute} label="Execute Unit Handover" variant="brand"
+                        onclick={executeUnitHandover} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showUnitCancellationExecute} label="Execute Unit Cancellation" variant="brand"
+                        onclick={executeCancellationProcess} disabled={executioncomplete}></lightning-button>
+
+                        <lightning-button if:true={showpreUnitCancellationExecute} label="Execute Pre Unit Cancellation" variant="brand"
+                        onclick={executePreCancellationProcess} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showpostUnitCancellationExecute} label="Execute Post Unit Cancellation" variant="brand"
+                        onclick={executePostCancellationProcess} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showpostUnitCancellationExecute1} label="Check for amount" variant="brand"
+                        onclick={executePostCancellationProcess1} disabled={executioncomplete}></lightning-button>
+
+                        <lightning-button if:true={showExecuteMR} label="Execute Mortgage Registration SR" variant="brand"
+                        onclick={handletransferMR} disabled={executioncomplete}></lightning-button>
+                        
+ 
+                        <lightning-button if:true={showExecuteMD} label="Execute Mortgage Discharge SR" variant="brand"
+                        onclick={handletransferMD} disabled={executioncomplete}></lightning-button>
+                        <lightning-button if:true={showLPCExecute} label="Execute LPC Wavier" variant="brand"
+                        onclick={handleLPCManage} disabled={executioncomplete}></lightning-button>
+                </footer>
+            </div>
+        </section>
+
+        <!-- Modal Backdrop -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

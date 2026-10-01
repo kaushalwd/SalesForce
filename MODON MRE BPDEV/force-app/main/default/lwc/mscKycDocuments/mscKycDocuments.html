@@ -1,0 +1,88 @@
+<template>
+    <!-- Grey list, muted tick, ghost controls. No banner, no card, no Remove.
+         1.4 - Upload on a row holding the rep's own file asks first, in a quiet line under the row. -->
+    <template lwc:if={show}>
+        <section class={rootClass}>
+            <template lwc:if={compact}></template>
+            <template lwc:else>
+                <header class="kycd__head">
+                    <span class="kycd__title">{labels.KYCD_TITLE}</span>
+                    <span class="kycd__counter">{counter}</span>
+                </header>
+            </template>
+
+            <template for:each={groups} for:item="g">
+                <div key={g.key} class="kycd__grp">
+                    <template lwc:if={g.heading}>
+                        <p class="kycd__grp-h">{g.heading}</p>
+                    </template>
+                    <ul class="kycd__list">
+                        <template for:each={g.rows} for:item="r">
+                            <li key={r.key} class={r.rowClass}>
+                                <span class={r.markClass} aria-hidden="true">
+                                    <template lwc:if={r.hasFile}>
+                                        <c-modon-icon name="check" size="9" color="currentColor"></c-modon-icon>
+                                    </template>
+                                </span>
+                                <span class="kycd__name">{r.name}</span>
+                                <span class={r.factClass}>{r.fact}</span>
+                                <span class="kycd__act">
+                                    <!-- 1.6 - UI-27: the servlet only downloads, so the link says so and stays in place -->
+                                    <template lwc:if={r.viewUrl}>
+                                        <a class="kycd__btn" href={r.viewUrl} download
+                                           rel="noopener">{labels.KYCD_VIEW}</a>
+                                    </template>
+                                    <template lwc:if={r.canUpload}>
+                                        <!-- 1.1 - a ghost button over a hidden input; the file is posted by Apex.
+                                             1.3 - disabled only while THIS row uploads
+                                             1.4 - hidden while its question is open -->
+                                        <template lwc:if={r.confirming}></template>
+                                        <template lwc:else>
+                                            <button type="button" class="kycd__btn" data-upload="1" data-key={r.key}
+                                                    data-document={r.documentId} data-replace={r.replaceAttr}
+                                                    onclick={handleUploadClick} disabled={r.uploading}>{r.uploadLabel}</button>
+                                        </template>
+                                        <input type="file" class="kycd__file" accept={accept}
+                                               data-key={r.key} data-document={r.documentId}
+                                               onchange={handleFileChosen} tabindex="-1" aria-hidden="true" />
+                                    </template>
+                                </span>
+                                <!-- 1.4 - the one question before a replace; grey, a hairline at the left -->
+                                <template lwc:if={r.confirming}>
+                                    <div class="kycd__confirm" role="group" aria-label={text.REPLACE_ASK}
+                                         data-document={r.documentId} onkeydown={handleConfirmKey}>
+                                        <span class="kycd__confirm-q">{text.REPLACE_ASK}</span>
+                                        <button type="button" class="kycd__btn" data-yes="1" data-key={r.key}
+                                                data-document={r.documentId}
+                                                onclick={handleReplaceYes}>{text.REPLACE_YES}</button>
+                                        <button type="button" class="kycd__btn kycd__btn--quiet"
+                                                data-document={r.documentId}
+                                                onclick={handleReplaceNo}>{labels.CTA_CANCEL}</button>
+                                    </div>
+                                </template>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <template lwc:if={compact}>
+                <p class="kycd__counter kycd__counter--foot">{counter}</p>
+            </template>
+            <template lwc:if={note}>
+                <p class="kycd__note">{note}</p>
+            </template>
+            <!-- 1.4 - why a row that holds a file offers no Upload -->
+            <template lwc:if={lockNote}>
+                <p class="kycd__note kycd__note--lock">{lockNote}</p>
+            </template>
+        </section>
+    </template>
+
+    <template lwc:if={blocked}>
+        <p class="kycd__blocked">{blocked}</p>
+    </template>
+    <template lwc:if={problem}>
+        <p class="kycd__problem">{problem}</p>
+    </template>
+</template>

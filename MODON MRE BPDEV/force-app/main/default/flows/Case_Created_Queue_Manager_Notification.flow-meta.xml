@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Custom_Notification_Action_1</name>
+        <label>Send Custom Notification Action 1</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>customNotificationAction</actionName>
+        <actionType>customNotificationAction</actionType>
+        <connector>
+            <targetReference>Send_Email_To_Queue_Manager</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>customNotifTypeId</name>
+            <value>
+                <elementReference>Get_Notification.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientIds</name>
+            <value>
+                <elementReference>NotificationRecepient</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>title</name>
+            <value>
+                <elementReference>NotificationTitle</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>body</name>
+            <value>
+                <elementReference>NotificationBody</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>targetId</name>
+            <value>
+                <elementReference>$Record.Master_SLA__r.Escalation_1_Contact__c</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>customNotificationAction</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Send_Email_To_Queue_Manager</name>
+        <label>Send Email To Queue Manager</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.Escalation_1_Email__c</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailAddressesArray</name>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <elementReference>SenderEmailAddress</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>SubjectLine</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>EmailBody</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <stringValue></stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>2.0.1</versionString>
+    </actionCalls>
+    <apiVersion>64.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>GetQueueManager</name>
+        <label>GetQueueManager</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>NotificationRecepient</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Record.Master_SLA__r.Escalation_1_Contact__c</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>CheckRecepient</targetReference>
+        </connector>
+    </assignments>
+    <constants>
+        <name>SenderEmailAddress</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>&quot;MODON SALES&quot; &lt;Sales@Modon.ae&gt;</stringValue>
+        </value>
+    </constants>
+    <decisions>
+        <name>CheckRecepient</name>
+        <label>CheckRecepient</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Available</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>NotificationRecepient</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_Custom_Notification_Action_1</targetReference>
+            </connector>
+            <label>Available</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>NotificationRecepient2</name>
+        <dataType>String</dataType>
+        <expression>{!$Record.Escalation_1_Id__c}</expression>
+    </formulas>
+    <formulas>
+        <name>NotificationTitle</name>
+        <dataType>String</dataType>
+        <expression>&apos;A Case &apos; + $Record.CaseId__r.CaseNumber + &apos; is allocated to your team member&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>RecepientForNotification</name>
+        <dataType>String</dataType>
+        <expression>{!$Record.Escalation_1_Id__c}</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseId__r.CaseNumber} + &apos; created and assigned to &apos; + {!$Record.Owner_Name__c}</expression>
+    </formulas>
+    <interviewLabel>Case Created Queue Manager Notification {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Case Created Queue Manager Notification</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Notification</name>
+        <label>Get Notification</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>GetQueueManager</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>CustomNotifTypeName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Case SLA Created</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CustomNotificationType</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Notification</targetReference>
+        </connector>
+        <filterLogic>or</filterLogic>
+        <filters>
+            <field>RunningTestClass__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>CaseSLA__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Obsolete</status>
+    <textTemplates>
+        <name>EmailBody</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!$Record.Escalation_1_Name__c},
+
+A case has been allotted to your team member with below details:
+
+Case Number       :  {!$Record.CaseId__r.CaseNumber}
+Current Status      :  {!$Record.CaseId__r.Status}
+Case Type             :  {!$Record.CaseId__r.CaseType__c}
+Category              :  {!$Record.CaseId__r.CaseCategory__c}
+Sub Category       :  {!$Record.CaseId__r.CaseSubCategory__c}
+Issue Description :   {!$Record.CaseId__r.Description}
+Primary Owner     :  {!$Record.CaseId__r.Primary_Owner_Name__c}
+Customer Name   :  {!$Record.CaseId__r.Customer_Name__c}
+Date Created        :  {!$Record.CaseId__r.CreatedDate}
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <textTemplates>
+        <name>NotificationBody</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>A Case {!$Record.CaseId__r.CaseNumber} is allocated to your team member.</text>
+    </textTemplates>
+    <variables>
+        <name>NotificationRecepient</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

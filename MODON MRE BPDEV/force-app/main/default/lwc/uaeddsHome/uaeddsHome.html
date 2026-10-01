@@ -1,0 +1,108 @@
+<template>
+    <div class="dd-panel">
+
+        <div class="dd-bar">
+            <span>Direct Debit &rsaquo; Home</span>
+            <lightning-button label="Refresh" onclick={handleRefresh} disabled={loading}>
+            </lightning-button>
+        </div>
+
+        <div class="dd-body">
+
+            <div>
+                <div class="dd-heading">What needs attention today</div>
+                <div class="dd-sub">
+                    The two deadlines that move, and the three counts that should be zero.
+                </div>
+            </div>
+
+            <template lwc:if={loading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <template lwc:if={view}>
+
+                <div class="dd-grid">
+
+                    <!-- Deadline one: the collection cut-off, ticking. -->
+                    <div class={cutOffClass}>
+                        <div class="dd-card-label">Due tomorrow, before 20:00</div>
+                        <div class="dd-card-figure">{dueHeadline}</div>
+                        <div class="dd-card-note">
+                            <template lwc:if={view.pastCutOff}>
+                                Cut-off passed. A file sent now would fail overnight.
+                            </template>
+                            <template lwc:else>
+                                Cut-off {cutOffLabel}, Dubai time.
+                            </template>
+                        </div>
+                        <template lwc:if={dueBlockedLabel}>
+                            <div class="dd-card-note">{dueBlockedLabel}</div>
+                        </template>
+                    </div>
+
+                    <!-- Deadline two: the signing window, in working days. -->
+                    <div class={signingClass}>
+                        <div class="dd-card-label">Signing window closing</div>
+                        <div class="dd-card-figure">{signingCount} awaiting signature</div>
+                        <template lwc:if={hasSigning}>
+                            <div class="dd-rows">
+                                <template for:each={signingRows} for:item="row">
+                                    <div key={row.mandateId} class={row.rowClass}
+                                        data-id={row.mandateId} onclick={handleOpenMandate}>
+                                        <span class="dd-row-name">{row.name}</span>
+                                        <span class="dd-row-customer">{row.customer}</span>
+                                        <span class="dd-row-when">{row.label}</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="dd-card-note">
+                                About 7 working days from the send date. UAEDDS counts working days
+                                and does not publish its holiday calendar, so treat it as close.
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="dd-card-note">Nobody is waiting to sign.</div>
+                        </template>
+                    </div>
+
+                    <div class={stuckClass}>
+                        <div class="dd-card-label">Files stuck submitting</div>
+                        <div class="dd-card-figure">{view.stuckFiles}</div>
+                        <div class="dd-card-note">
+                            Not a retry queue. A file here may already be held by the bank, so the
+                            day-end report settles it before anything is resent.
+                        </div>
+                    </div>
+
+                    <div class={unmatchedClass}>
+                        <div class="dd-card-label">Unmatched at day end</div>
+                        <div class="dd-card-figure">{view.unmatched}</div>
+                        <div class="dd-card-note">
+                            Money moved against a Modon mandate with no request behind it, over the
+                            last 7 days.
+                        </div>
+                    </div>
+
+                    <div class={bouncedClass}>
+                        <div class="dd-card-label">Bounces awaiting a decision</div>
+                        <div class="dd-card-figure">{view.bounced}</div>
+                        <div class="dd-card-note">
+                            Representment is never automatic. Three attempts maximum, and each one
+                            can cost the customer another bank charge.
+                        </div>
+                    </div>
+
+                </div>
+
+                <template lwc:if={allQuiet}>
+                    <div class="dd-note">
+                        Nothing needs attention. Every count is zero and no deadline is close.
+                    </div>
+                </template>
+
+            </template>
+
+        </div>
+    </div>
+</template>

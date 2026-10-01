@@ -1,0 +1,218 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+.org__head {
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.org__hint {
+    margin: 0 0 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* 1.3 - names the block, so the company fields stop reading as more address fields.
+   Its own size, not .h-md: that is the section CARD's heading, and a sub-heading at the
+   same weight would compete with it rather than sit under it. */
+.org__section {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+}
+
+.org__upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+/* Hidden, not removed: it still holds the value, still opens the dialog and still
+   takes focus. Not display:none, which would make it unfocusable and strand keyboard
+   users on a label they cannot activate. */
+.org__file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.org__choose {
+    cursor: pointer;
+}
+
+/* The focus ring belongs on what is visible - a label cannot receive focus itself. */
+.org__file:focus-visible + .org__choose {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+.org__file:disabled + .org__choose {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.org__filename {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
+/* Shadow DOM does not share stylesheets, so the list primitives are defined here
+   rather than inherited from mscConsole - the same gap that left .glass undefined
+   there until 1.4. */
+.rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.row {
+    width: 100%;
+    padding: 12px 14px;
+    text-align: left;
+}
+
+.row__main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.row__name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.row__sub {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.form-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 12px;
+}
+
+.org__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.org__pct {
+    margin-left: auto;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text, #fafafa);
+}
+
+.org__form {
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 12px;
+}
+
+.org__warn {
+    margin-top: 10px;
+}
+
+/* 1.3 - the base .banner carries no background of its own (only --warn/--error/--ok
+   do), so this rendered as loose text under a clock icon. Neutral, because a list of
+   what is still to come is not a warning. */
+.org__outstanding {
+    margin-top: 14px;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+}
+
+/* 1.3 - a line under a heading, not a whole-page empty state. */
+.org__empty {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.org__outstanding-lede {
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.org__list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text, #fafafa);
+}
+
+/* ── 1.5  phones ────────────────────────────────────────────────────────────
+   This component had no media queries at all - it was built after the device
+   pass. An owner row is name + subtitle + ownership % + Edit + Remove on one
+   flex line; at 360px the two buttons alone are 44px tall each by the touch
+   target rule and there is nothing left for the name. It becomes two rows: who
+   they are, then the figure and the actions. */
+@media (max-width: 767px) {
+    .org__row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    /* Takes the whole first line so a long name is not competing for width. */
+    .row__main {
+        flex: 1 0 100%;
+    }
+
+    .org__pct {
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    /* The upload button goes full width rather than sitting beside a filename
+       that has nowhere to wrap to. */
+    .org__choose {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .org__filename {
+        width: 100%;
+    }
+}
+
+/* MSC-087 - no stepper on Share owned. type="number" is kept for min/max/step and
+   the number pad; the arrows go, as they do on the joint owner drawer's
+   Ownership %. Firefox needs the textfield appearance as well as the WebKit
+   pseudo-elements. */
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}

@@ -1,0 +1,707 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Approved_Email</name>
+        <label>Approved Email</label>
+        <locationX>314</locationX>
+        <locationY>803</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>Latest_Passfort_Transaction.Owner:User.Email</elementReference>
+                </collectionElements>
+                <collectionElements>
+                    <elementReference>Latest_Passfort_Transaction.Sales_Order__r.Owner:User.Email</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>CurrentUser</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>Varrppvedsubject</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>Dear Team,
+
+We are pleased to inform you that the Compliance Team has completed their review and approved the account for {!$Record.FirstName} {!$Record.LastName}.
+
+Customer Name: {!$Record.FirstName} {!$Record.LastName}
+
+Approval Status: Approved
+
+Comments: {!$Record.PassfortComment__pc} {!$Record.PassfortComment__c}
+
+No further action is required from the Compliance side. You may proceed with the next steps as applicable.
+
+If you have any questions regarding this approval, please reach out to the Compliance Team.
+
+Best regards,
+Compliance Team</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <actionCalls>
+        <name>Copy_1_of_Send_Email_Action_1</name>
+        <label>Send Email Action 1</label>
+        <locationX>578</locationX>
+        <locationY>911</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>Latest_Passfort_Transaction.Sales_Order__r.Owner:User.Email</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>CurrentUser</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>varemailsubkecy</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>Dear Team,
+
+This is to inform you that the Compliance Team has reviewed the account for {!$Record.FirstName} {!$Record.LastName} and provided the following update:
+
+Customer Name: {!VARCustomerName}
+
+Approval Status: {!$Record.PassfortApprovalStatus__pc}
+
+Comments: {!$Record.PassfortComment__pc}
+
+Please review the details above and take any necessary action based on the current status.
+If you have any questions regarding this update, please reach out to the Compliance Team.
+
+Best regards,
+Compliance Team</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <actionCalls>
+        <name>Log_Flow_Exception</name>
+        <label>Log Flow Exception</label>
+        <locationX>1000</locationX>
+        <locationY>1000</locationY>
+        <actionName>LoggerService</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>faultErrorMessage</name>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>flowName</name>
+            <value>
+                <stringValue>PassfortStatusTaskCreationFinal</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>LoggerService</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Send_Email_Action_1</name>
+        <label>Send Email Action 1</label>
+        <locationX>50</locationX>
+        <locationY>911</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>Latest_Passfort_Transaction.Owner:User.Email</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>CurrentUser</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>varemailsubkecy</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>Dear Team,
+
+This is to inform you that the Compliance Team has reviewed the account for {!$Record.FirstName} {!$Record.LastName} and provided the following update:
+
+Customer Name: {!VARCustomerName}
+
+Approval Status: {!$Record.PassfortApprovalStatus__pc}
+
+Comments: {!$Record.PassfortComment__pc}
+
+Please review the details above and take any necessary action based on the current status.
+If you have any questions regarding this update, please reach out to the Compliance Team.
+
+Best regards,
+Compliance Team</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Set_Contact_Id_Assignment_Element</name>
+        <label>Set Contact Id  Assignment Element:</label>
+        <locationX>974</locationX>
+        <locationY>371</locationY>
+        <assignmentItems>
+            <assignToReference>varContactId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.PersonContactId</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Latest_Passfort_Transaction</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>EMail_Check</name>
+        <label>EMail Check</label>
+        <locationX>974</locationX>
+        <locationY>587</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Account_is_Active_and_EMail_Address</name>
+            <conditionLogic>(1 AND 2 ) OR (3 AND 4)</conditionLogic>
+            <conditions>
+                <leftValueReference>Latest_Passfort_Transaction.Owner:User.IsActive</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Latest_Passfort_Transaction.Owner:User.Email</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Latest_Passfort_Transaction.Sales_Order__r.Owner:User.IsActive</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Latest_Passfort_Transaction.Sales_Order__r.Owner:User.Email</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>When_Trigger</targetReference>
+            </connector>
+            <label>Account is Active and EMail Address</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>When_Trigger</name>
+        <label>When Trigger</label>
+        <locationX>578</locationX>
+        <locationY>695</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Commente_chnage_in_Review_Status</name>
+            <conditionLogic>1 AND 2 AND 5 AND (3 OR 4)</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__pc</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortComment__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortComment__pc</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Latest_Passfort_Transaction.Sales_Order__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Craete_Task</targetReference>
+            </connector>
+            <label>Commente chnage in Review Status with no SO</label>
+        </rules>
+        <rules>
+            <name>Send_Email_Or_Bell_Icon_Status_Chnage</name>
+            <conditionLogic>(1 AND 2) OR (3 AND 4)</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__pc</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record__Prior.PassfortApprovalStatus__pc</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Approved_Email</targetReference>
+            </connector>
+            <label>Send Email Or Bell Icon Status Chnage</label>
+        </rules>
+        <rules>
+            <name>Commente_chnage_in_Review_Status_with_SO</name>
+            <conditionLogic>1 AND 2 AND 5 AND (3 OR 4)</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__pc</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortApprovalStatus__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Approved</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortComment__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.PassfortComment__pc</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Latest_Passfort_Transaction.Sales_Order__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_1_of_Craete_Task</targetReference>
+            </connector>
+            <label>Commente chnage in Review Status with SO</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>NowPlus1Day</name>
+        <dataType>DateTime</dataType>
+        <expression>NOW() + 1</expression>
+    </formulas>
+    <interviewLabel>PassfortStatusTaskCreation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>PassfortStatusTaskCreationFinal</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordCreates>
+        <name>Copy_1_of_Craete_Task</name>
+        <label>Craete Task</label>
+        <locationX>578</locationX>
+        <locationY>803</locationY>
+        <connector>
+            <targetReference>Copy_1_of_Send_Email_Action_1</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>NowPlus1Day</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <elementReference>varTaskDescription1</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>Latest_Passfort_Transaction.Sales_Order__r.OwnerId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value>
+                <stringValue>High</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Not Started</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <elementReference>varsubject1</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Type</field>
+            <value>
+                <stringValue>Other</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhoId</field>
+            <value>
+                <elementReference>varContactId</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <recordCreates>
+        <name>Craete_Task</name>
+        <label>Craete Task</label>
+        <locationX>50</locationX>
+        <locationY>803</locationY>
+        <connector>
+            <targetReference>Send_Email_Action_1</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>NowPlus1Day</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <elementReference>varTaskDescription1</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>Latest_Passfort_Transaction.OwnerId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value>
+                <stringValue>High</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Not Started</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <elementReference>varsubject1</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Type</field>
+            <value>
+                <stringValue>Other</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhoId</field>
+            <value>
+                <elementReference>varContactId</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <recordLookups>
+        <name>Latest_Passfort_Transaction</name>
+        <label>Latest Passfort Transaction</label>
+        <locationX>631</locationX>
+        <locationY>495</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>EMail_Check</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Contact__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>varContactId</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>OwnerId</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>EntityType__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Individual</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>PassfortTransaction__c</object>
+        <sortField>LastModifiedDate</sortField>
+        <sortOrder>Desc</sortOrder>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>848</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Set_Contact_Id_Assignment_Element</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Source_Entity__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Modon - Egypt</stringValue>
+            </value>
+        </filters>
+        <object>Account</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>VARCustomerName</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>{!$Record.FirstName} {!$Record.LastName}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>varemailsubkecy</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Compliance Update for Customer -{!$Record.FirstName} {!$Record.LastName}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>Varrppvedsubject</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Compliance Approved for Customer -{!$Record.FirstName} {!$Record.LastName}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>varsubject1</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Compliance Comment Updated for {!$Record.FirstName} {!$Record.LastName} â€” Action Required</text>
+    </textTemplates>
+    <textTemplates>
+        <name>varTaskDescription1</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>{!$Record.PassfortComment__c} {!$Record.PassfortComment__pc}</text>
+    </textTemplates>
+    <variables>
+        <description>Stores PersonContactId from Account</description>
+        <name>varContactId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Now + 1 day</description>
+        <name>varDueDate</name>
+        <dataType>DateTime</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varPassfortTransaction</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>PassfortTransaction__c</objectType>
+    </variables>
+    <variables>
+        <description>Task description</description>
+        <name>varTaskDescription</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>High or Normal</description>
+        <name>varTaskPriority</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Task subject</description>
+        <name>varTaskSubject</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

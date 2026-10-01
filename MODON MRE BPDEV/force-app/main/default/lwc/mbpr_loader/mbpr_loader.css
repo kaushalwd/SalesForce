@@ -1,0 +1,99 @@
+/* Theme tokens are inherited custom properties, so they reach here through the
+   shadow boundary from the homeGateway host. Fallbacks cover guest surfaces
+   that never get them. */
+.loader {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mbpr-theme-overlay-strong, rgba(0, 0, 0, 0.58));
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    /* Above the whole modal scale, which tops out at 9700. A blocking wait
+       outranks whatever raised it, or the screen behind a modal dims while the
+       modal itself stays bright and apparently interactive. */
+    z-index: 9800;
+}
+
+/* Absolute rather than fixed, so it fills the box it is put in; opaque rather
+   than a scrim, because the point is to hide what is behind it, not dim it; and
+   no blur, which would blur that rather than replace it. Rounding is inherited
+   from the host. */
+.loader--contained {
+    position: absolute;
+    background: var(--mbpr-theme-surface, #111111);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    z-index: 2;
+    border-radius: inherit;
+}
+
+/* Absolute like contained, but a scrim: the box behind it is a filled-in form
+   that is busy for a moment (upload, delete), so it should dim, not vanish.
+   Same overlay token as the full-screen loader, lighter blur so the form stays
+   readable. Sits above step content, below any modal. */
+.loader--veil {
+    position: absolute;
+    background: var(--mbpr-theme-overlay-strong, rgba(0, 0, 0, 0.58));
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    z-index: 5;
+    border-radius: inherit;
+}
+
+.loader__inner {
+    align-items: center;
+    color: var(--mbpr-theme-ink, #ffffff);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* The mark is the spinner: a ring with a dot, so the dot orbiting reads as
+   progress on its own. currentColor is why it is inline vector and not the
+   raster favicon, which would sit in a fixed light-on-dark tile. */
+.loader__mark {
+    animation:
+        mbprLoaderSpin 1.4s linear infinite,
+        mbprLoaderPulse 1.4s ease-in-out infinite;
+    fill: currentColor;
+    height: 44px;
+    transform-origin: 50% 50%;
+    width: 44px;
+}
+
+.loader__label {
+    color: var(--mbpr-theme-ink-soft, rgba(255, 255, 255, 0.72));
+    font-family: inherit;
+    font-size: 13px;
+    margin: 0;
+    text-align: center;
+}
+
+@keyframes mbprLoaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* The pulse carries the "still working" signal on its own, which keeps the
+   reduced-motion fallback legible rather than a dead logo. */
+@keyframes mbprLoaderPulse {
+    0%,
+    100% {
+        opacity: 0.55;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* A spinning, pulsing mark is what vestibular-motion sensitivity reacts to. The
+   overlay still appears and still blocks; only the movement stops. */
+@media (prefers-reduced-motion: reduce) {
+    .loader__mark {
+        animation: none;
+        opacity: 0.85;
+    }
+}

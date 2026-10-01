@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>KYC_Log_Error</name>
+        <label>KYC Log Error</label>
+        <locationX>176</locationX>
+        <locationY>623</locationY>
+        <actionName>CustomerKYCErrorLogHelper</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>className</name>
+            <value>
+                <stringValue>Customer KYC </stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorMessage</name>
+            <value>
+                <elementReference>$Record.Signzy_Journey_Message__c</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>kycId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>methodName</name>
+            <value>
+                <stringValue>Customer KYC</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>processName</name>
+            <value>
+                <stringValue>KYC Error Response</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>CustomerKYCErrorLogHelper</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>61.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Error</name>
+        <label>Error</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Error_Notification</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Signzy_Journey_Status__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>COMPETED</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>KYC_Log_Error</targetReference>
+            </connector>
+            <label>Error Notification</label>
+        </rules>
+        <rules>
+            <name>Success_Notification</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Signzy_Journey_Status__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>COMPLETED</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>KYC_Log_Error</targetReference>
+            </connector>
+            <label>Success Notification</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <interviewLabel>KYC Error Notification {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>KYC Notification</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Error</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Signzy_Journey_Status__c</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Signzy_Journey_Status__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>IN PROGRESS</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Signzy_Journey_Status__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Signzy_Journey_Status__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>CLOSED BY USER</stringValue>
+            </value>
+        </filters>
+        <object>KYC_Response__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

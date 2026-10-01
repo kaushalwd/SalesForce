@@ -1,0 +1,145 @@
+<template>
+    <!-- `mounted`, not `open`: stays true for the length of the exit -->
+    <template lwc:if={mounted}>
+        <!-- the layer is the click target; the panel stops the event -->
+        <div class={layerClass} onclick={handleClose}>
+            <div class="scrim"></div>
+            <section
+                class="pm"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="pm-title"
+                onclick={stop}
+                onkeydown={handleKeydown}
+            >
+                <template lwc:if={hasRow}>
+                    <!-- head: which payment and when it is due. No money, and (1.2) no state; the lines below say it. -->
+                    <header class="pm__head">
+                        <div class="pm__headings">
+                            <h2 id="pm-title" class="pm__title">{title}</h2>
+                            <p class={sublineClass}>
+                                {subline}
+                                <template lwc:if={overdue}>
+                                    <span class="pm__late">{labels.LEDGER_ROW_OVERDUE}</span>
+                                </template>
+                            </p>
+                        </div>
+                        <button
+                            class="pm__x"
+                            type="button"
+                            onclick={handleClose}
+                            aria-label="Close"
+                            title="Close"
+                        >
+                            <c-modon-icon name="x" size="16" color="currentColor"></c-modon-icon>
+                        </button>
+                    </header>
+
+                    <!-- body: one line per fact, then the form -->
+                    <div class="pm__body">
+                        <!-- where this payment's money comes from; only the terminal case needs saying -->
+                        <template lwc:if={routeNote}>
+                            <p class="pm__route">
+                                <c-modon-icon
+                                    name="info"
+                                    size="13"
+                                    color="var(--text-dim, #8a8a8a)"
+                                ></c-modon-icon>
+                                <span>{routeNote}</span>
+                            </p>
+                        </template>
+
+                        <!-- the total -->
+                        <div class="pm__il pm__il--top">
+                            <span class="pm__il-id">{labels.LED_COL_TOTAL}</span>
+                            <span class="pm__il-sp"></span>
+                            <span class="pm__il-amt">{totalValue}</span>
+                        </div>
+
+                        <!-- the payments with Finance, one line each -->
+                        <template for:each={instrumentLines} for:item="l">
+                            <div key={l.key} class="pm__il">
+                                <span class="pm__il-id">{l.id}</span>
+                                <span class="pm__il-chip">{l.chip}</span>
+                                <template lwc:if={l.meta}>
+                                    <span class="pm__il-meta">{l.meta}</span>
+                                </template>
+                                <span class="pm__il-sp"></span>
+                                <span class="pm__il-amt pm__il-amt--rec">
+                                    {l.amount}
+                                    <span class="pm__il-w">{l.word}</span>
+                                </span>
+                            </div>
+                        </template>
+
+                        <!-- money Finance has allocated. 1.3: the name is the state, so no trailing tag. -->
+                        <template lwc:if={paidLine}>
+                            <div class="pm__il">
+                                <span class="pm__il-id">{labels.LED_ALLOCATED}</span>
+                                <span class="pm__il-sp"></span>
+                                <span class="pm__il-amt pm__il-amt--paid">{paidLine}</span>
+                            </div>
+                        </template>
+
+                        <!-- nothing further to record -->
+                        <template lwc:if={coveredNote}>
+                            <p class="pm__covered">{coveredNote}</p>
+                        </template>
+
+                        <!-- the handoff: the figure the form prefills -->
+                        <template lwc:if={stillDueLine}>
+                            <div class="pm__sd">
+                                <span class="pm__sd-t">{stillDueLine.text}</span>
+                                <span class="pm__sd-v">{stillDueLine.value}</span>
+                            </div>
+                        </template>
+
+                        <!-- the same form, drawn flat -->
+                        <template lwc:if={showForm}>
+                            <div class={formClass}>
+                                <c-msc-payment-block
+                                    embedded
+                                    flat
+                                    payment-type={row.key}
+                                    label={row.label}
+                                    required-amount={row.requiredAmount}
+                                    paid-amount={row.paidAmount}
+                                    remaining-amount={row.remainingAmount}
+                                    open-amount={row.openAmount}
+                                    with-finance-amount={row.withFinanceAmount}
+                                    records-payment={row.recordsPayment}
+                                    due-date={row.dueDate}
+                                    status={row.status}
+                                    related-record-id={row.sourceId}
+                                    sales-order-id={row.salesOrderId}
+                                    proof-slot-id={row.proofSlotId}
+                                    has-slot={row.hasSlot}
+                                    method-options={row.allowedMethods}
+                                    allow-direct-debit={row.allowDirectDebit}
+                                    proofs={row.proofs}
+                                    result={formResult}
+                                    busy={busy}
+                                    onrequestslot={handleRequestSlot}
+                                    onproofuploaded={handleProofUploaded}
+                                    oncaptureproof={handleCaptureProof}
+                                    onproofremoved={handleProofRemoved}
+                                    onsubmitproof={handleSubmitProof}
+                                    onsetupdirectdebit={handleSetupDirectDebit}
+                                ></c-msc-payment-block>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- foot: only where there is no form -->
+                    <template lwc:if={showFoot}>
+                        <footer class="pm__foot">
+                            <button class="btn btn-ghost btn-sm" type="button" onclick={handleClose}>
+                                {labels.CTA_CLOSE}
+                            </button>
+                        </footer>
+                    </template>
+                </template>
+            </section>
+        </div>
+    </template>
+</template>

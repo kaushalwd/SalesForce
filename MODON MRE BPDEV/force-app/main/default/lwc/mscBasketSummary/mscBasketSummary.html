@@ -1,0 +1,71 @@
+<template>
+    <!-- .summary is the shared rail-panel surface, so this sits in the rail
+         looking like the single-unit summary it replaces. -->
+    <aside class="summary basket" aria-label="Selected Units">
+        <div class="eyebrow basket__head">
+            <span class="eyebrow__dot">•</span>
+            <span class="eyebrow__label">{labels.BASKET_TITLE}</span>
+            <span class="basket__count">{countLabel}</span>
+        </div>
+
+        <template lwc:if={hasRows}>
+            <div class="basket__rows">
+                <template for:each={rows} for:item="r">
+                    <button
+                        key={r.id}
+                        class="basket-row"
+                        type="button"
+                        data-section="unit"
+                        onclick={handleJump}
+                    >
+                        <span class="basket-row__top">
+                            <span class="basket-row__name">{r.name}</span>
+                            <span class="basket-row__price">{r.price}</span>
+                        </span>
+                        <!-- 1.1 - the same identity the single-unit summary shows.
+                             A basket was a name and a price; the agent could not
+                             tell two 6 BR villas apart from the recap. -->
+                        <template lwc:if={r.meta}>
+                            <span class="basket-row__meta">{r.meta}</span>
+                        </template>
+                        <span class={r.planCls}>{r.planName}</span>
+
+                        <!-- 1.1 - and the milestones, which a basket never had.
+                             The agent was confirming several million dirhams
+                             having seen a plan NAME and nothing else. -->
+                        <template lwc:if={r.hasSchedule}>
+                            <span class="basket-row__sched">
+                                <template for:each={r.schedule} for:item="m">
+                                    <span key={m.key} class="basket-mile">
+                                        <span class="basket-mile__name">{m.description}</span>
+                                        <span class="basket-mile__pct">{m.percent}</span>
+                                        <span class="basket-mile__amt">{m.amount}</span>
+                                    </span>
+                                </template>
+                            </span>
+                        </template>
+                    </button>
+                </template>
+            </div>
+
+            <div class="basket__total">
+                <span class="basket__total-label">{labels.BASKET_TOTAL}</span>
+                <span class="basket__total-value">{total}</span>
+            </div>
+
+            <!--
+              Said here as well as at selection time. The rail is what an agent
+              reads while they work, and a basket collecting no payment is the one
+              thing about this booking they must not discover at Confirm.
+            -->
+            <div class="banner banner--warn basket__note">
+                <c-modon-icon name="info" size="14" color="var(--chip-amber, #d97706)"></c-modon-icon>
+                <span>{labels.MULTI_NO_PAYMENT_TITLE}</span>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <p class="basket__empty">{labels.EMPTY_UNIT}</p>
+        </template>
+    </aside>
+</template>

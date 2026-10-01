@@ -1,0 +1,1173 @@
+:host {
+    /* Pre-login, so nothing supplies --mbpr-theme-* here and the fallbacks are
+       the theme. Values are THEME_TOKENS.dark from mbpr_homeGateway.js. */
+    --reg-ink: var(--mbpr-theme-ink, #fafafa);
+    --reg-ink-soft: var(--mbpr-theme-ink-soft, #a3a3a3);
+    --reg-ink-faint: var(--mbpr-theme-ink-faint, #8a8a8a);
+    --reg-line: var(--mbpr-theme-ink-line, rgba(255, 255, 255, 0.13));
+    --reg-line-strong: var(--mbpr-theme-ink-line-strong, rgba(255, 255, 255, 0.22));
+    --reg-paper: var(--mbpr-theme-paper, #000000);
+    --reg-surface: var(--mbpr-theme-surface-solid, #111111);
+    --reg-surface-soft: var(--mbpr-theme-surface-soft, #1a1a1a);
+    --reg-control: var(--mbpr-theme-control-bg, #1b1b1b);
+    --reg-inverse: var(--mbpr-theme-inverse-ink, #111111);
+    --reg-accent: var(--mbpr-theme-accent, #0f9f98);
+    --reg-accent-ink: var(--mbpr-theme-accent-ink, #59d6ce);
+    --reg-accent-soft: var(--mbpr-theme-accent-soft, rgba(15, 159, 152, 0.14));
+    --reg-accent-line: var(--mbpr-theme-accent-line, rgba(15, 159, 152, 0.36));
+    --reg-warning: var(--mbpr-theme-warning, #fbbf24);
+    --reg-warning-soft: var(--mbpr-theme-warning-soft, rgba(251, 191, 36, 0.14));
+    --reg-overlay: var(--mbpr-theme-overlay-strong, rgba(0, 0, 0, 0.68));
+    --reg-shadow-sm: var(--mbpr-theme-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.36));
+    --reg-shadow-md: var(--mbpr-theme-shadow-md, 0 16px 32px rgba(0, 0, 0, 0.42));
+    --reg-radius-sm: var(--mbpr-radius-sm, 8px);
+    --reg-radius-md: var(--mbpr-radius-md, 12px);
+    --reg-radius-lg: var(--mbpr-radius-lg, 16px);
+    --reg-radius-pill: var(--mbpr-radius-pill, 999px);
+    --reg-serif: var(--mbpr-serif, ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif);
+    --reg-ease: var(--mbpr-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    /* Custom properties inherit through shadow boundaries, so child components
+       resolve to this dark palette instead of their own light fallbacks. */
+    --mbpr-theme-ink: #fafafa;
+    --mbpr-theme-ink-soft: #a3a3a3;
+    --mbpr-theme-ink-faint: #8a8a8a;
+    --mbpr-theme-ink-line: rgba(255, 255, 255, 0.13);
+    --mbpr-theme-ink-line-strong: rgba(255, 255, 255, 0.22);
+    --mbpr-theme-paper: #000000;
+    --mbpr-theme-surface: #111111;
+    --mbpr-theme-surface-solid: #111111;
+    --mbpr-theme-surface-soft: #1a1a1a;
+    --mbpr-theme-control-bg: #1b1b1b;
+    --mbpr-theme-input-disabled-bg: #161616;
+    --mbpr-theme-inverse-ink: #111111;
+    --mbpr-theme-accent: #0f9f98;
+    --mbpr-theme-accent-ink: #59d6ce;
+    --mbpr-theme-accent-soft: rgba(15, 159, 152, 0.14);
+    --mbpr-theme-accent-line: rgba(15, 159, 152, 0.36);
+    --mbpr-theme-gold-soft: rgba(210, 183, 126, 0.16);
+    --mbpr-theme-gold-line: rgba(210, 183, 126, 0.32);
+    --mbpr-theme-warning: #fbbf24;
+    --mbpr-theme-warning-soft: rgba(251, 191, 36, 0.14);
+    --mbpr-theme-error: #f87171;
+    --mbpr-theme-error-soft: rgba(248, 113, 113, 0.14);
+    --mbpr-theme-error-line: rgba(248, 113, 113, 0.28);
+    --mbpr-theme-overlay-strong: rgba(0, 0, 0, 0.68);
+    --mbpr-theme-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.36);
+    --mbpr-theme-shadow-md: 0 16px 32px rgba(0, 0, 0, 0.42);
+    --mbpr-theme-skeleton-start: rgba(255, 255, 255, 0.055);
+    --mbpr-theme-skeleton-mid: rgba(255, 255, 255, 0.11);
+    color: var(--reg-ink);
+    /* Native controls render in their dark UA style. */
+    color-scheme: dark;
+    display: block;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 0;
+    position: relative;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+    font: inherit;
+}
+
+/* Guest shell, mirroring the sign-in page. */
+
+.reg-shell {
+    /* Same ground as the home page in dark theme: --mbpr-page-bg and
+       --mbpr-page-gradient from THEME_TOKENS.dark in mbpr_homeGateway.js.
+       Painted on the shell itself rather than on a child layer, because below
+       1200px the shell scrolls; a child layer would scroll away and expose
+       flat colour. An element's own background does not move when its content
+       scrolls, so the gradient stays anchored at every breakpoint. */
+    background-color: #08090b;
+    background-image: linear-gradient(180deg, #1a1e24 0%, #08090b 100%);
+    background-repeat: no-repeat;
+    color: #fff;
+    inset: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    z-index: 9000;
+}
+
+.reg-main {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: calc(100dvh - 4.75rem);
+    padding:
+        max(2.75rem, env(safe-area-inset-top))
+        max(2rem, env(safe-area-inset-right))
+        max(5.5rem, env(safe-area-inset-bottom))
+        max(2rem, env(safe-area-inset-left));
+    position: relative;
+    z-index: 1;
+}
+
+.reg-stack {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 32.5rem);
+}
+
+.brand-mark {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 0.9rem;
+}
+
+.brand-logo {
+    color: #ffffff;
+    display: block;
+    height: 1.65rem;
+    width: auto;
+}
+
+.brand-divider {
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.brand-label {
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.brand-subtitle {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 1rem;
+    line-height: 1.35;
+    margin: 0 0 1.75rem;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.landing-card {
+    animation: regCardIn 760ms var(--reg-ease);
+    background: rgba(18, 18, 18, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 1.25rem;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+    color: #fff;
+    padding: clamp(1.55rem, 3vw, 2.35rem);
+    width: min(100%, 32.5rem);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+}
+
+@keyframes regCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(0.9rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.card-head {
+    margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+    color: rgba(255, 255, 255, 0.52);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.feedback {
+    border-radius: 0.85rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0 0 1rem;
+    padding: 0.75rem 0.85rem;
+}
+
+.feedback--info {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.field {
+    margin-bottom: 1.05rem;
+}
+
+.field-label {
+    color: rgba(255, 255, 255, 0.52);
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+}
+
+.input-shell {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0.9rem;
+    display: flex;
+    gap: 0.65rem;
+    min-height: 3rem;
+    padding: 0 0.85rem;
+    transition:
+        border-color 180ms ease,
+        background 180ms ease;
+}
+
+.input-shell:focus-within {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.34);
+}
+
+.field-input {
+    background: transparent;
+    border: 0;
+    color: #fff;
+    flex: 1;
+    font: inherit;
+    font-size: 0.92rem;
+    min-width: 0;
+    outline: none;
+}
+
+.field-input::placeholder {
+    color: rgba(255, 255, 255, 0.24);
+}
+
+.action-row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.primary-action,
+.secondary-action {
+    align-items: center;
+    border-radius: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 800;
+    gap: 0.55rem;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0.8rem 1rem;
+    transition:
+        opacity 180ms ease,
+        background 180ms ease,
+        border-color 180ms ease;
+}
+
+.primary-action {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.primary-action--inline {
+    flex: 1;
+    width: auto;
+}
+
+/* The landing's two actions are stacked full-width, so the primary fills
+   the card the way .register-cta does. */
+.primary-action--block {
+    width: 100%;
+}
+
+.choice-hint {
+    color: rgba(255, 255, 255, 0.52);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 0.55rem 0 0;
+    text-align: center;
+}
+
+.choice-hint--field {
+    margin: 0 0 1.05rem;
+    text-align: left;
+}
+
+.primary-action:hover,
+.primary-action:focus-visible {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.34);
+}
+
+.secondary-action {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #fff;
+    min-width: 7rem;
+}
+
+.secondary-action:hover,
+.secondary-action:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.divider-or {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.38);
+    display: flex;
+    font-size: 0.72rem;
+    gap: 0.7rem;
+    letter-spacing: 0.14em;
+    margin: 1.2rem 0;
+    text-transform: uppercase;
+}
+
+.divider-or::before,
+.divider-or::after {
+    background: rgba(255, 255, 255, 0.14);
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+}
+
+.register-cta {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.32);
+    border-radius: 0.9rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 800;
+    min-height: 3rem;
+    padding: 0.8rem 1rem;
+    transition:
+        background 180ms ease,
+        border-color 180ms ease;
+    width: 100%;
+}
+
+.register-cta:hover,
+.register-cta:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.5);
+    border-style: solid;
+}
+
+/* Guided steps: full-screen overlay for guests, inline in portal. */
+
+.reg-workspace-layer {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: clamp(0.75rem, 2vw, 2rem);
+    position: fixed;
+    z-index: 9600;
+}
+
+.reg-workspace-layer--inline {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: transparent;
+    display: block;
+    inset: auto;
+    padding: 0;
+    position: static;
+    z-index: auto;
+}
+
+.reg-workspace {
+    background: var(--reg-paper);
+    border: 1px solid var(--reg-line-strong);
+    border-radius: calc(var(--reg-radius-lg) + 6px);
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    height: min(94dvh, 62rem);
+    max-width: 76rem;
+    overflow: hidden;
+    width: 100%;
+    animation: regWorkspaceIn 260ms var(--reg-ease) both;
+}
+
+.reg-workspace-layer--inline .reg-workspace {
+    animation: none;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: auto;
+    max-width: none;
+    overflow: visible;
+}
+
+@keyframes regWorkspaceIn {
+    from {
+        opacity: 0;
+        transform: translateY(1rem) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.reg-workspace__header {
+    align-items: center;
+    background: var(--reg-surface);
+    border-bottom: 1px solid var(--reg-line);
+    display: flex;
+    gap: 0.8rem;
+    justify-content: space-between;
+    padding: 1rem 1.4rem;
+}
+
+.reg-workspace-layer--inline .reg-workspace__header {
+    background: transparent;
+    border-bottom: 0;
+    padding: 0 0 0.6rem;
+}
+
+.reg-workspace__eyebrow {
+    color: var(--reg-accent-ink);
+    font-size: 0.64rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    margin: 0 0 0.15rem;
+    text-transform: uppercase;
+}
+
+.reg-workspace__heading h2 {
+    font-family: var(--reg-serif);
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    margin: 0;
+}
+
+.reg-workspace__close {
+    align-items: center;
+    background: var(--reg-control);
+    border: 1px solid var(--reg-line);
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 2.2rem;
+    justify-content: center;
+    width: 2.2rem;
+}
+
+.reg-workspace__close:hover {
+    background: var(--reg-surface-soft);
+}
+
+.reg-workspace__close:focus-visible {
+    outline: 2px solid var(--reg-accent);
+    outline-offset: 2px;
+}
+
+.review-panel {
+    background: var(--reg-warning-soft);
+    border-bottom: 1px solid var(--reg-line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.7rem 1.4rem;
+}
+
+.reg-workspace-layer--inline .review-panel {
+    border: 1px solid var(--reg-line);
+    border-radius: var(--reg-radius-md);
+    margin-bottom: 0.6rem;
+}
+
+.review-panel__intro,
+.review-panel__outro {
+    color: var(--reg-ink-soft);
+    font-size: 0.76rem;
+    margin: 0;
+}
+
+/* BP-038 - view-only notice: same panel, the title line in plain ink. */
+.review-panel--locked .review-panel__comment {
+    color: var(--reg-ink);
+}
+
+.review-panel__comment {
+    color: var(--reg-warning);
+    font-size: 0.82rem;
+    font-weight: 650;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* ---- Premium stepper ---- */
+
+.stepper {
+    background: var(--reg-surface);
+    display: flex;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    overflow-x: auto;
+    padding: 0.7rem 1.4rem;
+    scrollbar-width: thin;
+}
+
+.reg-workspace-layer--inline .stepper {
+    background: transparent;
+    border: 1px solid var(--reg-line);
+    border-radius: var(--reg-radius-md);
+    margin-bottom: 0.6rem;
+    padding: 0.6rem 0.8rem;
+}
+
+.stepper__item {
+    align-items: center;
+    color: var(--reg-ink-faint);
+    display: flex;
+    flex: 1 1 0;
+    gap: 0.45rem;
+    min-width: max-content;
+    padding: 0.25rem 0;
+    position: relative;
+}
+
+.stepper__connector {
+    background: var(--reg-line);
+    display: block;
+    flex: 1 1 1.4rem;
+    height: 2px;
+    margin: 0 0.6rem;
+    min-width: 1rem;
+}
+
+.stepper__item:last-child .stepper__connector {
+    display: none;
+}
+
+.stepper__item--done .stepper__connector {
+    background: var(--reg-accent);
+}
+
+.stepper__item--current {
+    color: var(--reg-ink);
+}
+
+.stepper__item--done {
+    color: var(--reg-accent-ink);
+}
+
+.stepper__marker {
+    align-items: center;
+    background: var(--reg-control);
+    border: 1px solid var(--reg-line);
+    border-radius: 50%;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 0.68rem;
+    font-weight: 800;
+    height: 1.6rem;
+    justify-content: center;
+    transition: background 180ms var(--reg-ease), border-color 180ms var(--reg-ease);
+    width: 1.6rem;
+}
+
+.stepper__item--current .stepper__marker {
+    background: var(--reg-accent);
+    border-color: var(--reg-accent);
+    box-shadow: 0 0 0 4px var(--reg-accent-soft);
+    color: var(--reg-inverse);
+}
+
+.stepper__item--done .stepper__marker {
+    background: var(--reg-accent-soft);
+    border-color: var(--reg-accent-line);
+    color: var(--reg-accent-ink);
+}
+
+.stepper__label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ---- Body + footer ---- */
+
+.reg-workspace__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.1rem 1.4rem;
+}
+
+.reg-workspace-layer--inline .reg-workspace__body {
+    overflow: visible;
+    padding: 0;
+}
+
+.step-frame {
+    background: var(--reg-surface);
+    border: 1px solid var(--reg-line);
+    border-radius: var(--reg-radius-lg);
+    box-shadow: var(--reg-shadow-sm);
+    margin: 0 auto;
+    max-width: 64rem;
+    padding: clamp(0.9rem, 2vw, 1.6rem);
+}
+
+.reg-workspace__footer {
+    align-items: center;
+    background: var(--reg-surface);
+    border-top: 1px solid var(--reg-line);
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    padding: 0.85rem 1.4rem;
+}
+
+.reg-workspace-layer--inline .reg-workspace__footer {
+    background: transparent;
+    border-top: 0;
+    padding: 0.8rem 0 0;
+}
+
+.reg-button {
+    align-items: center;
+    background: var(--reg-surface);
+    border: 1px solid var(--reg-accent-line);
+    border-radius: var(--reg-radius-pill);
+    color: var(--reg-accent-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.3rem;
+    justify-content: center;
+    min-height: 2.25rem;
+    min-width: 6.5rem;
+    padding: 0.55rem 0.95rem;
+    transition: background 160ms var(--reg-ease), border-color 160ms var(--reg-ease),
+        transform 160ms var(--reg-ease);
+}
+
+.reg-button:hover:not(:disabled) {
+    background: var(--reg-accent-soft);
+    border-color: var(--reg-accent-line);
+    box-shadow: var(--reg-shadow-sm);
+    transform: translateY(-1px);
+}
+
+.reg-button:focus-visible {
+    outline: 2px solid var(--reg-accent);
+    outline-offset: 2px;
+}
+
+.reg-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.reg-button--ghost {
+    background: var(--reg-surface);
+    border-color: var(--reg-line);
+    color: var(--reg-ink);
+}
+
+.reg-button--ghost:hover:not(:disabled) {
+    background: var(--reg-accent-soft);
+    border-color: var(--reg-accent-line);
+    color: var(--reg-accent-ink);
+}
+
+/* States, busy layer, modals */
+
+.state-panel {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    justify-content: center;
+    min-height: 14rem;
+    padding: 1rem;
+}
+
+.state-panel--loading {
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-top: 1.4rem;
+}
+
+.busy-layer {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    background: var(--reg-overlay);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: fixed;
+    z-index: 9700;
+}
+
+.pending-card {
+    background: var(--reg-surface);
+    border: 1px solid var(--reg-line);
+    border-radius: var(--reg-radius-md);
+    box-shadow: var(--reg-shadow-md);
+    padding: 0.9rem;
+    width: min(16rem, 86vw);
+}
+
+.modal-layer {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    background: var(--reg-overlay);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 9650;
+}
+
+.modal-card {
+    background: var(--reg-surface);
+    border: 1px solid var(--reg-line-strong);
+    border-radius: var(--reg-radius-lg);
+    box-shadow: var(--reg-shadow-md);
+    color: var(--reg-ink);
+    max-width: 26rem;
+    overflow: hidden;
+    width: 100%;
+    animation: regModalIn 200ms var(--reg-ease) both;
+}
+
+@keyframes regModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(0.6rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.modal-card__header {
+    align-items: center;
+    border-bottom: 1px solid var(--reg-line);
+    display: flex;
+    gap: 0.6rem;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+}
+
+.modal-card__header h2 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.modal-card__close {
+    align-items: center;
+    background: var(--reg-control);
+    border: 1px solid var(--reg-line);
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    height: 2rem;
+    justify-content: center;
+    width: 2rem;
+}
+
+.modal-card__close:hover {
+    background: var(--reg-surface-soft);
+}
+
+.modal-card__close:focus-visible {
+    outline: 2px solid var(--reg-accent);
+    outline-offset: 2px;
+}
+
+.modal-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem 1rem;
+}
+
+.modal-card__body p {
+    color: var(--reg-ink-soft);
+    font-size: 0.82rem;
+    margin: 0;
+}
+
+.otp-input {
+    letter-spacing: 0.4em;
+    text-align: center;
+}
+
+.modal-card__footer {
+    border-top: 1px solid var(--reg-line);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding: 0.7rem 1rem;
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-card,
+    .reg-workspace,
+    .modal-card {
+        animation: none !important;
+    }
+    .reg-button,
+    .primary-action,
+    .secondary-action,
+    .register-cta,
+    .input-shell,
+    .stepper__marker {
+        transition: none !important;
+    }
+}
+
+/* Short fine-pointer windows scroll instead of clipping the card. The
+   >=1200px overflow clip is pre-existing desktop behaviour, left alone. */
+@media (max-width: 1199px) {
+    .reg-shell {
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 980px) {
+    .reg-shell {
+        overflow-y: auto;
+        position: fixed;
+    }
+
+    .reg-main {
+        min-height: auto;
+        padding:
+            max(2rem, env(safe-area-inset-top, 0px))
+            max(1rem, env(safe-area-inset-right, 0px))
+            max(6.5rem, env(safe-area-inset-bottom, 0px))
+            max(1rem, env(safe-area-inset-left, 0px));
+    }
+
+    .brand-mark {
+        margin-bottom: 0.7rem;
+    }
+}
+
+/* Touch band. The 6rem bottom padding reserves the fixed footer on tablets;
+   phones drop it, the footer goes in-flow at <=767px. */
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .reg-shell {
+        -webkit-overflow-scrolling: touch;
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+        overflow-y: auto;
+    }
+
+    .reg-main {
+        min-height: calc(100svh - 4.75rem);
+        min-height: calc(100dvh - 4.75rem);
+        padding:
+            max(2rem, env(safe-area-inset-top, 0px))
+            max(1rem, env(safe-area-inset-right, 0px))
+            max(6rem, env(safe-area-inset-bottom, 0px))
+            max(1rem, env(safe-area-inset-left, 0px));
+    }
+
+    .field-input {
+        font-size: 16px; /* prevents iOS focus zoom */
+        scroll-margin-block: 4.5rem 6.5rem;
+    }
+
+    .reg-button,
+    .primary-action,
+    .secondary-action,
+    .register-cta {
+        min-height: 48px;
+    }
+
+    .reg-workspace__close,
+    .modal-card__close {
+        min-height: 48px;
+        min-width: 48px;
+    }
+}
+
+@media (max-width: 767px) {
+    /* Flex column with the main area growing, so the in-flow footer sits at the
+       viewport bottom on short pages and after the content when it scrolls. */
+    .reg-shell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reg-main {
+        align-items: flex-start;
+        flex: 1 0 auto;
+        min-height: auto;
+        padding:
+            max(1.5rem, env(safe-area-inset-top, 0px))
+            max(1.35rem, env(safe-area-inset-right, 0px))
+            2rem
+            max(1.35rem, env(safe-area-inset-left, 0px));
+    }
+
+    /* Auto margins centre the card while there is free space and collapse once
+       the content overflows, degrading to a top-aligned scroll. */
+    .reg-stack {
+        margin-block: auto;
+        width: min(100%, 26rem);
+    }
+
+    /* Full-screen app page: header and stepper on top, scrolling form, sticky
+       action bar at the bottom. */
+    .reg-workspace-layer {
+        padding: 0;
+    }
+
+    .reg-workspace {
+        border: 0;
+        border-radius: 0;
+        height: 100vh;
+        height: 100svh;
+        height: 100dvh;
+        max-width: none;
+    }
+
+    .review-panel {
+        max-height: 9rem;
+        overflow-y: auto;
+    }
+
+    .reg-workspace__header {
+        padding: max(0.8rem, env(safe-area-inset-top)) 1rem 0.8rem;
+    }
+
+    .reg-workspace__heading h2 {
+        font-size: 1.05rem;
+    }
+
+    .stepper {
+        padding: 0.55rem 1rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .stepper__label {
+        font-size: 0.7rem;
+    }
+
+    .reg-workspace__body {
+        padding: 0.8rem 0.8rem 1rem;
+    }
+
+    .step-frame {
+        border-radius: var(--reg-radius-md);
+        padding: 0.8rem;
+    }
+
+    .reg-workspace__footer {
+        padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .reg-workspace__footer .reg-button {
+        flex: 1 1 auto;
+    }
+
+    .landing-card {
+        padding: 1.3rem 1.1rem;
+    }
+
+    .action-row {
+        flex-direction: column;
+    }
+
+    .secondary-action {
+        min-width: 0;
+    }
+
+    .brand-logo {
+        height: 1.35rem;
+    }
+
+    .modal-layer {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal-card {
+        border-end-end-radius: 0;
+        border-end-start-radius: 0;
+        max-width: none;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+}
+
+@media (max-width: 599px) {
+    .reg-main {
+        padding-block-start: max(1.2rem, env(safe-area-inset-top, 0px));
+    }
+
+    .brand-mark {
+        flex-wrap: wrap;
+        row-gap: 0.35rem;
+    }
+
+    .brand-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .landing-card {
+        padding: 1.15rem 0.95rem;
+    }
+
+    /* Compact stepper: markers stay as the rail, only the current step keeps
+       its title. */
+    .stepper__item {
+        flex: 0 0 auto;
+        min-width: 0;
+    }
+
+    /* Do not clip the item, the current marker's 4px focus ring needs room.
+       Only the label truncates. */
+    .stepper__item--current {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .stepper__item:not(.stepper__item--current) .stepper__label {
+        display: none;
+    }
+
+    .stepper__item--current .stepper__label {
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stepper__connector {
+        flex: 0 1 1.4rem;
+        margin: 0 0.35rem;
+        min-width: 0.5rem;
+    }
+
+    /* Room for the marker's ring: a horizontal scroller clips vertically at
+       its padding edge. */
+    .stepper {
+        padding-block: 0.6rem;
+    }
+}
+
+@media (max-width: 374px) {
+    .landing-card {
+        padding: 1rem 0.85rem;
+    }
+
+    .reg-button {
+        min-width: 0;
+    }
+
+    .reg-workspace__body {
+        padding: 0.6rem 0.6rem 0.8rem;
+    }
+
+    .step-frame {
+        padding: 0.65rem;
+    }
+}
+
+@media (max-height: 479px) and (max-width: 899px) {
+    .reg-main {
+        align-items: flex-start;
+        padding-block:
+            max(0.7rem, env(safe-area-inset-top, 0px))
+            max(1rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .brand-mark {
+        margin-bottom: 0.45rem;
+    }
+
+    .brand-subtitle {
+        margin-bottom: 0.7rem;
+    }
+
+    .reg-workspace__header {
+        padding-block: 0.5rem 0.4rem;
+    }
+
+    .stepper {
+        padding-block: 0.35rem;
+    }
+
+    .review-panel {
+        max-height: 4.5rem;
+        overflow-y: auto;
+    }
+}
+
+/* The footer is still fixed at 768-899px, so keep clearance for it. */
+@media (max-height: 479px) and (min-width: 768px) and (max-width: 899px) {
+    .reg-main {
+        padding-block-end: max(5.5rem, env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* Compact landing card on phones and touch tablets, matching the sign-in
+   card. Spacing only; card width, the full-screen workspace and desktop
+   are untouched. */
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .landing-card {
+        padding: clamp(0.95rem, 2.5vw, 1.35rem);
+    }
+
+    .landing-card .card-head {
+        margin-bottom: 0.85rem;
+    }
+
+    .landing-card .feedback {
+        margin-bottom: 0.7rem;
+    }
+
+    .landing-card .field {
+        margin-bottom: 0.7rem;
+    }
+
+    .landing-card .field-label {
+        font-size: 0.62rem;
+        letter-spacing: 0.14em;
+        margin-bottom: 0.28rem;
+    }
+
+    .landing-card .action-row {
+        gap: 0.6rem;
+    }
+}

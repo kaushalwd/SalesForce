@@ -1,0 +1,324 @@
+<template>
+    <article class={blockClass}>
+        <!-- 1.2: suppressed inside a ledger row, which carries these already -->
+        <template lwc:if={showHeader}>
+            <header class="row-between block__head">
+                <div class="eyebrow">
+                    <span class="eyebrow__dot"></span>
+                    <span class="eyebrow__label">{positionLabel}</span>
+                </div>
+                <span class={statusChipClass}>{statusText}</span>
+            </header>
+
+            <h3 class="h-md block__title">{label}</h3>
+            <p class="amount-required">{requiredDisplay}</p>
+            <template lwc:if={caption}>
+                <p class="amount-caption">{caption}</p>
+            </template>
+
+            <hr class="divider" />
+        </template>
+
+        <!-- 1.8: Modon's Create Receipt fields; the mode switches the pair after it -->
+        <div class="field-grid">
+            <div class="field">
+                <label class="field__label" for="method">{labels.BLOCK_MODE} *</label>
+                <select
+                    id="method"
+                    class={fields.method.cls}
+                    data-field="method"
+                    onchange={handleField}
+                    onblur={handleBlur}
+                    disabled={modeDisabled}
+                >
+                    <option value="">Select…</option>
+                    <template for:each={methodChoices} for:item="m">
+                        <option key={m.value} value={m.value} selected={m.selected}>
+                            {m.label}
+                        </option>
+                    </template>
+                </select>
+                <template lwc:if={fields.method.error}>
+                    <p class="field__error">{fields.method.error}</p>
+                </template>
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="ref">{referenceLabel} *</label>
+                <!-- MSC-200: for a cheque the image fills this; it is text, not a box -->
+                <template lwc:if={chequeLocked}>
+                    <p class={referenceTextClass}>{referenceText}</p>
+                </template>
+                <template lwc:else>
+                    <input
+                        id="ref"
+                        class={fields.reference.cls}
+                        type="text"
+                        data-field="reference"
+                        value={form.reference}
+                        oninput={handleField}
+                        onblur={handleBlur}
+                        placeholder={referencePlaceholder}
+                    />
+                </template>
+                <template lwc:if={fields.reference.error}>
+                    <p class="field__error">{fields.reference.error}</p>
+                </template>
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="paid">{dateLabel} *</label>
+                <template lwc:if={chequeLocked}>
+                    <p class={paidDateTextClass}>{paidDateText}</p>
+                </template>
+                <template lwc:else>
+                    <input
+                        id="paid"
+                        class={fields.paidDate.cls}
+                        type="date"
+                        data-field="paidDate"
+                        value={form.paidDate}
+                        max={dateMax}
+                        oninput={handleField}
+                        onchange={handleField}
+                        onblur={handleBlur}
+                    />
+                </template>
+                <template lwc:if={fields.paidDate.error}>
+                    <p class="field__error">{fields.paidDate.error}</p>
+                </template>
+            </div>
+
+            <!-- 1.2: the amount, seeded with what is open (1.8: less what is with Finance), capped, editable -->
+            <div class="field">
+                <label class="field__label" for="amt">{labels.BLOCK_AMOUNT_LABEL} *</label>
+                <!-- 1.24: an input even for a read cheque, so a misread amount can be corrected -->
+                <template lwc:if={showAmountInput}>
+                    <input
+                        id="amt"
+                        class={fields.amount.cls}
+                        type="number"
+                        inputmode="decimal"
+                        min="0"
+                        step="0.01"
+                        max={amountMax}
+                        data-field="amount"
+                        value={form.amount}
+                        oninput={handleField}
+                        onblur={handleBlur}
+                    />
+                </template>
+                <template lwc:if={fields.amount.error}>
+                    <p class="field__error">{fields.amount.error}</p>
+                </template>
+                <!-- 1.11: the part-payment hint is gone, by request -->
+            </div>
+
+            <template lwc:if={isCheque}>
+                <div class="field">
+                    <label class="field__label" for="bank">{labels.BLOCK_BANK} *</label>
+                    <select
+                        id="bank"
+                        class={fields.bank.cls}
+                        data-field="bank"
+                        onchange={handleField}
+                        onblur={handleBlur}
+                    >
+                        <option value="">{bankPlaceholder}</option>
+                        <template for:each={bankChoices} for:item="b">
+                            <option key={b.value} value={b.value} selected={b.selected}>
+                                {b.label}
+                            </option>
+                        </template>
+                    </select>
+                    <template lwc:if={fields.bank.error}>
+                        <p class="field__error">{fields.bank.error}</p>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <hr class="divider proof__rule" />
+
+        <!-- 1.7: one strip, proof left, ways to attach and submit right. 1.8: the console's own attach control, files handed up as base64. -->
+        <section class="proof">
+            <div class="proof__head">
+                <div class="proof__left">
+                    <span class="field__label proof__title">{labels.PROOF_TITLE}</span>
+                    <template lwc:if={hasChips}>
+                        <ul class="upload-list proof__files">
+                            <template for:each={proofRows} for:item="p">
+                                <li key={p.key} class={p.cls}>
+                                    <template lwc:if={p.removing}>
+                                        <span class="proof__spin">
+                                            <c-modon-icon name="refresh-cw" size="12" color="currentColor"></c-modon-icon>
+                                        </span>
+                                    </template>
+                                    <template lwc:elseif={p.removeError}>
+                                        <c-modon-icon
+                                            name="alert-triangle"
+                                            size="12"
+                                            color="var(--chip-red, #f87171)"
+                                        ></c-modon-icon>
+                                    </template>
+                                    <template lwc:else>
+                                        <c-modon-icon
+                                            name="file-check"
+                                            size="12"
+                                            color="var(--chip-green, #4ade80)"
+                                        ></c-modon-icon>
+                                    </template>
+                                    <span class="upload-item__name" title={p.fileLabel}>{p.fileLabel}</span>
+                                    <template lwc:if={p.removeError}>
+                                        <span class="upload-item__meta proof__file__err">{p.removeError}</span>
+                                    </template>
+                                    <template lwc:elseif={p.uploadedDisplay}>
+                                        <span class="upload-item__meta">{p.uploadedDisplay}</span>
+                                    </template>
+                                    <button
+                                        class="btn-link icon-btn"
+                                        type="button"
+                                        data-id={p.documentId}
+                                        onclick={handleRemoveProof}
+                                        title="Remove"
+                                        disabled={p.removeDisabled}
+                                    >
+                                        <c-modon-icon name="x" size="12"></c-modon-icon>
+                                    </button>
+                                </li>
+                            </template>
+                            <template for:each={stagingRows} for:item="s">
+                                <li key={s.key} class={s.cls}>
+                                    <template lwc:if={s.failed}>
+                                        <c-modon-icon
+                                            name="alert-triangle"
+                                            size="12"
+                                            color="var(--chip-red, #f87171)"
+                                        ></c-modon-icon>
+                                    </template>
+                                    <template lwc:else>
+                                        <span class="proof__spin">
+                                            <c-modon-icon name="refresh-cw" size="12" color="currentColor"></c-modon-icon>
+                                        </span>
+                                    </template>
+                                    <span class="upload-item__name" title={s.text}>{s.text}</span>
+                                    <template lwc:if={s.failed}>
+                                        <button
+                                            class="btn-link icon-btn"
+                                            type="button"
+                                            data-key={s.key}
+                                            onclick={handleDismissStaging}
+                                            title="Dismiss"
+                                        >
+                                            <c-modon-icon name="x" size="12"></c-modon-icon>
+                                        </button>
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template lwc:else>
+                        <span class="proof__empty">{proofEmptyText}</span>
+                    </template>
+                </div>
+
+                <div class="proof__ways">
+                    <!-- MSC-194: mouse only. On a coarse pointer the picker AND its input leave the
+                         DOM, so phone and tablet have no file-attach path at all - the camera is it. -->
+                    <template lwc:if={showAttachButton}>
+                        <input
+                            class="proof__input"
+                            type="file"
+                            multiple
+                            accept={acceptedFormats}
+                            onchange={handleFilesPicked}
+                            tabindex="-1"
+                            aria-hidden="true"
+                        />
+                        <button
+                            class="btn btn-ghost btn-sm proof__attach"
+                            type="button"
+                            onclick={openPicker}
+                            disabled={attachDisabled}
+                        >
+                            <c-modon-icon name="paperclip" size="13" color="currentColor"></c-modon-icon>
+                            <span>{labels.PROOF_ATTACH}</span>
+                        </button>
+                    </template>
+
+                    <!-- 1.1: the receipt is usually in hand. 1.13: phone and tablet only; not drawn on a fine pointer. -->
+                    <template lwc:if={showCameraButton}>
+                        <button
+                            class="btn btn-ghost btn-sm proof__cam"
+                            type="button"
+                            onclick={toggleCamera}
+                            disabled={attachDisabled}
+                        >
+                            <c-modon-icon name="eye" size="13" color="currentColor"></c-modon-icon>
+                            <span>{cameraLabel}</span>
+                        </button>
+                    </template>
+
+                    <button
+                        class="btn btn-primary btn-sm proof__submit"
+                        type="button"
+                        onclick={handleSubmit}
+                        disabled={submitDisabled}
+                    >
+                        {submitLabel}
+                    </button>
+                </div>
+            </div>
+
+            <!-- MSC-197: what the cheque image said, or why it said nothing -->
+            <template lwc:if={readingText}>
+                <p class="read read--wait">{readingText}</p>
+            </template>
+            <template lwc:if={showReadNote}>
+                <p class={readNoteClass}>
+                    <span>{readNote.text}</span>
+                    <template lwc:if={readNote.canRetry}>
+                        <button
+                            class="read__again"
+                            type="button"
+                            onclick={handleReadAgain}
+                            disabled={busy}
+                        >{labels.PROOF_READ_AGAIN}</button>
+                    </template>
+                </p>
+            </template>
+            <!-- MSC-205: flags, not sentences - red is refused on submit, amber is a look -->
+            <template lwc:if={showChequeIssues}>
+                <p class="flags">
+                    <template for:each={chequeIssues} for:item="f">
+                        <span key={f.key} class={f.cls}>{f.text}</span>
+                    </template>
+                </p>
+            </template>
+
+            <template lwc:if={submitNote}>
+                <p class="field__error proof__note">{submitNote}</p>
+            </template>
+            <template lwc:if={showResult}>
+                <p class={resultClass}>{result.message}</p>
+            </template>
+
+            <!-- 1.13: showCameraPanel is gated on the button too -->
+            <template lwc:if={showCameraPanel}>
+                <!-- 1.12: autostart, the press on Use camera is the press; label and fallback-hint name the visible control -->
+                <div class="proof__camera">
+                    <c-msc-capture
+                        aspect="1.6"
+                        label="Use camera"
+                        hint="Fit the whole receipt inside the frame"
+                        autostart={cameraAutostart}
+                        fallback-hint="record this payment from a computer"
+                        disabled={busy}
+                        oncapture={handleCaptured}
+                        oncancel={handleCameraCancel}
+                    ></c-msc-capture>
+                </div>
+            </template>
+        </section>
+    </article>
+</template>

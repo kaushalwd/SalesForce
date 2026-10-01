@@ -1,0 +1,68 @@
+<template>
+    <div class="dd-panel">
+
+        <div class="dd-bar">
+            <span>Direct Debit &rsaquo; Reconciliation</span>
+            <lightning-button label="Export CSV" onclick={handleExport} disabled={nothingToExport}>
+            </lightning-button>
+        </div>
+
+        <div class="dd-body">
+
+            <div>
+                <div class="dd-heading">Check the day matched</div>
+                <div class="dd-sub">
+                    What UAEDDS says moved, against what this org asked for.
+                </div>
+            </div>
+
+            <div class="dd-controls">
+                <div class="dd-date">
+                    <lightning-input type="date" label="Report date" value={reportDate}
+                        onchange={handleDateChange}></lightning-input>
+                </div>
+                <lightning-button variant="brand" label="Run" onclick={handleRun}
+                    disabled={loading}></lightning-button>
+            </div>
+
+            <template lwc:if={loading}>
+                <lightning-spinner alternative-text="Reading the day-end report" size="small">
+                </lightning-spinner>
+            </template>
+
+            <template lwc:if={emptyDay}>
+                <div class="dd-empty">No activity on this date.</div>
+            </template>
+
+            <template lwc:if={ran}>
+                <!-- Unmatched leads. Money moved against a Modon mandate that Salesforce has no
+                     record of requesting is the finding this screen exists for. -->
+                <template lwc:if={hasUnmatched}>
+                    <div class="dd-note dd-note_bad">{unmatchedHeading}</div>
+                    <div class="dd-table">
+                        <lightning-datatable key-field="paymentId" data={unmatched}
+                            columns={unmatchedColumns} hide-checkbox-column>
+                        </lightning-datatable>
+                    </div>
+                </template>
+                <template lwc:if={allMatched}>
+                    <div class="dd-note dd-note_ok">
+                        Nothing unmatched. Every payment UAEDDS reported has a request behind it.
+                    </div>
+                </template>
+
+                <template lwc:if={hasMatched}>
+                    <div class="dd-section">
+                        <div class="dd-heading">Matched ({matchedCount})</div>
+                        <div class="dd-table">
+                            <lightning-datatable key-field="paymentId" data={matched}
+                                columns={matchedColumns} hide-checkbox-column>
+                            </lightning-datatable>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+        </div>
+    </div>
+</template>

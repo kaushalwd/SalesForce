@@ -1,0 +1,114 @@
+<template>
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open custom-modal">
+        <div class="slds-modal__container custom-container">
+    <template if:true={isSpinner}>
+      <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
+    <lightning-card title="Payment Details" icon-name="standard:payment_gateway">
+       <!-- Action slot in the header -->
+       <!--lightning-button 
+       slot="actions" 
+       label="Refresh" 
+       variant="brand" 
+       onclick={getPaymentDetails}>
+   </lightning-button-->
+    <div style="padding: 15px 20px!important;" class="card-body">
+        <lightning-layout horizontal-align="start" multiple-rows>
+            <lightning-layout-item size="5">
+
+            <lightning-combobox
+            name="SelectSalesOrder"
+            label="Select a Sales Order to Adjust Payment"
+            value={selectedValue}
+            placeholder="Select Unit"
+            options={options}
+            variant="label-hidden"
+            onchange={handleUnitChange}>
+        </lightning-combobox>
+        </lightning-layout-item>
+        <lightning-layout-item size="1"></lightning-layout-item>
+        <lightning-layout-item size="1"></lightning-layout-item>
+         <lightning-layout-item size="4">
+            <p class="outstandingCls">Remaining : {outstandingAmountToApply}</p>
+        </lightning-layout-item>
+
+        </lightning-layout>
+        <!--h2 class="slds-text-heading_medium slds-text-align_center slds-var-m-bottom_small">Payment Details <span style="float:right;margin-right:15px;font-size:20px">Remaining Amount : <b>{outstandingAmountToApply}</b></span></h2-->
+        <div style="overflow-x:auto;" class="table-container">
+            <div class="table-scroll">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-var-m-top_small payment-table">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col"><div class="slds-truncate">Installment Name</div></th>
+                            <th scope="col"><div class="slds-truncate">Milestone Number</div></th>
+                            <th scope="col"><div class="slds-truncate">Milestone Description</div></th>
+                            <th scope="col"><div class="slds-truncate">Milestone Date</div></th>
+                            <th scope="col"><div class="slds-truncate">Payment Status</div></th>
+                            <th scope="col"><div class="slds-truncate">Installment Amount</div></th>
+                            <th scope="col"><div class="slds-truncate">Installment Balance</div></th>
+                            <th scope="col"><div class="slds-truncate">Amount</div></th>
+                            <th scope="col"><div class="slds-truncate">Action</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={lstOfSOInstallments} for:item="installment">
+                            <tr key={installment.SOInstallmentId}>
+                                <td>{installment.Name}</td>
+                                <td>{installment.MilestoneNumber}</td>
+                                <td>{installment.MilestoneDescription}</td>
+                                <td>{installment.MilestoneDate}</td>
+                                <td>{installment.PaymentStatus}</td>
+                                <td>{installment.InstallmentAmount}</td>
+                                <td>{installment.outstandingAmount}</td>
+                                <td>
+                                    <lightning-input 
+                                        label="adjustedAmount"
+                                        value={installment.adjustmentAmount}
+                                        name={installment.SOInstallmentId}
+                                        onblur={handleFocusOut}
+                                        onchange={handleChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </td>
+                                <td>
+                                    <lightning-button 
+                                        data-row={installment.SOInstallmentId}
+                                        class="slds-m-left_x-small"
+                                        variant="brand"
+                                        onclick={applyBalanceAmount}
+                                        name="Create Payment"
+                                        disabled={installment.adjustPayment}
+                                        label="Payment">
+                                    </lightning-button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            
+    </div> 
+    <div>
+        <!--lightning-button style="float: right;" class="slds-m-right_x-small" variant="brand" onclick={getPaymentDetails} name="Refresh" label="Refresh">
+        </lightning-button-->
+    </div>
+    </div>
+    <!-- card footer -->
+     <!-- Footer Slot 
+        <div  style="float:right;padding:10px">
+            <lightning-button label="Refresh" class="slds-m-right_small" onclick={getPaymentDetails}></lightning-button>
+        </div>
+        <div class="slds-float_right">
+            <lightning-button label="Save" variant="brand" onclick={applyBalanceAmount} disabled={excessAmount}></lightning-button>
+        </div-->
+        <footer class="slds-modal__footer">
+            <button class="slds-button slds-button_neutral" onclick={closeModel}>Cancel</button>
+            <button class="slds-button slds-button_neutral" onclick={getPaymentDetails}>Refresh</button>
+         </footer>
+    </lightning-card>
+    <!-- modal footer start-->
+    
+    </div>
+    
+    </section>
+</template>

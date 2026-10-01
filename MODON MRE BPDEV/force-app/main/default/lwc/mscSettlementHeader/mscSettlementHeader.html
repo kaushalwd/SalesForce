@@ -1,0 +1,105 @@
+<template>
+    <template lwc:if={hasSettlement}>
+        <section class="settle">
+            <!-- 1.3: the confirmation first, one line at the top -->
+            <!-- 1.5: which booking and when -->
+            <!-- MSC-096: one line; collected is said under the figure; the reference counts the Sales Orders -->
+            <template lwc:if={showConfirmedStrip}>
+                <div class="settle__done">
+                    <c-modon-icon name={resumeIcon} size="15" color="var(--step-done, #16a34a)"></c-modon-icon>
+                    <p class="settle__done-head">
+                        <span class="settle__done-lead">{resumeLead}</span>
+                        <span class="settle__done-ref">{referenceText}</span>
+                        <template lwc:if={confirmedOnText}>
+                            <span class="settle__done-on">{confirmedOnText}</span>
+                        </template>
+                    </p>
+                </div>
+            </template>
+
+            <!-- tier 1: the one number. 1.10 / MSC-098b: Continue to Verification beside it once confirmed. -->
+            <div class="settle__hero">
+                <div class="settle__hero-main">
+                    <p class="field__label settle__lbl">
+                        <template lwc:if={markClass}>
+                            <span class={markClass} aria-hidden="true"></span>
+                        </template>
+                        <span>{headlineLabel}</span>
+                    </p>
+                    <template lwc:if={headlineFigure}>
+                        <p class={figureClass}>{headlineFigure}</p>
+                    </template>
+                    <template lwc:if={headlineSub}>
+                        <p class="settle__sub">{headlineSub}</p>
+                    </template>
+                </div>
+                <template lwc:if={showAdvance}>
+                    <button class="btn btn-primary btn-sm settle__adv" type="button" onclick={handleAdvance}>
+                        <span>{labels.ADVANCE_CTA}</span>
+                        <c-modon-icon name="arrow-right" size="13" color="currentColor"></c-modon-icon>
+                    </button>
+                </template>
+            </div>
+
+            <!-- MSC-096: one segment per closing payment; money only -->
+            <template lwc:if={showProgress}>
+                <div class="settle__ticks" role="img" aria-label={progressLabel}>
+                    <template for:each={progressTicks} for:item="t">
+                        <span key={t.key} class={t.cls}></span>
+                    </template>
+                </div>
+                <p class="settle__prog">{progressText}</p>
+            </template>
+
+            <!-- tier 2: the two legs of SalesTeamVoidCheck__c -->
+            <template lwc:if={legs.length}>
+                <ul class="legs">
+                    <template for:each={legs} for:item="l">
+                        <li key={l.key} class="leg">
+                            <div class="leg__row">
+                                <span class="leg__name">{l.label}</span>
+                                <span class={l.chipClass}>{l.chipLabel}</span>
+                                <span class={l.figureClass}>{l.figure}</span>
+                            </div>
+                            <template lwc:if={l.note}>
+                                <p class="leg__note">{l.note}</p>
+                            </template>
+                            <template lwc:if={l.showBar}>
+                                <div class="leg__track">
+                                    <div class="leg__fill" style={l.barStyle}></div>
+                                </div>
+                            </template>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- MSC-231: the EOI deposits, with the rest of the money. Pre-Confirm the rows
+                 come from the journey's assignment (chip "On confirm"); after, from the
+                 receipts the org engine actually linked (chip "Applied"). -->
+            <template lwc:if={deposits.length}>
+                <ul class="legs legs--deposits">
+                    <template for:each={deposits} for:item="d">
+                        <li key={d.key} class="leg">
+                            <div class="leg__row">
+                                <span class="leg__name">{d.label}</span>
+                                <template lwc:if={d.sub}>
+                                    <span class="leg__unit">{d.sub}</span>
+                                </template>
+                                <span class={d.chipClass}>{d.chipLabel}</span>
+                                <template lwc:if={d.canChange}>
+                                    <button class="leg__chg" type="button" data-unit={d.unitId} onclick={handleDepositChange}>Change</button>
+                                </template>
+                                <span class="leg__fig leg__fig--deposit">{d.figure}</span>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <template lwc:if={showFootnote}>
+                <p class="settle__est">{footnote}</p>
+            </template>
+        </section>
+    </template>
+</template>

@@ -1,0 +1,190 @@
+@import "c/mscStyles";
+
+/*
+  Grey base, one muted rule on the left. The MODON console marks a section's
+  state with an edge, not with a coloured panel, so this reuses the --edge-*
+  tokens (alpha 0.34-0.46) rather than the saturated --chip-* ones. Nothing in
+  here is a banner, and there is no success card.
+*/
+
+:host {
+    display: block;
+}
+
+.kycg {
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-left: 2px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* The only three states the edge distinguishes. Muted throughout: verified is a
+   quiet green rule, anything outstanding is amber, and "not started" is not a
+   problem yet, so it stays grey. */
+.kycg--ok {
+    border-left-color: var(--edge-green, rgba(74, 222, 128, 0.34));
+}
+.kycg--warn {
+    border-left-color: var(--edge-amber, rgba(251, 191, 36, 0.44));
+}
+.kycg--idle {
+    border-left-color: var(--gold, #a8a8a8);
+}
+
+/* Uppercase and tracked - the state marker treatment the rail and the verify
+   gate already use, so this reads as part of the console and not as a new idea. */
+.kycg__status {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+.kycg--ok .kycg__status {
+    color: var(--chip-green, #4ade80);
+}
+.kycg--warn .kycg__status {
+    color: var(--chip-amber, #fbbf24);
+}
+
+.kycg__body {
+    margin: 4px 0 0;
+    max-width: 52ch;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text, #fafafa);
+}
+
+/* A plain list. No icons, no badges - the names are the content. */
+.kycg__docs {
+    margin: 8px 0 0;
+    padding: 0 0 0 16px;
+    list-style: disc;
+}
+.kycg__doc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* Deliberately the quietest line in the panel. */
+.kycg__advisory {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/*
+  Phase 3 additions. The panel gained a subject and three controls and must not
+  gain any visual weight: the buttons are the console's ghost treatment, the new
+  lines are the existing muted greys, and there is still no banner and no card.
+*/
+
+/* Who is being verified - for a company, the authorised POA. Sits directly under
+   the status word because "whose KYC is this" is read before "what state is it". */
+.kycg__subject {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* When the link went out. Quieter than the body: it is context, not the message. */
+.kycg__sent,
+.kycg__notice {
+    margin: 6px 0 0;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* MODON's own refusal. No panel: the edge already carries the state.
+   3.15 - R2-15: muted text with a thin amber rule, not bright amber text. */
+.kycg__blocked {
+    margin: 6px 0 0;
+    max-width: 52ch;
+    padding-left: 8px;
+    border-left: 2px solid var(--edge-amber, rgba(251, 191, 36, 0.44));
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.kycg__problem {
+    margin: 6px 0 0;
+    max-width: 52ch;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--chip-red, #f87171);
+}
+
+/* 3.9 - the digital link, set apart from the manual message: a hairline, a small label, the
+   link's state in dim text, the one button pushed to the end of the row */
+.kycg__link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+}
+.kycg__linklabel {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+.kycg__linkstate {
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+.kycg__linkbtn {
+    margin-left: auto;
+}
+
+.kycg__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* Ghost by default. Even the primary action is only a slightly firmer border -
+   a filled button here would outweigh the step's own Continue. */
+.kycg__btn {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: var(--text, #fafafa);
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.kycg__btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+}
+.kycg__btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.kycg__btn--go {
+    border-color: var(--text-muted, #a3a3a3);
+}
+/* 3.7 - the manual route: the same control as its neighbours so the row reads as one set,
+   two steps quieter. No border and muted text carry "this is the exception", which is how the
+   rest of the console separates a secondary action; the 11px underlined link it replaces said
+   the same thing by being smaller, which read as a mistake and gave nothing to aim at. */
+/* 3.15 - R2-15: it keeps the ghost border so it reads as a button; only the text is quieter. */
+.kycg__btn--quiet {
+    color: var(--text-muted, #a3a3a3);
+}
+.kycg__btn--quiet:hover:not(:disabled) {
+    color: var(--text, #fafafa);
+}
+/* 3.7 - the request form, under the row whose button opens it. */
+.kycg__manual {
+    margin-top: 10px;
+}

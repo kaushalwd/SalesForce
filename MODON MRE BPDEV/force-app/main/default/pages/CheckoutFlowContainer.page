@@ -1,0 +1,144 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false"
+           applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Payment</title>
+    <style>
+        html, body { margin: 0; padding: 0; background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        #wrap { padding: 0; }
+        #cko-status { font-size: 13px; color: #5a5a5a; padding: 8px 4px; }
+        #cko-status.error { color: #b3261e; }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <div id="flow-container"></div>
+        <div id="cko-status">Loading secure payment…</div>
+    </div>
+
+    <!--
+      Generic embedded Checkout Flow container. The parent frame posts a "checkout-init"
+      message with { publicKey, environment, paymentSession }; this page mounts Flow and posts
+      "checkout-result" back. Not EOI-specific, so the portal / public sites can reuse it.
+    -->
+    <script type="module">
+        const SF_ORIGIN = /(\.force\.com|\.salesforce\.com|\.visualforce\.com|\.site\.com)$/;
+        const statusEl = document.getElementById('cko-status');
+        let initialised = false;
+
+        function setStatus(text, isError) {
+            statusEl.textContent = text || '';
+            statusEl.className = isError ? 'error' : '';
+        }
+
+        function toParent(payload) {
+            // Parent is a Salesforce origin; it validates the message shape on receipt.
+            window.parent.postMessage(payload, '*');
+        }
+
+        /*
+          MEOI-FRAME (11 Sep 2026). A redirect return - a 3-D Secure step finishing - now
+          lands HERE rather than on the site page, because Checkout navigates the frame the
+          card form is in, and a site-page return URL loaded the whole microsite inside its
+          own card box. Nothing existing sends a "result" parameter, so this branch is
+          unreachable for every caller that mounts the card form the normal way.
+        */
+        const RETURN_PARAMS = new URLSearchParams(window.location.search || '');
+        const REDIRECT_RESULT = RETURN_PARAMS.get('result');
+
+        function handleRedirectReturn() {
+            const ref = RETURN_PARAMS.get('ref') || '';
+            const path = RETURN_PARAMS.get('path') || '';
+            const outcome = REDIRECT_RESULT === 'success' ? 'completed' : 'failed';
+            if (window.parent && window.parent !== window) {
+                // the normal case: hand the outcome to the page that owns this frame
+                setStatus('');
+                toParent({ type: 'checkout-result', outcome: outcome, via: 'redirect', reference: ref });
+                return;
+            }
+            // Checkout took the WHOLE browser rather than the frame. Forward to the site
+            // page so its existing return leg runs, exactly as the hosted rail does.
+            // A path only, never a host: this can never redirect off our own origin.
+            if (/^\/[^\/\\:]/.test(path)) {
+                window.location.replace(window.location.origin + path
+                    + '?paymentResult=' + (REDIRECT_RESULT === 'success' ? 'success' : 'failed')
+                    + '&ref=' + encodeURIComponent(ref));
+                return;
+            }
+            setStatus('Payment finished. Please return to the registration page.', false);
+        }
+
+        window.addEventListener('message', async (event) => {
+            let host = '';
+            try { host = new URL(event.origin).hostname; } catch (e) { return; }
+            if (!SF_ORIGIN.test(host)) return;
+
+            const data = event.data || {};
+            if (data.type !== 'checkout-init' || initialised) return;
+            initialised = true;
+
+            try {
+                // Classic script-tag load: the SDK CDN serves no CORS headers, so a
+                // cross-origin module import() can never resolve - the documented
+                // integration is the script tag defining a global.
+                await new Promise((resolve, reject) => {
+                    if (window.CheckoutWebComponents || window.loadCheckoutWebComponents) { resolve(); return; }
+                    const s = document.createElement('script');
+                    s.src = 'https://checkout-web-components.checkout.com/index.js';
+                    s.onload = resolve;
+                    s.onerror = () => reject(new Error('The payment library could not be loaded.'));
+                    document.head.appendChild(s);
+                });
+                const loadCheckoutWebComponents = window.CheckoutWebComponents || window.loadCheckoutWebComponents;
+                const checkout = await loadCheckoutWebComponents({
+                    publicKey: data.publicKey,
+                    environment: data.environment || 'sandbox',
+                    paymentSession: data.paymentSession,
+                    onPaymentCompleted: (_component, paymentResponse) => {
+                        toParent({ type: 'checkout-result', outcome: 'completed', paymentId: paymentResponse && paymentResponse.id });
+                    },
+                    onError: (_component, error) => {
+                        setStatus((error && error.message) || 'Payment could not be completed.', true);
+                        toParent({ type: 'checkout-result', outcome: 'error', message: (error && error.message) || 'Payment error' });
+                    }
+                });
+                const flow = checkout.create('flow');
+                flow.mount('#flow-container');
+                setStatus('');
+                // Report rendered height so the parent can size the frame snugly
+                // (checkout-size). ResizeObserver tracks accordion open/close too.
+                const container = document.getElementById('flow-container');
+                let lastH = 0;
+                const report = () => {
+                    const h = Math.ceil(document.body.scrollHeight);
+                    if (h > 0 && Math.abs(h - lastH) > 4) {
+                        lastH = h;
+                        toParent({ type: 'checkout-size', height: h });
+                    }
+                };
+                try {
+                    new ResizeObserver(report).observe(container);
+                } catch (roErr) { /* older browsers keep the fixed height */ }
+                setTimeout(report, 400);
+                setTimeout(report, 1500);
+            } catch (e) {
+                setStatus((e && e.message) ? e.message : 'Unable to load payment.', true);
+                toParent({ type: 'checkout-result', outcome: 'error', message: (e && e.message) ? e.message : String(e) });
+            }
+        });
+
+        if (REDIRECT_RESULT) {
+            // never mount Flow on a return load: `initialised` also makes the message
+            // listener above a no-op, so a stray checkout-init cannot start a second form
+            initialised = true;
+            handleRedirectReturn();
+        } else {
+            // Signal the parent that we're ready to receive the session.
+            toParent({ type: 'checkout-ready' });
+        }
+    </script>
+</body>
+</html>
+</apex:page>

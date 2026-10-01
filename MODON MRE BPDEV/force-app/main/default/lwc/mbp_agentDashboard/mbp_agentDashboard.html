@@ -1,0 +1,311 @@
+<template>
+  <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+  <main class="dashboard-container">
+
+    <!-- Filter Row -->
+    <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+   <div class="filter-wrapper"> 
+    <!-- Sticky filter icon -->
+    <img src={filterIcon} alt="Filter" class="filter-icon" onclick={toggleFilterBox} />
+
+    <!-- Floating filter box -->
+    <div class={filterBoxClass} onmousedown={stopEvent}>
+        <button class="filter-close-btn" onclick={closeFilterBox} title="Close" aria-label="Close filters">✕</button>
+        <b>Custom Filters</b>
+       
+  
+         <!-- <lightning-button 
+        label="Export Dashboard as PDF" 
+        onclick={exportAllCharts} 
+        class="slds-m-around_medium">
+    </lightning-button> -->
+   
+        <lightning-combobox
+            name="filter"
+            value={selectedFilter}
+            placeholder="Select Filter"
+            options={filterOptions}
+            onchange={handleFilterChange}
+            class="placeholder mb-1">
+        </lightning-combobox>
+
+        <!-- Custom Date Pickers (only when "Custom" selected) -->
+        <template if:true={showCustomDates}>
+            <input type="date" value={customStartDate} onchange={handleStartDateChange} class="date-field placeholder" />
+            <input type="date" value={customEndDate} onchange={handleEndDateChange} class="date-field placeholder" />
+        </template>
+
+       <div class="button-row filter-buttons">            
+            <button class="reset-btn" onclick={resetFilters}>Reset</button>
+            <button class="apply-btn" onclick={applyFilters}>Apply Filters</button>
+        </div>
+    </div>
+</div>
+
+
+
+   
+    <div class="row header-row align-items-center mb-4">
+      <!-- <div class="col-md-3">
+      
+      </div> -->
+
+      <div class="col-md-12">       
+        <div class="row">
+          <div class="col-md-3">
+              <div class="profile-panel">
+                <label for="label" class="section-title">Welcome <b>{loggedInUserName}!!</b></label>
+                <img src={userPhotoUrl} alt="Agent" class="profile-photo" />
+                <!-- <div class="fbold mt-4 text-center">{agencyName}</div> -->
+                <!--<div class="titleclassification mt-4">{accountClassification}</div>-->
+                <div class="classification">Journey to Excellence</div>
+              </div>
+          </div>
+
+
+          
+          <div class="col-md-3">
+             <div class="card-container">
+             
+              
+            
+                <br>
+                <div class="card-body">
+
+                      <center>
+                 <b><span class="text-white">Total Sales Amount</span></b>
+               
+               <div class="total-sales">AED {formattedTotalSales}</div>
+<div class="salesmaount">(AED {formattedTotalSales1})</div>
+                </center>
+              </div>
+               
+              
+            </div>
+          </div>
+
+
+
+          <div class="col-md-6">
+             <div class="chart-container panel">
+              <div class="y-axis-label-vertical">Sum of Total Amount (AED)</div>
+              <div class="chart-wrapper">
+                <div class="y-axis">
+                  <template for:each={yAxisTicks} for:item="tick">
+                    <div key={tick.label} class="y-axis-tick" style={tick.style}>
+                      <div class="y-axis-line"></div>
+                      <div class="y-axis-label">{tick.label}</div>
+                    </div>
+                  </template>
+                </div>
+                <div class="chart">
+                  <div class="bars">
+                    <template for:each={monthsData} for:item="month">
+                      <div key={month.name} class="bar-group">
+                        <div class="bar" style={month.barStyle} title={month.name}>
+                          <template for:each={month.stacks} for:item="stack">
+                            <div key={stack.name} class="stack" style={stack.style} title={stack.title}></div>
+                          </template>
+                        </div>
+                        <div class="x-axis-label">{month.label}</div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <div class="legend">
+                <template for:each={legendData} for:item="item">
+                  <div key={item.name} class="legend-item">
+                    <div class="color-box" style={item.colorStyle}></div>
+                    <div>{item.name}</div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+         
+
+   
+         
+            <div class="col-md-3">
+           <c-mbp_dynamic-chart 
+              chart-title="Lead & Opportunity Overview" 
+              chart-type="doughnut" 
+              labels={leadOppLabels} 
+              values={leadOppValues} 
+              colors={leadOppColors} 
+              sales-mode="count">
+          </c-mbp_dynamic-chart>
+
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Units by Project" chart-type="doughnut"
+              labels={projectLabels} values={unitCounts} colors={projectColors}
+              show-details="true" sales-mode="count">
+            </c-mbp_dynamic-chart>
+          </div>
+          
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Sales by Project" chart-type="doughnut"
+              labels={projectLabels} values={totalSales} colors={projectColors}
+              show-details="true" sales-mode="price">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Units by Nationality (Residential)" chart-type="doughnut"
+              labels={nationalityLabels} values={nationalityUnitCounts} colors={nationalityColors}
+              show-details="true" sales-mode="count">
+            </c-mbp_dynamic-chart>
+          </div>
+
+         
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Sales by Nationality (Residential)" chart-type="doughnut"
+              labels={nationalityLabels} values={nationalitySales} colors={nationalityColors}
+              show-details="true" sales-mode="price">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Units by Nationality (All)" chart-type="doughnut"
+              labels={nationalityLabels} values={nationalityUnitCounts} colors={nationalityColors}
+              show-details="true" sales-mode="count">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Sales by Nationality (All)" chart-type="doughnut"
+              labels={nationalityLabels} values={nationalitySales} colors={nationalityColors}
+              show-details="true" sales-mode="price">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Units by No of Bedrooms" chart-type="doughnut"
+              labels={bedroomLabels} values={bedroomUnitCounts} colors={bedroomColors}
+              show-details="true" sales-mode="count">
+            </c-mbp_dynamic-chart>
+          </div>
+
+          
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Sales by No of Bedrooms" chart-type="doughnut"
+              labels={bedroomLabels} values={bedroomSales} colors={bedroomColors}
+              show-details="true" sales-mode="price">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Units by Residence" chart-type="doughnut"
+              labels={residencyLabels} values={residencyUnitCounts} colors={residencyColors}
+              show-details="true" sales-mode="count">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Sales by Residence" chart-type="doughnut"
+              labels={residencyLabels} values={residencySales} colors={residencyColors}
+              show-details="true" sales-mode="price">
+            </c-mbp_dynamic-chart>
+          </div>
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Units by Project-Classification-Bedrooms" chart-type="doughnut"
+              labels={unitBedLabels} values={unitBedCounts} colors={unitBedColors}
+              show-details="true" sales-mode="count">
+            </c-mbp_dynamic-chart>
+          </div>
+
+         
+          <div class="col-md-3">
+            <c-mbp_dynamic-chart chart-title="Sales by Project-Classification-Bedrooms" chart-type="doughnut"
+              labels={unitBedLabels} values={unitBedSales} colors={unitBedColors}
+              show-details="true" sales-mode="price">
+            </c-mbp_dynamic-chart>
+          </div>
+        
+          <div class="col-md-3">
+        
+          </div>
+         
+   
+       
+
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+   
+<br>
+<br>
+
+
+
+
+
+
+
+
+    <!-- Calendar + Events -->
+    <!-- <div class="col-md-12">
+      <div class="row calendar-row">
+        <div class="col-md-6">
+          <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-2"></div>
+            
+          </div>
+          <div class="col-md-12">
+            <div class="card panel-card">
+              <div class="card-header fbold">Upcoming Events</div>
+              <div class="card-body p-0">
+                <template if:true={hasUpcomingEvents}>
+                  <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                      <thead>
+                        <tr>
+                          <th scope="col">Date</th>
+                          <th scope="col">Event</th>
+                          <th scope="col">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template for:each={upcomingEvents} for:item="event">
+                          <tr key={event.id}>
+                            <td><small>{event.formattedDate}</small></td>
+                            <td>
+                              <div class="event-title">{event.title}</div>
+                              <small if:true={event.location} class="text-muted">{event.location}</small>
+                            </td>
+                            <td><span class="badge bg-primary">{event.type}</span></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="card-footer bg-transparent text-end">
+                    <a href="#" onclick={navigateToUpdates}>View More</a>
+                  </div>
+                </template>
+                <template if:false={hasUpcomingEvents}>
+                  <div class="text-center p-4">
+                    <lightning-icon icon-name="utility:event" size="medium" class="text-muted mb-2"></lightning-icon>
+                    <p class="text-muted mb-0">No upcoming events scheduled</p>
+                    <small class="text-muted">Check back later for new events</small>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Create Lead -->
+    <div class="mt-3">
+     
+        <button class="createlead btn btn-primary" onclick={handleCreateLead}>+ Create Lead</button>
+      
+    </div>
+
+  </main>
+</template>

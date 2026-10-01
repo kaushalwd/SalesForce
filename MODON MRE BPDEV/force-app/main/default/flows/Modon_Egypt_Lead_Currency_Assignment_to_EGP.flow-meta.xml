@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>This will assign the lead currency to EGP</description>
+        <name>Assign_Lead_Currency_to_EGP</name>
+        <label>Assign Lead Currency to EGP</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.CurrencyIsoCode</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>EGP</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description>This flow will assign the currency of lead to EGP when created with Lead source &apos;Webform - Egypt Website&apos; OR Source Entity &apos;Modon - Egypt&apos;</description>
+    <environments>Default</environments>
+    <interviewLabel>Modon Egypt Lead Currency Assignment to EGP {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Modon Egypt Lead Currency Assignment to EGP</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Assign_Lead_Currency_to_EGP</targetReference>
+        </connector>
+        <filterLogic>or</filterLogic>
+        <filters>
+            <field>LeadSource</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Webform - Egypt Website</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Source_Entity__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Modon - Egypt</stringValue>
+            </value>
+        </filters>
+        <object>Lead</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

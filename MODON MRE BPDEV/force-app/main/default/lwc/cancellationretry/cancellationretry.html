@@ -1,0 +1,50 @@
+<template>
+    <lightning-card title="Retry Sync Process" icon-name="utility:refresh">
+
+        <div class="slds-p-around_medium">
+
+            <p class="slds-m-bottom_small slds-text-body_regular">
+                Click the button below to re-process all failed invoices, receipts,
+                and allocations stored in <strong>SR_Sync_Ids__c</strong> for this
+                Service Request.
+            </p>
+
+            <!-- ── Spinner: visible while launching or batch is running ── -->
+            <template if:true={isLoading}>
+                <div class="spinner-container slds-m-vertical_medium">
+                    <lightning-spinner
+                        alternative-text={spinnerLabel}
+                        size="medium">
+                    </lightning-spinner>
+                    <p class="slds-m-top_large slds-text-align_center slds-text-color_weak spinner-label">
+                        {spinnerLabel}
+                    </p>
+                </div>
+            </template>
+
+            <!-- ── Retry button: disabled while loading ── -->
+            <lightning-button
+                label="Retry Sync"
+                title="Retry Sync"
+                icon-name="utility:refresh"
+                variant="brand"
+                disabled={isLoading}
+                onclick={handleRetry}>
+            </lightning-button>
+
+            <!-- ── Result status box: shown after batch completes ── -->
+            <template if:true={showStatus}>
+                <div class={statusBoxClass}>
+                    <lightning-icon
+                        icon-name={statusIcon}
+                        size="small"
+                        class="slds-m-right_x-small">
+                    </lightning-icon>
+                    <span class="slds-text-body_regular">{statusMessage}</span>
+                </div>
+            </template>
+
+        </div>
+
+    </lightning-card>
+</template>

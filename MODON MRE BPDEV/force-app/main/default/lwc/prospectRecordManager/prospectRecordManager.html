@@ -1,0 +1,245 @@
+<!--
+  @description       : 
+  @author            : Krishna Chaitanya
+  @group             : 
+  @last modified on  : 05-08-2026
+  @last modified by  : Krishna Chaitanya
+-->
+<template>
+
+  <div>
+<template if:true={isSaving}>
+
+    <lightning-spinner
+        alternative-text="Saving"
+        size="small">
+    </lightning-spinner>
+
+</template>
+    <!-- TYPE -->
+    <div class="slds-p-bottom_medium">
+
+      <lightning-combobox
+        label="Type"
+        value={selectedType}
+        options={typeOptions}
+        onchange={handleTypeChange}
+        disabled={disableFullScreen}>
+      </lightning-combobox>
+
+    </div>
+
+    <!-- EXISTING ORG + CONTACT -->
+    <template if:true={showExistingOrgContactError}>
+
+      <div class="slds-text-color_error slds-p-bottom_small">
+
+        Org Account and Contact already added for this SR
+
+      </div>
+
+    </template>
+
+    <!-- ORG ERROR -->
+    <template if:true={showOrgError}>
+
+      <div class="slds-text-color_error slds-p-bottom_small">
+
+        Create Org Account first
+
+      </div>
+
+    </template>
+
+    <template if:false={disableFullScreen}>
+
+      <!-- SEARCH -->
+      <div class="slds-box slds-theme_default">
+
+        <div class="slds-grid slds-wrap slds-gutters">
+
+          <div class="slds-col slds-size_1-of-2">
+
+            <lightning-input
+                label="Name"
+                value={searchName}
+                data-field="searchName"
+                onchange={handleSearchInput}
+                required>
+            </lightning-input>
+
+          </div>
+
+          <div class="slds-col slds-size_1-of-2">
+
+            <lightning-input
+              label="Email"
+              value={searchEmail}
+              data-field="searchEmail"
+              onchange={handleSearchInput}
+              required>
+          </lightning-input>
+
+          </div>
+
+          <div class="slds-col slds-size_1-of-2">
+
+            <lightning-input
+              label="Phone"
+              value={searchPhone}
+              data-field="searchPhone"
+              onchange={handleSearchInput}>
+            </lightning-input>
+
+          </div>
+
+          <div class="slds-col slds-size_1-of-2">
+
+            <lightning-input
+              label="EID"
+              value={searchEid}
+              data-field="searchEid"
+              onchange={handleSearchInput}>
+            </lightning-input>
+
+          </div>
+
+          <div class="slds-col slds-size_1-of-2">
+
+            <lightning-input
+              label="Passport"
+              value={searchPassport}
+              data-field="searchPassport"
+              onchange={handleSearchInput}>
+            </lightning-input>
+
+          </div>
+
+        </div>
+
+        <div class="slds-p-top_medium">
+
+          <lightning-button
+            label="Search"
+            variant="brand"
+            onclick={handleSearchClick}>
+          </lightning-button>
+
+        </div>
+
+      </div>
+
+      <!-- RESULTS -->
+      <template if:true={showCandidates}>
+
+        <div class="slds-p-top_medium">
+
+          <lightning-datatable
+            key-field="rowId"
+            data={candidates}
+            columns={columns}
+            max-row-selection="1"
+            onrowselection={handleRowSelection}>
+          </lightning-datatable>
+
+        </div>
+
+      </template>
+
+      <!-- FORM -->
+      <div class="slds-p-top_large">
+
+        <lightning-record-edit-form
+          object-api-name="Prospect_Account__c"
+          onsubmit={handleSubmit}
+          onsuccess={handleSuccess}
+          onerror={handleError}>
+
+          <div class="slds-box slds-theme_default">
+
+            <div class="slds-grid slds-wrap slds-gutters">
+
+              <div class="slds-col slds-size_1-of-2">
+
+                <lightning-input-field
+                  field-name="IsPersonAccount__c"
+                  value={isPersonValue}
+                  disabled>
+                </lightning-input-field>
+
+              </div>
+
+              <div class="slds-col slds-size_1-of-2">
+
+                <lightning-input-field
+                  field-name="Is_Primary__c"
+                  value={isPrimaryValue}
+                  disabled={disablePrimary}>
+                </lightning-input-field>
+
+              </div>
+
+              <template if:true={showParentProspect}>
+
+                <div class="slds-col slds-size_1-of-1">
+
+                  <lightning-input-field
+                    field-name="Prospect_Account__c"
+                    value={parentProspectId}
+                    disabled>
+                  </lightning-input-field>
+
+                </div>
+
+              </template>
+
+              <template if:true={showOwnership}>
+
+                <div class="slds-col slds-size_1-of-1">
+
+                  <lightning-input-field
+                    field-name="OwnershipPercentage__c"
+                    required>
+                  </lightning-input-field>
+
+                </div>
+
+              </template>
+
+              <template if:true={showRelationshipSubType}>
+
+                  <div class="slds-col slds-size_1-of-1">
+
+                      <lightning-input-field
+                          field-name="RelationshipSubType__c"
+                          required>
+                      </lightning-input-field>
+
+                  </div>
+
+              </template>
+
+            </div>
+
+            <div class="slds-p-top_medium">
+
+              <lightning-button
+    type="submit"
+    label={saveLabel}
+    variant="brand"
+    disabled={disableSaveButton}>
+</lightning-button>
+
+            </div>
+
+          </div>
+
+        </lightning-record-edit-form>
+
+      </div>
+
+    </template>
+
+  </div>
+
+</template>

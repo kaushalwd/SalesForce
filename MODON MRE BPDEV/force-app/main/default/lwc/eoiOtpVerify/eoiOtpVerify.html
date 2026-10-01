@@ -1,0 +1,53 @@
+<template>
+    <template lwc:if={showChannelChoice}>
+        <p class="m-sub">{subLine}</p>
+    </template>
+
+    <template lwc:if={errorMessage}>
+        <p class="error" role="alert">{errorMessage}</p>
+    </template>
+
+    <!-- MEOI-A7. Email / SMS is the same segmented control as Resident / Non-Resident,
+         full width; the masked destination reads on its own line beneath it. -->
+    <template lwc:if={showChannelChoice}>
+        <p class="m-label">Send my code by</p>
+        <div class="m-seg" role="group" aria-label="Verification channel">
+            <button class={emailChannelClass} data-value="Email" aria-pressed={emailSelected} onclick={selectChannel} disabled={channelSwitchDisabled} type="button">Email</button>
+            <button class={smsChannelClass} data-value="SMS" aria-pressed={smsSelected} onclick={selectChannel} disabled={channelSwitchDisabled} type="button">SMS</button>
+        </div>
+    </template>
+    <template lwc:if={destinationValue}>
+        <p class="m-dest">{destinationLead} <b>{destinationValue}</b></p>
+    </template>
+
+    <template lwc:if={hasRequest}>
+        <div class="m-field"><label for="otp">Verification code</label></div>
+        <div class="m-otpwrap">
+            <div class="m-otp" aria-hidden="true">
+                <template for:each={otpCells} for:item="c">
+                    <span key={c.i} class={c.cls}>{c.ch}</span>
+                </template>
+            </div>
+            <input
+                id="otp"
+                class="code-input"
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                aria-label="Verification code"
+                oninput={handleCode}
+                onkeydown={handleCodeKeydown}
+            />
+        </div>
+        <p class="m-resend">Didn&rsquo;t receive it? <button class="m-resend__btn" type="button" onclick={handleResend} disabled={resendDisabled}>{resendLabel}</button></p>
+        <button class="m-btn submit" type="button" onclick={handleVerify} disabled={isBusy}>
+            Verify <span class="arr" aria-hidden="true">&#10230;</span>
+        </button>
+    </template>
+    <template lwc:else>
+        <button class="m-btn submit" type="button" onclick={handleSend} disabled={isBusy}>
+            Send code <span class="arr" aria-hidden="true">&#10230;</span>
+        </button>
+    </template>
+</template>

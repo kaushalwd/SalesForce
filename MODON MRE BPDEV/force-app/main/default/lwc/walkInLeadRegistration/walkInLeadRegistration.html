@@ -1,0 +1,308 @@
+<template>
+    <div class="container" style={backgroundStyle}>
+        <!-- Custom Toast -->
+        <template if:true={showToast}>
+            <div class={toastClass}>
+                <span>{toastMessage}</span>
+            </div>
+        </template>
+        <!-- Fixed Header with Logo -->
+        <header class="header">
+            <img src={logoUrl} alt="Logo" class="logo" />
+            <h2>Walk‑in Registration</h2>
+        </header>
+
+        <!-- Spacer under header -->
+        <div class="header-spacer"></div>
+        <div class="main-column">
+            <!-- Tabs / Buttons -->
+            <div class="tabs">
+                <button class={directClass} onclick={showDirectCustomer}>
+                    <div class="button-content">
+                        <lightning-icon icon-name="utility:adduser" size="small"></lightning-icon>
+                        <span>New Customer</span>
+                    </div>
+                </button>
+                <button class={existingLeadClass} onclick={showExistingLead}>
+                    <div class="button-content">
+                        <lightning-icon icon-name="utility:lead" size="small"></lightning-icon>
+                        <span>Existing Lead<br>without Appointment</span>
+                    </div>
+                </button>
+                <button class={existingBrokerClass} onclick={showExistingBroker}>
+                    <div class="button-content">
+                        <lightning-icon icon-name="utility:advertising" size="small"></lightning-icon>
+                        <span>Existing Broker<br>without Appointment</span>
+                    </div>
+                </button>
+                <button class={brokerClass} onclick={showBroker}>
+                    <div class="button-content">
+                        <lightning-icon icon-name="utility:buyer_group_qualifier" size="small"></lightning-icon>
+                        <span>New Customer<br>with Broker</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <main class="content-wrapper">
+                <!-- DIRECT CUSTOMER FORM  -->
+                <template if:true={isBroker}>
+                    <div class="form-box">
+                        <div class="form-grid">
+                            <div class="form-column">
+                                <lightning-input label="First Name" name="firstName" value={firstName}
+                                    onchange={handleChange} required disabled={isSubmitting}></lightning-input>
+                            </div>
+                            <div class="form-column">
+                                <lightning-input label="Last Name" name="lastName" value={lastName}
+                                    onchange={handleChange} required disabled={isSubmitting}></lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-column"> 
+                                <lightning-input label="Email" name="email" value={email} onchange={handleChange}
+                                    required disabled={isSubmitting}></lightning-input>
+                            </div>
+                            <div class="form-column">
+                               <!-- <div class="phone-group"> -->
+                                   <!-- <lightning-combobox label="Code" name="countryCode" value={countryCode}
+                                        options={countryCodeOptions} onchange={handleChange}
+                                        disabled={isSubmitting}></lightning-combobox>-->
+                                    <lightning-input label="Phone" name="phone" type="tel" value={phone}
+                                        onchange={handleChange} required disabled={isSubmitting}></lightning-input>
+                              <!--  </div> -->
+                            </div>
+                        </div>
+
+                        <!-- Broker Agency Lookup -->
+                        <div class="broker-lookup">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                                <lightning-input label="Broker Agency" name="brokerAgencySearch"
+                                    value={brokerAgencySearchTerm} onchange={handleBrokerAgencySearch}
+                                    placeholder="Search for Broker Agency..." disabled={isSubmitting}>
+                                </lightning-input>
+                            </div>
+
+                            <template if:true={selectedBrokerAgency}>
+                                <div class="result-card selected">
+                                    <p><strong>{selectedBrokerAgency.Name}</strong></p>
+                                    <button class="clear-button" onclick={clearBrokerAgency} disabled={isSubmitting}>
+                                        <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                        <!-- Clear -->
+                                    </button>
+                                </div>
+
+                                <!-- Broker Contacts Section -->
+                                <div class="contacts-section">
+                                    <h3>Broker Contacts</h3>
+                                    <div class="contacts-list">
+                                        <template if:true={brokerContacts.length}>
+                                            <template for:each={brokerContacts} for:item="contact">
+                                                <div key={contact.Id} class="contact-card" data-id={contact.Id}
+                                                    onclick={selectBrokerContact}>
+                                                    <div class="contact-info">
+                                                        <p><strong>{contact.Name}</strong></p>
+                                                        <p>Email: {contact.Email}</p>
+                                                        <p>Phone: {contact.Phone}</p>
+                                                        <p>Title: {contact.Title}</p>
+                                                    </div>
+                                                    <div class="contact-selection">
+                                                        <template if:true={contact.isSelected}>
+                                                            <lightning-icon icon-name="utility:check" size="small"
+                                                                class="selected-icon"></lightning-icon>
+                                                            <span>Selected</span>
+                                                        </template>
+                                                        <template if:false={contact.isSelected}>
+                                                            <lightning-button label="Select" variant="brand"
+                                                                size="small"></lightning-button>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </template>
+                                        <template if:false={brokerContacts.length}>
+                                            <div class="no-contacts">
+                                                <p>No contacts found for this broker agency.</p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template if:false={selectedBrokerAgency}>
+                                <template for:each={brokerAgencyResults} for:item="brokerAgency">
+                                    <div key={brokerAgency.Id} class="result-card" data-id={brokerAgency.Id}
+                                        onclick={selectBrokerAgency}>
+                                        <p><strong>{brokerAgency.Name}</strong></p>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+
+                        <lightning-radio-group label="Do you have an appointment?" name="appointment"
+                            options={appointmentOptions} value={appointment} type="radio" onchange={handleChange}
+                            required disabled={isSubmitting}></lightning-radio-group>
+                        <template if:true={showAppointmentDate}>
+                            <lightning-input type="datetime-local" label="Appointment Date/Time"
+                                name="appointmentDateTime" value={appointmentDateTime} onchange={handleChange}
+                                required></lightning-input>
+                        </template>
+                        <div class="button-wrapper">
+                            <lightning-button label="Submit" variant="brand" onclick={handleSubmit}
+                                disabled={isSubmitting}></lightning-button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- BROKER CUSTOMER FORM -->
+                <template if:true={isDirect}>
+                    <div class="form-box">
+                        <div class="form-grid">
+                            <div class="form-column">
+                                <lightning-input label="First Name" name="firstName" value={firstName}
+                                    onchange={handleChange} required disabled={isSubmitting}></lightning-input>
+                            </div>
+                            <div class="form-column">
+                                <lightning-input label="Last Name" name="lastName" value={lastName}
+                                    onchange={handleChange} required disabled={isSubmitting}></lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-column">
+                                <lightning-input label="Email" name="email" value={email} onchange={handleChange}
+                                    required disabled={isSubmitting}></lightning-input>
+                            </div>
+                            <div class="form-column">
+                                <!--<div class="phone-group">-->
+                                   <!-- <lightning-combobox label="Code" name="countryCode" value={countryCode}
+                                        options={countryCodeOptions} onchange={handleChange}
+                                        disabled={isSubmitting}></lightning-combobox>-->
+                                    <lightning-input label="Phone" name="phone" type="tel" value={phone}
+                                        onchange={handleChange} required disabled={isSubmitting}></lightning-input>
+                               <!-- </div>-->
+                            </div>
+                        </div>
+
+                        <lightning-radio-group label="Do you have an appointment?" name="appointment"
+                            options={appointmentOptions} value={appointment} type="radio" onchange={handleChange}
+                            required disabled={isSubmitting}></lightning-radio-group>
+                        <template if:true={showAppointmentDate}>
+                            <lightning-input type="datetime-local" label="Appointment Date/Time"
+                                name="appointmentDateTime" value={appointmentDateTime} onchange={handleChange}
+                                required></lightning-input>
+                        </template>
+                        <div class="button-wrapper">
+                            <lightning-button label="Submit" variant="brand" onclick={handleSubmit}
+                                disabled={isSubmitting}></lightning-button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- EXISTING LEAD SEARCH + APPOINTMENT -->
+                <template if:true={isExistingLead}>
+                    <div class="form-box search-box">
+                        <lightning-input type="search" label="Search Leads"  placeholder="Search using name or email..." value={leadSearchTerm}
+                            onchange={handleLeadSearch}></lightning-input>
+                        <template if:true={selectedLead}>
+                            <div key={selectedLead.Id} class="result-card selected">
+                                <p><strong>{selectedLead.FirstName} {selectedLead.LastName}</strong></p>
+                                <p>Email: {selectedLead.Email}</p>
+                                <p>Phone: {selectedLead.Phone}</p>
+                                <p class="slds-text-color_weak">Created: {selectedLead.CreatedDate}</p>
+                            </div>
+                        </template>
+                        <template if:false={selectedLead}>
+                            <template for:each={leadResults} for:item="lead">
+                                <div key={lead.Id} class="result-card" data-id={lead.Id} onclick={selectLead}>
+                                    <p><strong>{lead.FirstName} {lead.LastName}</strong></p>
+                                    <p>Email: {lead.Email}</p>
+                                    <p>Phone: {lead.Phone}</p>
+                                    <p class="slds-text-color_weak">Created: {lead.CreatedDate}</p>
+                                </div>
+                            </template>
+                        </template>
+
+                        <template if:true={selectedLead}>
+                            <lightning-radio-group label="Do you have an appointment?" name="appointment"
+                                options={appointmentOptions} value={appointment} type="radio" onchange={handleChange}
+                                required disabled={isSubmitting}>
+                            </lightning-radio-group>
+
+                            <!-- If YES → show DB value -->
+                            <template if:true={showExistingAppointmentDate}>
+                                <lightning-input type="datetime-local" label="Appointment Date/Time (from DB)"
+                                    value={dbAppointmentDateTime} disabled>
+                                </lightning-input>
+                            </template>
+
+                            <!-- If NO → allow user to enter new date -->
+                            <template if:true={showAppointmentDate}>
+                                <lightning-input type="datetime-local" label="Appointment Date/Time"
+                                    name="appointmentDateTime" value={appointmentDateTime} onchange={handleChange}
+                                    required>
+                                </lightning-input>
+                            </template>
+
+                            <div class="button-wrapper">
+                                <lightning-button label="Update Appointment" variant="brand"
+                                    onclick={updateLeadAppointment}>
+                                </lightning-button>
+                            </div>
+                        </template>
+
+                    </div>
+                </template>
+
+                <!-- EXISTING BROKER SEARCH + APPOINTMENT -->
+                <template if:true={isExistingBroker}>
+                    <div class="form-box search-box">
+                        <lightning-input type="search" label="Search Brokers" value={brokerSearchTerm}
+                            onchange={handleBrokerSearch} placeholder="Search using name..."></lightning-input>
+                        <template if:true={selectedBroker}>
+                            <div key={selectedBroker.id} class="result-card selected">
+                                <p><strong>{selectedBroker.name}</strong></p>
+                            </div>
+                        </template>
+                        <template if:false={selectedBroker}>
+                            <template for:each={brokerResults} for:item="broker">
+                                <div key={broker.id} class="result-card" data-id={broker.id} onclick={selectBroker}>
+                                    <p><strong>{broker.name}</strong></p>
+                                </div>
+                            </template>
+                        </template>
+
+                        <template if:true={selectedBroker}>
+                            <lightning-radio-group label="Do you have an appointment?" name="appointmentBroker"
+                                options={appointmentOptions} value={appointmentBroker} type="radio"
+                                onchange={handleChange} required disabled={isSubmitting}>
+                            </lightning-radio-group>
+
+                            <!-- If YES → show DB value -->
+                            <template if:true={showExistingBrokerAppointmentDate}>
+                                <lightning-input type="datetime-local" label="Appointment Date/Time (from DB)"
+                                    value={dbBrokerAppointmentDateTime} disabled>
+                                </lightning-input>
+                            </template>
+
+                            <!-- If NO → allow user to enter new date -->
+                            <template if:true={showBrokerAppointmentDate}>
+                                <lightning-input type="datetime-local" label="Appointment Date/Time"
+                                    name="appointmentBrokerDateTime" value={appointmentBrokerDateTime}
+                                    onchange={handleChange} required>
+                                </lightning-input>
+                            </template>
+
+                            <div class="button-wrapper">
+                                <lightning-button label="Update Broker Appointment" variant="brand"
+                                    onclick={updateBrokerAppointment} disabled={isSubmitting}>
+                                </lightning-button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </main>
+        </div>
+    </div>
+</template>

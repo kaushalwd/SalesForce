@@ -1,0 +1,851 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 12-28-2024
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+  2.2 - Arvind - 28 Jun 2026 - Added disabled={unitObj.isDisabled} to active
+        checkboxes in tbody so Sold and Reserved units cannot be selected.
+        No other change made to this file.
+  2.4 - Modon IT - 16 Jul 2026 - Added a "Payment in progress" badge to the Status
+        cell. Such a unit still reads "Available" but its checkbox is greyed out,
+        so the badge is what explains why.
+  2.5 - Modon IT - 16 Jul 2026 - "{n}% paid" badge on a reserved but part-paid unit.
+        Shown inline in the Status cell so it does not push the row height.
+  2.6 - Modon IT - 16 Jul 2026 - Approve partial booking: tick reserved part-paid
+        units and click "Allow Partial Booking (N)"; approved rows show Revoke.
+  3.0 - Arvind - 23 Jul 2026 - Added Floor, Zone and Unit Classification filter
+        dropdowns (new filter-col blocks after Bucket, before Inventory Status).
+-->
+<template>
+    <div class="spinner">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+            </lightning-spinner>
+        </template>
+    </div>
+    <article class="slds-card slds-p-left_x-large slds-p-right_x-large">
+        <div class="slds-card__header slds-grid">
+            
+        </div>
+        <div class="slds-card__body">
+            <div class="slds-grid slds-container--fluid slds-gutters slds-grid_vertical-align-end slds-wrap">
+               
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Project</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Project"
+                        label="Select Project" value={selectedProject} options={allProjects}
+                        onchange={handleProjectChange} variant="label-hidden">
+                            </lightning-combobox>
+                </div>
+                <!-- Add Phase filter is added on 18/11/2024 by Arbaz-Aphidas-->
+                 <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Phase</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Phase"
+                        label="Select Phase" value={selectedPhase} options={availablePhases}
+                        onchange={handlePhaseChange} variant="label-hidden">
+                            </lightning-combobox>
+                </div>
+                <!--Changes added by Chaitanya for bucket filter-->
+                <!-- <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Bucket</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Bucket"
+                        label="Bucket" value={selectedBucket} options={bucketOptions}
+                        onchange={handleBucketChange} variant="label-hidden">
+                    </lightning-combobox>
+                </div> -->
+
+                
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Bedrooms</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Bedrooms"
+                        label="Select Phase" value={selectedBedrooms} options={UnitBedroomFilterOptions}
+                        onchange={handleBedroomChange} variant="label-hidden">
+                            </lightning-combobox>
+                </div>
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Bucket</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Bucket" value={selectedBucket} options={bucketOptions}
+                        onchange={handleBucketChange} variant="label-hidden"></lightning-combobox>
+                </div>
+                <!-- start 3.0 - Arvind - 23 Jul 2026 - Floor / Zone / Unit Classification filters -->
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Floor</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Floor"
+                        label="Select Floor" value={selectedFloor} options={FloorOptions}
+                        onchange={handleFloorChange} variant="label-hidden">
+                    </lightning-combobox>
+                </div>
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Zone</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Zone"
+                        label="Select Zone" value={selectedZone} options={ZoneOptions}
+                        onchange={handleZoneChange} variant="label-hidden">
+                    </lightning-combobox>
+                </div>
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Unit Classification</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Unit Classification"
+                        label="Select Unit Classification" value={selectedClassification} options={allClassification}
+                        onchange={handleUnitClassificationChange} variant="label-hidden">
+                    </lightning-combobox>
+                </div>
+                <!-- end 3.0 -->
+                <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Inventory
+                            Status <lightning-helptext content="Inventory Status- Approval Waiting and Approval is now Released.
+                                Inventory Status-Rejected and Draft is now Draft.
+                                Units Status - Blocked(with SO), Booking In-Progress is now Reserved.
+                                Units Status - Booking Confirmed is now SOLD."></lightning-helptext></span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select type of unit"
+                        label="Inventory Status" value={selectedListView} options={allListView}
+                        onchange={handleListViewChange} variant="label-hidden" >
+                            </lightning-combobox>
+                </div>
+                <!-- COMMENTED FOR NOW NO NEED OF CLASSIFICATION AND TYPE FILTER  
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Type</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Type"
+                        label="Select Type" value={selectedType} options={alltype}
+                        onchange={handleUnitTypeChange} variant="label-hidden">
+                            </lightning-combobox>
+                </div>
+                <div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Classification</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Project"
+                        label="Select Classification" value={selectedClassification} options={allClassification}
+                        onchange={handleUnitClassificationChange} variant="label-hidden">
+                            </lightning-combobox>
+                </div>
+                -->
+                <!--div class="filter-col slds-col slds-size_6-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Facade Style</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select Type"
+                        label="Select Type" value={selectedFacadeStyle} options={FacadeStyleOptions}
+                        onchange={handleFacadeStyleChange} variant="label-hidden">
+                    </lightning-combobox>
+                </div-->
+
+                 <div lwc:if={newpick} class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_medium">
+                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Unit
+                            Status</span></label>
+                    <lightning-combobox dropdown-alignment="auto" name="Select type of unit"
+                        label="Inventory Status" value={selectedmetaView} options={UnitpiclistOptions}
+                        onchange={handleMetaViewChange} variant="label-hidden">
+                    </lightning-combobox>
+                    
+                </div>
+                
+				
+                <!--<template lwc:if={showAllInventories}>
+                    -- Stretchable spacer to push content to the right --
+                    <lightning-button class="slds-grid slds-grid_align-end" label="Download"
+                        onclick={handleExportDocment} icon-name="utility:download"></lightning-button>
+                </template> -->
+                <!-- <template lwc:if={showManageInventory}>
+                    <div class="filter-col slds-col slds-size_2-of-12">
+                        <div class="slds-m-bottom_medium">
+                        <lightning-button class="slds-float_right" name="Release" label="Release" slot="actions"
+                            disabled={disableSendForApproval} onclick={handleButtonAction}></lightning-button>
+
+                            <lightning-button class="slds-float_right slds-p-right_medium" name="UnRelease" label="UnRelease" slot="actions"
+                            disabled={disableSendForApproval} onclick={handleButtonAction}></lightning-button>
+                        </div>
+                        <div class="slds-m-bottom_medium">
+                                <lightning-button class="slds-float_right" name="Send For Approval" label="Send For Approval" slot="actions"
+                                disabled={disableSendForApproval} onclick={handleButtonAction}></lightning-button>
+                                <lightning-button class="slds-float_right" label="Download" onclick={handleExportDocment} icon-name="utility:download" ></lightning-button>
+                            </div>
+                    </div>
+                </template> -->
+                <!-- <template lwc:if={showAwaitingApproval}>
+
+                    <div class="filter-col slds-col slds-size_2-of-12">
+                        <lightning-button class="slds-float_right" name="Rejected" label="Rejected" slot="actions"
+                            disabled={disableSendForApproval} onclick={handleButtonAction}></lightning-button>
+                        <lightning-button class="slds-float_right slds-p-right_medium" name="Approved" label="Approved" slot="actions"
+                            disabled={disableSendForApproval} onclick={handleButtonAction}></lightning-button>
+                            <div class="slds-m-top_medium"></div>
+                            <div class="slds-m-bottom_medium">
+                                <lightning-button class="slds-float_right" label="Download" onclick={handleExportDocment} icon-name="utility:download" ></lightning-button>
+                         </div>
+                    </div>
+                </template> -->
+                
+                
+
+                <!-- <template lwc:if={showAllInventories}>
+                    <div class="filter-col slds-col slds-size_1-of-12"></div>
+                    <div class="filter-col slds-col slds-size_2-of-12">
+                        <lightning-button class="slds-float_right" name="Revoke" label="Revoke" slot="actions"
+                            disabled={disableSendForApproval} onclick={handleButtonAction}></lightning-button>
+                    </div>
+                </template> -->
+                
+            </div>   
+            <div class="slds-grid slds-container--fluid slds-gutters slds-grid_vertical-align-end slds-p-top_medium slds-wrap">
+                <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_x-small">
+					<label data-main-label="true" class=""><span style="font-weight:600;">Search Unit</span></label>
+					<lightning-input dropdown-alignment="auto" name="Name" label="Search Unit"
+						value={selectedUnit} onchange={handleUnitSerchChange} variant="label-hidden" type="search">
+					</lightning-input>
+				</div>
+                <template lwc:if={showManageInventory}>
+                    <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12">
+                    <!-- <div class="filter-col slds-col slds-size_2-of-12"> -->
+                        <!--<lightning-button class="slds-float_right" label="Download" onclick={handleExportDocment}
+                            icon-name="utility:download"></lightning-button>-->
+                        <lightning-button class="slds-float_right slds-p-right_medium" name="Revoke" label="Revoke"
+                            slot="actions" disabled={disableSendForApproval}
+                            onclick={handleButtonAction}></lightning-button>
+                    </div>
+                    <!-- </div> -->
+                </template>
+                <template lwc:else>
+                    <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 hide-box"></div>
+                </template>
+                <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 hide-box"></div>
+                <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 hide-box"></div>
+                <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 hide-box"></div>
+                <div class="filter-col slds-col slds-size_12-of-12 slds-small-size_6-of-12 slds-medium-size_4-of-12 slds-large-size_2-of-12 slds-p-top_x-small">
+                    <div lwc:if={newcheck}>
+                        <label data-main-label="true" class=""><span style="font-weight:600;">Inventory Status</span></label>
+                        <lightning-combobox lwc:if={newcheck} dropdown-alignment="auto" placeholder="Select type of sub unit"
+                            label="Inventory Status" value={selectedsubView} options={SubUnitpickOptions}
+                            onchange={handleAssignedChange} variant="label-hidden">
+                        </lightning-combobox>
+                    </div> 
+                </div>
+            </div>
+            <template lwc:if={userCanModify}>
+            <div class="slds-m-top_medium">
+                <div class="slds-grid slds-grid_align-center slds-wrap">
+                <!-- start Partial booking approval -->
+                <template lwc:if={showApproveButton}>
+                    <div class="slds-col slds-m-top_small">
+                        <lightning-button variant="brand" label={approveButtonLabel} onclick={handleApprovePartial}></lightning-button>
+                    </div>
+                    &nbsp;
+                    &nbsp;
+                </template>
+                <!-- end Partial booking approval -->
+                <template lwc:if={showSendForApproval}>
+                        <div class="slds-col slds-m-top_small">
+                            <button class="slds-button slds-button_neutral slds-button_stretch"
+                                    style="width:120px"  
+                                    name="Release" slot="actions" disabled={disableSendForApproval} 
+                                    onclick={handleButtonAction}>Release</button>
+                        </div>
+                            &nbsp;
+                            &nbsp;
+                        <div class="slds-col slds-m-top_small">
+                            <button class="slds-button slds-button_neutral slds-button_stretch"
+                                    style="width:120px" 
+                                    name="UnRelease" slot="actions" disabled={disableSendForApproval} 
+                                    onclick={handleButtonAction}>UnRelease</button>
+                        </div>
+                        &nbsp;
+                        &nbsp;
+                        <div class="slds-col slds-m-top_small">
+                            <lightning-button name="Download" label="Download" 
+                            onclick={handleExportDocment} icon-name="utility:download"></lightning-button>
+                        </div>
+                </template>
+                <template lwc:if={showUnReleasedInventories}>
+                        <div class="slds-col slds-m-top_small">
+                            <lightning-button name="Transfer Bucket" label="Transfer Bucket" disabled={disableSendForApproval}
+                            onclick={handleButtonAction}></lightning-button>
+                        </div>
+                        &nbsp;
+                        &nbsp;
+                        <div class="slds-col slds-m-top_small">
+                            <lightning-button name="Back to Draft" label="Back to Draft" disabled={disableSendForApproval}
+                            onclick={handleButtonAction}></lightning-button>
+                        </div>
+						&nbsp;
+						&nbsp;
+                        <div class="slds-col slds-m-top_small">
+                            <lightning-button name="Release"
+                            label="Release" slot="actions" disabled={disableSendForApproval}
+                            onclick={handleButtonAction}></lightning-button>
+                        </div>
+                        &nbsp;
+                        &nbsp;
+                        <div class="slds-col slds-m-top_small">
+                            <lightning-button name="Download" label="Download"
+                            onclick={handleExportDocment} icon-name="utility:download"></lightning-button>
+                        </div>                        
+                </template>
+                <template lwc:if={showReleasedInventories}>
+                    <div class="slds-col slds-m-top_small">
+                        <lightning-button name="Transfer Bucket" label="Transfer Bucket" disabled={disableSendForApproval}
+                        onclick={handleButtonAction}></lightning-button>
+                    </div>
+                    &nbsp;
+                    &nbsp;
+                    <div class="slds-col slds-m-top_small">
+                        <lightning-button label="Back to UnRelease" name="UnRelease" disabled={disableSendForApproval}
+                            onclick={handleButtonAction}></lightning-button>
+                    </div>
+                    &nbsp;
+                    &nbsp;
+                    <div class="slds-col slds-m-top_small">
+                    <lightning-button label="Back to Draft" name="Back to Draft" disabled={disableSendForApproval}
+                        onclick={handleButtonAction}></lightning-button>
+                    </div>
+                    &nbsp;
+                    &nbsp;
+                    <div class="slds-col slds-m-top_small">
+                        <lightning-button name="Download" label="Download"
+                        onclick={handleExportDocment} icon-name="utility:download"></lightning-button>
+                    </div>
+                    <!--commented by prateek.bansal@modon.com as it is not used-->
+                    &nbsp;
+                    &nbsp;
+                        <template lwc:if={showSendForRelease}>
+                            <div class="slds-col slds-m-top_small">
+                                <button class="slds-button slds-button_neutral slds-button_stretch"
+                                        style="width:120px"  
+                                        name="Assign" slot="actions" disabled={disableSendForApproval} 
+                                        onclick={handleButtonAction}>Assign</button>
+                        </div>
+                    </template>
+                    <template lwc:if={showSendForUnAssign}>
+                            <div class="slds-col slds-m-top_small">
+                                <button class="slds-button slds-button_neutral slds-button_stretch"
+                                        style="width:120px"  
+                                        name="UnAssign" slot="actions" disabled={disableSendForApproval} 
+                                        onclick={handleButtonAction}>Un-Assign</button>
+                            </div>            
+                    </template>
+                </template>
+               </div>
+            </div>
+            </template>
+            <!--unit details section-->
+            <div class="slds-card slds-card_boundary slds-m-top_x-small">
+                <div class="slds-card__header slds-card__header-title">
+                   Unit Details
+                </div>
+                <template lwc:if={userCanModify}>
+                <div class="slds-grid slds-wrap slds-grid_align-center btn-bottom">
+                    <div class="slds-col slds-m-top_small">
+                    <lightning-button label="Select All" onclick={handleSelectAll}></lightning-button> &nbsp;
+                    </div>
+                    <div class="slds-col slds-m-top_small">
+                    <lightning-button label="Unselect All" onclick={handleDeSelectAll}></lightning-button> &nbsp;
+                    </div>
+                    <div class="slds-col slds-m-top_small">
+                    <!--Changes Added by Chaitanya for Assign to Bucket Button-->
+                    <!-- <lightning-button label="Assign to Bucket" onclick={openAssignBucketModal}></lightning-button> -->
+                    </div>
+                </div>
+                </template>
+                <!--table data section-->
+                <div class="slds-card__body slds-card__body_inner">
+                    <template lwc:if={showUnitData}>
+                        <div class="slds-scrollable scroll-container" style="height: 400px;" onscroll={handleScroll}>
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate">Action</div>
+                                        </th>
+                                        <template if:true={hideProjectcolume}>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="ProjectName"
+                                                    onclick={sortData}>
+                                                Project Name
+                                                <template if:true={sortbyProjectName}>
+                                                        <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                            class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        </template>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="unitName" onclick={sortData}>
+                                                Unit Name
+                                                <template if:true={sortbyUnitName}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="bedrooms" onclick={sortData}>
+                                                Number of bedrooms
+                                                <template if:true={sortbyNumberOfBedrooms}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="phase" onclick={sortData}>
+                                                Phase
+                                                <template if:true={sortbyPhase}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="price" onclick={sortData}>
+                                                {priceColumnName}
+                                                <template if:true={sortbyTotalPrice}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <template if:true={isWadeemProject}>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="UAECitizenPrice" onclick={sortData}>
+                                                    UAE Citizen Price
+                                                </div>
+                                            </th>
+                                        </template> 
+                                        <!-- <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="BlockComment" onclick={sortData}>
+                                                Unit Block Comment
+                                            </div>
+                                        </th> -->
+                                        
+                                        <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="BlockComment" onclick={sortData}>
+                                                    Unit Block Comment
+                                                </div>
+                                            </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="status" onclick={sortData}>
+                                                Unit Status
+                                                <template if:true={sortbyStatus}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <!-- <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="plotArea" onclick={sortData}>
+                                                Status Change Time
+                                            </div>
+                                        </th> -->
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="plotArea" onclick={sortData}>
+                                                Aging
+                                            </div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="plotArea" onclick={sortData}>
+                                                Plot Area
+                                                <template if:true={sortbyPlotArea}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="plotNo" onclick={sortData}>
+                                                Plot No
+                                                <template if:true={sortbyPlotNo}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                        class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="bucket" onclick={sortData}>
+                                                Bucket
+                                                <template if:true={sortbyBucket}>
+                                                    <lightning-icon icon-name={sortingIcon} size="x-small" class="sorting-icon"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </th>
+                                        
+                                        <template if:true={rejectedListViewSelected}>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate">Rejected</div>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={showReleasedInventories}>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="blockFor"
+                                                    onclick={sortData}>
+                                                    Assigned For
+                                                <template if:true={sortbyBlockFor}>
+                                                        <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                            class="sorting-icon"></lightning-icon>
+                                                </template>
+                                                </div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="blockUntil"
+                                                    onclick={sortData}>
+                                                    Block until
+                                                <template if:true={sortbyBlockUntil}>
+                                                        <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                            class="sorting-icon"></lightning-icon>
+                                                    </template>
+                                                </div>
+                                            </th>
+
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="blockBy"
+                                                    onclick={sortData}>
+                                                    Block By
+                                                    <template if:true={sortbyBlockBy}>
+                                                        <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                            class="sorting-icon"></lightning-icon>
+                                                </template>
+                                                </div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate hover-pointer" name="blockFor"
+                                                    onclick={sortData}>
+                                                    Blocked Time
+                                                    <template if:true={sortbyBlockFor}>
+                                                        <lightning-icon icon-name={sortingIcon} size="x-small"
+                                                            class="sorting-icon"></lightning-icon>
+                                                </template>
+                                                </div>
+                                            </th>
+                                        </template>
+                                         <!--th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="type">
+                                                Facade Style
+                                            </div>
+                                    </th-->
+                                    <!--th class="" scope="col">
+                                            <div class="slds-truncate hover-pointer" name="unitClassification">
+                                                Unit Classification
+                                            </div>
+                                    </th-->
+                                    </tr>
+                                   
+                                </thead>
+                                <tbody>
+                                    <template for:each={checkboxUnitLst} for:item="unitObj" for:index="index">
+                                        <tr class="slds-hint-parent" key={unitObj.Id}>
+                                            <td data-label="checkbox selection">
+                                                <template lwc:if={unitObj.Phase__c}>
+                                                    <!-- For Released Inventories-->
+                                                    <template lwc:if={showReleasedInventories}>
+                                                        <!-- If Blocked it can be revoked-->
+                                                        <template lwc:if={unitObj.BlockUntil__c}>
+                                                                <!-- 2.2 - Arvind - 28 Jun 2026 - added disabled={unitObj.isDisabled} -->
+                                                                <lightning-input class="rowSelector" type="checkbox"
+                                                                data-index={index} data-id={unitObj.Id}
+                                                                data-unit-name={unitObj.Name} onchange={handleRowSelect}
+                                                                checked={unitObj.isSelected}
+                                                                disabled={unitObj.isDisabled}
+                                                                value={unitObj.isSelected}></lightning-input>
+                                                        </template>
+                                                        <!-- Otherewise Sales Order is present-->
+                                                        <template lwc:else>
+                                                            <template lwc:if={unitObj.IsUnitAvailable__c}>
+                                                                    <!-- 2.2 - Arvind - 28 Jun 2026 - added disabled={unitObj.isDisabled} -->
+                                                                    <lightning-input class="rowSelector" type="checkbox"
+                                                                    data-index={index} data-id={unitObj.Id}
+                                                                    data-unit-name={unitObj.Name}
+                                                                    onchange={handleRowSelect}
+                                                                    checked={unitObj.isSelected}
+                                                                    disabled={unitObj.isDisabled}
+                                                                    value={unitObj.isSelected}></lightning-input>
+                                                            </template>
+                                                            <template lwc:else>
+                                                                <lightning-input class="rowSelector" type="checkbox"
+                                                                    disabled>
+                                                                </lightning-input>
+                                                            </template>
+                                                        </template>
+                                                    </template>
+                                                    <template lwc:else>
+                                                            <!-- 2.2 - Arvind - 28 Jun 2026 - added disabled={unitObj.isDisabled} -->
+                                                            <lightning-input class="rowSelector" type="checkbox"
+                                                            data-index={index} data-id={unitObj.Id}
+                                                            data-unit-name={unitObj.Name} onchange={handleRowSelect}
+                                                            checked={unitObj.isSelected}
+                                                            disabled={unitObj.isDisabled}
+                                                            value={unitObj.isSelected}></lightning-input>
+                                                    </template>
+                                                    
+                                                </template>
+                                                <template lwc:else>
+                                                    <lightning-input class="rowSelector" type="checkbox" disabled="true"
+                                                        value={unitObj.isSelected}></lightning-input>
+                                                </template>
+                                            </td>
+                                            <template if:true={hideProjectcolume}>
+                                            <td data-hidden={hideProjectvalue} data-label="Project Name"> 
+                                                    {unitObj.Project_Name__c}
+                                            </td>
+                                        </template>
+                                            <td data-label="Account Name">
+                                                <!-- <div class="slds-truncate" title="Cloudhub">{unitObj.Name}</div> -->
+                                                <a href="javascript:void(0);" data-id={unitObj.Id}
+                                                    onclick={handleLinkClick}>
+                                                    {unitObj.Name}
+                                                </a>
+                                            </td>
+                                            <td data-label="Account Name">
+                                                <div class="slds-truncate" title="Cloudhub">
+                                                    {unitObj.Number_of_Bedrooms__c}</div>
+                                            </td>
+                                            <td data-label="Account Name">
+                                                <template lwc:if={unitObj.Phase__c}>
+                                                    <div class="slds-truncate" title="Cloudhub">{unitObj.Phase__r.Name}
+                                                    </div>
+                                                </template>
+                                                <template lwc:else>
+                                                    <b>Phase not available</b>
+                                                </template>
+                                            </td>
+                                            <td data-label="Account Name">
+                                                <!-- <div class="slds-truncate" title="Cloudhub">{unitObj.TotalPrice__c}</div> -->
+                                                <div class="slds-truncate" title="Cloudhub">
+                                                    <lightning-formatted-number value={unitObj.TotalPrice__c}
+                                                        format-style="currency"
+                                                        currency-code="AED"></lightning-formatted-number>
+                                                </div>                                                
+                                            </td>
+                                           <template if:true={isWadeemProject}>
+                                                <td data-label="Account Name" class="slds-truncate" title="Cloudhub">
+                                                    <lightning-formatted-number value={unitObj.UAE_Citizen_Price__c}
+                                                        format-style="currency"
+                                                        currency-code="AED"></lightning-formatted-number>
+                                                </td>
+                                            </template>
+                                            <!-- <td data-label="Account Name">
+                                                <div class="slds-truncate" title="Cloudhub">{unitObj.BlockComment__c}
+                                                </div>
+                                            </td> -->
+                                            
+                                            <td data-label="Account Name">
+                                                    <div class="slds-truncate" title="Cloudhub">{unitObj.BlockComment__c}
+                                                    </div>
+                                                </td>
+                                            <td data-label="Account Name">
+                                                <!-- start Reserved payment progress badge -->
+                                                <!-- status + badge inline via inner flex, so the td stays a normal cell and columns align -->
+                                                <div class="mi-status-cell">
+                                                    <div class="slds-truncate" title="Cloudhub">{unitObj.Status__c}</div>
+                                                    <!-- 2.4 - a unit being paid for still reads "Available", so say why its checkbox is greyed out -->
+                                                    <template lwc:if={unitObj.isPaymentInProgress}>
+                                                        <span class="slds-badge">Payment in progress</span>
+                                                    </template>
+                                                    <!-- reserved but only part-paid -->
+                                                    <template lwc:if={unitObj.isPartiallyPaid}>
+                                                        <span class="slds-badge mi-badge_partial">{unitObj.paidPercent}% paid</span>
+                                                    </template>
+                                                    <!-- start Partial booking approval -->
+                                                    <!-- tick to approve this unit for partial booking; one bulk button approves all ticked -->
+                                                    <template lwc:if={unitObj.canApprovePartial}>
+                                                        <lightning-input type="checkbox" variant="label-hidden" label="Approve partial booking"
+                                                            data-id={unitObj.Id} checked={unitObj.approvalSelected}
+                                                            onchange={handleApprovalSelect} class="mi-approve-check"></lightning-input>
+                                                    </template>
+                                                    <template lwc:if={unitObj.partialApproved}>
+                                                        <span class="slds-badge mi-badge_approved">Approved</span>
+                                                        <a href="javascript:void(0);" data-id={unitObj.Id} onclick={handleRevokePartial}>Revoke</a>
+                                                    </template>
+                                                    <!-- end Partial booking approval -->
+                                                </div>
+                                                <!-- end Reserved payment progress badge -->
+                                            </td>
+                                            <!-- <td class="" scope="col">
+                                                <div class="slds-truncate">
+                                                    <lightning-formatted-date-time value={unitObj.Status_Change_Time__c}
+                                                        year="numeric" month="long" day="numeric" hour="2-digit"
+                                                        minute="2-digit" second="2-digit" hour12>
+                                                    </lightning-formatted-date-time>
+                                                </div>
+                                            </td> -->
+                                            <td data-label="Account Name" style="display:flex;">
+                                                <span class="aging-pill" style={unitObj.colorStyle}></span>
+                                                <div class="slds-truncate" title="Cloudhub">{unitObj.Aging__c}</div>
+                                            </td>
+                                            <td data-label="Account Name">
+                                                <div class="slds-truncate" title="Cloudhub">{unitObj.PlotAreasqm__c}
+                                                </div>
+                                            </td>
+                                            <td data-label="Account Name">
+                                                <div class="slds-truncate" title="Cloudhub">{unitObj.PlotNo__c}</div>
+                                            </td>
+
+                                            <td data-label="Bucket">
+                                                <template lwc:if={unitObj.Bucket__r}>
+                                                    <div class="slds-truncate" title="Bucket">{unitObj.Bucket__r.Name}</div>
+                                                </template>
+                                                <template lwc:else>
+                                                    <div class="slds-truncate">N/A</div>
+                                                </template>
+                                            </td>
+                                            
+                                            <template if:true={rejectedListViewSelected}>
+                                                <td class="" scope="col">
+                                                    <div class="slds-truncate">{unitObj.RejectionComment__c}</div>
+                                                </td>
+                                            </template>
+                                            <template if:true={showReleasedInventories}>
+                                                <td class="" scope="col">
+                                                    <template if:true={unitObj.BlockedFor__r}>
+                                                        <div class="slds-truncate">{unitObj.BlockedFor__r.Name}</div>
+                                                    </template>
+                                                    <template if:false={unitObj.BlockedFor__r}>
+                                                        <template if:true={unitObj.Allocate_to_Agency__r}>
+                                                            <div class="slds-truncate">{unitObj.Allocate_to_Agency__r.Name}</div>
+                                                        </template>
+                                                        <template if:false={unitObj.Allocate_to_Agency__r}>
+                                                            <div class="slds-truncate">N/A</div>
+                                                        </template>
+                                                    </template>
+                                                </td>
+                                                <td class="" scope="col">
+                                                    <div class="slds-truncate">
+                                                        <lightning-formatted-date-time value={unitObj.BlockUntil__c}
+                                                            year="numeric" month="long" day="numeric" hour="2-digit"
+                                                            minute="2-digit" second="2-digit" hour12>
+                                                        </lightning-formatted-date-time>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Block By">
+                                                    <template if:true={unitObj.BlockedBy__r}>
+                                                        <div class="slds-truncate">{unitObj.BlockedBy__r.Name}</div>
+                                                    </template>
+                                                    <template if:false={unitObj.BlockedBy__r}>
+                                                        <div class="slds-truncate">N/A</div>
+                                                    </template>
+                                                </td>
+                                                <td data-label="Assigned For">
+                                                    <template if:true={unitObj.Blocked_Time__c}>
+                                                        <div class="slds-truncate">
+                                                            <lightning-formatted-date-time
+                                                                value={unitObj.Blocked_Time__c} year="numeric"
+                                                                month="long" day="numeric" hour="2-digit"
+                                                                minute="2-digit" second="2-digit" hour12>
+                                                            </lightning-formatted-date-time>
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={unitObj.Blocked_Time__c}>
+                                                        <div class="slds-truncate">N/A</div>
+                                                    </template>
+                                                </td>
+                                            </template>
+                                             <!--td  data-label="Type"> 
+                                                    {unitObj.Type__c}
+                                            </td>
+                                             <td data-label="UnitClassification"> 
+                                                    {unitObj.UnitClassification__c}
+                                            </td-->
+                                             <!--td data-label="facadeStyle"> 
+                                                    {unitObj.FacadeStyle__c}
+                                            </td-->
+                                        </tr>
+                                    </template>
+
+                                    <template if:true={isScrollLoading}>
+                                        <div class="slds-p-around_medium slds-align_absolute-center">
+                                            <lightning-spinner size="small"></lightning-spinner>
+                                        </div>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-size_1-of-1">
+                                No units available with this criteria.
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </article>
+    
+
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" size="small" alternative-text="close" class="slds-button__icon slds-button__icon_large"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Select an Option</h2>
+                </header>
+
+                <!-- Modal/Popup Body -->
+                <div class="slds-modal__content slds-p-around_small" id="modal-content-id-1">
+                    <template if:true={errorMessageonpopup}>
+                        <div class="slds-text-color_error slds-m-bottom_small">{errorMessage}</div>
+                    </template>
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-wrap slds-grid_vertical-align-top">
+                            <template lwc:if={isShowBucketSelection}>
+                                <c-manage-bucket-lwc toggle-manage-inventory="true" direct-save-bucket={directSaveBucket} previous-bucket-selection={selectedBucketId} onbucketselect={handleBucketSelection} class="slds-col slds-size_12-of-12" ></c-manage-bucket-lwc>
+                            </template>
+                            <template lwc:if={showReleaseOption}>
+                                <div class="slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                    <b>Selected Bucket :</b> {selectedBucketName}
+                                </div>
+
+                                <template if:false={isUnReleaseModalOpen}>
+                                    <div class="slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                        <lightning-combobox label="Status" value={selectedOption} options={picklistOptions} disabled={isdisabled} onchange={handlePicklistChange}></lightning-combobox>
+                                    </div>
+                                    <div lwc:if={showBlockRequestModal} class="slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                        <!-- <label data-main-label="true" class="slds-form-element__label"><span>Block for</span></label> -->
+                                        <!-- <lightning-record-picker label="Select a user" placeholder="Search..." object-api-name="User" value={selectedBlockingUser} onchange={handleChange} class="customer-name-input blockDetails" required="true" variant="label-hidden" filter={userIdFilter} ></lightning-record-picker>    -->
+                                        <lightning-combobox name="user" label="Block for" options={userOptions} value={selectedUserId} onchange={handleUserChange}> </lightning-combobox>
+                                    </div>
+                                    <div  lwc:if={showBlockRequestModal} class="slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                        <template if:true={showBlockingHours}>
+                                            <label data-main-label="true" class="slds-form-element__label"><span>Select Blocking Hours</span></label>
+                                            <lightning-combobox dropdown-alignment="auto" label="" placeholder="Select Blocking Hours" value={selectedBlockingHours} options={blockingHourOptions} variant="label-hidden" onchange={manageBlockingHours} class="selectedBlockingHours blockDetails"></lightning-combobox>
+                                        </template>                        
+                                    </div>
+                                    <div lwc:if={showBlockRequestModal} class="slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                        <label data-main-label="true" class="slds-form-element__label"><span>Comment</span></label>
+                                        <lightning-textarea label="Comment" required="true" type="text-area" class="customer-name-input blockDetails" data-target-type="input" variant="label-hidden" value={commentValue} onchange={updateCommentValue}></lightning-textarea>  
+                                    </div>
+                                </template>
+                            </template>
+                            
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal/Popup Footer -->
+                <template lwc:if={showReleaseOption}>
+                    <template if:false={isTransferModelOpen}>
+                        <footer class="slds-modal__footer">
+                            <div class="slds-grid slds-grid_align-center">
+                                <template if:false={releaseOptionOfUnreleased}>
+                                    <lightning-button variant="neutral" class="slds-m-right_small" label="<<Back" onclick={handleBack}></lightning-button>
+                                </template>
+                                <lightning-button variant="neutral" class="slds-m-right_small" label="Cancel" onclick={closeModal}></lightning-button>
+                                <lightning-button variant="brand" name="Submit" label="Submit" onclick={handleButtonAction}></lightning-button>
+                                <!-- <lightning-button variant="neutral" class="slds-m-right_small" label="Cancel" onclick={closeModal}></lightning-button>
+                                <lightning-button variant="brand" name="Submit" label="Submit" onclick={handleButtonAction}></lightning-button> -->
+                            </div>
+                        </footer>
+                    </template>
+                    <template if:true={isTransferModelOpen}>
+                        <footer class="slds-modal__footer">
+                            <div class="slds-grid slds-grid_align-center">
+                                <lightning-button variant="neutral" class="slds-m-right_small" label="Cancel" onclick={closeModal}></lightning-button>
+                                <lightning-button variant="neutral" class="slds-m-right_small" label="Transfer Bucket" onclick={handleTransferBucket}></lightning-button>
+                            </div>
+                        </footer>
+                    </template>
+                </template>
+                
+            </div>
+         </section>
+         <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

@@ -1,0 +1,89 @@
+<template>
+    <lightning-modal-header label={modalHeader}>
+    </lightning-modal-header>
+
+    <template if:true={isAction}>
+
+        <lightning-modal-body>
+            <p class="slds-p-around_small slds-text-heading_medium">Confirm if you want to <b>{action} {selectedUnitsCount} unit/s.</b></p>
+
+            <template if:true={showReleaseSection}>
+                <lightning-combobox data-id="newBucketCombobox" label="Select Bucket to Assign to" name="Select Bucket to Assign to"
+                    placeholder="Select Bucket" options={buckets} value="" required onchange={handleInputChange}>
+                </lightning-combobox>
+                <lightning-combobox data-id="releaseStatus" label="Select Release Status" name="Select Release Status"
+                    placeholder="Select Release Status" options={releaseStatuses} value="" required onchange={handleInputChange}>
+                </lightning-combobox>
+
+                <template if:true={isReleasedStatusAssigned}>
+                    <lightning-combobox data-id="userCombobox" label="Select User" name="Select User" placeholder="Select User"
+                        options={userSortedOptions} value="" required onchange={handleInputChange}>
+                    </lightning-combobox>
+                    <lightning-combobox data-id="hoursCombobox" label="Select Hours to Assign" name="Select Hours to Assign" placeholder="Select Hours to Assign"
+                        options={hoursToBlock} value="" required onchange={handleInputChange}>
+                    </lightning-combobox>
+                    <lightning-textarea data-id="blockCommentsTextArea" name="Block Comments" label="Block Comments" placeholder="Enter Block Comments..." required onchange={handleInputChange}></lightning-textarea>
+                </template>
+            </template>
+
+            <template if:true={showUserCombobox}>
+                <lightning-combobox data-id="bucketCombobox" label="Selected Bucket" name="Selected Bucket" options={buckets}
+                    value={currentBucket.value} disabled="true">
+                </lightning-combobox>
+                <lightning-combobox data-id="userCombobox" label="Select User" name="Select User" placeholder="Select User"
+                    options={userSortedOptions} value="" required onchange={handleInputChange}>
+                </lightning-combobox>
+                <lightning-combobox data-id="hoursCombobox" label="Select Hours to Assign" name="Select Hours to Assign" placeholder="Select Hours to Assign"
+                    options={hoursToBlock} value="" required onchange={handleInputChange}>
+                </lightning-combobox>
+                <lightning-textarea data-id="blockCommentsTextArea" name="Block Comments" label="Block Comments" placeholder="Enter Block Comments..." required onchange={handleInputChange}></lightning-textarea>
+            </template>
+
+            <template if:true={showBucketCombobox}>
+                <lightning-combobox data-id="currentBucketCombobox" label="Current Bucket" name="Current Bucket"
+                    options={buckets} value={currentBucket.value} disabled="true">
+                </lightning-combobox>
+                <lightning-combobox data-id="newBucketCombobox" label="Select Bucket to Transfer to" name="Select Bucket to Transfer to"
+                    placeholder="Select Bucket" options={buckets} value="" required onchange={handleInputChange}>
+                </lightning-combobox>
+            </template>
+        </lightning-modal-body>
+
+        <lightning-modal-footer>
+            <lightning-button class="slds-p-around_xx-small" label="Cancel" variant="neutral"
+                onclick={handleCancel}></lightning-button>
+            <lightning-button class="slds-p-around_xx-small" label="Confirm" variant="brand"
+                onclick={handleConfirm}></lightning-button>
+        </lightning-modal-footer>
+
+    </template>
+
+    <template if:true={isRecordEdit}>
+
+        <lightning-record-edit-form record-id={recordId} object-api-name={objectAPIName}
+            onsuccess={handleRecordUpdateSuccess} onerror={handleRecordUpdateFailure}>
+
+            <lightning-modal-body>                
+                <lightning-layout class="slds-grid slds-scrollable slds-container--fluid slds-gutters slds-wrap">
+                    <template for:each={recordFieldList} for:item="field">
+                        <lightning-layout-item
+                            class="slds-col slds-size_6-of-12 slds-small-size_12-of-12 slds-medium-size_6-of-12 slds-large-size_6-of-12"
+                            key={field}>
+                            <lightning-input-field field-name={field}></lightning-input-field>
+                        </lightning-layout-item>
+                    </template>
+                </lightning-layout>
+            </lightning-modal-body>
+
+            <lightning-modal-footer>
+                <lightning-button class="slds-p-around_xx-small" label="Cancel" variant="neutral"
+                    onclick={handleCancel}></lightning-button>
+                <lightning-button class="slds-p-around_xx-small" type="submit" label="Save"
+                    variant="brand"></lightning-button>
+            </lightning-modal-footer>
+
+        </lightning-record-edit-form>
+
+    </template>
+
+</template>

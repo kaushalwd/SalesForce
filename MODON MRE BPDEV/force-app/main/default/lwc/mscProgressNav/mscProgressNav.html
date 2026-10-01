@@ -1,0 +1,55 @@
+<template>
+    <!-- Phone only. The tape below is hidden at the same width - see the CSS. -->
+    <p class="step-caption">{stepCaption}</p>
+    <template lwc:if={showStepValue}>
+        <p class="step-value">{stepValue}</p>
+    </template>
+
+    <!--
+      1.5 - THE DEAL TAPE.
+
+      An ordered list, not a row of buttons: 1.4 made this an index rather than a
+      control and that stands, so nothing here is focusable or clickable and nothing
+      promises an action it does not have. aria-current="step" is what carries "you
+      are here" to a screen reader, in place of the ring the chips used to draw.
+
+      Each segment is a label over a value. The value is what the step PRODUCED - a
+      unit and its price, a customer and their plan, the amount due - and a step still
+      waiting shows a prompt in the same slot, so the tape never reflows as the booking
+      fills in. There are no numbers and no circles: the rule under each segment is the
+      progress indicator, and it says the same thing in 2px that the chips said in 20.
+    -->
+    <ol class="tape" aria-label="Booking progress">
+        <template for:each={items} for:item="s">
+            <li key={s.key} class="seg-item">
+                <!--
+                  1.6 - a button, but only for steps BEHIND the agent. `disabled`
+                  carries that: a step ahead keeps its place and its value and simply
+                  is not a way to get anywhere, which is more honest than hiding it
+                  and more honest than letting it skip the step in between.
+
+                  1.10 - and the same `disabled` carries the floor. A step whose work
+                  is written on a Sales Order is behind the agent AND closed; it is
+                  rendered exactly as it was, green rule and all, and is not a control.
+                  Nothing is hidden, so the tape still reads as the whole journey.
+                -->
+                <button
+                    class={s.cls}
+                    type="button"
+                    data-key={s.key}
+                    disabled={s.disabled}
+                    aria-current={s.ariaCurrent}
+                    title={s.title}
+                    onclick={handleJump}
+                >
+                    <!-- R2-03: the short name and a two-line value where the tab is narrow -->
+                    <span class="seg__label seg__label--full">{s.label}</span>
+                    <span class="seg__label seg__label--short">{s.shortLabel}</span>
+                    <span class="seg__value">
+                        <span class="seg__v1">{s.valueHead}</span><template lwc:if={s.valueTail}><span class="seg__sep"> · </span><span class="seg__v2">{s.valueTail}</span></template>
+                    </span>
+                </button>
+            </li>
+        </template>
+    </ol>
+</template>

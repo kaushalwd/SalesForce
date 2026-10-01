@@ -1,0 +1,98 @@
+<template>
+    <!--
+      The manual route. Reason, comment and attachment are ALL required - the same three
+      MODON's own quick action asks for. Nothing here is a banner: this is a small form
+      inside a panel, in the console's grey.
+    -->
+    <section class="mk">
+        <p class="mk__title">{labels.MKYC_TITLE}</p>
+
+        <!-- Organisation: MODON has configured no corporate field rules, so no checklist is
+             invented. The company's DIGITAL KYC is unaffected and runs through its POA. -->
+        <template lwc:if={unconfigured}>
+            <p class="mk__note">{unconfiguredReason}</p>
+        </template>
+
+        <template lwc:else>
+            <!-- 2.1 - a company: its POA (who is approved) and the company itself -->
+            <template lwc:if={subjectLine}>
+                <p class="mk__subject">{subjectLine}</p>
+            </template>
+            <template lwc:if={companyLine}>
+                <p class="mk__subject">{companyLine}</p>
+            </template>
+
+            <template lwc:if={done}>
+                <p class="mk__done">{done}</p>
+            </template>
+
+            <template lwc:else>
+                <div class="mk__field">
+                    <label class="mk__label" for="reason">{labels.MKYC_REASON}</label>
+                    <select id="reason" class="mk__input" onchange={handleReason} disabled={busy}>
+                        <option value="">{labels.MKYC_REASON_PICK}</option>
+                        <template for:each={reasonOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        </template>
+                    </select>
+                </div>
+
+                <div class="mk__field">
+                    <label class="mk__label" for="comment">{labels.MKYC_COMMENT}</label>
+                    <textarea id="comment" class="mk__input mk__area" rows="2"
+                              onchange={handleComment} disabled={busy}></textarea>
+                </div>
+
+                <div class="mk__field">
+                    <label class="mk__label" for="file">{labels.MKYC_ATTACHMENT}</label>
+                    <template lwc:if={hasFiles}>
+                        <!-- 1.1 - the chosen file is marked on its option; see fileOptions -->
+                        <select id="file" class="mk__input" onchange={handleFile} disabled={busy}>
+                            <option value="">{labels.MKYC_FILE_PICK}</option>
+                            <template for:each={fileOptions} for:item="f">
+                                <option key={f.value} value={f.value} selected={f.selected}>{f.label}</option>
+                            </template>
+                        </select>
+                    </template>
+                    <!-- UI-04: the label above names this control; its own label is hidden -->
+                    <template lwc:if={accountId}>
+                        <lightning-file-upload
+                            class="mk__upload"
+                            label={labels.MKYC_UPLOAD}
+                            variant="label-hidden"
+                            name="manualKycFile"
+                            accept={uploadFormats}
+                            record-id={accountId}
+                            onuploadfinished={handleUploadFinished}
+                        ></lightning-file-upload>
+                    </template>
+                    <!-- 1.1 - the fact of the upload, said once; the dropdown says what is submitted -->
+                    <template lwc:if={uploadedLine}>
+                        <p class="mk__status">{uploadedLine}</p>
+                    </template>
+                </div>
+
+                <p class="mk__hint">{labels.MKYC_ALL_REQUIRED}</p>
+
+                <!-- 2.0 - what compliance would still find missing; said, not enforced here -->
+                <template lwc:if={hasMissing}>
+                    <p class="mk__hint">{labels.MKYC_STILL_NEEDED}</p>
+                    <ul class="mk__missing">
+                        <template for:each={missing} for:item="m">
+                            <li key={m}>{m}</li>
+                        </template>
+                    </ul>
+                </template>
+
+                <div class="mk__actions">
+                    <button type="button" class="mk__btn" onclick={handleSubmit}
+                            disabled={submitDisabled}>{submitLabel}</button>
+                </div>
+            </template>
+
+            <template lwc:if={problem}>
+                <p class="mk__problem">{problem}</p>
+            </template>
+        </template>
+    </section>
+</template>

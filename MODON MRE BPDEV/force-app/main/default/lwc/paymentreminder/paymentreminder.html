@@ -1,0 +1,148 @@
+<template>
+    <div style=" background-color : white !important;">
+        <lightning-tabset active-tab-value={activeTab}>
+            <lightning-tab label="Payment Reminder" value="1" onactive={handleActive}>
+                <div style="background-color: white;">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+                        </lightning-spinner>
+                    </template>
+                    <div class="slds-grid slds-gutters slds-p-horizontal_x-large slds-p-vertical_medium">
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-combobox name="projectNameField" value={projectNameField} label="Project"
+                                placeholder="Project" options={projectNamePickListValues}
+                                onchange={handleProjectChange}>
+                            </lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-combobox name="phaseNameVal" value={phaseNameVal} label="Phase" placeholder="Phase"
+                                options={phaseFieldValues} onchange={handlePhase}>
+                            </lightning-combobox>
+                        </div>
+                        <!--
+                             onchange={handlePhase}
+                            
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-input type="text" variant="standard" name="locationCodeField"
+                                value={locationCodeField} label="Unit Number" placeholder="Unit Number"
+                                onkeyup={handleKeyUp}>
+                            </lightning-input>
+                        </div>
+                        -->
+                    </div>
+
+                    <div class="slds-grid slds-gutters slds-p-left_x-large slds-p-bottom_medium">
+                        <!--<div class="slds-col slds-size_1-of-4">
+                            <lightning-input type="date" label="Due Date" onchange={handleDate} value={selectedDate}>
+                            </lightning-input>
+                        </div>-->
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-input type="text" variant="standard" name="locationCodeField"
+                                value={locationCodeField} label="Unit Number" placeholder="Unit Number"
+                                onchange={handleUnitName}
+                                onkeyup={handleKeyUp}>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-combobox name="reminderType" value={selectedReminderType} label="Reminder Type"
+                                placeholder="Reminder" options={remindersPickListValues}
+                                onchange={handleReminderChange}>
+                            </lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-p-top_medium slds-size_1.5-of-4 slds-m-vertical_x-small">
+                            <lightning-button variant="brand" icon-name="utility:search" style="margin-bottom: 10px;"
+                                class="slds-m-left_xx-small" label="Search" title="Search"
+                                onclick={handleSearch}></lightning-button>
+                            <lightning-button variant="neutral" style="margin-bottom: 10px;"
+                                class="slds-m-left_xx-small" label="Reset"
+                                title="Reset" onclick={handleReset}></lightning-button>                            
+                        </div>
+                    </div>
+
+                </div>
+                <div style="background-color: white;" class="slds-m-vertical_medium">
+                        <lightning-datatable 
+                            data-id="tables" 
+                            key-field="Id" 
+                            data={completeTableData} 
+                            columns={installmentColumns}
+                            hide-checkbox-column="true"
+                            enable-infinite-loading	="true"
+                        >
+                        </lightning-datatable>
+                    <div>Total Records: {completeTableData.length}</div>
+                </div>
+                <template if:true={dataNotAvailable}>
+                    <div style="text-align: center;background-color: white;" class="slds-m-vertical_medium"> No Data
+                        Found</div>
+                </template>
+            </lightning-tab>
+            
+
+            <lightning-tab label="Payment Reminder Email Log" value="3" onactive={handleActive}
+                title="2nd tab extended title">
+                <div style="background-color: white;">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+                        </lightning-spinner>
+                    </template>
+                    <div class="slds-grid slds-gutters slds-p-horizontal_x-large slds-p-vertical_medium">
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-combobox name="projectNameFieldReminder" value={projectNameFieldLog}
+                                label="Project" placeholder="Project" options={projectNamePickListValues}
+                                onchange={handleProjectChangeReminder}>
+                            </lightning-combobox>
+                        </div>  
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-combobox name="phaseFieldReminder" value={phaseNameValLog} label="Phase"
+                                placeholder="Phase" options={phaseFieldValuesReminder} onchange={handlePhaseReminder}>
+                            </lightning-combobox>
+                        </div>
+                        <!--
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-input type="text" variant="standard" name="locationCodeFieldLog"
+                                value={locationCodeFieldLog} label="Unit Number" placeholder="Unit Number"
+                                onkeyup={handleKeyUp}>
+                            </lightning-input>
+                        </div>
+                        -->
+                    </div>
+
+                    <div class="slds-grid slds-gutters slds-p-left_x-large slds-p-bottom_medium">
+                        <!--<div class="slds-col slds-size_1-of-4">
+                            <lightning-input type="date" label="Reminder Sent Date" onchange={handleDateReminder}
+                                value={selectedDateLog}>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning-combobox name="reminderTypeReminder" value={selectedReminderTypeLog}
+                                label="Reminder Type" placeholder="Reminder" options={remindersPickListValuesReminder}
+                                onchange={handleReminderChangeReminder}>
+                            </lightning-combobox>
+                        </div>-->
+                        <div class="slds-col slds-p-top_medium slds-size_2-of-4 slds-m-vertical_x-small">
+                            <lightning-button variant="brand" icon-name="utility:search" label="Search"
+                                title="Search" onclick={handleSearchReminder}
+                                class="slds-m-left_xx-small"></lightning-button>
+                            <lightning-button variant="neutral" label="Reset"
+                                title="Reset" onclick={handleResetReminder}
+                                class="slds-m-left_xx-small"></lightning-button>                            
+                        </div>
+                    </div>
+
+                </div>
+                <div style="background-color: white;" class="slds-m-vertical_medium">
+                        <lightning-datatable data-id="tableReminder" key-field="Id" data={completeTableDataReminder}
+                            columns={columnReminder} hide-checkbox-column="true"
+                            enable-infinite-loading	="true"
+                        >
+                        </lightning-datatable>
+                </div>
+                <template if:true={dataNotAvailable}>
+                    <div style="text-align: center;background-color: white;" class="slds-m-vertical_medium"> No Data
+                        Found</div>
+                </template>
+            </lightning-tab>
+        </lightning-tabset>       
+    </div>
+</template>

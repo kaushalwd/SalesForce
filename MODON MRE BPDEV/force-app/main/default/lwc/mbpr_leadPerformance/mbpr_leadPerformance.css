@@ -1,0 +1,1330 @@
+:host {
+    --perf-ink: var(--mbpr-theme-ink, #101112);
+    --perf-ink-soft: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.64));
+    --perf-ink-faint: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    --perf-line: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    --perf-line-strong: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    --perf-surface: var(--mbpr-theme-surface-solid, #ffffff);
+    --perf-surface-soft: var(--mbpr-theme-surface-soft, #f8f6f2);
+    --perf-control: var(--mbpr-theme-control-bg, #f7f5f1);
+    --perf-inverse: var(--mbpr-theme-inverse-ink, #ffffff);
+    --perf-accent: var(--mbpr-theme-accent, #0b7772);
+    --perf-accent-ink: var(--mbpr-theme-accent-ink, #06504c);
+    --perf-accent-soft: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    --perf-accent-line: var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    --perf-gold: var(--mbpr-theme-gold, #b69a68);
+    --perf-gold-soft: var(--mbpr-theme-gold-soft, rgba(182, 154, 104, 0.16));
+    --perf-success: var(--mbpr-theme-success, #1f7a5c);
+    --perf-danger: var(--mbpr-theme-error, #b42318);
+    /* Data-viz tones: 'active' navy, 'success' gold, 'warning' slate, and the
+       closed states 'error' and 'muted' take the inactive gray. 'info' is
+       never produced by statusToneOf but is kept for salesWorkspace parity;
+       it takes mauve, which carries no status meaning. */
+    --perf-viz-active: var(--mbpr-theme-viz-active, #1F3A5F);
+    --perf-viz-warning: var(--mbpr-theme-viz-pending, #4C6B8A);
+    --perf-viz-success: var(--mbpr-theme-viz-success, #B5893E);
+    --perf-viz-error: var(--mbpr-theme-viz-neutral, #74787A);
+    --perf-viz-muted: var(--mbpr-theme-chart-9, #74787A);
+    --perf-viz-info: var(--mbpr-theme-chart-4, #7A6E8C);
+    --perf-tip-bg: var(--mbpr-theme-tooltip-bg, #101112);
+    --perf-tip-ink: var(--mbpr-theme-tooltip-ink, #ffffff);
+    --perf-tip-line: var(--mbpr-theme-tooltip-border, rgba(255, 255, 255, 0.08));
+    --perf-input-bg: var(--mbpr-theme-input-bg, #f7f5f1);
+    --perf-input-border: var(--mbpr-theme-input-border, rgba(0, 0, 0, 0.2));
+    --perf-shadow-sm: var(--mbpr-theme-shadow-sm, 0 1px 2px rgba(16, 17, 18, 0.06));
+    --perf-shadow-md: var(--mbpr-theme-shadow-md, 0 16px 32px rgba(16, 17, 18, 0.08));
+    --perf-shadow-lg: var(--mbpr-theme-shadow-lg, 0 28px 64px rgba(16, 17, 18, 0.22));
+    --perf-radius-sm: var(--mbpr-radius-sm, 8px);
+    --perf-radius-md: var(--mbpr-radius-md, 12px);
+    --perf-radius-lg: var(--mbpr-radius-lg, 16px);
+    --perf-radius-pill: var(--mbpr-radius-pill, 999px);
+    --perf-mono: var(--mbpr-mono, ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace);
+    --perf-ease: var(--mbpr-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    color: var(--perf-ink);
+    display: block;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 0;
+    position: relative;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* From-only keyframes, so the rest state is the element's own inline
+   styling and dynamic widths survive both the animation and reduced motion. */
+@keyframes perfPanelIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+@keyframes perfChipIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+@keyframes perfRowIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+}
+
+@keyframes perfArcIn {
+    from {
+        stroke-dasharray: 0 100;
+    }
+}
+
+@keyframes perfBarIn {
+    from {
+        width: 0;
+    }
+}
+
+/* ============================= Shell ============================= */
+
+.perf {
+    display: grid;
+    gap: 0.85rem;
+    transition: opacity 160ms var(--perf-ease);
+}
+
+.perf--busy {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.perf-state {
+    display: grid;
+    gap: 1rem;
+}
+
+/* ============================= Toolbar ============================= */
+
+.perf-toolbar {
+    align-items: center;
+    display: flex;
+    gap: 0.55rem;
+    justify-content: flex-end;
+    position: relative;
+}
+
+/* Agent focus picker (Owner/Agency Admin only): the explicit way to scope
+   the dashboard to one agent - kept in sync with leaderboard row taps. */
+.perf-agent-picker {
+    align-items: center;
+    background: var(--perf-surface);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-pill);
+    cursor: pointer;
+    display: inline-flex;
+    gap: 0.5rem;
+    min-height: 2.1rem;
+    min-width: 0;
+    padding: 0.32rem 0.85rem;
+    position: relative;
+    transition:
+        border-color 140ms var(--perf-ease),
+        box-shadow 140ms var(--perf-ease);
+}
+
+.perf-agent-picker:hover,
+.perf-agent-picker:focus-within {
+    border-color: var(--perf-accent-line);
+    box-shadow: var(--perf-shadow-sm);
+}
+
+.perf-agent-picker__kicker {
+    color: var(--perf-ink-faint);
+    flex: 0 0 auto;
+    font-size: 0.56rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.perf-agent-picker__input {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--perf-ink);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    max-width: 13rem;
+    min-width: 0;
+    outline: none;
+    overflow: hidden;
+    padding: 0 1rem 0 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 9.5rem;
+}
+
+.perf-agent-picker__input::placeholder {
+    color: var(--perf-ink-faint);
+    font-weight: 700;
+}
+
+/* Results menu: same surface language as the filter popover
+   (.perf-pop) so the two controls in this toolbar read as one family. */
+.perf-agent-menu {
+    background: var(--perf-surface);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-md);
+    box-shadow: var(--perf-shadow-lg);
+    display: grid;
+    gap: 0.1rem;
+    left: 0;
+    max-height: 15rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.3rem;
+    position: absolute;
+    top: calc(100% + 6px);
+    width: max(100%, 15rem);
+    z-index: 90;
+}
+
+.perf-agent-option {
+    background: transparent;
+    border: 0;
+    border-radius: var(--perf-radius-sm);
+    color: var(--perf-ink);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    overflow: hidden;
+    padding: 0.42rem 0.6rem;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.perf-agent-option--active,
+.perf-agent-option:hover {
+    background: var(--perf-surface-soft);
+}
+
+.perf-agent-option--selected {
+    background: var(--perf-accent-soft);
+    color: var(--perf-accent-ink);
+}
+
+.perf-agent-menu__empty {
+    color: var(--perf-ink-faint);
+    font-size: 0.74rem;
+    margin: 0;
+    padding: 0.5rem 0.6rem;
+}
+
+.perf-agent-picker__caret {
+    border-bottom: 2px solid var(--perf-ink-soft);
+    border-right: 2px solid var(--perf-ink-soft);
+    height: 0.34rem;
+    pointer-events: none;
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-65%) rotate(45deg);
+    width: 0.34rem;
+}
+
+.perf-filter-trigger {
+    align-items: center;
+    background: var(--perf-surface);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-pill);
+    color: var(--perf-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    gap: 0.45rem;
+    min-height: 2.1rem;
+    padding: 0.32rem 0.5rem 0.32rem 0.8rem;
+    transition:
+        border-color 140ms var(--perf-ease),
+        box-shadow 140ms var(--perf-ease);
+}
+
+.perf-filter-trigger:hover,
+.perf-filter-trigger:focus-visible {
+    border-color: var(--perf-line-strong);
+    box-shadow: var(--perf-shadow-sm);
+    outline: none;
+}
+
+.perf-filter-trigger--active {
+    border-color: var(--perf-accent-line);
+}
+
+.perf-filter-chip {
+    background: var(--perf-accent-soft);
+    border-radius: var(--perf-radius-pill);
+    color: var(--perf-accent-ink);
+    font-size: 0.68rem;
+    font-weight: 850;
+    max-width: 11rem;
+    overflow: hidden;
+    padding: 0.16rem 0.55rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.perf-scrim {
+    background: transparent;
+    inset: 0;
+    position: fixed;
+    z-index: 88;
+}
+
+.perf-pop {
+    animation: perfPanelIn 200ms var(--perf-ease) both;
+    background: var(--perf-surface);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-lg);
+    box-shadow: var(--perf-shadow-lg);
+    display: grid;
+    gap: 0.6rem;
+    padding: 0.85rem;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: min(21rem, 92vw);
+    z-index: 89;
+}
+
+.perf-pop__head {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.perf-pop__head b {
+    font-size: 0.85rem;
+    font-weight: 900;
+}
+
+.perf-pop__close {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--perf-line);
+    border-radius: 50%;
+    color: var(--perf-ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.66rem;
+    height: 1.6rem;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    width: 1.6rem;
+}
+
+.perf-pop__close:hover,
+.perf-pop__close:focus-visible {
+    border-color: var(--perf-line-strong);
+    color: var(--perf-ink);
+    outline: none;
+}
+
+.perf-cell {
+    background: var(--perf-surface-soft);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-sm);
+    display: grid;
+    gap: 0.24rem;
+    padding: 0.4rem 0.55rem;
+}
+
+.perf-cell:focus-within {
+    border-color: var(--perf-accent-line);
+}
+
+.perf-cell > span {
+    color: var(--perf-ink-faint);
+    font-size: 0.56rem;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.perf-cell select,
+.perf-cell input {
+    background: transparent;
+    border: 0;
+    color: var(--perf-ink);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    min-height: 1.5rem;
+    outline: none;
+    padding: 0;
+    width: 100%;
+}
+
+.perf-cell input[type="date"]::-webkit-calendar-picker-indicator {
+    background: currentColor;
+    cursor: pointer;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z'/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0.75;
+}
+
+.perf-pop__dates {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.perf-pop__hint {
+    color: var(--perf-ink-soft);
+    font-size: 0.72rem;
+    font-weight: 650;
+    margin: 0;
+}
+
+.perf-pop__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.perf-button {
+    background: var(--perf-accent);
+    border: 1px solid var(--perf-accent);
+    border-radius: var(--perf-radius-pill);
+    color: var(--perf-inverse);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 850;
+    min-height: 2.1rem;
+    padding: 0.34rem 1rem;
+    transition:
+        box-shadow 140ms var(--perf-ease),
+        opacity 140ms var(--perf-ease);
+}
+
+.perf-button:hover:not(:disabled),
+.perf-button:focus-visible {
+    box-shadow: var(--perf-shadow-sm);
+    outline: none;
+}
+
+.perf-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.perf-button--ghost {
+    background: transparent;
+    border-color: var(--perf-line);
+    color: var(--perf-ink);
+}
+
+.perf-button--ghost:hover:not(:disabled),
+.perf-button--ghost:focus-visible {
+    border-color: var(--perf-line-strong);
+}
+
+/* The modal header owns the agent picker and Filters chip, so the inline
+   toolbar collapses to a zero-height popover anchor; the negative margin
+   swallows the grid gap. Below 1200px the toolbar renders inline. */
+@media (min-width: 1200px) {
+    .perf--chrome-hosted .perf-toolbar {
+        margin-bottom: -0.85rem;
+        min-height: 0;
+    }
+
+    /* `top: calc(100% + 8px)` hangs the panel below whatever height the
+       collapsed anchor row computes to, which floated it mid-dashboard.
+       Top-pinning drops it under the header's Filters chip instead. */
+    .perf--chrome-hosted .perf-pop {
+        top: 8px;
+    }
+
+    .perf--chrome-hosted .perf-agent-picker,
+    .perf--chrome-hosted .perf-filter-trigger {
+        display: none;
+    }
+}
+
+/* ============================= Hero ============================= */
+
+.perf-hero {
+    animation: perfPanelIn 320ms var(--perf-ease) both;
+    background: var(--perf-surface);
+    background-image: radial-gradient(120% 140% at 100% 0%, var(--perf-accent-soft) 0%, transparent 52%);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-lg);
+    isolation: isolate;
+    overflow: hidden;
+    padding: 1.15rem 1.3rem 1.25rem;
+    position: relative;
+}
+
+.perf-hero__aura {
+    border-radius: 50%;
+    filter: blur(30px);
+    opacity: 0.55;
+    position: absolute;
+    z-index: -1;
+}
+
+.perf-hero__aura--a {
+    background: var(--perf-accent-soft);
+    height: 15rem;
+    right: -4rem;
+    top: -6rem;
+    width: 15rem;
+}
+
+.perf-hero__aura--b {
+    background: var(--perf-gold-soft);
+    bottom: -7rem;
+    height: 13rem;
+    left: 18%;
+    width: 13rem;
+}
+
+/* Two halves: totals and status ring on the left, agent board on the right.
+   Without the board the pair spans and centres itself. */
+.perf-hero__grid {
+    align-items: center;
+    display: grid;
+    gap: clamp(1.2rem, 2.5vw, 2rem);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.perf-hero__pair {
+    align-items: center;
+    /* Stretch the anchor to the board's height so the ring enlarge button
+       lines up with the board's. */
+    align-self: stretch;
+    display: grid;
+    gap: clamp(1.2rem, 2.5vw, 2.2rem);
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-width: 0;
+    /* Anchor for the absolutely-positioned ring enlarge button. */
+    position: relative;
+}
+
+/* Same pill as the shared chart's head button. The ring button floats at
+   the pair's top-right, since the gauge is role="img". */
+.perf-gauge-expand,
+.perf-board__expand {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-pill);
+    color: var(--perf-ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 1.7rem;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+    width: 1.7rem;
+}
+
+.perf-gauge-expand svg,
+.perf-board__expand svg {
+    fill: none;
+    height: 0.82rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 0.82rem;
+}
+
+.perf-gauge-expand:hover,
+.perf-board__expand:hover,
+.perf-gauge-expand:focus-visible,
+.perf-board__expand:focus-visible {
+    background: var(--perf-surface-soft);
+    border-color: var(--perf-line-strong, var(--perf-line));
+    color: var(--perf-ink);
+}
+
+.perf-gauge-expand:focus-visible,
+.perf-board__expand:focus-visible {
+    outline: 2px solid var(--perf-ink-soft);
+    outline-offset: 2px;
+}
+
+.perf-gauge-expand {
+    position: absolute;
+    right: 0;
+    /* Matches the agent board's head padding, so the two enlarge icons
+       sit on the same line (user request). */
+    top: 0.9rem;
+    z-index: 2;
+}
+
+.perf-hero__pair:only-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    max-width: 44rem;
+    /* With the board hidden the pair centres, so a pair-anchored button would
+       float over the ring. Dropping the anchor re-bases it on the hero card. */
+    position: static;
+    width: 100%;
+}
+
+/*...and inset it to the hero's content edge, top-right of the card -
+   the same corner placement as every other card's enlarge icon. */
+.perf-hero__pair:only-child .perf-gauge-expand {
+    right: 1.3rem;
+}
+
+.perf-hero .perf-board {
+    align-self: stretch;
+    min-width: 0;
+    width: 100%;
+}
+
+.perf-hero .perf-board__list {
+    max-height: 12.5rem;
+}
+
+.perf-kicker {
+    color: var(--perf-ink-faint);
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+}
+
+.perf-hero__value {
+    color: var(--perf-ink);
+    font-family: var(--perf-mono);
+    font-size: clamp(2.5rem, 5vw, 3.6rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin: 0;
+}
+
+.perf-hero__scope {
+    color: var(--perf-ink-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin: 0.45rem 0 0;
+}
+
+.perf-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.8rem;
+}
+
+.perf-chip {
+    align-items: center;
+    animation: perfChipIn 260ms var(--perf-ease) both;
+    background: var(--perf-surface-soft);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-pill);
+    display: inline-flex;
+    font-size: 0.72rem;
+    gap: 0.4rem;
+    padding: 0.28rem 0.7rem;
+}
+
+.perf-chip:nth-child(2) {
+    animation-delay: 70ms;
+}
+
+.perf-chip:nth-child(3) {
+    animation-delay: 140ms;
+}
+
+.perf-chip:nth-child(4) {
+    animation-delay: 210ms;
+}
+
+.perf-chip:nth-child(5) {
+    animation-delay: 280ms;
+}
+
+.perf-chip__label {
+    color: var(--perf-ink-soft);
+    font-weight: 700;
+}
+
+.perf-chip__value {
+    color: var(--perf-ink);
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+}
+
+.perf-chip__dot {
+    border-radius: 50%;
+    flex: 0 0 auto;
+    height: 0.5rem;
+    width: 0.5rem;
+}
+
+.perf-chip__dot--active {
+    background: var(--perf-viz-active);
+}
+
+.perf-chip__dot--warning {
+    background: var(--perf-viz-warning);
+}
+
+.perf-chip__dot--success {
+    background: var(--perf-viz-success);
+}
+
+.perf-chip__dot--error {
+    background: var(--perf-viz-error);
+}
+
+.perf-chip__dot--muted {
+    background: var(--perf-viz-muted);
+}
+
+.perf-chip__dot--info {
+    background: var(--perf-viz-info);
+}
+
+/* ============================= Gauge ============================= */
+
+/* Ring sized up ~15%. Stroke geometry follows the viewBox; centre text
+   keeps its own size. */
+.perf-gauge {
+    height: clamp(9.2rem, 12.5vw, 11.5rem);
+    position: relative;
+    width: clamp(9.2rem, 12.5vw, 11.5rem);
+}
+
+.perf-gauge__svg {
+    height: 100%;
+    transform: none;
+    width: 100%;
+}
+
+.perf-gauge__track,
+.perf-gauge__seg {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 3;
+}
+
+.perf-gauge__track {
+    stroke: var(--perf-accent-soft);
+}
+
+.perf-gauge__seg {
+    animation: perfArcIn 1100ms var(--perf-ease) both;
+    animation-delay: calc(250ms + var(--seg-delay, 0ms));
+}
+
+.perf-gauge__seg--active {
+    stroke: var(--perf-viz-active);
+}
+
+.perf-gauge__seg--warning {
+    stroke: var(--perf-viz-warning);
+}
+
+.perf-gauge__seg--success {
+    stroke: var(--perf-viz-success);
+}
+
+.perf-gauge__seg--error {
+    stroke: var(--perf-viz-error);
+}
+
+.perf-gauge__seg--muted {
+    stroke: var(--perf-viz-muted);
+}
+
+.perf-gauge__seg--info {
+    stroke: var(--perf-viz-info);
+}
+
+.perf-gauge__seg--hot {
+    stroke-width: 4;
+}
+
+.perf-gauge__seg--dim {
+    opacity: 0.35;
+}
+
+/* Pointer-following tooltip, same language as the chart cards. */
+.perf-tip {
+    background: var(--perf-tip-bg);
+    border: 1px solid var(--perf-tip-line);
+    border-radius: var(--perf-radius-md);
+    box-shadow: var(--perf-shadow-lg);
+    color: var(--perf-tip-ink);
+    opacity: 0;
+    padding: 0.45rem 0.6rem;
+    pointer-events: none;
+    position: absolute;
+    transition: opacity 120ms var(--perf-ease);
+    z-index: 5;
+}
+
+.perf-tip--on {
+    opacity: 1;
+}
+
+.perf-tip__row {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
+    white-space: nowrap;
+}
+
+.perf-tip__swatch {
+    border-radius: 3px;
+    flex: 0 0 auto;
+    height: 0.6rem;
+    width: 0.6rem;
+}
+
+.perf-tip__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.perf-tip__value {
+    font-size: 0.74rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+}
+
+.perf-tip__pct {
+    color: var(--perf-tip-ink);
+    font-size: 0.66rem;
+    font-weight: 700;
+    opacity: 0.7;
+}
+
+/* pointer-events none: this overlay spans the whole gauge, so without it
+   every hover lands here and the ring segments never see the pointer. */
+.perf-gauge__center {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    inset: 0;
+    justify-content: center;
+    pointer-events: none;
+    position: absolute;
+}
+
+.perf-gauge__pct {
+    color: var(--perf-ink);
+    font-family: var(--perf-mono);
+    font-size: 1.6rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.perf-gauge__pct span {
+    color: var(--perf-ink-soft);
+    font-size: 0.85rem;
+}
+
+.perf-gauge__center small {
+    color: var(--perf-ink-faint);
+    font-size: 0.6rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ============================= Charts row ============================= */
+
+.perf-charts-row {
+    align-items: stretch;
+    display: grid;
+    gap: 0.7rem;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.perf-board {
+    animation: perfPanelIn 320ms var(--perf-ease) 120ms both;
+    background: var(--perf-surface);
+    border: 1px solid var(--perf-line);
+    border-radius: var(--perf-radius-lg);
+    display: grid;
+    gap: 0.6rem;
+    grid-auto-rows: max-content;
+    min-width: 0;
+    padding: 0.9rem 1rem 1rem;
+}
+
+.perf-board__head {
+    display: grid;
+    gap: 0.3rem;
+}
+
+.perf-board__topline {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+/* Colour key for the stacked status bars. */
+.perf-board__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.7rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.perf-board__legend li {
+    align-items: center;
+    color: var(--perf-ink-soft);
+    display: inline-flex;
+    font-size: 0.68rem;
+    font-weight: 700;
+    gap: 0.3rem;
+}
+
+.perf-board__title {
+    color: var(--perf-ink);
+    font-size: 0.8rem;
+    font-weight: 850;
+    margin: 0;
+}
+
+.perf-board__list {
+    display: grid;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    max-height: 24rem;
+    overflow: auto;
+    padding: 0;
+}
+
+.perf-board__list li {
+    animation: perfRowIn 300ms var(--perf-ease) both;
+    animation-delay: var(--row-i, 0ms);
+}
+
+.perf-row {
+    align-items: center;
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: auto minmax(0, 1.1fr) minmax(0, 1.2fr) auto;
+    padding: 0.48rem 0.55rem;
+    width: 100%;
+}
+
+.perf-row__rank {
+    color: var(--perf-ink-faint);
+    font-family: var(--perf-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.perf-row__name {
+    align-items: center;
+    color: var(--perf-ink);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.35rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.perf-row__state {
+    background: var(--perf-viz-success);
+    border-radius: 50%;
+    flex: 0 0 auto;
+    height: 0.42rem;
+    width: 0.42rem;
+}
+
+.perf-row__state--off {
+    background: var(--perf-ink-faint);
+}
+
+.perf-row__track {
+    background: var(--perf-surface-soft);
+    border-radius: var(--perf-radius-pill);
+    display: flex;
+    gap: 2px;
+    height: 0.42rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.perf-row__seg {
+    animation: perfBarIn 600ms var(--perf-ease) both;
+    animation-delay: calc(260ms + var(--seg-delay, 0ms));
+    cursor: pointer;
+    display: block;
+    flex: 0 0 auto;
+    height: 100%;
+    transition: filter 200ms ease;
+}
+
+.perf-row__seg:hover {
+    filter: brightness(1.12);
+}
+
+.perf-row__count {
+    color: var(--perf-ink);
+    font-family: var(--perf-mono);
+    font-size: 0.84rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+/* ============================= Responsive ============================= */
+
+@media (max-width: 1099px) {
+    .perf-hero__grid {
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
+    }
+
+    .perf-hero__pair:only-child {
+        max-width: none;
+    }
+
+    .perf-gauge {
+        height: 9.2rem;
+        width: 9.2rem;
+    }
+
+    .perf-charts-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Touch band: comfortable targets + the filter panel becomes a bottom
+   sheet (same treatment as the portal's other filter panes). */
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .perf-filter-trigger {
+        min-height: 44px;
+    }
+
+    .perf-agent-picker {
+        min-height: 44px;
+    }
+
+    .perf-agent-picker__input {
+        font-size: 16px;
+        width: 100%;
+    }
+
+    /* Touch: the menu spans the picker and rows meet the 44px target. */
+    .perf-agent-picker {
+        width: 100%;
+    }
+
+    .perf-agent-menu {
+        max-height: 60vh;
+        width: 100%;
+    }
+
+    .perf-agent-option {
+        min-height: 44px;
+        white-space: normal;
+    }
+
+    .perf-scrim {
+        background: var(--mbpr-theme-overlay, rgba(12, 12, 12, 0.44));
+        z-index: 92;
+    }
+
+    .perf-pop {
+        border-radius: 18px 18px 0 0;
+        bottom: 0;
+        left: 0;
+        max-height: min(84dvh, 42rem);
+        overflow: auto;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        position: fixed;
+        right: 0;
+        top: auto;
+        width: auto;
+        z-index: 93;
+    }
+
+    .perf-pop__head b {
+        display: grid;
+        gap: 0.1rem;
+    }
+
+    .perf-pop__head b::before {
+        color: var(--perf-accent-ink);
+        content: "Refine performance";
+        font-size: 0.52rem;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .perf-pop__close {
+        height: 2rem;
+        width: 2rem;
+    }
+
+    .perf-cell select,
+    .perf-cell input {
+        font-size: 16px;
+        min-height: 2rem;
+    }
+
+    .perf-pop__actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .perf-button {
+        min-height: 48px;
+    }
+}
+
+@media (max-width: 767px) {
+    .perf {
+        gap: 0.7rem;
+    }
+
+    .perf-toolbar {
+        flex-wrap: wrap;
+    }
+
+    /* One toolbar row: the agent picker flexes to fill whatever the
+       Filters trigger leaves, its select ellipsizing long names. */
+    .perf-agent-picker {
+        flex: 1 1 auto;
+        margin-right: 0;
+        min-width: 0;
+    }
+
+    .perf-agent-picker__input {
+        flex: 1 1 auto;
+        max-width: none;
+    }
+
+    .perf-filter-trigger {
+        flex: 0 0 auto;
+    }
+
+    .perf-hero {
+        padding: 1rem 1.05rem 1.1rem;
+    }
+
+    .perf-hero__value {
+        font-size: clamp(2.1rem, 9vw, 2.6rem);
+    }
+
+    .perf-hero__pair {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: start;
+    }
+
+    /* Stacked hero: the status ring centres under the totals block. */
+    .perf-gauge {
+        justify-self: center;
+    }
+
+    .perf-row {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        row-gap: 0.3rem;
+    }
+
+    .perf-row__rank {
+        grid-row: 1;
+    }
+
+    .perf-row__name {
+        grid-row: 1;
+    }
+
+    .perf-row__count {
+        grid-row: 1;
+    }
+
+    .perf-row__track {
+        grid-column: 2 / -1;
+        grid-row: 2;
+    }
+}
+
+/* ============================= Chart enlarge ============================= */
+
+/* Ring-only donut cards get a larger ring (the legend moved to enlarge). */
+.perf-charts-row c-mbpr_chart {
+    --chart-donut-size: 13rem;
+}
+
+/* Monthly trend is navy, single colour, no gradient. A single-series chart
+   takes slot 1, so the old re-point to slot 2 is gone; keeping it would
+   render the trend in gold. The class stays as the tooltip/enlarge hook. */
+
+/* Enlarged content wrapper inside the lightbox slot: also the positioning
+   anchor the shared perf-tip clamps against. */
+.perf-xl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem 2rem;
+    min-width: 0;
+    position: relative;
+}
+
+.perf-gauge--xl {
+    height: min(17rem, 46vh);
+    margin-inline: auto;
+    width: min(17rem, 46vh);
+}
+
+.perf-gauge--xl .perf-gauge__pct {
+    font-size: 2.4rem;
+}
+
+.perf-gauge--xl .perf-gauge__center small {
+    font-size: 0.72rem;
+}
+
+.perf-xl__rows {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-direction: column;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    min-width: 0;
+    padding: 0;
+}
+
+.perf-xl__row {
+    align-items: center;
+    border-bottom: 1px solid var(--perf-line);
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    padding: 0.5rem 0.35rem;
+}
+
+.perf-xl__row:last-child {
+    border-bottom: 0;
+}
+
+.perf-xl__swatch {
+    border-radius: 4px;
+    display: inline-block;
+    height: 0.68rem;
+    width: 0.68rem;
+}
+
+.perf-xl__label {
+    color: var(--perf-ink-soft);
+    font-size: 0.9rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.perf-xl__value {
+    color: var(--perf-ink);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.perf-xl__pct {
+    background: var(--perf-surface-soft);
+    border-radius: var(--perf-radius-pill);
+    color: var(--perf-ink-faint);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    padding: 0.14rem 0.5rem;
+}
+
+/* Enlarged agent board: full list (no internal cap), roomier rows,
+   thicker status tracks. */
+.perf-xl .perf-board__legend--xl {
+    flex-basis: 100%;
+}
+
+.perf-xl .perf-board__list--xl {
+    flex: 1 1 100%;
+    max-height: none;
+}
+
+.perf-xl .perf-board__list--xl .perf-row {
+    padding: 0.6rem 0.55rem;
+}
+
+.perf-xl .perf-board__list--xl .perf-row__name {
+    font-size: 0.9rem;
+}
+
+.perf-xl .perf-board__list--xl .perf-row__track {
+    height: 0.8rem;
+}
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .perf-gauge-expand,
+    .perf-board__expand {
+        height: 2.2rem;
+        width: 2.2rem;
+    }
+
+    .perf-gauge--xl {
+        height: min(15rem, 72vw);
+        width: min(15rem, 72vw);
+    }
+
+    .perf-xl__row {
+        min-height: 44px;
+    }
+
+    .perf-xl .perf-board__list--xl .perf-row {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .perf,
+    .perf-hero,
+    .perf-board,
+    .perf-board__list li,
+    .perf-chip,
+    .perf-pop,
+    .perf-row__seg,
+    .perf-gauge__seg,
+    .perf-gauge-expand,
+    .perf-board__expand {
+        animation: none !important;
+        transition: none !important;
+    }
+}

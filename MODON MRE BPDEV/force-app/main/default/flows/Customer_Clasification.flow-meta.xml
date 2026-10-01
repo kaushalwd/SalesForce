@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Check_title</name>
+        <label>Check title</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Copy_1_of_Classfication_one</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Check_One</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Salutation</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>H.H</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Classfication_1_update</targetReference>
+            </connector>
+            <label>Check One</label>
+        </rules>
+        <rules>
+            <name>Check_Two</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Salutation</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>H.E</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Classfication_one</targetReference>
+            </connector>
+            <label>Check Two</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Checktwo</name>
+        <label>Check Two</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Copy_1_of_Update_classification_two</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Age &lt; 60</defaultConnectorLabel>
+        <rules>
+            <name>Age_Check</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Age</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue>
+                    <numberValue>60.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_classification_two</targetReference>
+            </connector>
+            <label>Age &gt; 60</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>Age</name>
+        <dataType>Number</dataType>
+        <expression>IF(
+    OR(
+        MONTH(TODAY()) &lt; MONTH({!$Record.PersonBirthdate}),
+        AND(
+            MONTH(TODAY()) = MONTH({!$Record.PersonBirthdate}),
+            DAY(TODAY()) &lt; DAY({!$Record.PersonBirthdate})
+        )
+    ),
+    YEAR(TODAY()) - YEAR({!$Record.PersonBirthdate}) - 1,
+    YEAR(TODAY()) - YEAR({!$Record.PersonBirthdate})
+)</expression>
+        <scale>2</scale>
+    </formulas>
+    <interviewLabel>Customer Clasification {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Customer Clasification</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Classfication_1_update</name>
+        <label>Classfication 1 update</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Checktwo</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Classification_Level_1__c</field>
+            <value>
+                <stringValue>Royal</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Classfication_one</name>
+        <label>Classfication one</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Checktwo</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Classification_Level_1__c</field>
+            <value>
+                <stringValue>Titled Individual</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Copy_1_of_Classfication_one</name>
+        <label>Copy 1 of Classfication one</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Checktwo</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Classification_Level_1__c</field>
+            <value>
+                <stringValue></stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Copy_1_of_Update_classification_two</name>
+        <label>Copy 1 of Update classification two</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <inputAssignments>
+            <field>Classification_Level_3__c</field>
+            <value>
+                <stringValue></stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_classification_two</name>
+        <label>Update classification two</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <inputAssignments>
+            <field>Classification_Level_3__c</field>
+            <value>
+                <stringValue>Senior Citizen</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_title</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Source_Entity__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Modon - Egypt</stringValue>
+            </value>
+        </filters>
+        <object>Account</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

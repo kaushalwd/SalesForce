@@ -1,0 +1,618 @@
+<template>
+    <lightning-card title="EOI Refund Process" icon-name="standard:refund" class="eoi-refund-card">
+        
+        <!-- Header Actions -->
+        <div slot="actions">
+            <template lwc:if={hasSelectedEOIs}>
+                <span class="slds-badge slds-theme_brand eoi-count-badge slds-m-right_x-small">
+                    Selected EOIs: {selectedEoisCount}
+                </span>
+            </template>
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                title="Refresh"
+                onclick={handleRefresh}
+                class="slds-m-right_xx-small">
+            </lightning-button-icon>
+        </div>
+
+        <!-- Main Body -->
+        <div class="slds-p-around_medium content-wrapper">
+
+            <!-- Loading Spinner -->
+            <template lwc:if={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium" variant="brand"></lightning-spinner>
+            </template>
+
+            <!-- Success Screen / State -->
+            <template lwc:if={isCaseCreated}>
+                <div class="success-container slds-p-around_large slds-text-align_center animate-fade-in">
+                    <div class="success-icon-wrapper slds-m-bottom_medium">
+                        <lightning-icon icon-name="action:approval" size="large" alternative-text="Success"></lightning-icon>
+                    </div>
+                    <h2 class="success-title slds-text-heading_medium slds-m-bottom_small">
+                        Business Process Initiated Successfully
+                    </h2>
+                    <p class="success-message slds-text-body_regular slds-m-bottom_large">
+                        The EOI refund request has been submitted for approval. A single Business Process (<strong>{createdBusinessProcessName}</strong>) was created with <strong>{submittedCasesCount} EOI(s)</strong> tagged. Refund cases (1 per EOI) will automatically be generated once the Business Process is approved.
+                    </p>
+
+                    <div class="success-summary-box slds-box slds-theme_shade slds-m-bottom_large slds-p-around_medium">
+                        <div class="slds-grid slds-gutters slds-wrap">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                <span class="summary-label">Business Process:</span>
+                                <span class="summary-value font-weight-bold text-brand">{createdBusinessProcessName}</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                <span class="summary-label">EOIs Tagged:</span>
+                                <span class="summary-value font-weight-bold">{submittedCasesCount}</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                <span class="summary-label">Total Refund Amount:</span>
+                                <span class="summary-value currency-value font-weight-bold">{formattedSubmittedAmount}</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                <span class="summary-label">Document Attached:</span>
+                                <template lwc:if={isMemoUploaded}>
+                                    <span class="summary-value font-weight-bold text-success">Management MEMO</span>
+                                </template>
+                                <template lwc:else>
+                                    <span class="summary-value font-weight-bold slds-text-color_weak">None (Optional)</span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Initiate Another Refund"
+                        icon-name="utility:new"
+                        onclick={handleReset}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- Main Interactive Form -->
+            <template lwc:else>
+
+                <!-- Process Flow Stepper (3 Steps) -->
+                <div class="stepper-bar slds-m-bottom_medium">
+                    <div class={step1Class}>
+                        <span class="step-badge">1</span>
+                        <span class="step-title">Select Project</span>
+                    </div>
+                    <div class={step2Class}>
+                        <span class="step-badge">2</span>
+                        <span class="step-title">Select EOIs &amp; Receipts</span>
+                    </div>
+                    <div class={step3Class}>
+                        <span class="step-badge">3</span>
+                        <span class="step-title">Upload Management MEMO (Optional)</span>
+                    </div>
+                </div>
+
+                <!-- Error Banner -->
+                <template lwc:if={errorMessage}>
+                    <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-bottom_medium" role="alert">
+                        <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                        <h2>{errorMessage}</h2>
+                    </div>
+                </template>
+
+                <!-- STEP 1: Select Project -->
+                <div class="section-card section-step-1 slds-m-bottom_medium">
+                    <div class="section-header">
+                        <lightning-icon icon-name="standard:location" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        <h3 class="section-title">Step 1: Select Project</h3>
+                    </div>
+                    <div class="section-body slds-p-around_medium">
+                        <template lwc:if={hasProjectOptions}>
+                            <div class="combobox-container">
+                                <lightning-combobox
+                                    name="projectPicklist"
+                                    label="Project"
+                                    placeholder="-- Select an Eligible Project --"
+                                    options={projectOptions}
+                                    value={selectedProjectId}
+                                    onchange={handleProjectChange}
+                                    class="custom-combobox full-width-combobox"
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="empty-state slds-text-align_center slds-p-around_medium">
+                                <lightning-icon icon-name="utility:info" size="small" class="slds-m-bottom_x-small"></lightning-icon>
+                                <p class="slds-text-color_weak">
+                                    No projects found matching the refund criteria (Projects with EOIs having Cleared Unidentified Account receipts or Voided/Cancelled Sales Orders).
+                                </p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- STEP 2: EOI List View with Nested Accordions -->
+                <template lwc:if={isStep2}>
+                    <div class="section-card section-step-2 slds-m-bottom_medium animate-fade-in">
+                        
+                        <!-- List View Header with Counts -->
+                        <div class="section-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <lightning-icon icon-name="standard:opportunity" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                <h3 class="section-title">Step 2: Expressions of Interest (EOI)</h3>
+                            </div>
+                            <!-- Tag showing current count of selected EOIs -->
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <span class="slds-badge slds-theme_brand eoi-count-badge slds-m-right_x-small" title="Total count of currently selected EOIs">
+                                    Selected EOIs: {selectedEoisCount}
+                                </span>
+                                <template lwc:if={hasSelectedEOIs}>
+                                    <span class="slds-badge slds-theme_inverse slds-m-right_x-small">
+                                        {selectedReceiptsCount} Receipts ({formattedSelectedTotalAmount})
+                                    </span>
+                                </template>
+                                <span class="slds-text-body_small slds-text-color_weak">
+                                    Total: {totalEOIsCount} EOIs
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="section-body slds-p-around_medium">
+                            <template lwc:if={hasEOIs}>
+
+                                <!-- Master Controls Bar (With Highlighted EOIs-per-page Field) -->
+                                <div class="list-controls-bar slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-p-bottom_small slds-m-bottom_small">
+                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Select All On Page"
+                                            checked={isSelectAllPageChecked}
+                                            onchange={handleSelectAllPage}
+                                            class="master-checkbox">
+                                        </lightning-input>
+                                    </div>
+                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                        
+                                        <!-- Highlighted Area (Red Square in Screenshot): Specify number of EOIs to show on a single page -->
+                                        <div class="page-size-selector slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                                            <span class="page-size-label slds-m-right_x-small">EOIs per page:</span>
+                                            <lightning-combobox
+                                                name="pageSize"
+                                                variant="label-hidden"
+                                                value={pageSizeStr}
+                                                options={pageSizeOptions}
+                                                onchange={handlePageSizeChange}
+                                                class="page-size-combobox"
+                                                title="Specify number of EOIs to show per page">
+                                            </lightning-combobox>
+                                            <template lwc:if={isCustomPageSize}>
+                                                <lightning-input
+                                                    type="number"
+                                                    variant="label-hidden"
+                                                    min="1"
+                                                    max="200"
+                                                    value={customPageSize}
+                                                    onchange={handleCustomPageSizeChange}
+                                                    class="custom-page-size-input slds-m-left_xx-small"
+                                                    title="Enter custom page size">
+                                                </lightning-input>
+                                            </template>
+                                        </div>
+
+                                        <lightning-button
+                                            label="Expand All"
+                                            variant="base"
+                                            icon-name="utility:expand_all"
+                                            size="small"
+                                            onclick={handleExpandAll}
+                                            class="slds-m-right_small">
+                                        </lightning-button>
+                                        <lightning-button
+                                            label="Collapse All"
+                                            variant="base"
+                                            icon-name="utility:collapse_all"
+                                            size="small"
+                                            onclick={handleCollapseAll}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+
+                                <!-- Accordion List of EOIs -->
+                                <div class="eoi-accordion-list">
+                                    <template for:each={paginatedEOIs} for:item="eoi">
+                                        <div key={eoi.id} class={eoi.rowClass}>
+                                            
+                                            <!-- EOI Accordion Header Row -->
+                                            <div class="eoi-header-row slds-grid slds-grid_vertical-align-center">
+                                                <!-- Expand / Collapse Chevron -->
+                                                <button
+                                                    type="button"
+                                                    class="chevron-btn slds-button slds-button_icon slds-m-right_xx-small"
+                                                    onclick={handleToggleEoi}
+                                                    data-eoi-id={eoi.id}
+                                                    title={eoi.chevronTitle}>
+                                                    <lightning-icon
+                                                        icon-name={eoi.chevronIcon}
+                                                        size="x-small"
+                                                        alternative-text="Toggle">
+                                                    </lightning-icon>
+                                                </button>
+
+                                                <!-- EOI Selection Checkbox -->
+                                                <lightning-input
+                                                    type="checkbox"
+                                                    label={eoi.eoiNumber}
+                                                    checked={eoi.isSelected}
+                                                    onchange={handleEoiCheckboxChange}
+                                                    data-eoi-id={eoi.id}
+                                                    class="eoi-checkbox slds-m-right_small">
+                                                </lightning-input>
+
+                                                <!-- Dynamic Configurable EOI Details Meta (Controlled via Custom Label EOI_Refund_EOI_Fields) -->
+                                                <div class="eoi-meta-info slds-grid slds-grid_vertical-align-center slds-wrap slds-grow">
+                                                    <template for:each={eoi.displayFields} for:item="f">
+                                                        <div key={f.label} class="meta-item slds-m-right_medium">
+                                                            <span class="meta-label">{f.label}:</span>
+                                                            <span class={f.valueClass}>{f.value}</span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+
+                                                <!-- Badges Summary -->
+                                                <div class="eoi-badges slds-grid slds-grid_vertical-align-center">
+                                                    <span class="slds-badge slds-theme_success eligible-badge slds-m-right_xx-small" title="Eligible Receipts">
+                                                        {eoi.eligibleCount} Eligible ({eoi.formattedEligibleAmount})
+                                                    </span>
+                                                    <template lwc:if={eoi.hasUneligible}>
+                                                        <span class="slds-badge slds-theme_shade uneligible-badge" title="Ineligible Receipts">
+                                                            {eoi.uneligibleCount} Ineligible
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </div>
+
+                                            <!-- Nested Accordions Container (When EOI is Expanded) -->
+                                            <template lwc:if={eoi.isExpanded}>
+                                                <div class="nested-accordions-container slds-p-around_small animate-fade-in">
+                                                    
+                                                    <!-- NESTED ACCORDION 1: ELIGIBLE RECEIPTS -->
+                                                    <div class="nested-accordion-card eligible-card slds-m-bottom_small">
+                                                        <div
+                                                            class="nested-accordion-header eligible-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center"
+                                                            onclick={handleToggleEligible}
+                                                            data-eoi-id={eoi.id}>
+                                                            <div class="slds-grid slds-grid_vertical-align-center">
+                                                                <lightning-icon
+                                                                    icon-name={eoi.eligibleChevronIcon}
+                                                                    size="xx-small"
+                                                                    class="slds-m-right_x-small">
+                                                                </lightning-icon>
+                                                                <span class="font-weight-bold text-success">
+                                                                    Eligible Receipts ({eoi.eligibleCount})
+                                                                </span>
+                                                            </div>
+                                                            <span class="slds-text-body_small font-weight-semibold text-success">
+                                                                Total: {eoi.formattedEligibleAmount}
+                                                            </span>
+                                                        </div>
+
+                                                        <template lwc:if={eoi.isEligibleOpen}>
+                                                            <div class="nested-accordion-body slds-p-around_x-small">
+                                                                <template lwc:if={eoi.hasEligible}>
+                                                                    <div class="table-responsive">
+                                                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_compact receipts-table">
+                                                                            <thead>
+                                                                                <tr class="slds-line-height_reset">
+                                                                                    <template for:each={displayedReceiptColumns} for:item="col">
+                                                                                        <th key={col.key} scope="col">{col.label}</th>
+                                                                                    </template>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <template for:each={eoi.eligibleReceipts} for:item="rec">
+                                                                                    <tr key={rec.id} class="slds-hint-parent">
+                                                                                        <template for:each={rec.cells} for:item="cell">
+                                                                                            <td key={cell.key} class={cell.cellClass}>
+                                                                                                <template lwc:if={cell.isBadge}>
+                                                                                                    <span class={cell.badgeClass}>{cell.value}</span>
+                                                                                                </template>
+                                                                                                <template lwc:else>
+                                                                                                    {cell.value}
+                                                                                                </template>
+                                                                                            </td>
+                                                                                        </template>
+                                                                                    </tr>
+                                                                                </template>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </template>
+                                                                <template lwc:else>
+                                                                    <p class="slds-text-body_small slds-text-color_weak slds-p-around_small">
+                                                                        No eligible receipts found on this EOI.
+                                                                    </p>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+
+                                                    <!-- NESTED ACCORDION 2: UNELIGIBLE RECEIPTS -->
+                                                    <template lwc:if={eoi.hasUneligible}>
+                                                        <div class="nested-accordion-card uneligible-card">
+                                                            <div
+                                                                class="nested-accordion-header uneligible-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center"
+                                                                onclick={handleToggleUneligible}
+                                                                data-eoi-id={eoi.id}>
+                                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                                    <lightning-icon
+                                                                        icon-name={eoi.uneligibleChevronIcon}
+                                                                        size="xx-small"
+                                                                        class="slds-m-right_x-small">
+                                                                    </lightning-icon>
+                                                                    <span class="font-weight-bold slds-text-color_weak">
+                                                                        UnEligible Receipts ({eoi.uneligibleCount})
+                                                                    </span>
+                                                                </div>
+                                                                <span class="slds-badge slds-theme_shade">Read-Only</span>
+                                                            </div>
+
+                                                            <template lwc:if={eoi.isUneligibleOpen}>
+                                                                <div class="nested-accordion-body slds-p-around_x-small">
+                                                                    <div class="table-responsive">
+                                                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_compact receipts-table uneligible-table">
+                                                                            <thead>
+                                                                                <tr class="slds-line-height_reset">
+                                                                                    <template for:each={displayedReceiptColumns} for:item="col">
+                                                                                        <th key={col.key} scope="col">{col.label}</th>
+                                                                                    </template>
+                                                                                    <th scope="col">Ineligibility Reason</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <template for:each={eoi.uneligibleReceipts} for:item="uRec">
+                                                                                    <tr key={uRec.id} class="slds-hint-parent uneligible-row">
+                                                                                        <template for:each={uRec.cells} for:item="cell">
+                                                                                            <td key={cell.key}>
+                                                                                                <template lwc:if={cell.isBadge}>
+                                                                                                    <span class="slds-badge slds-theme_shade">{cell.value}</span>
+                                                                                                </template>
+                                                                                                <template lwc:else>
+                                                                                                    {cell.value}
+                                                                                                </template>
+                                                                                            </td>
+                                                                                        </template>
+                                                                                        <td>
+                                                                                            <span class="slds-badge slds-theme_error">{uRec.ineligibilityReason}</span>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </template>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+
+                                                </div>
+                                            </template>
+
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Pagination Controls -->
+                                <div class="pagination-bar slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-m-top_medium slds-p-vertical_small">
+                                    <lightning-button
+                                        label="Previous"
+                                        icon-name="utility:chevronleft"
+                                        disabled={isPreviousDisabled}
+                                        onclick={handlePreviousPage}
+                                        class="pagination-btn slds-m-right_small">
+                                    </lightning-button>
+                                    <span class="pagination-text slds-m-right_small">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <lightning-button
+                                        label="Next"
+                                        icon-name="utility:chevronright"
+                                        icon-position="right"
+                                        disabled={isNextDisabled}
+                                        onclick={handleNextPage}
+                                        class="pagination-btn">
+                                    </lightning-button>
+                                </div>
+
+                                <!-- Bottom Action Bar for Step 2 -->
+                                <div class="action-bar slds-m-top_large slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                                    <lightning-button
+                                        label="Reset Form"
+                                        icon-name="utility:undo"
+                                        onclick={handleReset}>
+                                    </lightning-button>
+
+                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                        <template lwc:if={hasSelectedEOIs}>
+                                            <span class="slds-text-body_regular slds-m-right_medium">
+                                                <strong>{selectedEoisCount} EOI(s)</strong> selected ({selectedReceiptsCount} Receipts | Total: <strong>{formattedSelectedTotalAmount}</strong>)
+                                            </span>
+                                        </template>
+
+                                        <lightning-button
+                                            variant="brand"
+                                            label="Proceed to Document Upload"
+                                            icon-name="utility:forward"
+                                            icon-position="right"
+                                            disabled={isProceedDisabled}
+                                            onclick={handleProceedToUpload}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+
+                            </template>
+                            <template lwc:else>
+                                <div class="empty-state slds-text-align_center slds-p-around_large">
+                                    <lightning-icon icon-name="utility:info" size="medium" class="slds-m-bottom_small"></lightning-icon>
+                                    <p class="slds-text-heading_small slds-m-bottom_x-small">No Eligible EOIs Found</p>
+                                    <p class="slds-text-color_weak">
+                                        There are no EOIs with cleared eligible receipts under the selected project.
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- STEP 3: Optional Management MEMO Document Upload Screen -->
+                <template lwc:if={isStep3}>
+                    <div class="section-card section-step-3 slds-m-bottom_medium animate-fade-in">
+                        
+                        <div class="section-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <lightning-icon icon-name="standard:file" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                <h3 class="section-title">Step 3: Document Upload (Management MEMO - Optional)</h3>
+                            </div>
+                            <span class="slds-badge slds-theme_brand eoi-count-badge">
+                                Selected EOIs: {selectedEoisCount}
+                            </span>
+                        </div>
+
+                        <div class="section-body slds-p-around_medium">
+                            
+                            <!-- Summary Box of Selected EOIs -->
+                            <div class="upload-summary-box slds-box slds-m-bottom_medium slds-p-around_medium">
+                                <h4 class="summary-box-title slds-text-heading_small slds-m-bottom_small">
+                                    <lightning-icon icon-name="utility:summary" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Selected EOIs Summary
+                                </h4>
+                                <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_small">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                        <span class="summary-label">Project:</span>
+                                        <span class="summary-value font-weight-bold">{selectedProjectName}</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                        <span class="summary-label">Selected EOIs:</span>
+                                        <span class="summary-value font-weight-bold">{selectedEoisCount} EOI(s)</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                        <span class="summary-label">Eligible Receipts:</span>
+                                        <span class="summary-value font-weight-bold">{selectedReceiptsCount}</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                                        <span class="summary-label">Total Refund Amount:</span>
+                                        <span class="summary-value font-weight-bold text-success currency-value">{formattedSelectedTotalAmount}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-text-body_small slds-text-color_weak">
+                                    * <strong>1 Business Process</strong> will be created for all {selectedEoisCount} selected EOI(s). Refund cases will be generated upon approval.
+                                </div>
+                            </div>
+
+                            <!-- Management MEMO Upload Card (Optional) -->
+                            <div class="upload-card slds-box slds-m-bottom_medium">
+                                <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
+                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                        <lightning-icon icon-name="doctype:attachment" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                        <div>
+                                            <h4 class="font-weight-bold slds-text-heading_small">
+                                                Management MEMO
+                                                <span class="slds-badge slds-theme_shade slds-m-left_x-small">Optional</span>
+                                            </h4>
+                                            <p class="slds-text-body_small slds-text-color_weak">
+                                                You can optionally upload an approved Management MEMO document. You may also proceed directly to submit for approval without uploading.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <template lwc:if={isMemoUploaded}>
+                                        <span class="slds-badge slds-theme_success">
+                                            <lightning-icon icon-name="utility:check" size="xx-small" variant="inverse" class="slds-m-right_xx-small"></lightning-icon>
+                                            Uploaded
+                                        </span>
+                                    </template>
+                                    <template lwc:else>
+                                        <span class="slds-badge slds-theme_shade">
+                                            Not Uploaded (Optional)
+                                        </span>
+                                    </template>
+                                </div>
+
+                                <!-- File Upload State -->
+                                <template lwc:if={isMemoUploaded}>
+                                    <div class="uploaded-file-container slds-box slds-theme_shade slds-p-around_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center animate-fade-in">
+                                        <div class="slds-grid slds-grid_vertical-align-center">
+                                            <lightning-icon icon-name="doctype:pdf" size="medium" class="slds-m-right_small"></lightning-icon>
+                                            <div>
+                                                <span class="font-weight-bold file-name-text">{uploadedMemoFile.name}</span>
+                                                <div class="slds-text-body_small slds-text-color_weak">
+                                                    Document Type: <strong>Management MEMO</strong> &bull; Status: <span class="text-success font-weight-semibold">Verified</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <lightning-button
+                                                label="Remove"
+                                                variant="destructive-text"
+                                                icon-name="utility:delete"
+                                                size="small"
+                                                onclick={handleRemoveUploadedFile}
+                                                title="Remove this document">
+                                            </lightning-button>
+                                        </div>
+                                    </div>
+                                    <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_info slds-m-top_small" role="alert">
+                                        <lightning-icon icon-name="utility:success" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        <h2>Management MEMO verified! You can now proceed to submit for Business Process approval with {selectedEoisCount} EOI(s) tagged.</h2>
+                                    </div>
+                                </template>
+                                <template lwc:else>
+                                    <div class="file-uploader-box slds-p-around_medium slds-text-align_center">
+                                        <lightning-file-upload
+                                            label="Upload Management MEMO Document"
+                                            name="managementMemoUploader"
+                                            accept={acceptedFormats}
+                                            record-id={currentUserId}
+                                            onuploadfinished={handleUploadFinished}
+                                            multiple="false"
+                                            class="custom-file-upload">
+                                        </lightning-file-upload>
+                                        <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                                             Supported formats: PDF, DOC, DOCX, PNG, JPG (Max 25MB)
+                                        </p>
+                                    </div>
+                                    <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_info slds-m-top_small" role="alert">
+                                        <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        <h2>Notice: Management MEMO upload is optional. You may upload a document or proceed directly to submit for Business Process approval.</h2>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Bottom Action Bar for Step 3 -->
+                            <div class="action-bar slds-m-top_large slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                                <lightning-button
+                                    label="Back to EOI Selection"
+                                    icon-name="utility:back"
+                                    onclick={handleBackToSelection}>
+                                </lightning-button>
+
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <lightning-button
+                                        variant="brand"
+                                        label={submitButtonLabel}
+                                        icon-name="utility:send"
+                                        icon-position="right"
+                                        disabled={isSubmitDisabled}
+                                        onclick={handleSubmitRefund}
+                                        title={submitButtonTitle}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

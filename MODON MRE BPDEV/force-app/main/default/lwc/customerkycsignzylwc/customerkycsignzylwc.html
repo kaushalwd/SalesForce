@@ -1,0 +1,369 @@
+<!--*********************************************************************************************************************
+* Name               : kycMultiStepForm (LWC Template)
+* Description        : Multi-step KYC form component template - step navigation, address search,
+*                       employment details, trade license/POA upload, and KYC signing session UI
+* Created By         : ActiveMinds
+* --------------------------------------------------------------------------------------------------------------------
+* Version       Author                              Date            Comment
+* 2.9          Arvind                              28 July 2026    Journey_Status__c tracking added for customer
+*                                                                    step drop-off visibility (Steps 2/3/4, Trade
+*                                                                    License upload, POA upload, Sign KYC Form click,
+*                                                                    submit success/failure)
+* 3.0          Arvind                              31 July 2026    Added persistent "Terms & Conditions" footer link
+*                                                                    (opens in new tab, does not disrupt the in
+*                                                                    progress KYC session) visible across every
+*                                                                    step/state of the form.
+**********************************************************************************************************************-->
+<template>
+     <template if:true={isLoading}>
+         <c-guest-loader is-loading={isLoading}
+                  message={message}
+                  sub-message={subMessage}
+                  logo-url={logoUrl}
+                  dir="ltr">
+
+            <div slot="warning" class="kyc-safety-warning">
+                <span class="kyc-safety-warning-icon">⚠️</span>
+                <p class="kyc-safety-warning-text">
+                    Please do not close, refresh, or navigate away from this screen. Doing so may interrupt your KYC submission.
+                </p>
+            </div>
+
+  </c-guest-loader>
+       
+    </template>
+  <div class="kyc-container">
+    <c-custom-toast></c-custom-toast>
+
+<template if:true={isKycCompleted}>
+    <div class="container">
+        <div class="kyc-expired-banner">
+            <img src={kyccompleted} alt="KYC completed" class="kyc-expired-image"/>
+        </div>
+    </div>
+</template>
+<template if:false={isKycCompleted}>
+    <template if:true={iskycexpired}>
+    <div class="container">
+        <div class="kyc-expired-banner">
+            <img src={kycexpired} alt="KYC Expired" class="kyc-expired-image"/>
+            <p>Your KYC verification link has expired. Please request a new link to complete the process.</p>
+        </div>
+    </div>
+</template>
+     <template if:false={iskycexpired}>
+      <template if:true={initialDataLoaded}>
+      <lightning-card>
+          <div class="slds-p-around_medium">
+              <lightning-layout multiple-rows="true">
+                  <!-- Left Column: Logo and Title -->
+                  <lightning-layout-item size="12" medium-device-size="4" large-device-size="4" padding="around-medium" class="logo-column">
+                      <img src={logoUrl} alt="Company Logo" class="logo logoWidth"/>
+                      <h1 class="slds-text-heading_large slds-m-top_medium head-txt" style="font-size: 23px;">New Customer KYC Application</h1>
+                  </lightning-layout-item>
+
+                  <!-- Right Column: Form Content -->
+                  <lightning-layout-item size="12" medium-device-size="8" large-device-size="8" padding="around-medium" class="form-column">
+                      <!-- Custom Horizontal Progress Indicator -->
+                      <div class="slds-m-bottom_large">
+                          <div class="progress-indicator">
+                              <template for:each={computedSteps} for:item="step">
+                                  <div key={step.value} class={step.stepClass}>
+                                      <div class="progress-line"></div>
+                                      <div class="step-circle">
+                                          <template if:true={step.isCompleted}>
+                                              <lightning-icon icon-name="utility:check" size="x-small" variant="inverse"></lightning-icon>
+                                          </template>
+                                          <template if:false={step.isCompleted}>
+                                              {step.value}
+                                          </template>
+                                      </div>
+                                      <div class="step-label">{step.label}</div>
+                                  </div>
+                              </template>
+                          </div>
+                      </div>
+
+                      <!-- Form Steps Container -->
+                      <div>
+                          <!-- Step 1: Personal Information -->
+                          <!--template if:true={isStep1}>
+                              <p>*Before starting the <span class="slds-text-body_regular slds-m-bottom_large">"Document Verification"</span>, kindly enter the following information to proceed, information should match with the Govt. ID</p>
+                              <h2 class="slds-text-heading_medium slds-m-bottom_medium">Personal Information</h2>
+                              <lightning-layout multiple-rows="true">
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="firstName" label="First Name" placeholder="Enter First Name" value={formData.firstName} onchange={handleChange} required></lightning-input>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="lastName" label="Last Name" placeholder="Enter Last Name" value={formData.lastName} onchange={handleChange} required></lightning-input>
+                                  </lightning-layout-item>
+                                   <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-combobox name="nationality" label="Nationality" value={formData.nationality} placeholder="Select Country" options={nationalityOptions} onchange={handleChange} required></lightning-combobox>
+                                  </lightning-layout-item>
+                              </lightning-layout>
+                              <div class="slds-m-top_medium slds-p-around_small">
+                                  <div class="slds-form-element">
+                                      <span class="slds-form-element__label">What is your resident status?</span>
+                                      <div class="slds-form-element__control slds-grid slds-gutters slds-m-top_small responsive-buttons">
+                                          <div class="slds-col"><div data-name="residentStatus" data-value="Resident" class={residentStatusClassResident} onclick={handleCustomRadioClick}>Resident</div></div>
+                                          <div class="slds-col"><div data-name="residentStatus" data-value="International" class={residentStatusClassIntl} onclick={handleCustomRadioClick}>International</div></div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </template-->
+                          <!-- Step 2: Additional Status -->
+                          <template if:true={isStep1}>
+                              <h2 class="slds-text-heading_medium slds-m-bottom_medium">Additional Status</h2>
+                              <template if:true={showSelectDualNationality}>
+                              <div class="slds-form-element slds-m-bottom_large">
+                                  <span class="slds-form-element__label">Do you hold citizenship in more than one country?</span>
+                                  <div class="slds-form-element__control slds-grid slds-gutters slds-m-top_small responsive-buttons">
+                                      <div class="slds-col"><div data-name="dualNationality" data-value="Yes" class={dualNationalityClassYes} onclick={handleCustomRadioClick}>Yes</div></div>
+                                      <div class="slds-col"><div data-name="dualNationality" data-value="No" class={dualNationalityClassNo} onclick={handleCustomRadioClick}>No</div></div>
+                                  </div>
+                              </div>
+                              <template if:true={holdDualNationality}>
+                                      <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                          <lightning-combobox name="dualNationalityCountry" label="Please specify your other country of citizenship?" value={formData.dualNationalityCountry} placeholder="Select Country" options={dualNationalityOptions} onchange={handleChange} required></lightning-combobox>
+                                      </lightning-layout-item>
+                                  </template>
+                              </template>
+                              <div class="slds-form-element">
+                                  <span class="slds-form-element__label">Are you a Politically Exposed Person (PEP)?</span>
+                                  <div class="slds-form-element__control slds-grid slds-gutters slds-m-top_small responsive-buttons">
+                                      <div class="slds-col"><div data-name="pepStatus" data-value="Yes" class={pepStatusClassYes} onclick={handleCustomRadioClick}>Yes</div></div>
+                                      <div class="slds-col"><div data-name="pepStatus" data-value="No" class={pepStatusClassNo} onclick={handleCustomRadioClick}>No</div></div>
+                                  </div>
+                              </div>
+                          </template>
+                          <!-- Step 3: Location -->
+                          <template if:true={isStep2}>
+                              <h2 class="slds-text-heading_medium slds-m-bottom_medium">Residential Address</h2>
+                              <lightning-layout multiple-rows="true">
+                                  <lightning-layout-item size="12" padding="around-small">
+                                      <div class="geo-search-banner">
+                                          <span class="banner-icon">📍</span>
+                                          <div>
+                                              <div class="banner-text">Find your address the easy way</div>
+                                              <div class="banner-subtext">Search below and select your location to auto-fill your address</div>
+                                          </div>
+                                      </div>
+                                      <div class="geo-search-wrap">
+                                          <lightning-input
+                                              label="Search location"
+                                              placeholder="Type an address, area, or landmark"
+                                              oninput={handleAddressSearchChange}
+                                              onchange={handleAddressSearchChange}
+                                              onkeyup={handleAddressSearchChange}>
+                                          </lightning-input>
+                                          <template if:true={isAddressSearching}>
+                                              <lightning-spinner alternative-text="Searching" size="x-small" class="search-spinner"></lightning-spinner>
+                                          </template>
+                                          <template if:true={showAddressSearchResults}>
+                                              <ul class="geo-results">
+                                                  <template for:each={addressSearchResults} for:item="loc">
+                                                      <li key={loc.placeId} data-lat={loc.lat} data-lon={loc.lon} data-label={loc.label} onclick={handleAddressLocationSelect}>
+                                                          {loc.label}
+                                                      </li>
+                                                  </template>
+                                              </ul>
+                                          </template>
+                                      </div>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="villaNumber" label="Villa / Building Number" placeholder="Enter Villa or Building Number" value={formData.villaNumber} onchange={handleVillaNumberChange} required></lightning-input>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="street" label="Street" placeholder="Enter Street Name" value={streetDisplayValue} onchange={handleStreetChange} disabled={addressFieldsLocked} required></lightning-input>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="city" label="City" placeholder="Enter City Name" value={formData.city} onchange={handleChange} disabled={addressFieldsLocked} required></lightning-input>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="state" label="State / Province" placeholder="Enter State or Province" value={formData.state} onchange={handleChange} disabled={addressFieldsLocked} required></lightning-input>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="country" label="Country" placeholder="Enter Country" value={formData.country} onchange={handleChange} disabled={addressFieldsLocked} required></lightning-input>
+                                  </lightning-layout-item>
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-input name="postalCode" label="Postal Code" placeholder="Enter Postal Code" value={formData.postalCode} onchange={handleChange} disabled={addressFieldsLocked} required></lightning-input>
+                                  </lightning-layout-item>
+                              </lightning-layout>
+                          </template>
+                          <!-- Step 4: Employment -->
+                          <template if:true={isStep3}>
+                            <template if:false={isCorporateCustomer}>
+                              <h2 class="slds-text-heading_medium slds-m-bottom_medium">Income & Employment Status</h2>
+                              <lightning-layout multiple-rows="true">
+                                  <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                      <lightning-combobox name="employmentStatus" label="Employment Status" value={formData.employmentStatus} placeholder="Select Employment Status" options={employmentStatusOptions} onchange={handleChange} required></lightning-combobox>
+                                  </lightning-layout-item>
+                                  <!-- Conditional Employment Fields -->
+                                  <template if:true={isEmployed}>
+                                      <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                         <lightning-combobox name="position" label="Position" value={formData.position} placeholder="Select Employment Position" options={occupationOptions} onchange={handleChange} required></lightning-combobox>
+                                      </lightning-layout-item>
+                                      <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                          <lightning-input name="companyName" label="Company Name" placeholder="Enter Company Name" value={formData.companyName} onchange={handleChange} required></lightning-input>
+                                      </lightning-layout-item>
+                                      <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                          <lightning-combobox name="salaryrange" label="Monthly Salary Range" value={formData.salaryrange} placeholder="Select Monthly Salary Range" options={salaryrangeOptions} onchange={handleChange} required></lightning-combobox>
+                                      </lightning-layout-item>
+                                  </template>
+                                  <template if:true={isBusinessOwner}>
+                                      <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                          <lightning-input name="companyName" label="Company Name" placeholder="Enter Company Name" value={formData.companyName} onchange={handleChange} required></lightning-input>
+                                      </lightning-layout-item>
+                                        <!--lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                          <lightning-combobox name="salaryrange" label="Monthly Salary Range" value={formData.salaryrange} placeholder="Select Monthly Salary Range" options={salaryrangeOptions} onchange={handleChange} required></lightning-combobox>
+                                      </lightning-layout-item-->
+                                  </template>
+                                  <template if:false={isEmployed}> 
+                                    <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                            <lightning-combobox name="sourceOfIncome" label="Source of Income" value={formData.sourceOfIncome} placeholder="Select Source of Income" options={incomeSourceOptions} onchange={handleChange} required disabled={sourceOfIncomeDisabled}></lightning-combobox>
+                                    </lightning-layout-item>
+                                  </template> 
+                                  <!-- Conditional Other Source of Income -->
+                                  <template if:true={isOtherSource}>
+                                      <lightning-layout-item size="12" padding="around-small">
+                                          <lightning-textarea name="otherSourceOfIncome" label="Other Source of Income" value={formData.otherSourceOfIncome} onchange={handleChange} required></lightning-textarea>
+                                      </lightning-layout-item>
+                                  </template>
+                              </lightning-layout>
+                              </template>
+                              <template if:true={isCorporateCustomer}>
+                                <!-- template if:true={IsTradeLicenseNotUploaded} -->
+                                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Upload Trade License<span style="font-weight: bold;color:red">*</span></h2>
+                                    <p>Please upload your Trade License document to proceed with the KYC verification process.</p>
+                                    <c-trade-licensefile-upload-l-w-c onuploadevent={handleTradeLicenseUploadSuccess} account-id={recordId}></c-trade-licensefile-upload-l-w-c>  
+                                    <template if:true={fileUploaded}>
+                                    <!-- Ensure the uploaded Trade License Extracted Information --> 
+                                       <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                <lightning-input name="OrgcompanyName" label="Company Name" placeholder="Enter Company name" value={formData.OrgcompanyName} onchange={handleChange} required></lightning-input>
+                                          </lightning-layout-item>
+                                          <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                <lightning-input name="tradeLicenseNumber" label="Trade License Number" placeholder="Enter Trade License Number" value={formData.tradeLicenseNumber} onchange={handleChange} required></lightning-input>
+                                          </lightning-layout-item>
+                                          <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                <lightning-input name="tradeLicenseExpiryDate" type="date" label="Trade License Expiry Date" placeholder="Select Trade License Expiry Date" value={formData.tradeLicenseExpiryDate} onchange={handleChange} required></lightning-input>
+                                           </lightning-layout-item>
+                                           <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                <lightning-input name="bussinessAddr" type="text" label="Business Address" placeholder="Enter the Business Address" value={formData.bussinessAddr} onchange={handleChange} required></lightning-input>
+                                           </lightning-layout-item>
+                                           <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                <lightning-input name="countryAddr" type="text" label="Country Of Address" placeholder="Enter the Country Address" value={formData.countryAddr} onchange={handleChange} required></lightning-input>
+                                           </lightning-layout-item>
+                                           <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                                <lightning-input name="natureBusiness" type="text" label="Nature Of Business" placeholder="Enter the Nature Of Business" value={formData.natureBusiness} onchange={handleChange} required></lightning-input>
+                                           </lightning-layout-item>
+                                           <lightning-layout-item size="12" medium-device-size="6" padding="around-small">
+                                               <lightning-combobox name="LegalStructure" label="Legal Structure" value={formData.LegalStructure} placeholder="Select Legal Structure" options={legalTypeOptions} onchange={handleChange} required></lightning-combobox>
+                                           </lightning-layout-item>
+                                       </lightning-layout>
+                                    </template>
+                                    <!-- END -->
+                                
+                                <h2 class="slds-text-heading_medium slds-m-bottom_medium">Upload Power of Attorney</h2>
+                                <p>Please upload your Power of Attorney document, If applicable.</p>
+                                <c-powerofattorneyfileuploadcmp uploadpoaevent={handlePOAUploadSuccess} account-id={recordId}></c-powerofattorneyfileuploadcmp>     
+                              </template>
+                            </template>
+                            <!-- /template -->
+                            <template if:true={isStep4}>
+                              <h2 class="slds-text-heading_medium slds-m-bottom_small">Review Your Information</h2>
+                              <p>Almost done! Please check your information and <span  class="slds-text-body_regular slds-m-bottom_large">sign the KYC form </span>in the next step to finish verification. Thank you!</p><br/>
+                              <div class="review-section">
+                                  <!--div class="review-block">
+                                      <h3 class="review-title">Personal Info</h3>
+                                      <div class="review-grid">
+                                          <span class="review-label">First Name</span><span class="review-value">{formData.firstName}</span>
+                                          <span class="review-label">Last Name</span><span class="review-value">{formData.lastName}</span>
+                                          <span class="review-label">Resident Status</span><span class="review-value">{formData.residentStatus}</span>
+                                      </div>
+                                  </div-->
+                                  <div class="review-block">
+                                      <h3 class="review-title">Additional Status</h3>
+                                      <div class="review-grid">
+                                        <template if:true={showSelectDualNationality}>
+                                          <span class="review-label">Do you hold citizenship in more than one country?</span><span class="review-value">{formData.dualNationality}</span>
+                                            <template if:true={holdDualNationality}>
+                                                <span class="review-label">Second Citizenship Country</span><span class="review-value">{formData.dualNationalityCountry}</span>
+                                            </template>
+                                        </template>
+                                          <span class="review-label">Are you Politically Exposed?</span><span class="review-value">{formData.pepStatus}</span>
+                                      </div>
+                                  </div>
+                                  <div class="review-block">
+                                      <h3 class="review-title">Nationality</h3>
+                                       <div class="review-grid">
+                                          <span class="review-label">Nationality</span><span class="review-value">{formData.nationality}</span>
+                                        </div>
+                                        </div>
+                                  <div class="review-block">
+                                        <h3 class="review-title">Resident Address</h3>
+                                        <div class="review-grid">
+                                            <span class="review-label">Street</span><span class="review-value">{reviewStreetValue}</span>
+                                            <span class="review-label">City</span><span class="review-value">{formData.city}</span>
+                                            <template if:true={formData.state}><span class="review-label">State</span><span class="review-value">{formData.state}</span></template>
+                                            <template if:true={formData.country}><span class="review-label">Country</span><span class="review-value">{formData.country}</span></template>
+                                            <template if:true={formData.postalCode}><span class="review-label">Postal Code</span><span class="review-value">{formData.postalCode}</span></template>
+                                        </div>
+                                  </div>
+                                  <div class="review-block">
+                                    <template if:false={isCorporateCustomer}>
+                                      <h3 class="review-title">Income & Employment</h3>
+                                      <div class="review-grid">
+                                          <span class="review-label">Employment Status</span><span class="review-value">{formData.employmentStatus}</span>
+                                          <template if:true={formData.position}><span class="review-label">Position</span><span class="review-value">{formData.position}</span></template>
+                                          <template if:true={formData.companyName}><span class="review-label">Company Name</span><span class="review-value">{formData.companyName}</span></template>
+                                          <template if:true={formData.salary}><span class="review-label">Salary</span><span class="review-value">{formData.salary}</span></template>
+                                          <span class="review-label">Source of Income</span><span class="review-value">{formData.sourceOfIncome}</span>
+                                          <template if:true={formData.otherSourceOfIncome}><span class="review-label">Other Source Details</span><span class="review-value">{formData.otherSourceOfIncome}</span></template>
+                                      </div>
+                                      </template>
+                                      <template if:true={isCorporateCustomer}>
+                                      <h3 class="review-title">Trade License Info</h3>
+                                      <div class="review-grid">
+                                          <span class="review-label">Company Name</span><span class="review-value">{formData.OrgcompanyName}</span>
+                                          <template if:true={formData.tradeLicenseNumber}><span class="review-label">License No</span><span class="review-value">{formData.tradeLicenseNumber}</span></template>
+                                          <template if:true={formData.bussinessAddr}><span class="review-label">Business Address</span><span class="review-value">{formData.bussinessAddr}</span></template>
+                                          <template if:true={formData.countryAddr}><span class="review-label">Country Of Address</span><span class="review-value">{formData.countryAddr}</span></template>
+                                        <template if:true={formData.natureBusiness}><span class="review-label">Nature Of Business</span><span class="review-value">{formData.natureBusiness}</span></template>
+                                      </div>
+                                      </template>
+                                  </div>
+                              </div>
+                          </template>
+                      </div>
+                      
+                      <!-- Navigation -->
+                      <div class="slds-col slds-size_1-of-1 slds-m-top_large slds-border_top slds-p-top_large">
+                          <div class="slds-grid slds-grid_align-spread responsive-nav">
+                              <div>
+                                  <div class={previousButtonClass} onclick={handlePrevious}>Previous</div>
+                              </div>
+                              <div>
+                                  <div class={nextButtonClass} onclick={handleNext}>{nextButtonLabel}</div>
+                              </div>
+                          </div>
+                      </div>
+                  </lightning-layout-item>
+              </lightning-layout>
+          </div>
+      </lightning-card>
+      </template>
+      </template>
+   </template>
+
+    <!-- 3.0 Arvind 31 July 2026 - persistent Terms & Conditions footer link.
+         Present across every step/state (loading, completed, expired, and all form steps).
+         Opens in a new tab so the in-progress KYC session/journey is never lost. -->
+    <div class="kyc-footer">
+        <a href="https://www.modon.com/terms-and-conditions" target="_blank" rel="noopener noreferrer" class="kyc-footer-link">
+            Terms &amp; Conditions
+        </a>
+    </div>
+  </div>
+  
+</template>

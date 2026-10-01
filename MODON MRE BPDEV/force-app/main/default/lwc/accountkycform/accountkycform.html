@@ -1,0 +1,199 @@
+<template>
+    <div class="kyc-card">
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="loading-wrap">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Fatal load error -->
+        <template if:true={loadError}>
+            <div class="fatal-error">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                <span>{loadError}</span>
+            </div>
+            <div class="footer-actions">
+                <button class="btn-cancel" onclick={handleCancel}>Close</button>
+            </div>
+        </template>
+
+        <!-- Form -->
+        <template if:false={isLoading}>
+            <template if:false={loadError}>
+
+                <div class="card-header">
+                    <lightning-icon
+                        class="header-icon"
+                        icon-name="standard:address"
+                        size="small"></lightning-icon>
+                    <div>
+                        <p class="card-title">KYC and address details</p>
+                        <p class="card-subtitle">{headerSubtitle}</p>
+                    </div>
+                </div>
+
+                <template for:each={renderSections} for:item="section">
+                    <div key={section.key} class="form-section">
+
+                        <p class="section-label">{section.label}</p>
+
+                        <!-- Address search -->
+                        <template if:true={section.isAddress}>
+                            <div class="geo-search-wrap">
+                                <lightning-input
+                                    type="search"
+                                    label="Search location"
+                                    placeholder="Type an address, area, or landmark"
+                                    data-section={section.key}
+                                    value={section.searchTerm}
+                                    onchange={handleGeoSearchChange}
+                                    autocomplete="off">
+                                </lightning-input>
+
+                                <template if:true={section.isSearching}>
+                                    <div class="search-spinner">
+                                        <lightning-spinner
+                                            alternative-text="Searching"
+                                            size="x-small"></lightning-spinner>
+                                    </div>
+                                </template>
+
+                                <template if:true={section.hasResults}>
+                                    <ul class="geo-results" role="listbox">
+                                        <template for:each={section.results} for:item="r" for:index="idx">
+                                            <li key={r.key}
+                                                role="option"
+                                                data-section={section.key}
+                                                data-index={idx}
+                                                onclick={handleGeoSelect}>
+                                                {r.label}
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+
+                                <template if:true={section.searchError}>
+                                    <p class="inline-error">{section.searchError}</p>
+                                </template>
+                            </div>
+
+                            <div class="villa-wrap">
+                                <lightning-input
+                                    type="text"
+                                    label={section.villaLabel}
+                                    value={section.villaNumber}
+                                    max-length="60"
+                                    required={section.villaRequired}
+                                    placeholder="e.g. Villa 12 or Office 804"
+                                    data-section={section.key}
+                                    onchange={handleVillaChange}>
+                                </lightning-input>
+                                <p class="field-note">Added to the start of the street line when you save</p>
+                            </div>
+                        </template>
+
+                        <!-- Fields -->
+                        <div class="field-grid">
+                            <template for:each={section.fields} for:item="f">
+                                <div key={f.apiName} class={f.wrapperClass}>
+
+                                    <!-- Read-only and locked fields (e.g. Source of Income while Employed) -->
+                                    <template if:true={f.isReadOnly}>
+                                        <lightning-input
+                                            label={f.label}
+                                            value={f.value}
+                                            disabled
+                                            data-target={section.targetObject}
+                                            data-field={f.apiName}>
+                                        </lightning-input>
+                                        <p class="field-note">{f.readOnlyNote}</p>
+                                    </template>
+
+                                    <template if:false={f.isReadOnly}>
+
+                                        <template if:true={f.isPicklist}>
+                                            <lightning-combobox
+                                                label={f.label}
+                                                value={f.value}
+                                                placeholder="--None--"
+                                                options={f.options}
+                                                required={f.isRequiredNow}
+                                                data-target={section.targetObject}
+                                                data-field={f.apiName}
+                                                onchange={handleFieldChange}>
+                                            </lightning-combobox>
+                                        </template>
+
+                                        <template if:true={f.isCheckbox}>
+                                            <lightning-input
+                                                type="checkbox"
+                                                label={f.label}
+                                                checked={f.value}
+                                                data-target={section.targetObject}
+                                                data-field={f.apiName}
+                                                onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <template if:true={f.isTextarea}>
+                                            <lightning-textarea
+                                                label={f.label}
+                                                value={f.value}
+                                                max-length={f.maxLength}
+                                                required={f.isRequiredNow}
+                                                data-target={section.targetObject}
+                                                data-field={f.apiName}
+                                                onchange={handleFieldChange}>
+                                            </lightning-textarea>
+                                        </template>
+
+                                        <template if:true={f.isInput}>
+                                            <lightning-input
+                                                type={f.inputType}
+                                                label={f.label}
+                                                value={f.value}
+                                                max-length={f.maxLength}
+                                                required={f.isRequiredNow}
+                                                data-target={section.targetObject}
+                                                data-field={f.apiName}
+                                                data-mask={f.mask}
+                                                onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div class="error-banner">
+                        <lightning-icon icon-name="utility:warning" size="x-small" variant="error"></lightning-icon>
+                        <span>{errorMessage}</span>
+                    </div>
+                </template>
+
+                <div class="footer-actions">
+                    <span class="field-count">{fieldCountLabel}</span>
+                    <span class="footer-buttons">
+                        <button class="btn-cancel" onclick={handleCancel} disabled={isSaving}>Cancel</button>
+                        <button class="btn-save" onclick={handleSave} disabled={isSaving}>
+                            <template if:true={isSaving}>
+                                <lightning-spinner
+                                    alternative-text="Saving"
+                                    size="x-small"
+                                    variant="inverse"></lightning-spinner>
+                            </template>
+                            Save
+                        </button>
+                    </span>
+                </div>
+
+            </template>
+        </template>
+    </div>
+</template>

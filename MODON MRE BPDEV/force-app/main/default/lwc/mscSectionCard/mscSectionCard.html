@@ -1,0 +1,68 @@
+<template>
+    <section class={rootClass} data-section={sectionKey}>
+        <template lwc:if={showHead}>
+        <header class="section__head">
+            <div class="head__main">
+                <!-- 1.5 - the eyebrow only renders when it says something the
+                     heading does not. Every card was passing the SAME string as
+                     both, so each one announced itself twice - "CUSTOMER
+                     INFORMATION" directly above "Customer Information". -->
+                <template lwc:if={showEyebrow}>
+                    <div class="eyebrow">
+                        <span class="eyebrow__dot"></span>
+                        <span class="eyebrow__label">{eyebrowLabel}</span>
+                    </div>
+                </template>
+                <template lwc:if={heading}>
+                    <h2 class="h-md head__title">
+                        <span>{heading}</span>
+                        <template lwc:if={isComplete}>
+                            <c-modon-icon
+                                name="check-circle"
+                                size="14"
+                                color="var(--step-done, #16a34a)"
+                            ></c-modon-icon>
+                        </template>
+                    </h2>
+                </template>
+                <template lwc:if={showSummaryLine}>
+                    <p class="section__summary m0">{summaryLine}</p>
+                </template>
+            </div>
+
+            <div class="head__side">
+                <template lwc:if={showAside}>
+                    <span class="section__aside">{asideText}</span>
+                </template>
+                <slot name="aside"></slot>
+                <template lwc:if={collapsible}>
+                    <button
+                        class="btn btn-ghost btn-sm"
+                        type="button"
+                        onclick={handleToggle}
+                        aria-expanded={isOpen}
+                    >
+                        {toggleLabel}
+                    </button>
+                </template>
+            </div>
+        </header>
+        </template>
+
+        <!-- Rendered whenever open. A `todo` section stays in the DOM and is
+             dimmed + inert by CSS rather than removed, so the agent can see
+             what is coming. -->
+        <template lwc:if={isOpen}>
+            <!--
+              1.2 - no forward action here. It lived at the bottom of each section
+              for one revision, which put section 1's below up to sixty unit cards:
+              pick a unit at the top of the grid and the way onward was a long
+              scroll away. The journey carries a sticky action bar instead, so the
+              same action is one click from wherever the agent happens to be.
+            -->
+            <div class={bodyClass}>
+                <slot></slot>
+            </div>
+        </template>
+    </section>
+</template>

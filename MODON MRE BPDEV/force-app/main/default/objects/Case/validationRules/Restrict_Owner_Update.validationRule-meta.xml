@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Restrict_Owner_Update</fullName>
+    <active>false</active>
+    <description>You cannot update owner on this case.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+    ISCHANGED(New_Owner__c),
+    $User.Id &lt;&gt; Queue_Owner__c,
+    $User.Email &lt;&gt; &apos;hayat.zatiour@modon.com&apos;,
+    $Profile.Name &lt;&gt; &apos;Call Center Super Manager&apos;,
+    $Profile.Name &lt;&gt; &apos;Call Center TL&apos;,
+    $Profile.Name &lt;&gt; &quot;System Administrator&quot;
+)
+)</errorConditionFormula>
+    <errorDisplayField>New_Owner__c</errorDisplayField>
+    <errorMessage>You cannot update owner on this case.</errorMessage>
+</ValidationRule>

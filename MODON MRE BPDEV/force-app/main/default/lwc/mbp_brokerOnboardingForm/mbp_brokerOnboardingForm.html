@@ -1,0 +1,298 @@
+<template>       
+    <div class="body" style={backgroundStyle}>
+    <div class="content-overlay">
+        <header class="header">
+            <div class="logo"><img src={logowhite} alt="Modon"></div>
+        </header></div>
+    <!-- Spinner for main component -->
+    <template if:true={isLoading}>
+        <div class="spinner-overlay">
+            <div class="spinner-container">
+                <lightning-spinner  size="medium"></lightning-spinner>
+            </div>
+        </div>
+    </template>
+  <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+
+<template if:true={showInProgressPopup}>
+    <div class="apple-popup-backdrop">
+        <div class="apple-popup">
+            <div class="popup-header">
+                <h2>⏳ Service Request In Progress</h2>
+            </div>
+            <div class="popup-body">
+                <p>Your registration has been submitted successfully. A service request is currently in progress.</p>
+                <p>We’ll notify you once it is complete. Thank you for your patience.</p>
+            </div>
+            <div class="popup-footer">
+                <button class="close-btn" onclick={handleClosePopup}>Got it</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+    <template if:false={isLoading}>
+        <div class="main-container">
+            <template if:true={showInitial}>
+            <div class="login-container ">
+        <div class="row ">
+             
+            <div class="col-md-6">
+                 <div class="login-card">
+                    <div class="card-logo"><img src={logo} alt="Modon"></div>
+                    <div class="card-title">Broker Portal</div>
+                    <div class="card-subtitle spacer">Welcome</div>
+                    <div class="register-text spacer">New Broker Request</div>
+                    
+               </div>
+            </div>
+           
+            <div class="col-md-6">           
+                <!-- <h1 class="">New Broker Request</h1> <br/> -->
+                <template if:true={showStatusMessage}>
+                    <div class="slds-text-align_center slds-m-top_small slds-text-color_error" style="border: 1px solid #d3d3d3; border-radius: 40px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); background-color: #eeefef; padding: 8px;">
+                        {statusMessage}
+                    </div>
+                </template>
+
+                <template if:true={showInitial}>
+                    <div>
+                        <lightning-input class="placeholder"
+                                        type="text"
+                                        label="Trade License Number" 
+                                        value={email}
+                                        onchange={handleEmailChange}
+                                        onkeypress={handleKeyPress}
+                                        
+                                        message-when-value-missing="Please type the Trade License Number"
+                                        
+                                        required>
+                        </lightning-input>
+
+                        <div class="slds-text-align_right">
+                        <div class="row ms-0">
+                            <button class="slds-button slds-button_brand primary-btn-preview" title="Search" onclick={handleSendOtp}>Search</button>
+                            <button class="slds-button slds-button_outline-brand secondary-btn-preview" title="Clear" onclick={handleClear}>Clear</button>
+                        </div>
+                        
+                        </div></div>
+                        <template if:true={alwayshide}>
+                            <lightning-button label="Send OTP" onclick={handleSearch}></lightning-button>
+                        </template>
+                </template>
+
+              <template if:true={showOTPInput}>
+                <div class="custom-overlay">
+                    <div class="custom-otp-modal">
+                        <div class="custom-modal-header">
+                            <h2>Enter OTP</h2>
+                        </div>
+
+                        <div class="custom-modal-body">
+                            <input
+                                type="text"
+                                maxlength="6"
+                                class="otp-input-box"
+                                placeholder="●●●●●●"
+                                value={enteredOTP}
+                                oninput={handleOtpChange}
+                            />
+                        </div>
+
+                        <div class="custom-modal-footer">
+                            <button class="slds-button slds-button_outline-brand" onclick={closeModal}>Cancel</button>
+                            <button class="slds-button slds-button_brand" onclick={handleVerifyOtp}>Verify OTP</button>
+                        </div>
+                    </div>
+                </div>
+              </template> </div>
+            </div>
+            </div>
+            </template>
+        </div>
+
+              <template if:false={showInitial}>
+                   <div class="main-container">
+                   <div class="register-container ">  
+                    <div class="row">
+                    <div class="col-md-3">
+                         <div class="login-card">
+                            <div class="card-logo"><img src={logo} alt="Modon"></div>
+                            <div class="card-title">Broker Portal</div>
+                            <div class="card-subtitle spacer">Welcome</div>
+                            <div class="register-text spacer">New Broker Request </div>
+                             <template if:true={shouldShowLeftPanel}>
+ <template if:true={showCommentSection}>
+ 
+                 <br>
+        <br>
+            <!-- Comments Panel - LEFT FIRST -->
+   <div class="left-panel">     
+    <div class="highlighted-comment">
+        <!-- <div class="comment-count">❗ Important Action Required</div> -->
+       
+        <div class="highlighted-body">
+            <p class="comment-intro">
+                We've identified some items that need your attention before you can proceed.
+            </p>
+          
+
+            <!-- <p class="comment-count">❗ {taskCommentCount} issue(s) found</p> -->
+
+            <p class="comment-text">❗ {taskComment}</p>
+            <p class="comment-note">
+                Please review and resolve the above points to continue your registration process.
+                Once completed, you'll automatically receive a confirmation via email.
+            </p>
+        </div>
+    </div>
+</div>
+
+
+</template>
+    </template>
+                        </div>
+                    </div>
+                      <div class="col-md-9 mt-2-half">
+                    <div class="custom-progress">
+                        <lightning-progress-indicator type="base" variant="base"
+                            class="custom-progress"
+                            current-step={currentStep}>
+                            <template for:each={steps} for:item="step">                                
+                                <lightning-progress-step  class="custom-progress"                                 
+                                    key={step.stepNumber}
+                                    label={step.label}
+                                    value={step.stepNumber}
+                                ></lightning-progress-step>
+                            </template>
+                        </lightning-progress-indicator>
+                    </div>
+
+                    <div class="">
+                        <template if:true={showStep1}>
+                            <div>
+                                <c-mbp_company-informationform
+                                    object-api-name={objectApiName}
+                                    record-id={recordId}
+                                    onsuccess={handleFormSuccess}
+                                    onerror={handleFormError}
+                                    ontoast={handleToast}
+                                    registration-status={registrationObj.Status__c}
+                                    mode={mode}
+                                ></c-mbp_company-informationform>
+                            </div>
+                        </template>
+                        <template if:true={showStep2}>
+                            <div>
+                                <c-mbp_trade-licenseinformation
+                                    object-api-name={objectApiName}
+                                    record-id={recordId}
+                                    onsuccess={handleFormSuccess}
+                                    onerror={handleFormError}
+                                    ontoast={handleToast}
+                                    registration-status={registrationObj.Status__c}
+                                     mode={mode}
+                                ></c-mbp_trade-licenseinformation>
+                            </div>
+                        </template>
+                        <template if:true={showStep3}>
+                            <div>
+                                <c-mbp_owner-information
+                                    object-api-name={regiAgentObjectApiName}
+                                    registration-id={recordId}
+                                    onsuccess={handleFormSuccess}
+                                    onerror={handleFormError}
+                                    ontoast={handleToast}
+                                    registration-status={registrationObj.Status__c}
+                                     mode={mode}
+                                ></c-mbp_owner-information>
+                            </div>
+                        </template>
+                        <template if:true={showStep4}>
+                            <div>
+                                <c-mbp_agency-admininformation
+                                    object-api-name={regiAgentObjectApiName}
+                                    registration-id={recordId}
+                                    onsuccess={handleFormSuccess}
+                                    onerror={handleFormError}
+                                    ontoast={handleToast}
+                                    registration-status={registrationObj.Status__c}
+                                     mode={mode}
+                                ></c-mbp_agency-admininformation>
+                            
+                            </div>
+                        </template>
+                        <template if:true={showStep5}>
+                            <div>
+                                <c-mbp_bank-informationform
+                                    object-api-name={objectApiName}
+                                    record-id={recordId}
+                                    onsuccess={handleFormSuccess}
+                                    onerror={handleFormError}
+                                    mode={mode}
+                                    ontoast={handleToast}
+                                    registration-status={registrationObj.Status__c}
+                                     
+                                ></c-mbp_bank-informationform>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="slds-p-around_large slds-button-right"> 
+                        <template if:true={shouldShowPreviousButton}>
+                        <button class="slds-button slds-button_outline-brand secondary-btn-preview "
+                            title="Previous"
+                            onclick={handlePrevious}
+                        >Previous</button>
+                        </template>
+                         <template if:true={shouldShowNextButton}>                   
+                        <button
+                        class="slds-button slds-button_brand primary-btn-preview "
+                            title={nextButtonLabel}
+                            onclick={handleNext}
+                        >{nextButtonLabel}</button></template>
+                   
+                    </div>
+                     
+                   </div></div></div></div>
+                </template>
+            
+        </div>
+    </template>
+   
+    </div>
+    <!-- Footer -->
+     <footer class="footer">
+        <div class="row">
+            <div class="col-md-5 ms-2">© Modon 2025 All rights reserved</div>
+            <div class="col-md-6">
+                <a href={termsandcondtions} class="tc">Terms and Conditions</a> | 
+                <a href={privacyPolicyUrl} class="pp">Privacy Policy</a>
+            </div>
+            <div class="col-md-1">
+                <div style="display:inline-flex">
+                    <a href={linkedInUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="LinkedIn"
+                             src="https://e.hypermatic.com/c92cb5bd39105a473bfcfbd654d9bebe.png"/>
+                    </a>
+                    <a href={instagramUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="Instagram"
+                             src="https://e.hypermatic.com/7dda10e76ce1125775a3e98bcd498eba.png"/>
+                    </a>
+                    <a href={xUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="X"
+                             src="https://e.hypermatic.com/0c5ff08a5ad02ed83d457cc6b0505c3d.png"/>
+                    </a>
+                    <a href={facebookUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="Facebook"
+                             src="https://e.hypermatic.com/c59407678388970d47239b45163faa70.png"/>
+                    </a>
+                    <a href={youtubeUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="YouTube"
+                             src="https://e.hypermatic.com/b65787e98cc916d6885bacc41d0a6cdb.png"/>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</template>

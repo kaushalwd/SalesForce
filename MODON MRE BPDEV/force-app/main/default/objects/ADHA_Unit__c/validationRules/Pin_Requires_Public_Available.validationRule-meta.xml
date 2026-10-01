@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pin_Requires_Public_Available</fullName>
+    <active>true</active>
+    <description>Pins allocate the reserve pool only: Expose_To Reserved, no live reservation. Public and MV-Reserved refuse. Fires only when the pin changes, so status writes on a pinned villa pass.</description>
+    <errorConditionFormula>AND(
+    ISCHANGED(Pinned_Applicant__c),
+    NOT(ISBLANK(Pinned_Applicant__c)),
+    OR(
+        NOT(ISPICKVAL(Expose_To__c, &quot;Reserved&quot;)),
+        AND(
+            NOT(ISPICKVAL(Status__c, &quot;Reserved&quot;)),
+            NOT(ISPICKVAL(Status__c, &quot;Available&quot;))
+        ),
+        NOT(ISBLANK(Active_Reservation__c))
+    )
+)</errorConditionFormula>
+    <errorMessage>Only reserve-stock villas can be assigned: Expose To must be Reserved, the villa free of any live reservation. Public villas are for customers to book themselves.</errorMessage>
+</ValidationRule>

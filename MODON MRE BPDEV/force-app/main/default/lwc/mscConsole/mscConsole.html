@@ -1,0 +1,553 @@
+<template>
+    <div class="pane">
+        <!-- stops 1-3: residency, document, matches. Nothing at a stop renders until the one above is answered; the document is the only question the org can prove. -->
+        <template lwc:if={showFind}>
+            <div class="ident">
+                <!-- stop 1. 2.30: the buyer-type switch is drawn by c/mscBookingPage in the card's heading row and handed down as buyer-type; only the search is left here -->
+
+
+                <!-- 2.18: the non-resident company stop cannot be reached any more; the rule lives in c/mscCustomerInfo -->
+
+                <!-- stop 2: which document depends on both answers above -->
+                <template lwc:if={showDocument}>
+                    <div class="ident__row">
+                        <div class="field ident__field">
+                            <!-- 2.17 / 2.22: one field, the segments above are its label. 2.27: the active one is an underline drawn off data-on. Two inputs, no ids (LWC1042); the cursor finds it by data-search. A company gets the plain label. -->
+                            <div class="ident__search">
+                                <template lwc:if={showKeySegments}>
+                                    <div class="ident__keys" data-on={searchKey} role="group" aria-label="Search by">
+                                        <template for:each={keySegments} for:item="s">
+                                            <button
+                                                key={s.key}
+                                                class={s.cls}
+                                                type="button"
+                                                data-key={s.key}
+                                                aria-pressed={s.pressed}
+                                                onclick={handleSearchKey}
+                                            >{s.label}</button>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template lwc:else>
+                                    <p class="field__label ident__keys-label">{searchLabel}</p>
+                                </template>
+                                <!-- 2.29 / MSC-144: the value and the action are one row inside the control; this row owns the separator. Wraps below 480px. -->
+                                <div class="ident__line">
+                                    <template lwc:if={onDocumentKey}>
+                                        <input autocomplete="off"
+                                            data-search="input"
+                                            aria-label={searchLabel}
+                                            class="field__input"
+                                            type="text"
+                                            inputmode={documentInputMode}
+                                            enterkeyhint="search"
+                                            autocapitalize="characters"
+                                            autocorrect="off"
+                                            spellcheck="false"
+                                            value={identity.documentNumber}
+                                            placeholder={documentPlaceholder}
+                                            oninput={handleDocument}
+                                            onkeydown={handleDocumentKey}
+                                        />
+                                    </template>
+                                    <template lwc:else>
+                                        <input autocomplete="off"
+                                            data-search="input"
+                                            aria-label={searchLabel}
+                                            class="field__input"
+                                            type="text"
+                                            inputmode="email"
+                                            enterkeyhint="search"
+                                            autocapitalize="off"
+                                            autocorrect="off"
+                                            spellcheck="false"
+                                            value={contactTerm}
+                                            placeholder={contactPlaceholder}
+                                            oninput={handleContactTerm}
+                                            onkeydown={handleContactKey}
+                                        />
+                                    </template>
+                                    <button
+                                        class="btn btn-primary ident__btn"
+                                        type="button"
+                                        disabled={lookupBlocked}
+                                        onclick={findCustomer}
+                                    >{lookupLabel}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 2.10 / 2.29: why Find customer is not live yet, under the control; only while the number is started and short -->
+                    <template lwc:if={documentHint}>
+                        <p class="field__hint ident__hint">{documentHint}</p>
+                    </template>
+
+                    <!-- stop 3a: listed, not auto-selected; which record to book against is the rep's call -->
+                    <template lwc:if={hasMatches}>
+                        <div class="ident__found">
+                            <span class="field__label">{matchesLabel}</span>
+                        </div>
+
+                        <div class="rows" role="list">
+                            <template for:each={matchRows} for:item="m">
+                                <button
+                                    key={m.key}
+                                    class="glass row"
+                                    type="button"
+                                    role="listitem"
+                                    data-index={m.index}
+                                    disabled={busy}
+                                    onclick={chooseMatch}
+                                >
+                                    <span class="row__main">
+                                        <span class="row__name">
+                                            <!-- 2.11: the company on an organisation row -->
+                                            <span>{m.title}</span>
+                                            <!-- a lead costs a conversion; 2.11: and a company is not a person -->
+                                            <!-- 2.13: chips, plural: the record kind and what matched -->
+                                            <template for:each={m.chips} for:item="c">
+                                                <span key={c.key} class="chip row__kind">{c.text}</span>
+                                            </template>
+                                        </span>
+                                        <!-- 2.11: a company carries the licence and who signs for it -->
+                                        <template for:each={m.lines} for:item="l">
+                                            <span key={l.key} class="row__sub">{l.text}</span>
+                                        </template>
+                                        <!-- 2.14: the address gap, before the choice (GAP 32) -->
+                                        <template lwc:if={m.warn}>
+                                            <span class="row__sub cand__warn">{m.warn}</span>
+                                        </template>
+                                        <!-- 2.7: what this click will do -->
+                                        <span class="row__does">{m.action}</span>
+                                    </span>
+                                    <span class="row__right">
+                                        <c-modon-icon
+                                            name="chevron-right"
+                                            size="15"
+                                            color="var(--text-dim, #8a8a8a)"
+                                        ></c-modon-icon>
+                                    </span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- stop 3b: only after a search that found nobody -->
+                    <template lwc:if={noMatches}>
+                        <div class="ident__miss">
+                            <!-- 2.9: one line, then the button -->
+                            <p class="ident__miss-text">{noMatchMessage}</p>
+                            <button class="btn btn-primary new-btn" type="button" onclick={handleCreateNew}>
+                                <c-modon-icon name="plus" size="14" color="currentColor"></c-modon-icon>
+                                <span>{newCustomerLabel}</span>
+                            </button>
+                        </div>
+                    </template>
+
+                    <template lwc:if={identityError}>
+                        <p class="empty empty--err">{identityError}</p>
+                    </template>
+                </template>
+            </div>
+        </template>
+
+        <!-- qualifying a matched lead: only when it is missing what conversion demands -->
+        <template lwc:if={showQualify}>
+            <div class="form-head">
+                <button class="btn btn-link back-link" type="button" onclick={cancelQualify}>
+                    <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                    <span>Back</span>
+                </button>
+                <!-- MSC-214: the seeded panel carries no lede -->
+                <template lwc:if={qualifyLede}>
+                    <p class="lede">{qualifyLede}</p>
+                </template>
+            </div>
+
+            <p class="qualify__name">{lead.name}</p>
+
+            <div class="qualify__facts">
+                <template for:each={leadFacts} for:item="f">
+                    <div key={f.key} class="qualify__fact">
+                        <span class="qualify__fact-label">{f.label}</span>
+                        <span class="qualify__fact-value">{f.value}</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- MSC-224: field-grid--spaced carries the gap the removed note used to leave
+                 behind it; .field-grid itself has no bottom margin. -->
+            <div class="field-grid field-grid--spaced">
+                <!-- MSC-214: what the lead already answers arrives locked (fill-only on the server) -->
+                <!-- 2.40: every list on this component is c/mscPicklist, drawn in the page and opened
+                     in the browser's top layer (c/mscFloat 1.2). A native select's list is an OS
+                     window: on Windows it opened over the browser's tab bar. -->
+                <div class="field">
+                    <label class="field__label">Nationality *</label>
+                    <c-msc-picklist
+                        label="Nationality"
+                        data-field="nationality"
+                        options={nationalityChoices}
+                        disabled={qualifyNatDisabled}
+                        onchange={handleQualifyField}
+                    ></c-msc-picklist>
+                </div>
+
+                <div class="field">
+                    <label class="field__label">UAE Resident Status *</label>
+                    <c-msc-picklist
+                        label="UAE Resident Status"
+                        data-field="residentStatus"
+                        options={residentChoices}
+                        disabled={qualifyResDisabled}
+                        onchange={handleQualifyField}
+                    ></c-msc-picklist>
+                </div>
+
+                <!-- 2.12: the identity set the residency demands; fields the lead carries arrive locked. 2.13: inside the grid (display:contents). -->
+                <c-msc-identity-fields
+                    resident-status={lead.residentStatus}
+                    values={lead.idValues}
+                    locked={lead.idLocked}
+                    onidentitychange={handleQualifyIdentity}
+                ></c-msc-identity-fields>
+            </div>
+
+            <template lwc:if={qualifyError}>
+                <p class="empty empty--err">{qualifyError}</p>
+            </template>
+
+            <div class="form-foot">
+                <button class="btn btn-ghost" type="button" onclick={cancelQualify}>Cancel</button>
+                <button class="btn btn-primary" type="button" disabled={qualifyBlocked} onclick={confirmQualify}>
+                    {qualifyLabel}
+                </button>
+            </div>
+        </template>
+
+        <!-- 2.11: who signs for a matched company, only when it has more than one contact; stops conversion inventing the wrong Contact -->
+        <template lwc:if={showSignatory}>
+            <div class="form-head">
+                <button class="btn btn-link back-link" type="button" onclick={cancelSignatory}>
+                    <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                    <span>Back</span>
+                </button>
+                <p class="lede">{labels.SIG_TITLE}</p>
+            </div>
+
+            <p class="qualify__name">{signatory.companyName}</p>
+
+            <div class="qualify__facts">
+                <template for:each={signatoryFacts} for:item="f">
+                    <div key={f.key} class="qualify__fact">
+                        <span class="qualify__fact-label">{f.label}</span>
+                        <span class="qualify__fact-value">{f.value}</span>
+                    </div>
+                </template>
+            </div>
+
+            <div class="field-grid">
+                <div class="field field--wide">
+                    <label class="field__label">{labels.SIG_FIELD}</label>
+                    <!-- no blank Select option: there is a default -->
+                    <c-msc-picklist
+                        label={labels.SIG_FIELD}
+                        options={signatoryChoices}
+                        onchange={handleSignatoryChoice}
+                    ></c-msc-picklist>
+                </div>
+            </div>
+
+            <p class="qualify__note">{labels.SIG_NOTE}</p>
+
+            <template lwc:if={identityError}>
+                <p class="empty empty--err">{identityError}</p>
+            </template>
+
+            <div class="form-foot">
+                <button class="btn btn-ghost" type="button" onclick={cancelSignatory}>Cancel</button>
+                <button class="btn btn-primary" type="button" disabled={busy} onclick={confirmSignatory}>
+                    {signatoryCtaLabel}
+                </button>
+            </div>
+        </template>
+
+        <!-- 2.12: the identity step, only when identityFor reports the record cannot carry the booking on its own -->
+        <template lwc:if={showIdentityStep}>
+            <div class="form-head">
+                <button class="btn btn-link back-link" type="button" onclick={cancelIdentityStep}>
+                    <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                    <span>Back</span>
+                </button>
+                <p class="lede">{labels.IDST_TITLE}</p>
+            </div>
+
+            <p class="qualify__name">{identityStep.name}</p>
+
+            <div class="qualify__facts">
+                <template for:each={identityStepFacts} for:item="f">
+                    <div key={f.key} class="qualify__fact">
+                        <span class="qualify__fact-label">{f.label}</span>
+                        <span class="qualify__fact-value">{f.value}</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 2.21: the one place residency is asked; it decides which document is required -->
+            <template lwc:if={identityStepNeedsResidency}>
+                <div class="field-grid">
+                    <div class="field">
+                        <label class="field__label">{labels.IDST_RESIDENCY_ASK}</label>
+                        <c-msc-picklist
+                            label="UAE Resident Status"
+                            placeholder={labels.LEAD_FORM_SELECT}
+                            options={identityStepResidencyChoices}
+                            onchange={handleIdentityStepResidency}
+                        ></c-msc-picklist>
+                        <p class="field__hint">{labels.IDST_RESIDENCY_WHY}</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 2.13: the grid the display:contents fields lay out in -->
+            <div class="field-grid">
+                <c-msc-identity-fields
+                    resident-status={identityStep.residentStatus}
+                    values={identityStep.values}
+                    locked={identityStep.locked}
+                    reasons={identityStep.reasons}
+                    onidentitychange={handleIdentityStepChange}
+                ></c-msc-identity-fields>
+            </div>
+
+            <template lwc:if={identityStepNote}>
+                <p class="qualify__note">{identityStepNote}</p>
+            </template>
+
+            <template lwc:if={identityError}>
+                <p class="empty empty--err">{identityError}</p>
+            </template>
+
+            <div class="form-foot">
+                <button class="btn btn-ghost" type="button" onclick={cancelIdentityStep}>Cancel</button>
+                <button class="btn btn-primary" type="button" disabled={identityStepBlocked} onclick={confirmIdentityStep}>
+                    {identityStepCta}
+                </button>
+            </div>
+        </template>
+
+        <!-- 2.13: the candidates chooser, only when the server found more than one account and wrote nothing. Nothing preselected. -->
+        <template lwc:if={showCandidates}>
+            <div class="form-head">
+                <button class="btn btn-link back-link" type="button" onclick={cancelCandidates}>
+                    <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                    <span>Back</span>
+                </button>
+                <p class="lede">{labels.CAND_TITLE}</p>
+            </div>
+
+            <p class="qualify__name">{candidateCtx.name}</p>
+            <p class="cand__lede">{candidateLede}</p>
+
+            <div class="rows" role="list">
+                <template for:each={candidateRows} for:item="c">
+                    <button
+                        key={c.key}
+                        class={c.cls}
+                        type="button"
+                        role="listitem"
+                        data-index={c.index}
+                        disabled={candidateActionsBlocked}
+                        onclick={handleCandidatePick}
+                    >
+                        <span class="row__main">
+                            <span class="row__name">
+                                <span>{c.title}</span>
+                                <template for:each={c.chips} for:item="ch">
+                                    <span key={ch.key} class="chip row__kind">{ch.text}</span>
+                                </template>
+                            </span>
+                            <template lwc:if={c.sub}>
+                                <span class="row__sub">{c.sub}</span>
+                            </template>
+                            <template lwc:if={c.meta}>
+                                <span class="row__sub">{c.meta}</span>
+                            </template>
+                            <template lwc:if={c.warn}>
+                                <span class="row__sub cand__warn">{c.warn}</span>
+                            </template>
+                            <template lwc:if={c.warn2}>
+                                <span class="row__sub cand__warn">{c.warn2}</span>
+                            </template>
+                        </span>
+                    </button>
+                </template>
+            </div>
+
+            <template lwc:if={identityError}>
+                <p class="empty empty--err">{identityError}</p>
+            </template>
+
+            <!-- the escape hatch, in the footer. 2.42: only while ALLOW_NEW_CUSTOMER_DESPITE_MATCH is on -->
+            <div class="form-foot">
+                <button class="btn btn-ghost" type="button" onclick={cancelCandidates}>Cancel</button>
+                <button class="btn btn-primary" type="button" disabled={candidateContinueBlocked} onclick={confirmCandidates}>
+                    {candidateCta}
+                </button>
+                <template lwc:if={showCandidateNone}>
+                    <button class="btn btn-primary" type="button" disabled={candidateActionsBlocked} onclick={candidateNone}>
+                        {labels.CAND_NONE}
+                    </button>
+                </template>
+            </div>
+        </template>
+
+        <!-- creating a new customer: every field conversion demands, asked once -->
+        <template lwc:if={showCreate}>
+            <div class="form-head">
+                <button class="btn btn-link back-link" type="button" onclick={closeForm}>
+                    <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+                    <span>Back</span>
+                </button>
+                <!-- 2.4: the lede is gone -->
+            </div>
+
+            <!-- 2.12: the demo autofill is deleted -->
+
+            <div class="field-grid">
+                <!-- 2.1: the company first; the person below signs for it -->
+                <template lwc:if={formIsOrganisation}>
+                    <div class="field field--wide">
+                        <label class="field__label" for="co">Company name *</label>
+                        <!-- 2.11: readonly, not disabled, when completing a company the org already holds -->
+                        <input autocomplete="off" autocapitalize="words" spellcheck="false" id="co" class="field__input" type="text" data-f="companyName"
+                            value={form.companyName} oninput={handleField}
+                            readonly={formCompletesCompany}
+                            placeholder="As printed on the trade licence" />
+                        <template lwc:if={companyNameHint}>
+                            <p class="field__hint">{companyNameHint}</p>
+                        </template>
+                    </div>
+                    <p class="field-legend field--wide">{personLegend}</p>
+                </template>
+
+                <div class="field">
+                    <label class="field__label" for="fn">First name *</label>
+                    <input autocomplete="off" autocapitalize="words" spellcheck="false" id="fn" class="field__input" type="text" data-f="firstName"
+                        value={form.firstName} oninput={handleField} />
+                </div>
+                <div class="field">
+                    <label class="field__label" for="ln">Last name *</label>
+                    <input autocomplete="off" autocapitalize="words" spellcheck="false" id="ln" class="field__input" type="text" data-f="lastName"
+                        value={form.lastName} oninput={handleField} />
+                    <!-- 2.12: Block_Special_Characters_In_Name, said at the field; only when both names carry a refused character (GAP 34) -->
+                    <template lwc:if={nameRuleError}><p class="field__error">{nameRuleError}</p></template>
+                </div>
+                <!-- 2.10: both checked on blur, shape locally then Loqate -->
+                <div class="field">
+                    <label class="field__label" for="ph">Mobile *</label>
+                    <div class="field__wrap">
+                        <input autocomplete="off" id="ph" class={phoneState.inputClass} type="tel" data-f="phone"
+                            placeholder="+9715XXXXXXXX"
+                            value={form.phone} oninput={handleField} onblur={handleContactBlur} />
+                        <template lwc:if={phoneState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                        <template lwc:if={phoneState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                    </div>
+                    <template lwc:if={phoneState.isBad}><p class="field__error">{phoneState.message}</p></template>
+                </div>
+                <div class="field">
+                    <label class="field__label" for="em">Email *</label>
+                    <div class="field__wrap">
+                        <input autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" id="em" class={emailState.inputClass} type="email" data-f="email"
+                            value={form.email} oninput={handleField} onblur={handleContactBlur} />
+                        <template lwc:if={emailState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                        <template lwc:if={emailState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                    </div>
+                    <template lwc:if={emailState.isBad}><p class="field__error">{emailState.message}</p></template>
+                </div>
+
+                <!-- 2.25 / MSC-139: can this primary contact sign for the company? Yes links them with a Power of Attorney; blank writes nothing. -->
+                <template lwc:if={formIsOrganisation}>
+                    <div class="field">
+                        <label class="field__label">{labels.SIG_IS_AUTHORISED}</label>
+                        <c-msc-picklist
+                            label={labels.SIG_IS_AUTHORISED}
+                            data-f="isAuthorisedSignatory"
+                            options={authorisedSignatoryChoices}
+                            onchange={handleField}
+                        ></c-msc-picklist>
+                    </div>
+                </template>
+
+                <div class="field">
+                    <label class="field__label">UAE Resident Status *</label>
+                    <c-msc-picklist
+                        label="UAE Resident Status"
+                        data-f="residentStatus"
+                        options={formResidentChoices}
+                        onchange={handleField}
+                    ></c-msc-picklist>
+                </div>
+                <div class="field">
+                    <label class="field__label">Nationality *</label>
+                    <c-msc-picklist
+                        label="Nationality"
+                        data-f="nationality"
+                        options={formNationalityChoices}
+                        onchange={handleField}
+                    ></c-msc-picklist>
+                </div>
+
+                <!-- 2.12: the company's own document, organisation only -->
+                <template lwc:if={formIsOrganisation}>
+                    <div class="field">
+                        <label class="field__label" for="cdoc">Trade licence number *</label>
+                        <input autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" id="cdoc" class="field__input" type="text" data-f="documentNumber"
+                            value={form.documentNumber} oninput={handleField} placeholder={labels.ORG_LICENCE_PLACEHOLDER} />
+                    </div>
+                </template>
+
+                <!-- 2.12: the identity set the residency demands; PREPROD refuses every resident lead without an expiry -->
+                <!-- 2.13: no field-wide, the fields flow inline -->
+                <c-msc-identity-fields
+                    resident-status={form.residentStatus}
+                    values={formIdentity}
+                    onidentitychange={handleFormIdentity}
+                ></c-msc-identity-fields>
+
+                <!-- 2.13: no field-wide, paired into the last row -->
+                <div class="field">
+                    <label class="field__label">Project of interest *</label>
+                    <c-msc-picklist
+                        label="Project of interest"
+                        placeholder="Select a project…"
+                        data-f="projectInterest"
+                        options={projectChoices}
+                        onchange={handleField}
+                    ></c-msc-picklist>
+                </div>
+            </div>
+
+            <!-- 2.1: the standing hint is gone -->
+
+            <template lwc:if={formError}>
+                <div class="banner banner--error form-error">
+                    <c-modon-icon name="alert-circle" size="15" color="var(--chip-red, #f87171)"></c-modon-icon>
+                    <span>{formError}</span>
+                </div>
+            </template>
+
+            <div class="form-foot">
+                <button class="btn btn-ghost" type="button" onclick={closeForm}>Cancel</button>
+                <button class="btn btn-primary" type="button" disabled={saveDisabled} onclick={handleCreate}>
+                    {saveLabel}
+                </button>
+            </div>
+        </template>
+    </div>
+
+    <!-- the wait is shown and blocked: c-msc-loader covers the viewport -->
+    <template lwc:if={isBusy}>
+        <c-msc-loader></c-msc-loader>
+    </template>
+</template>

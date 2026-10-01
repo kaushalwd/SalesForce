@@ -1,0 +1,150 @@
+<template>
+    <!-- renders only while the Owners tab is showing; what it loaded is kept -->
+    <template lwc:if={active}>
+        <div class="op">
+            <template lwc:if={showLoader}>
+                <div class="op__sk" aria-label={labels.JO_B_LOADING}>
+                    <span class="op__sk-line op__sk-line--head"></span>
+                    <span class="op__sk-line"></span>
+                    <span class="op__sk-line"></span>
+                </div>
+            </template>
+
+            <template lwc:elseif={showFailure}>
+                <p class="op__none">{labels.JO_B_UNAVAILABLE}</p>
+            </template>
+
+            <template lwc:else>
+                <!-- the rep opened a unit this booking can no longer show -->
+                <template lwc:if={showOtherUnitNote}>
+                    <div class="op__note">
+                        <c-modon-icon
+                            name="info"
+                            size="14"
+                            color="currentColor"
+                        ></c-modon-icon>
+                        <span>{labels.JO_B_OTHER_UNIT}</span>
+                    </div>
+                </template>
+
+                <template lwc:if={owners}>
+                    <!-- MSC-088: two screens over one state, ownership (a record) and verification (a task); the Apex, writes, poll and drawers are shared -->
+                    <template lwc:if={isOwnersView}>
+                        <c-msc-owners-table
+                            state={owners}
+                            busy={ownersBusy}
+                            onaddowner={handleAddOwner}
+                            onaddtouncovered={handleAddToUncovered}
+                            oneditowner={handleEditOwner}
+                        ></c-msc-owners-table>
+                    </template>
+                    <template lwc:else>
+                        <!-- MSC-173: buyer-detail and next-step are a company's two tracks; undefined on an individual booking -->
+                        <c-msc-verify-list
+                            state={owners}
+                            buyer-detail={verifyBuyerDetail}
+                            next-step={verifyNextStep}
+                            busy={ownersBusy}
+                            sending-account-id={sendingAccountId}
+                            refreshing={refreshingOwners}
+                            checked-at={checkedAt}
+                            onsendverification={handleSendVerification}
+                            onfixdetails={handleFixDetails}
+                            oncheckcompliance={handleCheckCompliance}
+                            onaddowner={handleAddOwner}
+                            onaddtouncovered={handleAddToUncovered}
+                            onrefreshcompliance={handleRefreshOwners}
+                            onnextaction={handleVerifyNextAction}
+                            next-busy={verifyNextBusy}
+                        ></c-msc-verify-list>
+                    </template>
+                </template>
+            </template>
+
+            <!-- the pane's own sentence; the drawer's refusals are printed on the drawer -->
+            <template lwc:if={paneError}>
+                <div class="op__err" role="alert">
+                    <span>{paneError}</span>
+                    <button
+                        class="op__err-x"
+                        type="button"
+                        onclick={dismissPaneError}
+                        aria-label={labels.JO_B_DISMISS}
+                    >
+                        <c-modon-icon name="x" size="12" color="currentColor"></c-modon-icon>
+                    </button>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <!-- the layers, at the root and outside the tab guard: c/mscDrawer is position: fixed and owns its exit, so no lwc:if -->
+    <c-msc-owners-drawer
+        open={drawerOpen}
+        mode={drawerMode}
+        state={owners}
+        person={person}
+        search-status={searchStatus}
+        saving={busyOwnersSave}
+        error-message={ownersError}
+        preselected-order-ids={preselected}
+        edit-account-id={editAccountId}
+        onfindperson={handleFindPerson}
+        onresetsearch={handleResetSearch}
+        onpersonfound={handlePersonFound}
+        onsaveowner={handleSaveOwner}
+        onclosedrawer={handleCloseDrawer}
+    ></c-msc-owners-drawer>
+
+    <template lwc:if={gateOpen}>
+        <c-msc-owners-gate
+            open={gateOpen}
+            units={uncovered}
+            primary-name={primaryName}
+            ongateadd={handleGateAdd}
+            ongateconfirm={handleGateConfirm}
+        ></c-msc-owners-gate>
+    </template>
+
+    <!-- MSC-174: the company's details workspace, no lwc:if; only a company can reach it -->
+    <c-msc-org-details
+        open={orgDetailsOpen}
+        company-name={orgDetailsCompanyName}
+        booking-ref={orgDetailsBookingRef}
+        details={orgDetails}
+        loading={busyOrgDetails}
+        saving={busyOrgSave}
+        submitting={busyOrgSubmit}
+        uploading={busyOrgUpload}
+        sending-link={busyOrgSendLink}
+        next-step={verifyNextStep}
+        error-message={orgDetailsError}
+        onclose={handleOrgDetailsClose}
+        onsavedetails={handleSaveOrgDetails}
+        onchecksignatory={handleCheckSignatory}
+        onassignsignatory={handleAssignSignatory}
+        oncreatesignatory={handleCreateSignatory}
+        onsendverification={handleSendLinkFromWorkspace}
+        onuploadlicence={handleUploadLicence}
+        onuploadfailed={handleLicenceUnreadable}
+        onsubmitcompliance={handleSubmitOrgCompliance}
+    ></c-msc-org-details>
+
+    <template lwc:if={checkOpen}>
+        <c-msc-compliance-check
+            open={checkOpen}
+            state={check}
+            parties={checkParties}
+            active-account-id={checkActiveAccountId}
+            loading={busyCheck}
+            saving={busyCheckSave}
+            submitting={busyCheckSubmit}
+            error-message={checkError}
+            onswitchparty={handleSwitchParty}
+            onrefreshcheck={handleRefreshCheck}
+            onclosecheck={handleCloseCheck}
+            onsavedetails={handleSaveCheckDetails}
+            onsubmitcompliance={handleSubmitCheck}
+        ></c-msc-compliance-check>
+    </template>
+</template>

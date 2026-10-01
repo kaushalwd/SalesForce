@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_1st_Reminder_Email</name>
+        <label>Send 1st Reminder Email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>formula_RecipientEmail_1</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>template_1stReminderSubject</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>template_1stReminderBody</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <actionCalls>
+        <name>Send_2nd_Reminder_Email</name>
+        <label>Send 2nd Reminder Email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>formula_RecipientEmail_2</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>template_2ndReminderSubject</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>template_2ndReminderBody</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <actionCalls>
+        <name>Send_3rd_Reminder_Email</name>
+        <label>Send 3rd Reminder Email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recipientAddresses</name>
+            <value>
+                <collectionElements>
+                    <elementReference>formula_RecipientEmail_3</elementReference>
+                </collectionElements>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>template_3rdReminderSubject</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>template_3rdReminderBody</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>3.0.1</versionString>
+    </actionCalls>
+    <apiVersion>64.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Is_Task_Still_Incomplete</name>
+        <label>Is Task Still Incomplete</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Still_Open_1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Completed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>formula_RecipientEmail_1</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>formula_RecipientEmail_1</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue></stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_1st_Reminder_Email</targetReference>
+            </connector>
+            <label>Still Open</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Task_Still_Incomplete_2</name>
+        <label>Task Still Incomplete 2</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Still_Open_2</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Completed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>formula_RecipientEmail_2</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>formula_RecipientEmail_2</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue></stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_2nd_Reminder_Email</targetReference>
+            </connector>
+            <label>Still Open</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Task_Still_Incomplete_3</name>
+        <label>Task Still Incomplete 3</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Still_Open_3</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Completed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>formula_RecipientEmail_3</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>formula_RecipientEmail_3</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue></stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_3rd_Reminder_Email</targetReference>
+            </connector>
+            <label>Still Open</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>formula_1stCommentLine</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    {!$Record.Subject} = &quot;Customer Remarks Task&quot; || (NOT(ISBLANK({!Get_Case_Details_1.Customer_Remarks__c})) &amp;&amp; {!$Record.Description} = {!Get_Case_Details_1.Customer_Remarks__c}),
+    &quot;Customer Remarks: &quot; &amp; {!$Record.Description},
+    &quot;Customer Follow Up Comment: &quot; &amp; {!$Record.Description}
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_2ndCommentLine</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    {!$Record.Subject} = &quot;Customer Remarks Task&quot; || (NOT(ISBLANK({!Get_Case_Details_2.Customer_Remarks__c})) &amp;&amp; {!$Record.Description} = {!Get_Case_Details_2.Customer_Remarks__c}),
+    &quot;Customer Remarks: &quot; &amp; {!$Record.Description},
+    &quot;Customer Follow Up Comment: &quot; &amp; {!$Record.Description}
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_3rdCommentLine</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    {!$Record.Subject} = &quot;Customer Remarks Task&quot; || (NOT(ISBLANK({!Get_Case_Details_3.Customer_Remarks__c})) &amp;&amp; {!$Record.Description} = {!Get_Case_Details_3.Customer_Remarks__c}),
+    &quot;Customer Remarks: &quot; &amp; {!$Record.Description},
+    &quot;Customer Follow Up Comment: &quot; &amp; {!$Record.Description}
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_RecipientEmail_1</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Owner:User.Email})),
+    {!$Record.Owner:User.Email},
+    IF(
+        NOT(ISBLANK({!Get_Queue_Details_1.Email})),
+        {!Get_Queue_Details_1.Email},
+        IF(
+            NOT(ISBLANK({!Get_Case_Details_1.New_Owner_Email__c})),
+            {!Get_Case_Details_1.New_Owner_Email__c},
+            IF(
+                NOT(ISBLANK({!Get_Case_Details_1.Owner_Email__c})),
+                {!Get_Case_Details_1.Owner_Email__c},
+                IF(
+                    NOT(ISBLANK({!Get_Case_Details_1.LastModifiedBy.Email})),
+                    {!Get_Case_Details_1.LastModifiedBy.Email},
+                    {!Get_Case_Details_1.CreatedBy.Email}
+                )
+            )
+        )
+    )
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_RecipientEmail_2</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Owner:User.Email})),
+    {!$Record.Owner:User.Email},
+    IF(
+        NOT(ISBLANK({!Get_Queue_Details_2.Email})),
+        {!Get_Queue_Details_2.Email},
+        IF(
+            NOT(ISBLANK({!Get_Case_Details_2.New_Owner_Email__c})),
+            {!Get_Case_Details_2.New_Owner_Email__c},
+            IF(
+                NOT(ISBLANK({!Get_Case_Details_2.Owner_Email__c})),
+                {!Get_Case_Details_2.Owner_Email__c},
+                IF(
+                    NOT(ISBLANK({!Get_Case_Details_2.LastModifiedBy.Email})),
+                    {!Get_Case_Details_2.LastModifiedBy.Email},
+                    {!Get_Case_Details_2.CreatedBy.Email}
+                )
+            )
+        )
+    )
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_RecipientEmail_3</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Owner:User.Email})),
+    {!$Record.Owner:User.Email},
+    IF(
+        NOT(ISBLANK({!Get_Queue_Details_3.Email})),
+        {!Get_Queue_Details_3.Email},
+        IF(
+            NOT(ISBLANK({!Get_Case_Details_3.New_Owner_Email__c})),
+            {!Get_Case_Details_3.New_Owner_Email__c},
+            IF(
+                NOT(ISBLANK({!Get_Case_Details_3.Owner_Email__c})),
+                {!Get_Case_Details_3.Owner_Email__c},
+                IF(
+                    NOT(ISBLANK({!Get_Case_Details_3.LastModifiedBy.Email})),
+                    {!Get_Case_Details_3.LastModifiedBy.Email},
+                    {!Get_Case_Details_3.CreatedBy.Email}
+                )
+            )
+        )
+    )
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_RecipientGreeting_1</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Owner:User.Name})),
+    {!$Record.Owner:User.Name},
+    IF(
+        NOT(ISBLANK({!Get_Queue_Details_1.Name})),
+        {!Get_Queue_Details_1.Name},
+        &quot;Team&quot;
+    )
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_RecipientGreeting_2</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Owner:User.Name})),
+    {!$Record.Owner:User.Name},
+    IF(
+        NOT(ISBLANK({!Get_Queue_Details_2.Name})),
+        {!Get_Queue_Details_2.Name},
+        &quot;Team&quot;
+    )
+)</expression>
+    </formulas>
+    <formulas>
+        <name>formula_RecipientGreeting_3</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Owner:User.Name})),
+    {!$Record.Owner:User.Name},
+    IF(
+        NOT(ISBLANK({!Get_Queue_Details_3.Name})),
+        {!Get_Queue_Details_3.Name},
+        &quot;Team&quot;
+    )
+)</expression>
+    </formulas>
+    <interviewLabel>Task - Follow Up Emails {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Task - Follow Up Emails</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Case_Details_1</name>
+        <label>Get Case Details 1</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Queue_Details_1</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.WhatId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Case_Details_2</name>
+        <label>Get Case Details 2</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Queue_Details_2</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.WhatId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Case_Details_3</name>
+        <label>Get Case Details 3</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Queue_Details_3</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.WhatId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Queue_Details_1</name>
+        <label>Get Queue Details 1</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Is_Task_Still_Incomplete</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.OwnerId</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Queue_Details_2</name>
+        <label>Get Queue Details 2</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Task_Still_Incomplete_2</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.OwnerId</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Queue_Details_3</name>
+        <label>Get Queue Details 3</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Task_Still_Incomplete_3</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.OwnerId</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <filterLogic>(1 OR 2) AND 3</filterLogic>
+        <filters>
+            <field>Subject</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Customer Follow Up Task</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Subject</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Customer Remarks Task</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Completed</stringValue>
+            </value>
+        </filters>
+        <object>Task</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <scheduledPaths>
+            <name>Reminder_1_Minute</name>
+            <connector>
+                <targetReference>Get_Case_Details_1</targetReference>
+            </connector>
+            <label>Reminder - 1 Minute</label>
+            <offsetNumber>1</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>CreatedDate</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>Reminder_2_Minutes</name>
+            <connector>
+                <targetReference>Get_Case_Details_2</targetReference>
+            </connector>
+            <label>Reminder - 2 Minutes</label>
+            <offsetNumber>2</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>CreatedDate</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>Reminder_3_Minutes</name>
+            <connector>
+                <targetReference>Get_Case_Details_3</targetReference>
+            </connector>
+            <label>Reminder - 3 Minutes</label>
+            <offsetNumber>3</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>CreatedDate</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>template_1stReminderBody</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Hello {!formula_RecipientGreeting_1},
+
+This is the 1st reminder that a {!$Record.Subject} is pending your action. Case Details:
+Case Number: {!Get_Case_Details_1.CaseNumber}
+Subject: {!Get_Case_Details_1.Subject}
+New Owner: {!Get_Case_Details_1.New_Owner__r.Name}
+Queue: {!Get_Case_Details_1.Queue__c}
+Owner Queue: {!Get_Case_Details_1.Owner_Queue__c}
+{!formula_1stCommentLine}
+
+Please review the case details and complete the task in Salesforce at your earliest convenience.
+
+Thank you.</text>
+    </textTemplates>
+    <textTemplates>
+        <name>template_1stReminderSubject</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>1st Reminder: {!$Record.Subject} - Case {!Get_Case_Details_1.CaseNumber}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>template_2ndReminderBody</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Hello {!formula_RecipientGreeting_2},
+
+This is the 2nd reminder that a {!$Record.Subject} is pending your action. Case Details:
+Case Number: {!Get_Case_Details_2.CaseNumber}
+Subject: {!Get_Case_Details_2.Subject}
+New Owner: {!Get_Case_Details_2.New_Owner__r.Name}
+Queue: {!Get_Case_Details_2.Queue__c}
+Owner Queue: {!Get_Case_Details_2.Owner_Queue__c}
+{!formula_2ndCommentLine}
+
+Please review the case details and complete the task in Salesforce as soon as possible.
+
+Thank you.</text>
+    </textTemplates>
+    <textTemplates>
+        <name>template_2ndReminderSubject</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>2nd Reminder: {!$Record.Subject} - Case {!Get_Case_Details_2.CaseNumber}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>template_3rdReminderBody</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Hello {!formula_RecipientGreeting_3},
+
+This is the final reminder that a {!$Record.Subject} has reached its SLA deadline and requires immediate action. Case Details:
+Case Number: {!Get_Case_Details_3.CaseNumber}
+Subject: {!Get_Case_Details_3.Subject}
+New Owner: {!Get_Case_Details_3.New_Owner__r.Name}
+Queue: {!Get_Case_Details_3.Queue__c}
+Owner Queue: {!Get_Case_Details_3.Owner_Queue__c}
+{!formula_3rdCommentLine}
+
+Please review the case details and complete the task in Salesforce immediately.
+
+Thank you.</text>
+    </textTemplates>
+    <textTemplates>
+        <name>template_3rdReminderSubject</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Final Reminder: {!$Record.Subject} - Case {!Get_Case_Details_3.CaseNumber}</text>
+    </textTemplates>
+</Flow>

@@ -1,0 +1,890 @@
+/* eoiIdentityChooser — Wadeem journey design system (EOI-UI-9). @author Aurelix
+   Source of truth: the approved journey-redesign artifact. Tablet >=700px,
+   desktop >=1000px, mobile-first base. */
+
+:host {
+    --pine: var(--eoi-pine, #0D2B21);
+    --pine-2: var(--eoi-pine-2, #123A2C);
+    --abyss: var(--eoi-abyss, #071E16);
+    --champagne: var(--eoi-champagne, #C9BC8F);
+    --champ-40: var(--eoi-champ-40, rgba(201, 188, 143, 0.4));
+    --champ-18: var(--eoi-champ-18, rgba(201, 188, 143, 0.18));
+    --sand: var(--eoi-sand, #EFEAE0);
+    --shell: var(--eoi-shell, #FAF8F2);
+    --card: var(--eoi-card, #FFFFFF);
+    --ink: var(--eoi-ink, #182420);
+    --stone: var(--eoi-stone, #877F6C);
+    --line: var(--eoi-line, #DAD3C2);
+    --line-soft: var(--eoi-line-soft, #E7E2D6);
+    --amber: #8A6D1D;
+    --red: #A34433;
+    --serif: var(--eoi-serif, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    font-family: var(--sans);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* ---------- step rail ---------- */
+.m-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 0 0 22px;
+}
+/* The rail announces itself to screen readers as one sentence; the numbered
+   marks below are decorative (aria-hidden on the rail element). */
+.m-steps__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+.m-steps__rail {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+.m-step {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.m-step:last-child {
+    flex: 0 0 auto;
+}
+.m-step__num {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--stone);
+}
+.m-step__ck {
+    width: 9px;
+    height: 9px;
+    display: block;
+}
+.m-step__lab {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    margin-left: 8px;
+    white-space: nowrap;
+}
+.m-step__line {
+    flex: 1;
+    height: 1px;
+    background: var(--line-soft);
+    margin: 0 10px;
+    min-width: 10px;
+}
+.m-step.is-done .m-step__num {
+    color: var(--champagne);
+}
+.m-step.is-on .m-step__num {
+    background: var(--pine);
+    color: var(--shell);
+}
+.m-step.is-on .m-step__lab {
+    color: var(--pine);
+}
+.m-step.is-done .m-step__line {
+    background: var(--champ-40);
+}
+/* Narrow measure: numbers hold the sequence, only the current step is named. */
+.m-step:not(.is-on) .m-step__lab {
+    display: none;
+}
+
+/* ---------- voice ---------- */
+.m-h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 27px;
+    line-height: 1.14;
+    margin: 0 0 8px;
+    color: var(--pine);
+    letter-spacing: 0.005em;
+    text-wrap: balance;
+}
+.m-sub {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--eoi-muted, #5B6159);
+    margin: 0 0 24px;
+    max-width: 52ch;
+}
+.m-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: var(--pine);
+    margin: -2px 0 14px;
+}
+.m-verified::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background: var(--champagne);
+}
+
+.error {
+    margin: 0 0 18px;
+    padding: 10px 14px;
+    border: 1px solid rgba(163, 68, 51, 0.35);
+    background: rgba(163, 68, 51, 0.06);
+    color: var(--red);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+/* ---------- tabs ---------- */
+.m-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    margin: 0 0 24px;
+}
+.tab {
+    appearance: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    padding: 11px 4px 12px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    position: relative;
+    white-space: nowrap;
+}
+.tab[aria-selected="true"] {
+    color: var(--pine);
+}
+.tab[aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--pine);
+}
+.tab:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: -2px;
+}
+
+/* ---------- panes ---------- */
+.pane.is-hidden {
+    display: none;
+}
+.uae-wrap {
+    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.uae-wrap .m-note {
+    justify-content: center;
+    text-align: left;
+    max-width: 46ch;
+}
+.uae-btn {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+    line-height: 0;
+}
+.uae-btn img {
+    max-width: 100%;
+    height: 48px;
+    width: auto;
+    display: block;
+}
+.uae-btn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 3px;
+}
+.uae-btn[disabled] {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* ---------- forms ---------- */
+.m-grid2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px 16px;
+}
+.m-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.m-field label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    margin-bottom: 7px;
+}
+.m-input {
+    appearance: none;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--card);
+    padding: 12px 13px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.3;
+    min-height: 45px;
+    width: 100%;
+}
+.m-input::placeholder {
+    color: var(--eoi-khaki, #AFA893);
+}
+.m-input:focus {
+    outline: none;
+    border-color: var(--pine);
+    box-shadow: 0 0 0 1px var(--pine), 0 0 0 4px var(--champ-18);
+}
+.m-span2 {
+    grid-column: 1 / -1;
+}
+.sect {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    margin: 22px 0 14px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line-soft);
+}
+.hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ---------- buttons ---------- */
+.m-btn {
+    appearance: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    border: 1px solid var(--champ-40);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 14px 20px;
+    margin-top: 24px;
+}
+.m-btn .arr {
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--champagne);
+}
+.m-btn--ghost {
+    background: none;
+    color: var(--pine);
+    border: 1px solid var(--pine);
+}
+.m-btn--ghost .arr {
+    color: var(--pine);
+}
+.m-btn--link {
+    text-decoration: none;
+    box-sizing: border-box;
+}
+.m-btn[disabled] {
+    opacity: 0.6;
+    cursor: default;
+}
+.m-btn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+.backrow {
+    display: flex;
+    justify-content: center;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line-soft);
+}
+.back {
+    appearance: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--stone);
+    padding: 2px 6px;
+}
+.back:hover {
+    color: var(--pine);
+}
+.back:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+.m-note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--eoi-muted, #5B6159);
+    margin: 18px 0 0;
+}
+.m-note svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--stone);
+}
+
+/* system-generated EOI numbers as they land */
+.m-eoinum {
+    font-weight: 600;
+    color: var(--pine);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+
+/* ---------- receipt (done) ---------- */
+.m-donegrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+}
+.m-panelcap {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    margin: 0 0 14px;
+}
+.m-rcpt {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px 20px 16px;
+}
+.m-rcpt__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 13px;
+}
+.m-rcpt__row .l {
+    min-width: 0;
+    text-wrap: pretty;
+    padding-right: 6px;
+}
+.m-rcpt__row .l small {
+    display: block;
+    font-size: 10.5px;
+    color: var(--stone);
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+}
+.m-rcpt__row .r {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.m-rcpt__row--total {
+    border-bottom: none;
+    padding-top: 13px;
+}
+.m-rcpt__row--total .l {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--pine);
+}
+.m-rcpt__row--total .r {
+    font-family: var(--serif);
+    font-size: 19px;
+    color: var(--pine);
+}
+
+.m-next {
+    counter-reset: nxt;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.m-next li {
+    position: relative;
+    padding: 0 0 18px 34px;
+}
+.m-next li::before {
+    content: counter(nxt);
+    counter-increment: nxt;
+    position: absolute;
+    left: 0;
+    top: 1px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 11px;
+    color: var(--pine);
+    border: 1px solid var(--champagne);
+}
+.m-next li::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 26px;
+    bottom: 2px;
+    width: 1px;
+    background: var(--line-soft);
+}
+.m-next li:last-child::after {
+    display: none;
+}
+.m-next b {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+}
+.m-next p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--eoi-muted, #5B6159);
+}
+
+/* ---------- centered state screens ---------- */
+.m-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 4px;
+}
+.m-state .m-h1 {
+    margin-bottom: 10px;
+}
+.m-state .m-sub {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 42ch;
+}
+.m-state__card {
+    max-width: 420px;
+    width: 100%;
+}
+.m-state .error {
+    max-width: 420px;
+}
+.m-help {
+    margin: 14px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--stone);
+}
+
+/* Modon O spinner */
+.m-o {
+    width: 40px;
+    height: 40px;
+    fill: var(--pine);
+    transform-origin: 50% 50%;
+    margin-bottom: 20px;
+}
+.spin {
+    animation: mospin 1.4s linear infinite, mopulse 1.4s ease-in-out infinite;
+}
+@keyframes mospin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+@keyframes mopulse {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .spin {
+        animation: none;
+        opacity: 0.85;
+    }
+}
+
+/* ---------- tablet (>=700px) ---------- */
+@media (min-width: 700px) {
+    .m-step:not(.is-on) .m-step__lab {
+        display: block;
+    }
+    .m-grid2 {
+        grid-template-columns: 1fr 1fr;
+    }
+    .m-h1 {
+        font-size: 31px;
+    }
+    .m-donegrid {
+        grid-template-columns: 1.2fr 1fr;
+    }
+}
+
+/* ---------- desktop (>=1000px): the 40% column composes like a tall page ---------- */
+@media (min-width: 1000px) {
+    .m-h1 {
+        font-size: 28px;
+    }
+    .m-donegrid {
+        grid-template-columns: 1fr;
+        gap: 26px;
+    }
+    .m-steps {
+        margin-bottom: 20px;
+    }
+    .m-step__lab {
+        letter-spacing: 0.1em;
+        margin-left: 7px;
+    }
+    .m-step__line {
+        margin: 0 7px;
+        min-width: 8px;
+    }
+    .m-state {
+        padding: 60px 8px;
+    }
+}
+
+/* Embedded Checkout Flow (MSC-243). The container page paints its own transparent
+   background, so the frame only needs room to grow - Flow reports its own height and
+   the 3-D Secure challenge renders inside the same box. */
+.m-paysum {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+.m-paysum .m-lrow__name {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.25;
+    color: var(--ink);
+}
+.m-paysum .m-lrow__meta {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+}
+.m-paysum .m-wrow__amt {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.m-paysum .m-wrow__amt small {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--stone);
+    margin-right: 3px;
+}
+.m-cardsurface {
+    border: 1px solid var(--line);
+    background: var(--card);
+    padding: 6px;
+}
+.cko-frame {
+    width: 100%;
+    min-height: 360px;
+    border: 0;
+    display: block;
+    transition: height 0.25s ease;
+}
+/* MEOI-ID2. Residency segmented control inside the Individual pane. Deliberately not a
+   third tab: it decides one field, not a different kind of registration. */
+/* MEOI-A4b. Spaced and styled exactly like a field label: 16px above (the form's row
+   gap, so it sits as far below the mobile field as the fields sit from each other) and
+   7px to its control, in the same stone 13px as every other label. It used to sit 4px
+   under the mobile input in a heavier ink, which read as part of that field. */
+.m-reslabel {
+    margin: 16px 0 7px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--stone);
+}
+.m-seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    background: var(--card);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.m-seg__opt {
+    appearance: none;
+    cursor: pointer;
+    border: 0;
+    border-right: 1px solid var(--line);
+    background: none;
+    padding: 9px 18px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    color: var(--stone);
+}
+.m-seg__opt:last-child {
+    border-right: 0;
+}
+.m-seg__opt.is-on {
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    font-weight: 600;
+}
+.m-seg__opt:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: -2px;
+}
+
+/* MEOI-A5. Individual / Organisation as the same segmented control as Resident /
+   Non-Resident: one bordered group, the chosen option filled pine. Replaces the
+   underlined text tabs, which read as navigation rather than a choice. */
+.m-tabs {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--card);
+    margin: 0 0 22px;
+    overflow: hidden;
+    display: flex;
+    width: 100%;
+}
+.m-tabs .tab {
+    flex: 1 1 0;
+    text-align: center;
+    padding: 9px 18px;
+    margin: 0;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    background: none;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--stone);
+    box-shadow: none;
+}
+.m-tabs .tab:last-child {
+    border-right: 0;
+}
+.m-tabs .tab[aria-selected="true"] {
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    font-weight: 600;
+    border-bottom: 0;
+    box-shadow: none;
+}
+.m-tabs .tab[aria-selected="true"]::after,
+.m-tabs .tab::after {
+    display: none;
+}
+.m-tabs .tab:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: -2px;
+}
+
+/* MEOI-A6. Every choice control takes the full measure, options split equally. */
+.m-seg {
+    display: flex;
+    width: 100%;
+}
+.m-seg__opt {
+    flex: 1 1 0;
+    text-align: center;
+    padding: 12px 18px;
+    font-size: 14px;
+}
+
+/* MEOI-M1. iOS Safari zooms the page whenever a focused field's font is under 16px,
+   which is what "the form grows when I tap First name" is. Below the tablet
+   breakpoint every text field renders at 16px - the same visual size as the 14px
+   desktop field, because the phone canvas is denser - so focus changes nothing. */
+@media (max-width: 699px), (pointer: coarse) {
+    .m-input,
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"] {
+        font-size: 16px;
+    }
+}
+/* MEOI-M1a. Same trigger as the West Baniyas site (adhaBaniyasJourney): pointer: coarse
+   catches every touch device - an iPad in landscape is wider than 700px and would
+   otherwise still zoom - while a desktop with a mouse keeps the 14px field. */
+
+/* ---------- MSC-247: sign-in first ---------- */
+.m-reslabel--top {
+    margin-top: 0;
+}
+.m-inpwrap {
+    position: relative;
+}
+.m-inpicon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    color: var(--stone);
+    pointer-events: none;
+}
+.m-input--icon {
+    padding-left: 42px;
+}
+.m-or {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0 16px;
+    color: var(--stone);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.m-or::before,
+.m-or::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line-soft);
+}
+.uae-btn--wide {
+    width: 100%;
+}
+.uae-btn--wide img {
+    width: 100%;
+    height: auto;
+}
+/* the proven field: read-only, sand ground, one small lock on the right */
+.m-lockwrap {
+    position: relative;
+}
+.m-lockwrap .m-input {
+    padding-right: 40px;
+}
+.m-input--locked {
+    background: var(--sand);
+    border-color: var(--line-soft);
+    color: var(--ink);
+}
+.m-input--locked:focus {
+    border-color: var(--line-soft);
+    box-shadow: none;
+}
+.m-lock {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translateY(-50%);
+    color: var(--stone);
+    pointer-events: none;
+}
+/* the type a returning customer already registered with: shown, not clickable */
+.m-tabs .tab[disabled] {
+    opacity: 0.45;
+    cursor: default;
+}
+.m-note--lock {
+    margin: -12px 0 20px;
+}
+
+/* ---------- MEOI-CAPTCHA ---------- */
+/* Google's badge peeks in from the frame's right edge like from a page edge; the frame sits just
+   above the split page's footer bar and under any modal scrim. */
+.rc-frame { position: fixed; width: 300px; height: 80px; right: 0; bottom: 34px; border: 0; background: transparent; z-index: 30; pointer-events: none; } /* MEOI-CAPTCHA2 (Mridul, 11 Sep): the frame is mostly transparent and was swallowing taps on the buttons beneath it */
+.m-note--rc { display: block; margin-top: 12px; }
+.m-note--rc a { color: inherit; text-decoration: underline; }
+
+/* MEOI-CAPTCHA2 (Mridul, 11 Sep 2026): on phones every step ends with a full-width button and the
+   reCAPTCHA badge floats bottom-right above the footer; this clearance keeps the last button above
+   the badge when the page is scrolled to the end (the frame itself no longer takes pointer events). */
+@media (max-width: 767px) {
+    :host { padding-bottom: 64px; }
+    /* MEOI-CAPTCHA4 (12 Sep 2026, Mridul): smaller badge on phones, like the landing page;
+       scaled in place from its bottom-right corner, still no pointer events */
+    .rc-frame { transform: scale(.62); transform-origin: 100% 100%; }
+}

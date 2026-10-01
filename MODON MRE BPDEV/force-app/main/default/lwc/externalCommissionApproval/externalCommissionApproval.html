@@ -1,0 +1,118 @@
+<template>
+    <template lwc:if={isLoading}>
+        <div class="slds-align_absolute-center slds-m-top_large">
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </div>
+    </template>
+    <lightning-card title="Commission Lines - Internal Review" icon-name="standard:approval">
+   
+        <div class="slds-p-around_medium">
+            <!-- Filters -->
+<div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+    <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
+        <lightning-input
+            label="Search by Unit Name"
+            value={unitSearch}
+            onchange={handleUnitSearchChange}
+            placeholder="Type unit name...">
+        </lightning-input>
+    </div>
+
+    <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12">
+        <lightning-combobox
+            label="Status"
+            value={statusFilter}
+            options={statusOptions}
+            onchange={handleStatusChange}>
+        </lightning-combobox>
+    </div>
+
+    <div class="slds-col slds-size_1-of-1 slds-medium-size_5-of-12 slds-text-align_right slds-m-top_large">
+        <!-- Keep your existing buttons here (Bulk Approve, Refresh, Prev/Next...) -->
+    
+            <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                    <lightning-button
+                        label="Bulk Approve Selected"
+                        variant="brand"
+                        onclick={handleBulkApprove}
+                        disabled={disableBulkApprove}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_x-small"
+                        label="Refresh"
+                        onclick={loadData}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-text-align_right">
+                    <lightning-button
+                        label="Previous"
+                        onclick={handlePrev}
+                        disabled={disablePrev}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_x-small"
+                        label="Next"
+                        onclick={handleNext}
+                        disabled={disableNext}>
+                    </lightning-button>
+
+                    <span class="slds-m-left_medium">
+                        Page {pageNumber} of {totalPages} • Total: {totalRecords}
+                    </span>
+                </div>
+            </div>
+</div>
+</div>
+ <template if:true={showDataTable}>
+            <lightning-datatable
+                key-field="Id"
+                data={rows}
+                columns={columns}
+                onrowaction={handleRowAction}
+                onrowselection={handleRowSelection}
+                selected-rows={selectedRowIds}
+                is-loading={isLoading}>
+            </lightning-datatable>
+</template>
+            <template if:false={showDataTable}> 
+            <div class="slds-p-around_medium slds-text-align_center slds-text-body_large">
+                <b style="color:red">No commission lines pending for internal review.</b>
+            </div>
+        </template>
+        </div>        
+    </lightning-card>
+
+    <!-- Reject Modal -->
+    <template if:true={showRejectModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Reject Commission Line</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-textarea
+                        label="Rejection Reason *"
+                        placeholder="Enter the reason for rejection"
+                        required
+                        rows="3"
+                        value={rejectReason}
+                        onchange={handleRejectReasonChange}>
+                    </lightning-textarea>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeRejectModal}></lightning-button>
+                    <lightning-button class="slds-m-left_x-small" variant="destructive"
+                                      label="Reject" onclick={confirmReject}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

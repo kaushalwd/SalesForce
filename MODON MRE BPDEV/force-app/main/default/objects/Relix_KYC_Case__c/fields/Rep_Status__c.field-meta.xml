@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rep_Status__c</fullName>
+    <description>One plain label for reps and list views, derived from Decision, Send State, email status and the Relix case status.</description>
+    <externalId>false</externalId>
+    <formula>IF(ISPICKVAL(Decision__c, &apos;PASSED&apos;), &apos;Verified&apos;,
+IF(ISPICKVAL(Decision__c, &apos;NEEDS_REVIEW&apos;), &apos;Needs review&apos; &amp; IF(ISBLANK(Review_Reason__c), &apos;&apos;, &apos; - &apos; &amp; Review_Reason__c),
+IF(ISPICKVAL(Decision__c, &apos;REFUSED&apos;), &apos;Identity refused&apos;,
+IF(ISPICKVAL(Decision__c, &apos;EXPIRED&apos;), &apos;Link expired&apos;,
+IF(ISPICKVAL(Decision__c, &apos;SUPERSEDED&apos;), &apos;Replaced by a newer link&apos;,
+IF(ISPICKVAL(Send_State__c, &apos;SENDING&apos;), &apos;Sending&apos;,
+IF(ISPICKVAL(Send_State__c, &apos;SEND_FAILED&apos;), &apos;Send failed&apos;,
+IF(ISPICKVAL(Send_State__c, &apos;SEND_UNCERTAIN&apos;), &apos;Send uncertain - check the Relix Console&apos;,
+IF(Notification_Status__c = &apos;failed&apos;, &apos;Email failed&apos;,
+CASE(Relix_Status__c,
+  &apos;STARTED&apos;, &apos;Link sent&apos;,
+  &apos;IN_PROGRESS&apos;, &apos;Buyer in journey&apos;,
+  &apos;SUBMITTED&apos;, &apos;Checking&apos;,
+  &apos;PREPARING_RESULT&apos;, &apos;Checking&apos;,
+  &apos;COMPLETED&apos;, &apos;Checking&apos;,
+  &apos;REQUIRES_ATTENTION&apos;, &apos;Checking&apos;,
+  &apos;Link sent&apos;))))))))))</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Rep Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

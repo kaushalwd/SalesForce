@@ -1,0 +1,35 @@
+<template>
+  <div class="foot">
+    <span class="copy">{copyright}</span>
+    <div class="links">
+      <button class="link" type="button" data-doc="terms" aria-haspopup="dialog" onclick={openTerms}>Terms</button>
+      <span class="dot">·</span>
+      <button class="link" type="button" data-doc="privacy" aria-haspopup="dialog" onclick={openPrivacy}>Privacy</button>
+    </div>
+  </div>
+
+  <template lwc:if={showDoc}>
+    <!-- 1.1: a dialog to assistive technology; Escape, the backdrop and the close button all close it -->
+    <div class="doc-overlay" onclick={closeDoc}>
+      <div
+        class="doc-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="msc-doc-title"
+        tabindex="-1"
+        onclick={stopProp}
+        onkeydown={handleDocKey}
+      >
+        <div class="doc-head">
+          <h2 class="doc-title" id="msc-doc-title">{docTitle}</h2>
+          <button class="doc-close" type="button" onclick={closeDoc} title="Close" aria-label="Close">×</button>
+        </div>
+        <div class="doc-body">
+          <template for:each={docParas} for:item="p">
+            <p key={p.key} class="doc-para">{p.text}</p>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+</template>

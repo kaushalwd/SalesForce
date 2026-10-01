@@ -1,0 +1,47 @@
+<template>
+    <lightning-card title="">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+
+        <div class="top-right">
+            <lightning-button label="Receipt Update Excel File" onclick={downloadSampleFile}>
+            </lightning-button>
+        </div>
+
+        <div class="slds-m-around_medium">
+            <div class="slds-col slds-size_5-of-12">
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col">
+                        <lightning-input type="file" label="Upload CSV File" accept=".csv" onchange={handleFileChange}>
+                        </lightning-input>
+                        <template if:true={fileName}>
+                            <p class="slds-m-top_x-small">
+                                <strong>Selected File:</strong> {fileName}</p>
+                        </template>
+                    </div>
+                    <div class="slds-col slds-align-bottom">
+                        <lightning-button label="Upload Data" variant="brand" onclick={uploadData}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+ <template if:true={unmatchedCount}>
+    <div class="slds-text-color_error slds-m-top_small">
+        {unmatchedCount} record(s) were not found in Salesforce.
+    </div>
+</template>
+            <template if:true={dataPreview.length}>
+                <div class="scrollable-table slds-m-top_medium">
+                    <lightning-datatable key-field="id" data={dataPreview} columns={columns} hide-checkbox-column>
+                    </lightning-datatable>
+                </div>
+                <template if:true={isEmpty}>
+        <div class="slds-text-color_weak slds-p-top_small">No data found in file.</div>
+    </template>
+            </template>
+           
+
+        </div>
+    </lightning-card>
+</template>

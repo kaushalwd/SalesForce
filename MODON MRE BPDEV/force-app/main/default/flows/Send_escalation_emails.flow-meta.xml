@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Copy_1_of_send_email_Remainder</name>
+        <label>Copy 1 of send email Remainder</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>EscalationEmailsSend</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Copy_1_of_update_BP_escalation_Flag</targetReference>
+        </connector>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>actionType</name>
+            <value>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+                <stringValue>1</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>queueIds</name>
+            <value>
+                <elementReference>$Record.OwnerId</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>StepIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>EscalationEmailsSend</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Copy_2_of_send_email_Remainder</name>
+        <label>Copy 2 of send email Remainder</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>EscalationEmailsSend</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Copy_2_of_update_BP_escalation_Flag</targetReference>
+        </connector>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>actionType</name>
+            <value>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+                <stringValue>2</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>queueIds</name>
+            <value>
+                <elementReference>$Record.OwnerId</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>StepIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>EscalationEmailsSend</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>send_email_Remainder</name>
+        <label>send email Remainder</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>EscalationEmailsSend</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>update_BP_escalation_Flag</targetReference>
+        </connector>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>actionType</name>
+            <value>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+                <stringValue>0</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>queueIds</name>
+            <value>
+                <elementReference>$Record.OwnerId</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>StepIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+            </value>
+        </inputParameters>
+        <nameSegment>EscalationEmailsSend</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Copy_1_of_status_Check</name>
+        <label>Copy 1 of status Check</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Copy_1_of_Status_Open</name>
+            <conditionLogic>(1 OR 2 OR 3) AND 4</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Re Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Accepted</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Process_Flow_Step__r.Process_Flow__r.Name</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Clash Approval</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_1_of_send_email_Remainder</targetReference>
+            </connector>
+            <label>Copy 1 of Status Open</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Copy_2_of_status_Check</name>
+        <label>Copy 2 of status Check</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Copy_2_of_Status_Open</name>
+            <conditionLogic>(1 OR 2 OR 3) AND 4</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Re Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Accepted</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Process_Flow_Step__r.Process_Flow__r.Name</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Clash Approval</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_2_of_send_email_Remainder</targetReference>
+            </connector>
+            <label>Copy 2 of Status Open</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>status_Check</name>
+        <label>status Check</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Status_Open</name>
+            <conditionLogic>(1 OR 2 OR 3) AND 4</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Re Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Accepted</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Process_Flow_Step__r.Process_Flow__r.Name</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Clash Approval</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>send_email_Remainder</targetReference>
+            </connector>
+            <label>Status Open</label>
+        </rules>
+    </decisions>
+    <description>save 2</description>
+    <environments>Default</environments>
+    <formulas>
+        <name>InstanceURl</name>
+        <dataType>String</dataType>
+        <expression>LEFT({!$Api.Partner_Server_URL_260}, FIND( &apos;/services&apos;, {!$Api.Partner_Server_URL_260}))&amp;{!$Record.Business_Process__r.Id}</expression>
+    </formulas>
+    <formulas>
+        <name>QueueIdOrOwnerId</name>
+        <dataType>String</dataType>
+        <expression>IF(ISNULL({!$Record.Owner:Group.Id}),{!$Record.OwnerId} , {!$Record.Owner:Group.Id})</expression>
+    </formulas>
+    <formulas>
+        <name>subjectOwner</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    NOT(ISBLANK({!$Record.Assigned_To__c})),
+    {!$Record.Assigned_To__r.LastName} &amp; &quot; &quot; &amp; {!$Record.Assigned_To__r.FirstName},
+    {!$Record.Owner:Group.Name}
+)</expression>
+    </formulas>
+    <interviewLabel>Send escalation emails {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Send escalation emails</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Copy_1_of_update_BP_escalation_Flag</name>
+        <label>Copy 1 of update BP escalation Flag</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <inputAssignments>
+            <field>Escalation_2_sent__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Copy_2_of_update_BP_escalation_Flag</name>
+        <label>Copy 2 of update BP escalation Flag</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <inputAssignments>
+            <field>Escalation_3_sent__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>update_BP_escalation_Flag</name>
+        <label>update BP escalation Flag</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <inputAssignments>
+            <field>Escalation_1_Sent__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>remainderFlag__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>Business_Process_Step__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <scheduledPaths>
+            <name>Schedule_Remainder_1</name>
+            <connector>
+                <targetReference>status_Check</targetReference>
+            </connector>
+            <label>Schedule Remainder 1</label>
+            <offsetNumber>0</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>remainderDate1__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>schedule_remainder_2</name>
+            <connector>
+                <targetReference>Copy_1_of_status_Check</targetReference>
+            </connector>
+            <label>schedule remainder 2</label>
+            <offsetNumber>0</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>remainder2__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>schedule_remainder_3</name>
+            <connector>
+                <targetReference>Copy_2_of_status_Check</targetReference>
+            </connector>
+            <label>schedule remainder 3</label>
+            <offsetNumber>0</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>remainder3__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>ClashEmailBody</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;p&gt;&amp;lt;img src=&quot;https://modonproperties--bpdev.sandbox.my.salesforce.com/sfc/p/#VG000007z5zd/a/VG000002FI6j/MX82oxR3wRtN1ISkXSxo59CcePKF4yg65u3gyeuqtr8&quot;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;width=&quot;600&quot;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;alt=&quot;MODON&quot;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;style=&quot;display:block; width:600px; max-width:100%; height:auto;&quot;&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;Dear Team,&amp;lt;/p&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&amp;lt;p&amp;gt;&lt;/p&gt;&lt;p&gt;This is an escalation notification for the following Business Process&lt;/p&gt;&lt;p&gt;step that has exceeded the defined response time.&lt;/p&gt;&lt;p&gt;&amp;lt;/p&amp;gt;&lt;/p&gt;</text>
+    </textTemplates>
+    <textTemplates>
+        <name>emailBody</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;p&gt;Dear Team,&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;This is an escalation notification for the following business process step that has exceeded the defined response time.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Business Process&lt;/strong&gt; - {!$Record.Business_Process__r.Name}&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Booking &lt;/strong&gt;- {!$Record.Business_Process__r.Sales_Order__r.Name}&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Unit &lt;/strong&gt;- {!$Record.Business_Process__r.Unit__r.Name}&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Type &lt;/strong&gt;- {!$Record.Business_Process__r.Type__c}&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Name &lt;/strong&gt;- {!$Record.Business_Process_Steps_Name_Custom__c}&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Assigned To&lt;/strong&gt; - {!subjectOwner}&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Status &lt;/strong&gt;- {!$Record.Status__c}&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Please take immediate action to resolve this pending item or update the status accordingly.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!InstanceURl}&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Regards,&lt;/p&gt;&lt;p&gt;Modon Team.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;</text>
+    </textTemplates>
+    <textTemplates>
+        <name>emailSubject</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Business Process :{!$Record.Business_Process__r.Type__c} - Step:{!$Record.Business_Process_Steps_Name_Custom__c} - Assign To :{!subjectOwner}</text>
+    </textTemplates>
+</Flow>

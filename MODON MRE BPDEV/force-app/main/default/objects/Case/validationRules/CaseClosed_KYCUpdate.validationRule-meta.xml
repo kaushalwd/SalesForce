@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CaseClosed_KYCUpdate</fullName>
+    <active>false</active>
+    <description>KYC Update cases can be Closed with Resolution or Closed without Resolution.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+ISPICKVAL(CaseCategory__c, &apos;KYC Update&apos;),
+NOT(ISPICKVAL(Status,&apos;New&apos;)),
+NOT(ISPICKVAL(Status,&apos;In Progress&apos;)),
+ISBLANK(ParentId),
+NOT(ISPICKVAL(Status,&apos;Closed with Resolution&apos;)),
+NOT(ISPICKVAL(Status,&apos;Closed without Resolution&apos;))
+)
+)</errorConditionFormula>
+    <errorDisplayField>Status</errorDisplayField>
+    <errorMessage>KYC Update cases can be Closed with Resolution or Closed without Resolution.</errorMessage>
+</ValidationRule>

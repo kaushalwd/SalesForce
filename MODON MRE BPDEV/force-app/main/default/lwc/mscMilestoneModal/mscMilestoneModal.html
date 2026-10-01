@@ -1,0 +1,335 @@
+<template>
+    <!-- `mounted`, not `open`: it stays true for the length of the exit so the
+         panel can animate out. See the accessor in the JS. -->
+    <template lwc:if={mounted}>
+        <!-- The layer is the click target; the panel stops the event so a click
+             inside it does not close the modal. The scrim is a sibling of the
+             panel, so the dim and the entry animate independently. -->
+        <div class={layerClass} onclick={handleScrim}>
+            <div class="scrim"></div>
+            <section
+                class={panelClass}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="mm-title"
+                onclick={stop}
+                onkeydown={handleKeydown}
+            >
+                <!-- ── head: what am I looking at, and how it stands ─────────
+                     A panel renames the head to ITS task, so there is never a
+                     doubt about what Cancel cancels. The state line is the whole
+                     schedule answered in one phrase - never a figure: the card's
+                     line is the only place the total is stated. -->
+                <header class="mm__head">
+                    <div class="mm__headings">
+                        <h2 id="mm-title" class="mm__title">{headTitle}</h2>
+                        <p class="mm__subline">{headSub}</p>
+                    </div>
+                    <template lwc:if={headState}>
+                        <span class="mm__state">
+                            <span class={headState.dot}></span>
+                            <span>{headState.text}</span>
+                        </span>
+                    </template>
+                    <button
+                        class="mm__x"
+                        type="button"
+                        onclick={handleClose}
+                        aria-label="Close"
+                        title="Close"
+                    >
+                        <c-modon-icon name="x" size="16" color="currentColor"></c-modon-icon>
+                    </button>
+                </header>
+
+                <div class="mm__cols">
+                    <!-- ── the unit rail, only where there is a choice to make ──
+                         One row per Sales Order: the unit, its reference, and
+                         whether its schedule is arranged - in words. Switching
+                         submits nothing. -->
+                    <template lwc:if={showRail}>
+                        <nav class="mm__rail" aria-label={labels.MM_RAIL_TITLE}>
+                            <p class="mm__rail-h">{labels.MM_RAIL_TITLE}</p>
+                            <template for:each={railUnits} for:item="ru">
+                                <button
+                                    key={ru.soId}
+                                    class={ru.cls}
+                                    type="button"
+                                    data-so={ru.soId}
+                                    onclick={handleUnitSelect}
+                                >
+                                    <span class="mm__rail-n">{ru.name}</span>
+                                    <span class="mm__rail-s">
+                                        <span class={ru.dot}></span>
+                                        <span class="mm__rail-w">{ru.sub}</span>
+                                    </span>
+                                </button>
+                            </template>
+                        </nav>
+                    </template>
+
+                    <div class="mm__pane">
+                        <!-- ── the filter, only when the years fold ──────────────
+                             On a sixty-milestone plan half the job is finding what
+                             is not yet arranged; "Open 48" is one press. A short
+                             plan never shows this. -->
+                        <template lwc:if={showTools}>
+                            <div class="mm__tools">
+                                <div class="mm__seg" role="group">
+                                    <button class={filterAllCls} type="button" data-f="all" onclick={handleFilter}>
+                                        {filterAllText}
+                                    </button>
+                                    <button class={filterOpenCls} type="button" data-f="open" onclick={handleFilter}>
+                                        {filterOpenText}
+                                    </button>
+                                    <button class={filterCoveredCls} type="button" data-f="covered" onclick={handleFilter}>
+                                        {filterCoveredText}
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- ── the schedule ──────────────────────────────────────
+                             ≤ 12 milestones: every row, sticky year labels. Past
+                             that each year is one line - its coverage said in
+                             words, nothing else - and only the year being worked
+                             is open. -->
+                        <div class="mm__body">
+                            <template lwc:if={showSchedule}>
+                                <template for:each={yearGroups} for:item="y">
+                                    <template lwc:if={y.foldable}>
+                                        <button
+                                            key={y.key}
+                                            class={y.foldCls}
+                                            type="button"
+                                            data-year={y.key}
+                                            aria-expanded={y.ariaExpanded}
+                                            onclick={handleYearToggle}
+                                        >
+                                            <span class="mm__yfold-y">{y.label}</span>
+                                            <span class="mm__yfold-n">{y.sentence}</span>
+                                            <c-modon-icon
+                                                name={y.chevron}
+                                                size="14"
+                                                color="var(--text-dim, #8a8a8a)"
+                                            ></c-modon-icon>
+                                        </button>
+                                    </template>
+                                    <template lwc:else>
+                                        <div key={y.key} class="mm__ylabel">
+                                            <span class="mm__ylabel-y">{y.label}</span>
+                                            <span class="mm__ylabel-n">{y.count}</span>
+                                        </div>
+                                    </template>
+
+                                    <template for:each={y.rows} for:item="r">
+                                        <!-- 1.6 - ONE keyed node per row, holding its own
+                                             panel. The row and its panel used to be two
+                                             SIBLINGS inside this iteration, so expanding a
+                                             row inserted a node into the list and collapsing
+                                             it removed one - and a panel could be left
+                                             behind, or patched with the next row's content:
+                                             two panels on screen, one of them showing
+                                             another row's payments. Nested inside the row,
+                                             the list's shape no longer changes when a row
+                                             opens, and a panel cannot outlive the row that
+                                             owns it. Visually identical - a plain block
+                                             wrapper around a full-width row.
+                                             One control per row, live only where the row
+                                             has something more to show - a covered row
+                                             opens to its cheque's card. -->
+                                        <div key={r.sourceId} class="mm__rw">
+                                        <button
+                                            class={r.rowCls}
+                                            type="button"
+                                            data-id={r.sourceId}
+                                            data-exp={r.expandable}
+                                            aria-expanded={r.ariaExpanded}
+                                            onclick={handleRowToggle}
+                                        >
+                                            <span class="mm__n">{r.num}</span>
+                                            <span class="mm__main">
+                                                <!-- 1.7 - no pill on the row, by request.
+                                                     What stands against a milestone is said
+                                                     by the figure beside it and by the number
+                                                     badge's tone; the pill was a third telling
+                                                     of the same fact.
+
+                                                     1.8 - the due date folds under the name, as
+                                                     the ledger row outside does: what a payment
+                                                     IS and when it is due are one thought, and
+                                                     the column it vacated is what the pending
+                                                     figure needs. -->
+                                                <span class="mm__name">
+                                                    <span class="mm__name-t">{r.label}</span>
+                                                </span>
+                                                <template lwc:if={r.dueLabel}>
+                                                    <span class={r.dueCls}>{r.dueLabel}</span>
+                                                </template>
+                                            </span>
+
+                                            <!-- 1.8 - the milestone's own total, then what is
+                                                 still PENDING against it - the same order the
+                                                 table outside reads in, and the arithmetic the
+                                                 rep used to do in their head.
+
+                                                 The column changed its question. It printed what
+                                                 came IN, which left the work as the blank cells:
+                                                 on a plan where nothing has been collected yet,
+                                                 nothing on screen said so. It prints what is
+                                                 still OWED now, so colour marks the rows that
+                                                 need work instead of the rows that do not.
+
+                                                 Empty on a row a mandate covers: the bank
+                                                 collects when due, so there is nothing for a rep
+                                                 to record and a figure here would read as their
+                                                 work. The badge stays green for it. -->
+                                            <span class="mm__amt">{r.amount}</span>
+                                            <span class={r.pendCls}>
+                                                <template lwc:if={r.pendValue}>
+                                                    <span>{r.pendValue}</span>
+                                                    <template lwc:if={r.pendWord}>
+                                                        <span class="mm__pend-w">{r.pendWord}</span>
+                                                    </template>
+                                                </template>
+                                            </span>
+                                            <span class="mm__go">
+                                                <template lwc:if={r.expandable}>
+                                                    <c-modon-icon
+                                                        name={r.chevron}
+                                                        size="13"
+                                                        color="var(--text-dim, #8a8a8a)"
+                                                    ></c-modon-icon>
+                                                </template>
+                                            </span>
+                                        </button>
+
+                                        <template lwc:if={r.rowOpen}>
+                                            <div class="mm__xp">
+                                                <template for:each={r.lines.lines} for:item="c">
+                                                    <div key={c.key} class="mm__il">
+                                                        <span class="mm__il-id">{c.id}</span>
+                                                        <span class="mm__il-chip">{c.chip}</span>
+                                                        <span class="mm__il-meta">{c.meta}</span>
+                                                        <span class="mm__il-amt">{c.amount}</span>
+                                                    </div>
+                                                </template>
+                                                <template lwc:if={r.lines.still}>
+                                                    <div class="mm__il mm__il--still">
+                                                        <span class="mm__il-id">{labels.MM_IL_REMAINING}</span>
+                                                        <span class="mm__il-meta"></span>
+                                                        <span class="mm__il-amt">{r.lines.still}</span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        </div>
+                                    </template>
+                                </template>
+                            </template>
+
+                            <!-- ── a panel takes the body whole ──────────────────
+                                 The sheet and the mandate form carry their own
+                                 Cancel and Submit; the modal's foot stands down
+                                 while one is open. -->
+                            <template lwc:if={panel}>
+                                <template lwc:if={panel.showSheet}>
+                                    <div class="mm__panelbody">
+                                        <c-msc-cheque-sheet
+                                            data-so={panel.soId}
+                                            sales-order-id={panel.soId}
+                                            lines={panel.lines}
+                                            bank-options={panel.bankOptions}
+                                            busy={busy}
+                                            results={chequeResult}
+                                            error-message={chequeError}
+                                            onchequesubmit={handleSheetSubmit}
+                                            onchequecancel={handleSheetCancel}
+                                        ></c-msc-cheque-sheet>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={panel.showDdForm}>
+                                    <div class="mm__panelbody">
+                                        <c-msc-direct-debit
+                                            data-so={panel.soId}
+                                            sales-order-id={panel.soId}
+                                            mode="form"
+                                            state={panel.dd}
+                                            bank-options={panel.ddBankOptions}
+                                            account-types={panel.ddAccountTypes}
+                                            id-types={panel.ddIdTypes}
+                                            prefill={panel.prefill}
+                                            computed={panel.computed}
+                                            busy={busy}
+                                            onddcreate={handleDdCreate}
+                                            onddcancel={handleDdCancel}
+                                        ></c-msc-direct-debit>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={panel.showDdView}>
+                                    <div class="mm__panelbody">
+                                        <!-- 1.11: the mandate card - stage, facts, forms, actions -->
+                                        <c-msc-mandate-card
+                                            data-so={panel.soId}
+                                            sales-order-id={panel.soId}
+                                            card={panel.card}
+                                            computed={panel.computed}
+                                            busy={busy}
+                                            onddcancel={handleDdCancel}
+                                            onddchanged={handleDdChanged}
+                                            onddsetup={handleDdSetup}
+                                        ></c-msc-mandate-card>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+
+                        <!-- ── foot: the decision, pinned ────────────────────────
+                             One question and only the answers the server allows.
+                             It never scrolls away from the schedule it is about. -->
+                        <template lwc:if={foot}>
+                            <footer class="mm__foot">
+                                <span class="mm__foot-q">
+                                    <template lwc:if={foot.text}>{foot.text}</template>
+                                </span>
+                                <template lwc:if={foot.showDd}>
+                                    <button
+                                        class="btn btn-ghost btn-sm mm__foot-b"
+                                        type="button"
+                                        onclick={handleDd}
+                                        disabled={foot.disabled}
+                                    >
+                                        <c-modon-icon name="repeat" size="13"></c-modon-icon>
+                                        <span>{labels.CTA_DIRECT_DEBIT}</span>
+                                    </button>
+                                </template>
+                                <template lwc:if={foot.showCheques}>
+                                    <button
+                                        class="btn btn-primary btn-sm mm__foot-b"
+                                        type="button"
+                                        onclick={handleCheques}
+                                        disabled={foot.disabled}
+                                    >
+                                        {foot.chequesLabel}
+                                    </button>
+                                </template>
+                                <template lwc:if={foot.showView}>
+                                    <button
+                                        class="btn btn-ghost btn-sm mm__foot-b"
+                                        type="button"
+                                        onclick={handleView}
+                                        disabled={foot.disabled}
+                                    >
+                                        {labels.CTA_VIEW_MANDATE}
+                                    </button>
+                                </template>
+                            </footer>
+                        </template>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </template>
+</template>

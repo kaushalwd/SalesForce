@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sales_Manager_Source_Validation</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(CONTAINS($UserRole.DeveloperName, &apos;Sales_Manager&apos;), CONTAINS($UserRole.DeveloperName, &apos;Sales_Associate&apos;) )
+&amp;&amp; (TEXT(LeadSource) &lt;&gt; &apos;Self Generated&apos; &amp;&amp; TEXT(LeadSource) &lt;&gt; &apos;Management Lead&apos;)
+&amp;&amp; (ISNEW() || (NOT(ISNEW()) &amp;&amp; ISCHANGED(LeadSource)))
+&amp;&amp; NOT(ISPICKVAL(Source_Entity__c, &apos;Modon - Egypt&apos;))</errorConditionFormula>
+    <errorDisplayField>LeadSource</errorDisplayField>
+    <errorMessage>Lead Source must be selected as &apos;Self Generated&apos; or &apos;Management Lead&apos; for Sales Manager.</errorMessage>
+</ValidationRule>

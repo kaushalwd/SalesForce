@@ -1,0 +1,46 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" title="Interactive Unit Selection">
+
+    <!-- apex:includeLightning, not a hardcoded /lightning/lightning.out.js path: on a Salesforce
+         Site the script must resolve against the site's URL prefix, which this tag handles. -->
+    <apex:includeLightning />
+
+    <!-- Without this a mobile browser assumes a 980px layout viewport, so the component's
+         media queries never fire and the whole page renders desktop-wide and scaled down.
+         viewport-fit=cover lets the map run under the notch on iOS. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+
+    <style>
+        /* Single-page app: the map owns the viewport, so the page itself never scrolls.
+           dvh tracks the collapsing browser chrome on mobile; vh does not. */
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            background: #15161a;
+            overscroll-behavior: none;
+            -webkit-text-size-adjust: 100%;
+        }
+        .map-host { height: 100%; }
+    </style>
+
+    <div id="mapHost" class="map-host"></div>
+
+    <script>
+        $Lightning.use("c:MasterplanUnitSelectorOut", function () {
+            $Lightning.createComponent(
+                "c:adhaBaniyasJourney",
+                {
+                    mappingUrl: "{!URLFOR($Resource.WestBaniyasMasterplanData)}"
+                },
+                "mapHost",
+                function () {
+                    document.getElementById("mapHost").addEventListener("unitselected", function (event) {
+                        console.log("unitselected", event.detail);
+                    });
+                }
+            );
+        });
+    </script>
+
+</apex:page>

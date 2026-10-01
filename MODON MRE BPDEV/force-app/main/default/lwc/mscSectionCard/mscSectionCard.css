@@ -1,0 +1,132 @@
+@import "c/mscStyles";
+
+/* 1.7 - a flex column rather than a block, so a filling card can be told to take
+   the host's height. With one child and no definite height this lays out exactly
+   as `block` did, which is why it is safe to apply to every card rather than only
+   the filling ones - :host cannot be conditioned on an internal class. */
+:host {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── 1.7  filling the row ───────────────────────────────────────────────────
+   The card takes the height the host was given and the body takes what is left
+   after the head, so two cards in one row end on the same line however different
+   their contents are. min-height: 0 in both places - without it a flex item
+   refuses to shrink below its content and the card grows past the row instead of
+   scrolling inside it. */
+.section--fill {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    /* Deliberately NO overflow here. The body already clips its own scroll, and a
+       clip at the card boundary would be a new one - the customer card holds the
+       address autocomplete, and a card that clips is how a suggestion list gets
+       cut off at the frame. */
+}
+
+/* The head keeps its size. A flex item shrinks by default, so without this a tall
+   body would squeeze the heading rather than scroll under it. */
+.section--fill .section__head {
+    flex: 0 0 auto;
+}
+
+/* The body is the part that gives. max-height is explicitly dropped: the card's
+   own height is the bound now, and a max-height left in place would cap the body
+   short of the card's floor and put the gap back inside the card. */
+.section--fill .section__body--scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+}
+
+.head__main {
+    min-width: 0;
+}
+
+/* The complete tick moved in here from the eyebrow, which no longer renders on
+   most cards. margin-top only when something sits above it. */
+.head__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+}
+.eyebrow + .head__title {
+    margin-top: 8px;
+}
+
+.head__side {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* 1.4 - UI-18: on a phone the heading keeps one line. When the title and the controls beside it
+   do not fit, the controls drop under the title and take the row, instead of the title wrapping
+   beside them (the Customer Information card and its Individual / Organisation switch). Wider
+   screens are unchanged. */
+@media (max-width: 560px) {
+    .section__head {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+    .head__side {
+        flex: 1 1 auto;
+        justify-content: flex-end;
+    }
+}
+
+.section__summary {
+    margin-top: 8px;
+}
+
+/* ── bare: the card without its frame ───────────────────────────────────────
+   Declared here rather than in mscStyles so it lands AFTER the .section and
+   .section--active rules that import brings in - both are single-class
+   selectors, so source order is what decides the border colour, and a
+   `--bare` rule sitting above them would lose to `--active` on the one card
+   that most often has it. */
+.section--bare {
+    background: none;
+    border-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    padding: 0;
+}
+/* The amber rule is the blocked state's only signal, so it survives being
+   bare - it is a warning, not decoration. */
+.section--bare.section--blocked {
+    border-left-color: var(--chip-amber, #fbbf24);
+    padding-left: 10px;
+}
+/* ── 1.6  the body scrolls inside the card ──────────────────────────────────
+   Invisible scrollbar, matching the console's chromeless look everywhere else -
+   mscConsole and mscUnitSelect already suppress theirs. The content is what says
+   there is more of it: the card is cut off mid-row rather than ending on one, and
+   scroll-padding keeps a focused field clear of the top edge when the browser
+   scrolls it into view for the rep.
+
+   overscroll-behavior: contain, so reaching the end of this card does not hand
+   the wheel to the page behind it and jump the whole journey. */
+.section__body--scroll {
+    max-height: var(--section-body-max, none);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-top: 8px;
+    /* Room for a field's focus ring against the clipped edge. */
+    padding-right: 2px;
+    margin-right: -2px;
+}
+
+.section__body--scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.section__body--scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}

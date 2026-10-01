@@ -1,0 +1,859 @@
+<!--/**********************************************************************************************************************
+* Name               : OfferDetailsPDFv1                                                        
+* Description        : This vf is used to generate the PDF for The desired projects
+* Usage              : salesoffer Generation Page                                                          
+* Created By         : PWC Digital Middle East                                                     
+* --------------------------------------------------------------------------------------------------------------------
+* Version       Author                          Date            Comment                                                                       
+* 1.1           raghu.chilukuri@activemindsit.com  25-03-26   Changed the Laction of Disclamier for the offer and Removed Exclamatory mark for the Disclaimer and Hidden the Escrow and Adm details When Its from Broker Portal.
+* !.2           raghu.chilukuri@activemindsit.com  26-03-26   Removed The Previous Disclaimer and Placed The Actual Disclaimer
+* 1.3           upendra.asam@activemindsit.com     05-05-26   Fixed footer issue.
+******************************************************************************************************************/-->
+
+<apex:page standardStylesheets="false" renderAs="pdf" showHeader="false" applyBodyTag="false" applyHtmlTag="false" controller="OfferDetailsPDFController_v1">
+    <html>
+        <head>
+            <style>
+                @page {
+                size: A3;
+                margin: 0;
+                padding: 0;
+                }
+                
+                @font-face {
+                font-family: 'sussieFont';
+                src: url('{!URLFOR($Resource.sussieFont)}') format('truetype');
+                }
+                
+                .newfont {
+                font-family: 'sussieFont', Arial, sans-serif;
+                }
+                
+                body {
+                margin: 0;
+                padding: 0;
+                font-size: 14pt;
+                font-family: 'sussieFont', Arial, sans-serif;
+                }
+                
+                table {
+                font-size: 14pt;
+                font-family: 'sussieFont', Arial, sans-serif;
+                border-collapse: collapse;
+                }
+                
+                .content {
+                padding-top: 50px;
+                padding-bottom: 30px;
+                text-align: center;
+                }
+                
+                img.centered-img {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                width: 200px;
+                }
+                
+                .main-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                }
+                
+                .footer {
+                background-color: #e3e4e6;
+                padding-left: 1in;
+                padding-right: 1in;
+                position: absolute;
+                bottom: 0;
+                }
+                
+                .card {
+                background-color: #ffffff;
+                border-radius: 12px;
+                border: 2px solid #000000; /* blue border */
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                max-width: 600px;
+                margin: auto;
+                padding: 30px;
+                text-align: center;
+                margin-top: 190px;
+                margin-left: 220px;
+                }
+                .card h2 {
+                color: #333333;
+                }
+                .card p {
+                font-size: 16px;
+                color: #555555;
+                line-height: 1.5;
+                margin-bottom: 30px;
+                }
+                .button {
+                display: inline-block;
+                background-color: #0070d2;
+                color: #ffffff;
+                text-decoration: none;
+                font-weight: bold;
+                padding: 15px 25px;
+                border-radius: 8px;
+                font-size: 16px;
+                }
+                .button:hover {
+                background-color: #005fb2;
+                }
+                .virtualTourCard {
+                margin-top: 170px !important;
+                }
+                           
+            </style>
+        </head>
+        <body>
+            <div style="overflow: hidden;">
+                <!-- Centered Image -->
+                <!-- <img src="{!URLFOR($Resource.UpdatedSO_AlNaseem_FrontPage_New)}" alt="Centered Image" class="main-img" /> -->
+                
+                <apex:outputPanel rendered="{!projectName == 'Al Naseem'}">
+                    <img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/AlNaseem_FrontPage.jpg')}" alt="Centered Image" class="main-img"/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef East'}">
+                    <img src="{!URLFOR($Resource.NawayefEastSOImage, 'NawayefEast/NawayefEast_FrontPage.jpg')}" alt="Centered Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef West'}">
+                    <img src="{!URLFOR($Resource.NawayefWestSOImage, 'NawayefWest/NawayefWest_FrontPage.jpg')}" alt="Centered Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef Park View'}">
+                    <img src="{!URLFOR($Resource.NawayefPVSOImage, 'NawayefParkView/NawayefPV_FrontPage.jpg')}" alt="Centered Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef Village Townhouses'}">
+                    <img src="{!URLFOR($Resource.NawayefVillagesTownhouse, 'NawayefVillagesTownhouse/NVTH_FrontPage.jpg')}" alt="Centered Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Bashayer'}">
+                    <apex:outputPanel rendered="{!unitObj.UnitClassification__c == 'Villa'}">
+                        <img src="{!URLFOR($Resource.BashayerSOImage, 'Bashayer/Bashayer_FrontPage_Villa.png')}" alt="Centered Image" class="main-img"/>    
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!unitObj.UnitClassification__c == 'Apartment'}">
+                        <img src="{!URLFOR($Resource.BashayerSOImage, 'Bashayer/Bashayer_FrontPage_Apartment.png')}" alt="Centered Image" class="main-img"/>    
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Wadeem'}">
+                    <img src="{!URLFOR($Resource.WadeemSOImages, 'Wadeem/Wadeem_FrontPage.jpg')}" alt="Centered Image" class="main-img"/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!OR(phaseName == 'Mayar', phaseName == 'Mayar Townhouse')}">
+                    <img src="{!URLFOR($Resource.MayarSOImage, 'Mayar/Cover.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Muheira'}">
+                    <img src="{!URLFOR($Resource.MuheiraSOImage, 'Muheira/Cover.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!phaseName == 'Thoraya'}">
+                    <img src="{!URLFOR($Resource.ThorayaSOImage, 'Thoraya/Cover.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'YAMM'}">
+                    <img src="{!URLFOR($Resource.YammSOImage, 'YAMM/Cover.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Tara'}">
+                    <img src="{!URLFOR($Resource.TaraSOImage, 'Tara/Front.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Hudayriyat Golf Estates'}">
+                    <img src="{!URLFOR($Resource.HGESOImage, 'HGE/Front.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Wadeem Gardens'}">
+                    <img src="{!URLFOR($Resource.WadeemGardens, 'WadeemGardens/Front.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+            </div>
+            <!-- <img src="{!URLFOR($Resource.UpdatedSO_Header)}" alt="HEADER LOGO" class="main-img" /> -->
+            <img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+            <div class="page-content" width="100%" style="width:100%;position:relative;height:370mm;">
+                <div style="margin:1in;margin-bottom:0;">
+                    <table width="100%">
+                        <tr>
+                            <td colspan="2">
+                                <table width="100%">
+                                    <tr>
+                                        <!--   <td colspan="2" style="text-align: center; font-size: 32pt; font-weight: 900; padding-bottom: 20px;"> Property Purchase Overview </td>----Changing on Bussiness Request--->
+                                        <td colspan="2" style="text-align: center; font-size: 32pt; font-weight: 900; padding-bottom: 20px;"> Offer to Purchase Property Overview </td>
+                                    </tr>
+                                    <!-- Reference and Date on the Right -->
+                                    <tr>
+                                        <td colspan="2" style="text-align: right; font-size: 12pt; color: #666;"> Reference No: {!projectName} / {!randomString} <br /> Date: {!todayDate} </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <p>Dear <span style="font-weight: bolder;"> {!customerName},</span>
+                                </p>
+                                <!--    <br /> Thank you for considering one of Modon’s property. We are pleased to provide you with the details of your property purchase. This document outlines the specifics of your selected home, including key information about the property, payment terms and next steps to complete the purchase process.---changingon bussiness request--->
+                                <br /> Thank you for considering one of Modon’s property.This document outlines the specifics of your selected home, including key information about the property, payment terms and next steps to complete the purchase process.
+                                <!--Thank you for your interest in {!projectName} Community by Modon. This project features four to six-bedroom villas, situated on spacious plots within Hudayriyat Island, Abu Dhabi. We are pleased to provide you with the details of your property purchase offer.-->
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 15px;">
+                                <table width="100%">
+                                    <!-- Row 1: Unit Info -->
+                                    <tr>
+                                        <td colspan="2" style="font-size: 22pt; font-weight: bolder; color: #000; padding: 6px;">
+                                            <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">Unit {!unitObj.Name}</apex:outputPanel>
+                                            <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">Unit {!unitOptnObj.Unit__r.Name}</apex:outputPanel>
+                                            <!--<span style="font-weight: bold; color: #888888;font-family: 'sussieFont', Arial, sans-serif;">&nbsp;&nbsp;Unit Type 
+<apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">Unit {!unitObj.Typology__c}</apex:outputPanel><apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}"> {!unitOptnObj.Name}</apex:outputPanel></span>-->
+                                        </td>
+                                    </tr>
+                                    <!-- Row 2: Details Table -->
+                                    <tr>
+                                        <td colspan="2">
+                                            <table width="100%" style="margin: 20px auto;">
+                                                <tr style="background-color: #000000; color: #ffffff;">
+                                                    <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Gross Sellable Area</th>
+                                                    <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Plot Area</th>
+                                                    <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Estimated Completion Date*</th>
+                                                    <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Total Price (AED)**</th>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;"> {!GSAArea} <span style="font-weight: normal">sqm</span>
+                                                    </td>
+                                                    <td style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;"> {!plotArea} <span style="font-weight: normal">sqm</span>
+                                                    </td>
+                                                    <td style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">
+                                                        <apex:outputText value="{0,date,dd-MMM-yyyy}">
+                                                            <apex:param value="{!estimatedCompletionDate}" />
+                                                        </apex:outputText>
+                                                    </td>
+                                                    <td style="border: 1px solid #e5e5e5; font-size: 20pt; padding: 5px; text-align: center;font-weight: bolder;">
+                                                        <apex:outputText value="{0, number, ###,##0.00}">
+                                                            <apex:param value="{!totalPrice}" />
+                                                        </apex:outputText>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 10px;">
+                                <div style="padding-bottom: 5px; font-size: 16pt;font-weight: bolder;"> Payment Plan: {!paymentPlanObj.Name}</div>
+                                <table width="100%" style="margin: 20px auto;">
+                                    <tr style="background-color: black; color: white; ">
+                                        <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Inst.</th>
+                                        <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Milestone</th>
+                                        <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Percentage</th>
+                                        <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Date</th>
+                                        <th style="border: 1px solid #e5e5e5; padding: 5px; text-align: center;font-weight: 100;">Amount (AED)</th>
+                                    </tr>
+                                    <apex:variable var="totalCount" value="{!paymentPlanObj.Payment_Installments__r.size}" />
+                                    <apex:variable var="counter" value="{!0}" />
+                                    
+                                    <apex:repeat value="{!paymentPlanObj.Payment_Installments__r}" var="line">
+                                        <apex:variable var="counter" value="{!counter+1}" />
+                                        <tr>
+                                            <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;"> {!line.MilestoneNumber__c} </td>
+                                            <td style="border: 1px solid #e5e5e5; padding: 5px;font-weight: 100;"> {!line.MilestoneDescription__c} </td>
+                                            <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;"> {!line.Milestone__c}% </td>
+                                            <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;">
+                                                <apex:outputPanel rendered="{!line.MilestoneNumber__c == 1}"> On Booking Date </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!counter == totalCount}"> At Handover </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!line.MilestoneNumber__c != 1 && counter != totalCount}">
+                                                    <apex:outputText value="{0,date,dd/MM/yyyy}">
+                                                        <apex:param value="{!line.MilestoneDate__c}" />
+                                                    </apex:outputText>
+                                                </apex:outputPanel>
+                                            </td>
+                                            <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;">
+                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                    <apex:param value="{!(line.Milestone__c / 100) * totalPrice}" />
+                                                </apex:outputText>
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 10px;">
+                                <div style="width: 100%; font-weight: bold;">
+                                    <span style="white-space: nowrap;float:left;"> 
+                                        <apex:outputText rendered="{!island == 'Reem'}">ADGM</apex:outputText> 
+                                        <apex:outputText rendered="{!island == 'Hudayriyat'}">ADM</apex:outputText>
+                                        Registration Fee <span style="font-weight:normal;"> &nbsp;AED&nbsp; <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!(2/100) * totalPrice}" />
+                                        </apex:outputText></span>
+                                    </span>
+                                    <span style="white-space: nowrap;float:right"> DARI Fee&nbsp; 
+                                        <apex:outputText rendered="{!island == 'Reem'}"><span style="font-weight:normal;">AED 525</span></apex:outputText> 
+                                        <apex:outputText rendered="{!island == 'Hudayriyat'}"><span style="font-weight:normal;">AED 499</span></apex:outputText>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        <table width="100%">
+                            <!--  Update Version 1.2 Removed The Previous Disclaimer and Placed This Disclaimer Given By Bussiness-->
+                            <td width="100%" style="font-size:8pt; color: #888888;">**Disclaimer:This offer is provided for informational purposes only and does not constitute a legally binding agreement. 
+                                    All details, including availability and pricing, are subject to change without prior notice and are subject 
+                                    to the execution of a formal Sales and Purchase Agreement (SPA).</td>
+                        </table>
+                        <tr>
+                            <td colspan="2" style="padding-top: 0px;">
+                                <p> Please take your time to carefully review the above details, including the property specifications, payment terms and associated requirements to proceed with the purchase. </p>
+                                <p> Your sales representative will be in touch with you shortly to discuss your property purchase offer and to guide you through the next steps in the purchase process. </p>
+                                <!---- <br />Kind regards, <br />{!$User.FirstName} {!$User.LastName} <br /> Modon ----changed this line as per bussiness-->
+                                <br />Kind regards, <br />
+                                <br /> Modon
+                                
+                                <br/>
+                                <apex:outputText value="{!regardsName}" style="{!IF(isBrokerAgencyUser,'font-style:italic;','')}" />
+                                <br/>
+
+                                <!--update Version 1.1 starts Here
+                                @description:
+                                * Removed exclamatory mark for Disclaimer and changed Disclaimer Location
+                                -->
+                                
+                                <!-- Disclaimer moved slightly up -->
+                             <!--   <p style="margin-top:45px; font-size:16px; line-height:1.8;font-size:20px;">
+                                    <span style="font-weight:bold; color:#000000;font-size:20px;">
+                                        Disclaimer:
+                                    </span>
+                                    This offer is provided for informational purposes only and does not constitute a legally binding agreement. 
+                                    All details, including availability and pricing, are subject to change without prior notice and are subject 
+                                    to the execution of a formal Sales and Purchase Agreement (SPA).
+                                </p>-->
+                                <!--update version 1.0 Ends here-->
+                                
+                                
+                                
+                                
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="footer" width="100%" style="width:84%;">
+                    <table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+                        <tr style="height:18mm;">
+                            <td width="70%">
+                                <b>
+                                    <a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+                                </b> &nbsp; | &nbsp; <b>
+                                <a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+                                </b>
+                            </td>
+                            <td width="30%" style="text-align:right;">
+                                <b>
+                                    <a href="https://www.modon.com" style="color:black;">modon.com</a>
+                                </b>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <!-- <img src="{!URLFOR($Resource.UpdatedSO_Header)}" alt="HEADER LOGO" class="main-img" /> -->
+            <img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+              <!--  Version 1.3 starts -->
+            <div class="page-content" width="100%" style="width:100%;position:absolute;height:398.5mm;">
+                <!--  Version 1.3 ends -->
+            <!--update version 1.0
+            @description:
+            *Hidden the Ecsrow and adm details when offer is from broker
+            -->
+                <apex:outputPanel rendered="{!NOT(isBrokerAgencyUser)}">
+                <div style="margin:1in;margin-bottom:0;">                   
+                    <table width="100%"> 
+                        <tr>
+                            <td colspan="2">
+                                <table width="100%">
+                                    <tr>
+                                        <td colspan="2" style="text-align: center; font-size: 32pt; font-weight: 900; padding-bottom: 20px;"> Escrow and ADM Account Details </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr><!-- updated the account name condition for golf -->
+
+                            <td colspan="2" style="padding-top: 30px;">
+                                <!-- <div style="padding-bottom: 2px; font-size: 16pt;font-weight: bolder;">Escrow Account Details</div><br/> -->
+                                <table width="100%" style="margin: 20px auto;margin-top: 5px !important;">
+                                    <tr style="background-color: black; color: white; ">
+                                        <th style=" padding: 13px; text-align: center;font-weight: 100;width:35%;">Escrow Account Details</th>
+                                        <th style=" padding: 13px; text-align: center;font-weight: 100;width:65%"></th>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;"> Payable via : Cheque </td>
+                                        <td style="border: 1px solid #e5e5e5; padding: unset;font-weight: 100;"> 
+                                            <table>
+                                                <tr>
+                                                    <!--<apex:outputPanel rendered="{!projectName == 'Hudayriyat Golf Estates'}">
+                                                        <td style="padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Account Name : {!virtualAccountDetails.EscrowAccountNameText__c}</td>    
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!projectName != 'Hudayriyat Golf Estates'}">
+                                                        <td style="padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Account Name : {!virtualAccountDetails.ESCROWAccountName__c}</td>    
+                                                    <!--</apex:outputPanel>-->
+                                                    <td style="padding-left: 25px; padding-top: 8px; padding-bottom: 8px;">
+                                                        Account Name : 
+                                                        <apex:outputText value="{!virtualAccountDetails.EscrowAccountNameText__c}" 
+                                                                         rendered="{!projectName == 'Hudayriyat Golf Estates'}" />
+                                                        <apex:outputText value="{!virtualAccountDetails.ESCROWAccountName__c}" 
+                                                                         rendered="{!projectName != 'Hudayriyat Golf Estates'}" />
+                                                    </td>
+                                                </tr>
+                                            </table> 
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;"> Payable via : Bank Transfer </td>
+                                        <td style="border: 1px solid #e5e5e5; padding: unset;font-weight: 100;"> 
+                                            <table style="width: 100%">
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Bank Name : {!virtualAccountDetails.Escrow_Bank_Name__c}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Benificiary Name : {!virtualAccountDetails.Name}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Account Number : {!virtualAccountDetails.VirtualAccountNumber__c}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">IBAN : {!virtualAccountDetails.VirtualIBANNumber__c}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border: none;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Swift code : {!virtualAccountDetails.SwiftCode__c}</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 20px;">
+                                <!-- <div style="padding-bottom: 2px; font-size: 16pt;font-weight: bolder;">ADM Account Details</div><br/> -->
+                                <table width="100%" style="margin: 20px auto;margin-top: 5px !important;">
+                                    <tr style="background-color: black; color: white; ">
+                                        <th style=" padding: 13px; text-align: center;font-weight: 100;width:35%;border-right: none;">ADM Account Details</th>
+                                        <th style=" padding: 13px; text-align: center;font-weight: 100;width:65%"></th>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;"> Payable via : Cheque </td>
+                                        <td style="border: 1px solid #e5e5e5; padding: unset;font-weight: 100;"> 
+                                            <table>
+                                                <tr>
+                                                    <td style="padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Account Name : &nbsp;
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Unit__r.Phase__r.ADMAccountName__c}</apex:outputPanel>  
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Phase__r.ADMAccountName__c}</apex:outputPanel> 
+                                                    </td>
+                                                </tr>
+                                            </table> 
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #e5e5e5; text-align: center; padding: 5px;font-weight: 100;"> Payable via : Bank Transfer </td>
+                                        <td style="border: 1px solid #e5e5e5; padding: unset;font-weight: 100;"> 
+                                            <table style="width: 100%">
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Bank Name :  &nbsp;
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Unit__r.Phase__r.ADMBankName__c}</apex:outputPanel>  
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Phase__r.ADMBankName__c}</apex:outputPanel>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Account Name :  &nbsp;
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Unit__r.Phase__r.ADMAccountName__c}</apex:outputPanel>  
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Phase__r.ADMAccountName__c}</apex:outputPanel>    
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Account Number :  &nbsp;
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Unit__r.Phase__r.ADMAccountNumber__c}</apex:outputPanel>  
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Phase__r.ADMAccountNumber__c}</apex:outputPanel> 
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: 1px solid #e5e5e5;;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">IBAN :  &nbsp;
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Unit__r.Phase__r.ADMIBANNumber__c}</apex:outputPanel>  
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Phase__r.ADMIBANNumber__c}</apex:outputPanel> 
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border-bottom: none;padding-left: 25px;padding-top: 8px;padding-bottom: 8px;">Swift Code :  &nbsp;
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Unit__r.Phase__r.SwiftCode__c}</apex:outputPanel>  
+                                                        <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Phase__r.SwiftCode__c}</apex:outputPanel> 
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                            </td>
+                        </tr> 
+                        
+                    </table>                    
+                </div>
+                <!--Update Version 1.0 
+                @description: The Closing tag of the Hiding Escrow and adm details of Broker Site offer-->
+                    </apex:outputPanel>
+                <!-- Virtual Tour -->
+                <!--<apex:outputPanel rendered="{!NOT(OR(projectName == 'Bashayer', projectName == 'Muheira'))}">-->
+                <!--<apex:outputPanel rendered="{!NOT(OR(projectName == 'Wadeem', projectName == 'Muheira'))}">-->
+                <apex:outputPanel rendered="{!NOT(OR(projectName == 'Muheira'))}">
+                    <div class="card virtualTourCard">
+                        
+                        <h2 style="margin-bottom:5px;">
+                            Virtual Tour of the Unit
+                        </h2>
+                        
+                        <h2 style="margin-top:0;">
+                            <apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">
+                                ({!unitObj.Name})
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">
+                                ({!unitOptnObj.Unit__r.Name})
+                            </apex:outputPanel>
+                        </h2>
+                        
+                        <p style="margin-top:15px;">
+                            Discover the interior, exterior, and floor plans of your selected unit through our interactive virtual tour. 
+                            Click below to explore every detail of your future home!
+                        </p>
+                        
+                        <div style="margin:20px 0;">
+                            <apex:outputLink value="{!dpgLink}" target="_blank" styleClass="button">
+                                Visit Virtual Tour
+                            </apex:outputLink>
+                        </div>
+                        
+                    <!--Update Version 1.0 
+                    @description: removed The Disclaimer from here and put it at the top-->    
+                        
+                    </div>
+                </apex:outputPanel>
+                
+                <div class="footer" width="100%" style="width:84%;">
+                    <table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+                        <tr style="height:18mm;">
+                            <td width="70%">
+                                <b>
+                                    <a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+                                </b> &nbsp; | &nbsp; <b>
+                                <a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+                                </b>
+                            </td>
+                            <td width="30%" style="text-align:right;">
+                                <b>
+                                    <a href="https://www.modon.com" style="color:black;">modon.com</a>
+                                </b>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <!--<apex:outputPanel rendered="{!projectName == 'Al Naseem'}">
+<apex:outputPanel rendered="{!NOT(ISNULL(DPGImages))}">
+<div style="page-break-before: always;"></div>
+
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+<div style="width:100%;height: 397mm;position:relative;">
+<table width="100%">
+<tr>
+<td style="text-align:center;">
+<apex:repeat value="{!DPGImages}" var="img">
+<img src="{!img}" alt="Unit Image" style="width: 100%; height: auto; border-radius: 10px; margin: 0 auto; display: block;" />
+<br />
+</apex:repeat>
+</td>
+</tr>
+</table>
+<div class="footer" width="100%" style="width:84%;">
+<table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+<tr style="height:18mm;">
+<td width="70%">
+<b>
+<a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+</b> &nbsp; | &nbsp; <b>
+<a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+</b>
+</td>
+<td width="30%" style="text-align:right;">
+<b>
+<a href="https://www.modon.com" style="color:black;">modon.com</a>
+</b>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(GFfloorPlanImages))}">
+<div style="page-break-before: always;"></div>
+
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+<div style="width:100%;height: 397mm;background-color:#ffffff;position:relative;">
+<table width="100%" style="background-color:#ffffff;">
+<tr>
+<td width="30%" style="padding:0.5in;">
+<div style="text-align:center;">
+
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/AlNaseem_Logo.png')}" width="150" height="100" class="Al Naseem" alt="Al Naseem" />
+</div>
+</td>
+<td width="40%"></td>
+<td style="padding:0.5in;text-align: left; vertical-align: top;font-size:18pt;">
+<div style="font-weight: bold;">
+<apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Typology__c} <br />{!unitObj.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Name} <br />{!unitOptnObj.Unit__r.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+</div>
+</td>
+</tr>
+<tr>
+<td colspan="3" style="text-align:center;">
+<apex:repeat value="{!GFfloorPlanImages}" var="img">
+<img src="{!img}" alt="Unit Image" style="width: 100%; height: auto; border-radius: 10px; margin: 0 auto; display: block;"/>
+</apex:repeat>
+<br />
+<br />
+<br />
+
+</td>
+</tr>
+</table>
+
+<div class="footer" width="100%" style="width:84%;">
+<table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+<tr style="height:18mm;">
+<td width="70%">
+<b>
+<a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+</b> &nbsp; | &nbsp; <b>
+<a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+</b>
+</td>
+<td width="30%" style="text-align:right;">
+<b>
+<a href="https://www.modon.com" style="color:black;">modon.com</a>
+</b>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(FFfloorPlanImages))}">
+<div style="page-break-before: always;"></div>
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+<div style="width:100%;height: 397mm;background-color:#ffffff;position:relative;">
+<table width="100%" style="background-color:#ffffff;">
+<tr>
+<td width="30%" style="padding:0.5in;">
+<div style="text-align:center;">
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/AlNaseem_Logo.png')}" class="Al Naseem" alt="Al Naseem" />
+</div>
+</td>
+<td width="40%"></td>
+<td style="padding:0.5in;text-align: left; vertical-align: top;font-size:18pt;">
+<div style="font-weight: bold;">
+<apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Typology__c} <br />{!unitObj.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Name} <br />{!unitOptnObj.Unit__r.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+</div>
+</td>
+</tr>
+<tr>
+<td colspan="3" style="text-align:center;">
+<apex:repeat value="{!FFfloorPlanImages}" var="img">
+<img src="{!img}" alt="Unit Image" style="width: 100%; height: auto; border-radius: 10px; margin: 0 auto; display: block;"/>
+</apex:repeat>
+
+</td>
+</tr>
+</table>
+<div class="footer" width="100%" style="width:84%;">
+<table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+<tr style="height:18mm;">
+<td width="70%">
+<b>
+<a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+</b> &nbsp; | &nbsp; <b>
+<a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+</b>
+</td>
+<td width="30%" style="text-align:right;">
+<b>
+<a href="https://www.modon.com" style="color:black;">modon.com</a>
+</b>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(exteriorImages))}">
+<div style="page-break-before: always;"></div>
+
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+<div style="width:100%;height: 397mm;background-color:#ffffff;position:relative;">
+<table width="100%" style="background-color:#ffffff;">
+<tr>
+<td width="30%" style="padding:0.5in;">
+<div style="text-align:center;">
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/AlNaseem_Logo.png')}" class="Al Naseem" alt="Al Naseem" />
+</div>
+</td>
+<td width="40%"></td>
+<td style="padding:0.5in;text-align: left; vertical-align: top;font-size:18pt;">
+<div style="font-weight: bold;">
+<apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Typology__c} <br />{!unitObj.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Name} <br />{!unitOptnObj.Unit__r.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+</div>
+</td>
+</tr>
+<tr>
+<td colspan="3" style="text-align:center;">
+<apex:repeat value="{!exteriorImages}" var="img">
+<div style="text-align:center;">
+<img src="{!img}" style="width: 100%; height: auto; border-radius: 10px; margin: 0 auto; display: block;" />
+<br />
+</div>
+</apex:repeat>
+
+</td>
+</tr>
+</table>
+<div class="footer" width="100%" style="width:84%;">
+<table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+<tr style="height:18mm;">
+<td width="70%">
+<b>
+<a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+</b> &nbsp; | &nbsp; <b>
+<a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+</b>
+</td>
+<td width="30%" style="text-align:right;">
+<b>
+<a href="https://www.modon.com" style="color:black;">modon.com</a>
+</b>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(interiorImages))}">
+<div style="page-break-before: always;"></div>
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/Modon_Header.png')}" alt="HEADER LOGO" class="main-img" />
+<div style="width:100%;height: 397mm;background-color:#ffffff;position:relative;">
+<table width="100%" style="background-color:#ffffff;">
+<tr>
+<td width="30%" style="padding:0.5in;">
+<div style="text-align:center;">
+<img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/AlNaseem_Logo.png')}" class="Al Naseem" alt="Al Naseem" />
+</div>
+</td>
+<td width="40%"></td>
+<td style="padding:0.5in;text-align: left; vertical-align: top;font-size:18pt;">
+<div style="font-weight: bold;">
+<apex:outputPanel rendered="{!NOT(ISNULL(unitObj))}">{!unitObj.Typology__c} <br />{!unitObj.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(ISNULL(unitOptnObj))}">{!unitOptnObj.Name} <br />{!unitOptnObj.Unit__r.Name} <br />{!numberOfBedroom} Bedrooms </apex:outputPanel>
+</div>
+</td>
+</tr>
+<tr>
+<td colspan="3" style="text-align:center;">
+<apex:repeat value="{!interiorImages}" var="img">
+<div style="text-align:center;">
+<img src="{!img}" style="width: 100%; height: auto; border-radius: 10px; margin: 0 auto; display: block;" />
+</div>
+</apex:repeat>
+
+</td>
+</tr>
+</table>
+<div class="footer" width="100%" style="width:84%;">
+<table width="100%" style="font-size:12pt;background-color:#e3e4e6;">
+<tr style="height:18mm;">
+<td width="70%">
+<b>
+<a href="tel:80066366" style="color:black;cursor: pointer"> 800 MODON (66366)</a>
+</b> &nbsp; | &nbsp; <b>
+<a href="mailto:sales@modon.com" style="color:black;"> sales@modon.com </a>
+</b>
+</td>
+<td width="30%" style="text-align:right;">
+<b>
+<a href="https://www.modon.com" style="color:black;">modon.com</a>
+</b>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</apex:outputPanel>
+</apex:outputPanel>-->
+            <!-- <apex:outputPanel rendered="{!NOT(ISNULL(exteriorURL))}">
+<div style="page-break-before: always;"></div>
+<h2>Exterior</h2>
+<div style="width:100%;">
+<apex:image url="{!exteriorURL}" alt="Unit Image" width="100%" height="100%" />
+</div>
+</apex:outputPanel> -->
+            <!-- <apex:outputPanel rendered="{!NOT(ISNULL(exteriorURL))}">
+<div style="page-break-before: always;"></div>
+<h2>Exterior</h2>
+<div style="width:100%;">
+<apex:image url="{!exteriorURL}" alt="Unit Image" width="100%" height="100%" />
+</div>
+</apex:outputPanel> -->
+            <div style="page-break-before: always;"></div>
+            <div style="width:100%; height: 420mm; page-break-inside: avoid;overflow:hidden;text-align:center;background-color:#dce5e0;">
+                <!-- <img src="{!URLFOR($Resource.AlNaseemProject_LastPage_New)}" alt="Unit Image" width="99%" /> -->
+                <apex:outputPanel rendered="{!projectName == 'Al Naseem'}">
+                    <img src="{!URLFOR($Resource.AlNaseemSalesOfferImages, 'AlNaseem/AlNaseemProject_LastPage.png')}" alt="Unit Image" class="main-img"  />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef East'}">
+                    <img src="{!URLFOR($Resource.NawayefEastSOImage, 'NawayefEast/NawayefEast_LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef West'}">
+                    <img src="{!URLFOR($Resource.NawayefWestSOImage, 'NawayefWest/NawayefWest_LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef Park View'}">
+                    <img src="{!URLFOR($Resource.NawayefPVSOImage, 'NawayefParkView/NawayefPV_LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Nawayef Village Townhouses'}">
+                    <img src="{!URLFOR($Resource.NawayefVillagesTownhouse, 'NawayefVillagesTownhouse/NVTH_LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Bashayer'}">
+                    <img src="{!URLFOR($Resource.BashayerSOImage, 'Bashayer/Bashayer_LastPage.png')}" alt="Unit Image" class="main-img"/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Wadeem'}">
+                    <img src="{!URLFOR($Resource.WadeemSOImages, 'Wadeem/Wadeem_LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!OR(phaseName == 'Mayar', phaseName == 'Mayar Townhouse')}">
+                    <img src="{!URLFOR($Resource.MayarSOImage, 'Mayar/LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Muheira'}">
+                    <img src="{!URLFOR($Resource.MuheiraSOImage, 'Muheira/LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!phaseName == 'Thoraya'}">
+                    <img src="{!URLFOR($Resource.ThorayaSOImage, 'Thoraya/LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'YAMM'}">
+                    <img src="{!URLFOR($Resource.YammSOImage, 'YAMM/LastPage.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Tara'}">
+                    <img src="{!URLFOR($Resource.TaraSOImage, 'Tara/Back.png')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Hudayriyat Golf Estates'}">
+                    <img src="{!URLFOR($Resource.HGESOImage, 'HGE/Back.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!projectName == 'Wadeem Gardens'}">
+                    <img src="{!URLFOR($Resource.WadeemGardensLast, 'WadeemGardens/Back.jpg')}" alt="Unit Image" class="main-img" />
+                </apex:outputPanel>
+
+
+            </div>
+        </body>
+    </html>
+</apex:page>

@@ -1,0 +1,332 @@
+<template>
+    <div class="idn">
+        <!-- main column -->
+        <div class="idn__main">
+
+            <!-- Project -->
+            <section class="glass card">
+                <header class="card__head">
+                    <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Project</span></div>
+                    <template lwc:if={quotaText}>
+                        <span class="card__meta">{quotaText}</span>
+                    </template>
+                </header>
+                <div class="field field--wide">
+                    <label class="field__label" for="proj">Project interest *</label>
+                    <select id="proj" class="field__select" onchange={handleProject} disabled={busy}>
+                        <option value="">Select a project…</option>
+                        <template for:each={projectSelectOptions} for:item="p">
+                            <option key={p.value} value={p.value} selected={p.selected}>{p.label}</option>
+                        </template>
+                    </select>
+                </div>
+                <template lwc:if={projectClosed}>
+                    <div class="banner banner--warn card__banner">
+                        <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #fbbf24)"></c-modon-icon>
+                        <span>{projectClosedText}</span>
+                    </div>
+                </template>
+            </section>
+
+            <!-- Lookup -->
+            <section class="glass card">
+                <header class="card__head">
+                    <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Look up customer</span></div>
+                    <div class="seg" role="group" aria-label="Customer type">
+                        <template for:each={customerTypeSegments} for:item="t">
+                            <button key={t.value} class={t.cls} type="button" data-value={t.value} aria-pressed={t.pressed} disabled={lookupDisabled} onclick={handleCustomerType}>{t.label}</button>
+                        </template>
+                    </div>
+                </header>
+
+                <div class="field-grid" onkeydown={handleLookupKey}>
+                    <template lwc:if={isIndividual}>
+                        <div class="field">
+                            <label class="field__label" for="l-eid">Emirates ID</label>
+                            <input id="l-eid" class="field__input" type="text" inputmode="numeric" placeholder="784-1996-1234567-1" maxlength="18" autocomplete="off" data-field="emiratesId" value={lookup.emiratesId} oninput={handleLookupInput} disabled={lookupDisabled} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="l-pass">Passport number</label>
+                            <input id="l-pass" class="field__input" type="text" autocomplete="off" data-field="passportNumber" value={lookup.passportNumber} oninput={handleLookupInput} disabled={lookupDisabled} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="l-phone">Phone number</label>
+                            <div class="field__wrap">
+                                <input id="l-phone" class={lookupPhoneState.inputClass} type="tel" placeholder="+9715XXXXXXXX" autocomplete="off" data-field="phone" data-key="lookupPhone" data-kind="phone" value={lookup.phone} oninput={handleLookupInput} onblur={handleContactBlur} disabled={lookupDisabled} />
+                                <template lwc:if={lookupPhoneState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                <template lwc:if={lookupPhoneState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                            </div>
+                            <template lwc:if={lookupPhoneState.isBad}><p class="field__error">{lookupPhoneState.message}</p></template>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="l-email">Email address</label>
+                            <div class="field__wrap">
+                                <input id="l-email" class={lookupEmailState.inputClass} type="email" autocomplete="off" data-field="email" data-key="lookupEmail" data-kind="email" value={lookup.email} oninput={handleLookupInput} onblur={handleContactBlur} disabled={lookupDisabled} />
+                                <template lwc:if={lookupEmailState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                <template lwc:if={lookupEmailState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                            </div>
+                            <template lwc:if={lookupEmailState.isBad}><p class="field__error">{lookupEmailState.message}</p></template>
+                        </div>
+                    </template>
+
+                    <template lwc:if={isOrganization}>
+                        <div class="field">
+                            <label class="field__label" for="l-co">Company name</label>
+                            <input id="l-co" class="field__input" type="text" autocomplete="off" data-field="companyName" value={lookup.companyName} oninput={handleLookupInput} disabled={lookupDisabled} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="l-tl">Trade licence number</label>
+                            <input id="l-tl" class="field__input" type="text" autocomplete="off" data-field="tradeLicenseNumber" value={lookup.tradeLicenseNumber} oninput={handleLookupInput} disabled={lookupDisabled} />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="l-rphone">Registered phone</label>
+                            <div class="field__wrap">
+                                <input id="l-rphone" class={lookupPhoneState.inputClass} type="tel" placeholder="+9714XXXXXXX" autocomplete="off" data-field="registeredPhone" data-key="lookupPhone" data-kind="phone" value={lookup.registeredPhone} oninput={handleLookupInput} onblur={handleContactBlur} disabled={lookupDisabled} />
+                                <template lwc:if={lookupPhoneState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                <template lwc:if={lookupPhoneState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                            </div>
+                            <template lwc:if={lookupPhoneState.isBad}><p class="field__error">{lookupPhoneState.message}</p></template>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="l-remail">Registered email</label>
+                            <div class="field__wrap">
+                                <input id="l-remail" class={lookupEmailState.inputClass} type="email" autocomplete="off" data-field="registeredEmail" data-key="lookupEmail" data-kind="email" value={lookup.registeredEmail} oninput={handleLookupInput} onblur={handleContactBlur} disabled={lookupDisabled} />
+                                <template lwc:if={lookupEmailState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                <template lwc:if={lookupEmailState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                            </div>
+                            <template lwc:if={lookupEmailState.isBad}><p class="field__error">{lookupEmailState.message}</p></template>
+                        </div>
+                    </template>
+                </div>
+
+                <template lwc:if={lookupError}>
+                    <p class="field__error card__error">{lookupError}</p>
+                </template>
+
+                <div class="card__actions">
+                    <button class="btn btn-link btn-sm" type="button" onclick={handleClear} disabled={busy}>Clear</button>
+                    <button class="btn btn-sm" type="button" onclick={handleFind} disabled={lookupDisabled}>
+                        <c-modon-icon name="search" size="13" color="currentColor"></c-modon-icon>
+                        <span>{findLabel}</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Matches -->
+            <template lwc:if={showMatchSelection}>
+                <section class="glass card">
+                    <header class="card__head">
+                        <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Matching accounts</span></div>
+                        <span class="card__meta">{matchMessage}</span>
+                    </header>
+                    <div class="matches">
+                        <template for:each={matchCards} for:item="m">
+                            <button key={m.recordId} class="match glass-click" type="button" data-record-id={m.recordId} onclick={handleSelectMatch}>
+                                <span class="match__avatar" aria-hidden="true">{m.avatar}</span>
+                                <span class="match__body">
+                                    <span class="match__row">
+                                        <span class="match__name">{m.displayName}</span>
+                                        <span class={m.chipClass}>{m.chipLabel}</span>
+                                    </span>
+                                    <span class="match__type">{m.accountTypeLabel}</span>
+                                    <span class="match__fields">
+                                        <template for:each={m.displayFields} for:item="f">
+                                            <span key={f.key} class="match__field"><span class="match__k">{f.label}</span><span class="match__v">{f.value}</span></span>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="match__go"><c-modon-icon name="chevron-right" size="16" color="currentColor"></c-modon-icon></span>
+                            </button>
+                        </template>
+                    </div>
+                </section>
+            </template>
+
+            <!-- Details -->
+            <template lwc:if={showDetails}>
+                <section class="glass card">
+                    <header class="card__head">
+                        <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Customer details</span></div>
+                        <div class="seg" role="group" aria-label="Residency">
+                            <template for:each={residentSegments} for:item="r">
+                                <button key={r.value} class={r.cls} type="button" data-value={r.value} aria-pressed={r.pressed} disabled={residentDisabled} onclick={handleResident}>{r.label}</button>
+                            </template>
+                        </div>
+                    </header>
+
+                    <!-- Organisation -->
+                    <template lwc:if={isOrganization}>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field__label" for="c-co">Company name *</label>
+                                <input id="c-co" class="field__input" type="text" data-field="companyName" value={customer.companyName} oninput={handleFieldInput} disabled={lock.companyName} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-tl">Trade licence number *</label>
+                                <input id="c-tl" class="field__input" type="text" data-field="tradeLicenseNumber" value={customer.tradeLicenseNumber} oninput={handleFieldInput} disabled={lock.tradeLicenseNumber} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-tlx">Trade licence expiry</label>
+                                <input id="c-tlx" class="field__input" type="date" data-field="tradeLicenseExpiryDate" value={customer.tradeLicenseExpiryDate} onchange={handleFieldInput} disabled={lock.tradeLicenseExpiryDate} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-remail">Registered email</label>
+                                <input id="c-remail" class="field__input" type="email" data-field="registeredEmail" value={customer.registeredEmail} oninput={handleFieldInput} disabled={lock.registeredEmail} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-rphone">Registered phone</label>
+                                <input id="c-rphone" class="field__input" type="tel" placeholder="+9714XXXXXXX" data-field="registeredPhone" value={customer.registeredPhone} oninput={handleFieldInput} disabled={lock.registeredPhone} />
+                            </div>
+                            <template lwc:if={showEmiratesId}>
+                                <div class="field">
+                                    <label class="field__label" for="c-eid-o">Emirates ID (resident) *</label>
+                                    <input id="c-eid-o" class={eidInputClass} type="text" inputmode="numeric" placeholder="784-1996-1234567-1" maxlength="18" data-field="emiratesId" value={customer.emiratesId} oninput={handleFieldInput} disabled={lock.emiratesId} />
+                                    <template lwc:if={eidInvalid}><p class="field__error">Use the format 784-1996-1234567-1.</p></template>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="c-eidx-o">Emirates ID expiry</label>
+                                    <input id="c-eidx-o" class="field__input" type="date" data-field="emiratesIdExpiryDate" value={customer.emiratesIdExpiryDate} onchange={handleFieldInput} disabled={lock.emiratesIdExpiryDate} />
+                                </div>
+                            </template>
+                            <div class="field">
+                                <label class="field__label" for="c-pass-o">Passport number {passportMark}</label>
+                                <input id="c-pass-o" class="field__input" type="text" data-field="passportNumber" value={customer.passportNumber} oninput={handleFieldInput} disabled={lock.passportNumber} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-passx-o">Passport expiry</label>
+                                <input id="c-passx-o" class="field__input" type="date" data-field="passportExpiryDate" value={customer.passportExpiryDate} onchange={handleFieldInput} disabled={lock.passportExpiryDate} />
+                            </div>
+                        </div>
+
+                        <p class="card__sub">Authorised contact</p>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field__label" for="c-afn">First name *</label>
+                                <input id="c-afn" class="field__input" type="text" data-field="authorizedFirstName" value={customer.authorizedFirstName} oninput={handleFieldInput} disabled={lock.authorizedFirstName} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-aln">Last name *</label>
+                                <input id="c-aln" class="field__input" type="text" data-field="authorizedLastName" value={customer.authorizedLastName} oninput={handleFieldInput} disabled={lock.authorizedLastName} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-aem">Email *</label>
+                                <div class="field__wrap">
+                                    <input id="c-aem" class={customerEmailState.inputClass} type="email" data-field="authorizedEmail" data-key="customerEmail" data-kind="email" value={customer.authorizedEmail} oninput={handleFieldInput} onblur={handleContactBlur} disabled={lock.authorizedEmail} />
+                                    <template lwc:if={customerEmailState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                    <template lwc:if={customerEmailState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                                </div>
+                                <template lwc:if={customerEmailState.isBad}><p class="field__error">{customerEmailState.message}</p></template>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-aph">Phone *</label>
+                                <div class="field__wrap">
+                                    <input id="c-aph" class={customerPhoneState.inputClass} type="tel" placeholder="+9715XXXXXXXX" data-field="authorizedPhone" data-key="customerPhone" data-kind="phone" value={customer.authorizedPhone} oninput={handleFieldInput} onblur={handleContactBlur} disabled={lock.authorizedPhone} />
+                                    <template lwc:if={customerPhoneState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                    <template lwc:if={customerPhoneState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                                </div>
+                                <template lwc:if={customerPhoneState.isBad}><p class="field__error">{customerPhoneState.message}</p></template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Individual -->
+                    <template lwc:if={isIndividual}>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field__label" for="c-fn">First name *</label>
+                                <input id="c-fn" class="field__input" type="text" data-field="firstName" value={customer.firstName} oninput={handleFieldInput} disabled={lock.firstName} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-ln">Last name *</label>
+                                <input id="c-ln" class="field__input" type="text" data-field="lastName" value={customer.lastName} oninput={handleFieldInput} disabled={lock.lastName} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-em">Email *</label>
+                                <div class="field__wrap">
+                                    <input id="c-em" class={customerEmailState.inputClass} type="email" data-field="email" data-key="customerEmail" data-kind="email" value={customer.email} oninput={handleFieldInput} onblur={handleContactBlur} disabled={lock.email} />
+                                    <template lwc:if={customerEmailState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                    <template lwc:if={customerEmailState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                                </div>
+                                <template lwc:if={customerEmailState.isBad}><p class="field__error">{customerEmailState.message}</p></template>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-ph">Phone number *</label>
+                                <div class="field__wrap">
+                                    <input id="c-ph" class={customerPhoneState.inputClass} type="tel" placeholder="+9715XXXXXXXX" data-field="phone" data-key="customerPhone" data-kind="phone" value={customer.phone} oninput={handleFieldInput} onblur={handleContactBlur} disabled={lock.phone} />
+                                    <template lwc:if={customerPhoneState.isChecking}><span class="field__spin" aria-hidden="true"></span></template>
+                                    <template lwc:if={customerPhoneState.isOk}><span class="field__ok"><c-modon-icon name="check" size="13" color="currentColor"></c-modon-icon></span></template>
+                                </div>
+                                <template lwc:if={customerPhoneState.isBad}><p class="field__error">{customerPhoneState.message}</p></template>
+                            </div>
+                            <template lwc:if={showEmiratesId}>
+                                <div class="field">
+                                    <label class="field__label" for="c-eid">Emirates ID (resident) *</label>
+                                    <input id="c-eid" class={eidInputClass} type="text" inputmode="numeric" placeholder="784-1996-1234567-1" maxlength="18" data-field="emiratesId" value={customer.emiratesId} oninput={handleFieldInput} disabled={lock.emiratesId} />
+                                    <template lwc:if={eidInvalid}><p class="field__error">Use the format 784-1996-1234567-1.</p></template>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="c-eidx">Emirates ID expiry</label>
+                                    <input id="c-eidx" class="field__input" type="date" data-field="emiratesIdExpiryDate" value={customer.emiratesIdExpiryDate} onchange={handleFieldInput} disabled={lock.emiratesIdExpiryDate} />
+                                </div>
+                            </template>
+                            <div class="field">
+                                <label class="field__label" for="c-pass">Passport number {passportMark}</label>
+                                <input id="c-pass" class="field__input" type="text" data-field="passportNumber" value={customer.passportNumber} oninput={handleFieldInput} disabled={lock.passportNumber} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-passx">Passport expiry</label>
+                                <input id="c-passx" class="field__input" type="date" data-field="passportExpiryDate" value={customer.passportExpiryDate} onchange={handleFieldInput} disabled={lock.passportExpiryDate} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-nat">Nationality *</label>
+                                <select id="c-nat" class="field__select" data-field="nationality" onchange={handleFieldInput} disabled={lock.nationality}>
+                                    <option value="">Select…</option>
+                                    <template for:each={nationalitySelectOptions} for:item="o">
+                                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="c-cor">Country of residence *</label>
+                                <select id="c-cor" class="field__select" data-field="countryOfResidence" onchange={handleFieldInput} disabled={lock.countryOfResidence}>
+                                    <option value="">Select…</option>
+                                    <template for:each={countrySelectOptions} for:item="o">
+                                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                    </template>
+                </section>
+            </template>
+
+        </div>
+
+        <!-- rail -->
+        <aside class="idn__rail">
+            <div class="glass rail">
+                <div class="eyebrow"><span class="eyebrow__dot"></span><span class="eyebrow__label">Customer status</span></div>
+                <div class="rail__row">
+                    <span class={statusChip.cls}>{statusChip.label}</span>
+                </div>
+                <p class="rail__hint">{statusHint}</p>
+                <template lwc:if={hasLockedFields}>
+                    <p class="rail__lock">
+                        <c-modon-icon name="lock" size="12" color="currentColor"></c-modon-icon>
+                        <span>Locked fields are held by the existing account.</span>
+                    </p>
+                </template>
+                <ol class="rail__steps">
+                    <li>Identify the customer</li>
+                    <li>Customer verifies by email or SMS</li>
+                    <li>Choose units and payment</li>
+                </ol>
+                <!-- The step's action lives in the rail, exactly like the Details step's CTA. -->
+                <button class="btn btn-primary rail__cta" type="button" onclick={handleNext} disabled={nextDisabled}>
+                    <span>Continue to verification</span>
+                    <c-modon-icon name="arrow-right" size="14" color="currentColor"></c-modon-icon>
+                </button>
+            </div>
+        </aside>
+    </div>
+</template>

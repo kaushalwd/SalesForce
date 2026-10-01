@@ -1,0 +1,190 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 07-23-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+  <lightning-card title="DOCUMENT CHECKLISTS">
+    <div class="slds-m-around_medium">
+      <div
+        class="slds-grid slds-grid_align-end slds-gutters slds-p-around_medium">
+        <lightning-button label="Back" variant="brand" onclick={handleBack}
+          class="slds-m-left_x-small"></lightning-button>
+        <!--lightning-button
+          label="Save to Draft"
+          variant="neutral"
+          onclick={handleSaveDraft}
+          class="slds-m-left_x-small">
+        </lightning-button-->
+        <lightning-button
+          label="Reject"
+          variant="destructive"
+          onclick={handleReject}
+          class="slds-m-left_x-small"
+          disabled={canAccessCurrentTeam}>
+        </lightning-button>
+
+        <lightning-button
+          label={sendButtonLabel}
+          variant="success"
+          onclick={handleApprove}
+          class="slds-m-left_x-small"
+          disabled={canAccessCurrentTeam}>
+        </lightning-button>
+
+
+      </div>
+
+      <div class="slds-grid slds-wrap slds-p-around_medium">
+        <div class="slds-col slds-size_1-of-2"><b>Customer Name:
+            {customerName}</b></div>
+        <div class="slds-col slds-size_1-of-2"><b>Salesperson:
+            {salesperson}</b></div>
+        <div class="slds-col slds-size_1-of-2"><b>Project Name:
+            {projectName}</b></div>
+        <div class="slds-col slds-size_1-of-2"><b>Sales Order:
+            {salesOrderName}</b></div>
+        <div class="slds-col slds-size_1-of-2"><b>Unit(s) Number:
+            {unitNumber}</b></div>
+        <div class="slds-col slds-size_1-of-2"><b>Submission Date:
+            {submissionDate}</b></div>
+      </div>
+
+      <table
+        class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-around_medium">
+        <template for:each={checklistSections} for:item="section">
+          <thead key={section.title}>
+            <tr>
+              <th scope="col">Sr No</th>
+              <th scope="col" style="width: 30%;">{section.title} - Checklist
+                Detail</th>
+              <th scope="col">Approval Status</th>
+              <th scope="col">Rejection Reason</th>
+              <th scope="col">Remarks</th>
+              <th scope="col">Approved By</th>
+            </tr>
+          </thead>
+          <tbody key={section.column}>
+            <template for:each={section.items} for:item="item">
+              <tr key={item.itemKey}>
+                <td>{item.no}</td>
+                <td
+                  style="white-space: pre-wrap; word-break: break-word;">{item.label}</td>
+                <td>
+                  <lightning-combobox
+                    data-itemid={item.itemKey}
+                    data-label={item.label}
+                    name="status"
+                    value={item.approvalSts}
+                    placeholder="Approval Status"
+                    options={item.options}
+                    onchange={handleChange}
+                    disabled={item.readOnly}
+                    class="approvalSts-input"
+                    variant="label-hidden">
+                  </lightning-combobox>
+
+                  <template if:true={item.error.approvalSts}>
+                    <p
+                      class="slds-text-color_error slds-text-body_small">{item.error.approvalSts}</p>
+                  </template>
+                </td>
+                <td>
+
+                  <lightning-combobox
+                    data-itemid={item.itemKey}
+                    name="rejectionReason"
+                    label="Rejection Reason"
+                    value={item.rejectionReason}
+                    placeholder="Rejection Reason"
+                    options={item.rejectionOptions}
+                    onchange={handleChange}
+                    disabled={item.disabledRejection}
+                    class="rejectionRsn-input"
+                    variant="label-hidden">
+                  </lightning-combobox>
+                  <template if:true={item.error.rejectionReason}>
+                    <p
+                      class="slds-text-color_error slds-text-body_small">{item.error.rejectionReason}</p>
+                  </template>
+                </td>
+                <td>
+                  <lightning-textarea
+                    class="remark-input"
+                    data-itemid={item.itemKey}
+                    value={item.remark}
+                    disabled={item.readOnly}
+                    onchange={handleRemarkChange}>
+                  </lightning-textarea>
+                  <template if:true={item.error.remark}>
+                    <p
+                      class="slds-text-color_error slds-text-body_small">{item.error.remark}</p>
+                  </template>
+                </td>
+                <td>{item.approvedBy}</td>
+              </tr>
+            </template>
+          </tbody>
+        </template>
+      </table>
+
+      <p class="slds-p-top_medium">
+        *Incomplete cases mandated to be secured with Sales Director approval
+        signature and will not be processed until complete requirements
+        received.
+      </p>
+
+      <div
+        class="slds-grid slds-grid_align-end slds-gutters slds-p-around_medium">
+        <lightning-button label="Back" variant="brand" onclick={handleBack}
+          class="slds-m-left_x-small"></lightning-button>
+        <!--lightning-button
+          label="Save to Draft"
+          variant="neutral"
+          onclick={handleSaveDraft}
+          class="slds-m-left_x-small">
+        </lightning-button-->
+        <lightning-button
+          label="Reject"
+          variant="destructive"
+          onclick={handleReject}
+          class="slds-m-left_x-small"
+          disabled={canAccessCurrentTeam}>
+        </lightning-button>
+
+        <lightning-button
+          label={sendButtonLabel}
+          variant="success"
+          onclick={handleApprove}
+          class="slds-m-left_x-small"
+          disabled={canAccessCurrentTeam}>
+        </lightning-button>
+
+      </div>
+    </div>
+  </lightning-card>
+  <template if:true={showRemarksModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title">Remarks Required</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <lightning-textarea
+            label="Remarks"
+            value={popupRemarks}
+            onchange={handlePopupRemarksChange}></lightning-textarea>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button variant="neutral" label="Cancel"
+            onclick={closeRemarksModal}></lightning-button>
+          <lightning-button variant="brand" label="Submit"
+            onclick={submitRemarks}></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

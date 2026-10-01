@@ -1,0 +1,409 @@
+<template>
+    <div class="mre-shell">
+
+        <!-- HEADER -->
+        <div class="mre-header">
+            <h1>Create Payment for EOI</h1>
+        </div>
+
+        <!-- LOADING -->
+        <template if:true={isLoading}>
+            <div class="mre-loader">
+                <lightning-spinner
+                    alternative-text="Loading"
+                    size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+
+            <!-- ALERTS -->
+
+            <template if:true={isDuplicate}>
+                <div class="mre-alert mre-alert-error">
+
+                    <lightning-icon
+                        icon-name="utility:error"
+                        size="x-small">
+                    </lightning-icon>
+
+                    <div>
+                        <div class="mre-alert-title">
+                            Duplicate Payment
+                        </div>
+
+                        <p>{duplicateMessage}</p>
+                    </div>
+
+                </div>
+            </template>
+
+            <template if:true={isDocsMissing}>
+                <div class="mre-alert mre-alert-warning">
+
+                    <lightning-icon
+                        icon-name="utility:warning"
+                        size="x-small">
+                    </lightning-icon>
+
+                    <div>
+                        <div class="mre-alert-title">
+                            Action required before payment
+                        </div>
+
+                        <p>{docsMissingMessage}</p>
+                    </div>
+
+                </div>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="mre-alert mre-alert-error">
+
+                    <lightning-icon
+                        icon-name="utility:error"
+                        size="x-small">
+                    </lightning-icon>
+
+                    <div>
+                        <div class="mre-alert-title">
+                            Error
+                        </div>
+
+                        <p>{errorMessage}</p>
+                    </div>
+
+                </div>
+            </template>
+
+            <template if:true={isSuccess}>
+                <div class="mre-alert mre-alert-success">
+
+                    <lightning-icon
+                        icon-name="utility:success"
+                        size="x-small">
+                    </lightning-icon>
+
+                    <div>
+                        <div class="mre-alert-title">
+                            Success
+                        </div>
+
+                        <p>{successMessage}</p>
+                    </div>
+
+                </div>
+            </template>
+
+            <!-- FORM -->
+
+            <template if:false={hideForm}>
+
+                <!-- META -->
+
+                <div class="mre-meta-card">
+
+                    <div class="mre-meta-item">
+                        <span class="mre-meta-label">
+                            Expression of Interest
+                        </span>
+
+                        <span class="mre-meta-value">
+                            {eoiName}
+                        </span>
+                    </div>
+
+                    <div class="mre-divider"></div>
+
+                    <div class="mre-meta-item">
+                        <span class="mre-meta-label">
+                            Opportunity
+                        </span>
+
+                        <span class="mre-meta-value">
+                            {opportunityName}
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- SECTION -->
+
+                <div class="mre-section-title">
+                    Payment Details
+                </div>
+
+                <!-- FORM GRID -->
+
+                <div class={formGridClass}>
+
+                    <!-- MODE -->
+
+                    <div class="mre-field">
+                        <lightning-combobox
+                            label="Mode of Payment"
+                            required
+                            placeholder="--None--"
+                            options={paymentModeOptions}
+                            value={formData.modeOfPayment}
+                            disabled={isFormDisabled}
+                            onchange={handleModeChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- AMOUNT
+                         readonly for everyone by default.
+                         Editable ONLY for users with Allow_Duplicate_Payment_for_EOI
+                         custom permission (to split payments across receipts). -->
+
+                    <div class="mre-field">
+                        <lightning-input
+                            label="Amount"
+                            type="number"
+                            formatter="currency"
+                            step="0.01"
+                            min="0.01"
+                            required
+                            value={formData.amount}
+                            readonly={isAmountReadonly}
+                            data-field="amount"
+                            field-level-help="Editable only for users with split-payment permission."
+                            onchange={handleInputChange}>
+                        </lightning-input>
+                    </div>
+
+                    <!-- CHEQUE -->
+
+                    <template if:true={isCheque}>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Cheque Number"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.chequeNumber}
+                                data-field="chequeNumber"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Cheque Date"
+                                type="date"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.chequeDate}
+                                data-field="chequeDate"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-combobox
+                                label="Bank"
+                                required
+                                placeholder="--None--"
+                                disabled={isFormDisabled}
+                                options={bankOptions}
+                                value={formData.bankValue}
+                                data-field="bankValue"
+                                onchange={handleInputChange}>
+                            </lightning-combobox>
+                        </div>
+
+                    </template>
+
+                    <!-- POS -->
+
+                    <template if:true={isPOS}>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Transaction Number"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.transactionNumber}
+                                data-field="transactionNumber"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Transaction Date"
+                                type="date"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.transactionDate}
+                                data-field="transactionDate"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Time"
+                                type="time"
+                                disabled={isFormDisabled}
+                                value={formData.transactionTime}
+                                data-field="transactionTime"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Card Last 4 Digits"
+                                required
+                                maxlength="4"
+                                pattern="[0-9]{4}"
+                                message-when-pattern-mismatch="Must be exactly 4 digits"
+                                disabled={isFormDisabled}
+                                value={formData.last4Digit}
+                                data-field="last4Digit"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                    </template>
+
+                    <!-- ONLINE -->
+
+                    <template if:true={isOnline}>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Transaction Date"
+                                type="date"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.transactionDate}
+                                data-field="transactionDate"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Time"
+                                type="time"
+                                disabled={isFormDisabled}
+                                value={formData.transactionTime}
+                                data-field="transactionTime"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                    </template>
+
+                    <!-- BANK TRANSFER -->
+
+                    <template if:true={isBankTransfer}>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Transaction Number"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.transactionNumber}
+                                data-field="transactionNumber"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Transaction Date"
+                                type="date"
+                                required
+                                disabled={isFormDisabled}
+                                value={formData.transactionDate}
+                                data-field="transactionDate"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="Time"
+                                type="time"
+                                disabled={isFormDisabled}
+                                value={formData.transactionTime}
+                                data-field="transactionTime"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="mre-field">
+                            <lightning-input
+                                label="IBAN / Swift Code Last 4 Digits"
+                                required
+                                maxlength="4"
+                                disabled={isFormDisabled}
+                                value={formData.last4Digit}
+                                data-field="last4Digit"
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+
+                    </template>
+
+                    <!-- DOCUMENT -->
+
+                    <div class="mre-upload-card">
+
+                        <div class="mre-upload-title">
+                            Document
+
+                            <template if:true={isFileRequired}>
+                                <span class="mre-required">*</span>
+                            </template>
+                        </div>
+
+                        <template if:false={isFormDisabled}>
+                            <lightning-file-upload
+                                name="paymentDoc"
+                                accept={acceptedFormats}
+                                record-id={recordId}
+                                onuploadfinished={handleUploadFinished}
+                                multiple>
+                            </lightning-file-upload>
+                        </template>
+
+                        <template if:true={hasUploadedFiles}>
+                            <div class="mre-upload-success">
+                                {uploadedFileCount} file(s) attached
+                            </div>
+                        </template>
+
+                        <template if:true={showFileRequiredError}>
+                            <div class="mre-upload-error">
+                                Please upload at least one document.
+                            </div>
+                        </template>
+
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+
+                <div class="mre-footer">
+
+                    <lightning-button
+                        label="Save and Submit"
+                        variant="brand"
+                        onclick={handleSave}
+                        disabled={isSaveDisabled}>
+                    </lightning-button>
+
+                </div>
+
+            </template>
+
+        </template>
+
+    </div>
+</template>

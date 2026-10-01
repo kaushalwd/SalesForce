@@ -1,0 +1,570 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+/* ── 1.8  the panel is three regions, not one padded box ────────────────────
+   .summary carries `padding: 20px` in c/mscStyles, which was right when every
+   child was a row in one list. The masthead and the focus line have to run the
+   FULL width - a hairline that stops 20px short of each edge reads as a divider
+   inside a card rather than as the edge of a region - so the padding moves onto
+   the regions themselves and each one owns its own gutter. */
+.summary {
+    padding: 0;
+    /* The regions square off against the panel's own radius; without this the
+       masthead's background paints over the rounded corners. */
+    overflow: hidden;
+}
+
+/* ── Tier 1 · the masthead ────────────────────────────────────────────────── */
+
+.summary__mast {
+    padding: 16px 18px 15px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.summary__mastrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    min-height: 20px;
+}
+
+/* Tabular, and dimmer than the figure: a reference is looked up, not read. */
+.summary__ref {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.summary__mastrow .chip {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.summary__figlbl {
+    margin: 0 0 5px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.summary__fig {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+/* A verification state is words, not money. At 26px "Awaiting customer" wraps to
+   two lines in a 300px rail and reads as a headline rather than as a status. */
+.summary__fig--sm {
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+
+.summary__figsub {
+    margin: 5px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Tier 2 · the focus line ─────────────────────────────────────────────────
+   Tinted rather than bordered: this is the one line in the panel that is about
+   what to DO, and a banner box here would compete with the masthead directly
+   above it. The tint is the same one the page's own banners use. */
+.summary__focus {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.summary__focusdot {
+    flex: 0 0 auto;
+    width: 6px;
+    height: 6px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.summary__focus--warn {
+    color: var(--chip-amber, #fbbf24);
+    background: rgba(217, 119, 6, 0.09);
+}
+
+/* UI-08: quiet text; the dot carries the state */
+.summary__focus--ok {
+    color: var(--text-muted, #a3a3a3);
+}
+.summary__focus--ok .summary__focusdot {
+    background: var(--step-done, #16a34a);
+}
+
+.summary__focus--bad {
+    color: var(--chip-red, #f87171);
+    background: rgba(248, 113, 113, 0.09);
+}
+
+/* ── 1.9  the record scrolls inside the card ────────────────────────────────
+   The same rule c/mscSectionCard's own body follows: a scroll region with the
+   bar suppressed, so a long booking - a basket of six units, or a milestone list
+   after confirmation - is reachable without the panel growing past the sheet.
+   The masthead and the focus line are OUTSIDE it deliberately: the figure this
+   step is about and the sentence saying what is needed must not be the two
+   things that scroll away.
+
+   --summary-scroll-max is set by the journey (mscBookingPage.css) only where the
+   rail is on screen. Unset elsewhere it resolves to `none`, so the inline strip
+   and the phone sheet keep scrolling with the pane around them rather than
+   growing a second scroll region inside one that already scrolls. */
+.summary__scroll {
+    max-height: var(--summary-scroll-max, none);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.summary__scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* ── Tier 3 · the groups ─────────────────────────────────────────────────────
+   c/mscStyles separates groups with a margin, a top padding and a rule, which
+   suited a stack of rows inside one padded box. Here the whole head is a hit
+   target running edge to edge, so the separation is a single border on the
+   group itself and the gutters live inside. */
+.summary__group + .summary__group {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.summary__group {
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.summary__group:last-child {
+    border-bottom: 0;
+}
+
+.summary__grouphead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 18px;
+    background: none;
+    border: 0;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.summary__grouphead:hover {
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+}
+
+.summary__grouphead:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+}
+
+.summary__lbl {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary__lbl .field__label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* THE CHANGE THAT MAKES A SHUT PANEL WORTH HAVING: every group carries its own
+   headline value, so five questions are answered without a click. It yields
+   before the label does - a truncated figure is worse than a truncated name. */
+.summary__val {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: 12.5px;
+    color: var(--text, #fafafa);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.summary__flag {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.summary__grouphead c-modon-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+}
+
+.summary__body {
+    padding: 0 18px 13px;
+}
+
+.summary__body .summary__empty {
+    margin: 0;
+}
+
+/* ── the unit lines ──────────────────────────────────────────────────────────
+   1.8 - ONE ROW SHAPE. This is the basket row and the single-unit block merged:
+   a single unit is a list of one, so there is nothing left to branch on. */
+.uline__list {
+    display: flex;
+    flex-direction: column;
+    /* 1.9 - no cap and no scroll of its own. It used to hold a basket at 300px
+       and scroll inside the group; the whole record now scrolls as one region
+       (.summary__scroll), and a scroll inside a scroll means the agent's wheel
+       lands in whichever of the two happens to be under the pointer. */
+}
+
+.uline {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.uline:first-child {
+    padding-top: 3px;
+}
+
+.uline:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.uline__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.uline__name {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+.uline__meta {
+    font-size: 11.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.uline__where {
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.uline__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex: 0 0 auto;
+    margin-left: auto;
+    max-width: 52%;
+}
+
+.uline__price {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* MSC-093 - .uline__right .chip is gone with the chip it styled. The plan
+   group below keeps its own, under .planline .chip. */
+
+/* The plan group's own rows: the unit, and what it is being bought on. Same
+   list for one unit or many - the count is the only difference. */
+.planline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.planline:last-child {
+    border-bottom: 0;
+}
+
+.planline__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.planline .chip {
+    flex: 0 0 auto;
+    max-width: 58%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── payment rows ───────────────────────────────────────────────────────────
+   Two lines on the left and a chip on the right, so they need their own
+   alignment rather than the baseline default. */
+.summary-row--pay {
+    align-items: flex-start;
+}
+
+.pay__label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+}
+
+.pay__name {
+    text-align: left;
+}
+
+.pay__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* ── 1.7  a record, not a route ─────────────────────────────────────────────
+   Every group but Payment Status is a record of the booking rather than a way
+   back into editing it, so its rows keep the layout and drop the affordances of
+   a control. */
+.summary-row--static {
+    cursor: default;
+}
+
+.summary-row--static:hover .summary-row__value {
+    text-decoration: none;
+}
+
+/* Strip mode: the rail becomes a compact card in the scroll column below
+   1024px, where there is no room for a persistent side panel. */
+.summary--strip {
+    border-radius: 16px;
+}
+
+/* 1.9 - the phone override is gone with the cap it was releasing. .uline__list
+   no longer scrolls at any width, and --summary-scroll-max is only ever set
+   where the rail is on screen, so a phone has nothing to release. */
+
+/* ── 1.9  ONE TYPE SCALE INSIDE EVERY EXPANDED GROUP ────────────────────────
+   The five bodies had drifted to five different scales: 10px uppercase labels
+   against 14px values in Customer and Amounts, a 20px total, 13px unit names
+   with 11.5px and 11px beneath them, 12.5px plan rows. Expanding two groups in
+   turn read as two different panels.
+
+   Two sizes, and only two. 12px for anything that is an ANSWER - a name, a
+   figure, a plan - and 11px for anything that NAMES one. Everything below is
+   scoped to .summary__body, so the masthead keeps its own hierarchy: that is
+   where emphasis belongs, and it is why the total does not need 20px here. */
+.summary__body .summary-row__label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    /* Not uppercase. At 10px with 0.1em tracking these were wider than the
+       values they labelled, which is what made the rows read as a form. */
+    text-transform: none;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.summary__body .summary-row__value {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Weight, not size: the total is still the row that matters in this group, and
+   the masthead is already carrying the figure at 26px. */
+.summary__body .summary-row--total .summary-row__value {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.summary__body .summary-row {
+    padding: 4px 0;
+}
+
+.summary__body .uline__name,
+.summary__body .uline__price,
+.summary__body .planline__name {
+    font-size: 12px;
+}
+
+.summary__body .uline__meta,
+.summary__body .uline__where,
+.summary__body .t-xs,
+.summary__body .summary__empty {
+    font-size: 11px;
+}
+
+.summary__body .chip {
+    font-size: 10.5px;
+    padding: 1px 7px;
+}
+
+/* ── 1.12  the rest of the booking ──────────────────────────────────────────
+   Stated quietly and only when it applies: this is context about a booking the
+   screen cannot currently open, not a task. Above the rule rather than below
+   the list's last row, so it reads as a footnote to the units and not as
+   another unit. */
+.uline__covers {
+    margin: 10px 0 0;
+    padding-top: 9px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.uline__covers-lead {
+    display: block;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.uline__covers-names {
+    display: block;
+    margin-top: 1px;
+}
+
+/* ── 1.15  the other units, as a way in ─────────────────────────────────────
+   Same footnote position and rule as .uline__covers - it replaces that line -
+   but each unit is a pressable row, styled like a group head at unit-line
+   scale: no border, hover ground, visible focus, chevron at the end. */
+.sib {
+    margin: 10px 0 0;
+    padding-top: 9px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.sib__lead {
+    margin: 0 0 4px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sib__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 7px 8px;
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.sib__row:hover {
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+}
+
+.sib__row:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+}
+
+.sib__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sib__name {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+.sib__meta {
+    font-size: 11.5px;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+}
+
+.sib__ref {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.sib__row c-modon-icon {
+    flex: 0 0 auto;
+}
+
+/* UI-08: the stage chip ("Settled" and the rest) and the plan chips as quiet text with a small
+   mark; the shared chips are bright */
+.chip--paid,
+.chip--partial {
+    gap: 6px;
+    color: var(--text-muted, #a3a3a3);
+    background: none;
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.chip--paid::before,
+.chip--partial::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--step-done, #16a34a);
+    opacity: 0.85;
+}
+.chip--partial::before {
+    background: var(--chip-amber, #fbbf24);
+    opacity: 0.7;
+}

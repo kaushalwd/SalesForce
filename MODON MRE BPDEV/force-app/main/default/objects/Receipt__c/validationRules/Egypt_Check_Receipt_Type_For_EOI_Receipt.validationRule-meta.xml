@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Egypt_Check_Receipt_Type_For_EOI_Receipt</fullName>
+    <active>true</active>
+    <description>This validation rule will check the Receipt Type filed is equal to &apos;EOI Receipt&apos; when EOI look up is populated.</description>
+    <errorConditionFormula>AND(
+ Source_Entity__c = &apos;Modon - Egypt&apos;,
+ OR(
+  AND(
+   NOT( ISBLANK( ExpressionOfInterest__c ) ),
+   NOT( ISPICKVAL( Receipt_Type__c , &apos;EOI Receipt&apos;) )
+  ),
+  AND(
+   ISBLANK( ExpressionOfInterest__c ),
+   ISPICKVAL( Receipt_Type__c , &apos;EOI Receipt&apos;)
+  )
+ )
+)</errorConditionFormula>
+    <errorMessage>Receipt Type should be &apos;EOI Receipt&apos; only when creating EOI Receipt.</errorMessage>
+</ValidationRule>

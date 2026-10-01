@@ -1,0 +1,335 @@
+<template>
+    <!-- one card per unit. MSC-096a: everything owed on a unit sits in that unit's own card, one open at a time. A single unit is one headless card, always open; the markup is written once for both shapes. -->
+    <template for:each={unitCards} for:item="u">
+        <section key={u.key} class={u.cardClass}>
+            <!-- the closed card answers what is left on this unit -->
+            <template lwc:if={u.showHead}>
+                <button
+                    class="uc__head"
+                    type="button"
+                    data-u={u.stateKey}
+                    aria-expanded={u.ariaExpanded}
+                    onclick={handleUnitToggle}
+                >
+                    <span class="uc__id">
+                        <span class="uc__name">{u.name}</span>
+                        <template lwc:if={u.ref}>
+                            <span class="uc__ref">{u.ref}</span>
+                        </template>
+                    </span>
+                    <template lwc:if={u.headStatus}>
+                        <span class={u.headStatus.cls}>{u.headStatus.text}</span>
+                    </template>
+                    <template lwc:if={u.chip}>
+                        <span class={u.chip.cls}>{u.chip.text}</span>
+                    </template>
+                    <span class={u.headFigureClass}>{u.headFigure}</span>
+                    <span class="uc__chev">
+                        <c-modon-icon
+                            name={u.chevron}
+                            size="14"
+                            color="var(--text-muted, #a3a3a3)"
+                        ></c-modon-icon>
+                    </span>
+                </button>
+            </template>
+
+            <template lwc:if={u.open}>
+                <div class="uc__body">
+                    <!-- the tables: what is owed now. CLOSES THE BOOKING (the two legs of SalesTeamVoidCheck__c) and DUE NOW (the ADM + Dari charge and Milestone 1 on a single unit). Same table, three right-aligned money columns, no Unit column. -->
+                    <template for:each={u.tables} for:item="t">
+                        <section key={t.key} class="grp">
+                            <!-- 3.4: the strip above the table: a rule and the count. The tier is not named. 1.4: the hold rides here as a state, not a second clock; only a headless card draws it. -->
+                            <div class="grp__head grp__head--static">
+                                <span class="grp__count">{t.count}</span>
+                                <template lwc:if={t.hold}>
+                                    <template lwc:if={showHold}>
+                                        <span class={holdClass}>{holdText}</span>
+                                    </template>
+                                </template>
+                            </div>
+
+                            <!-- the pill says Still reserved; this says why, only when the answer is a riddle -->
+                            <template lwc:if={t.hold}>
+                                <template lwc:if={showReservedNote}>
+                                    <p class="grp__reserved">{labels.LEDGER_HOLD_SAFE_NOTE}</p>
+                                </template>
+                            </template>
+
+                            <!-- its own scroll region -->
+                            <div class="led__scroll">
+                                <table class="led">
+                                    <!-- 3.3: the header row is drawn empty, by request; kept for screen readers -->
+                                    <thead>
+                                        <tr class="led__h">
+                                            <th scope="col" class="led__h-c led__c-pay">
+                                                <span class="led__sr">{labels.LEDGER_COL_PAYMENT}</span>
+                                            </th>
+                                            <th scope="col" class="led__h-c led__c-m--total">
+                                                <span class="led__sr">{labels.LED_COL_TOTAL}</span>
+                                            </th>
+                                            <th scope="col" class="led__h-c led__c-st">
+                                                <span class="led__sr">{labels.LED_COL_PENDING}</span>
+                                            </th>
+                                            <th scope="col" class="led__h-c led__c-go">
+                                                <span class="led__sr">{labels.LEDGER_COL_ACTION}</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={t.rows} for:item="r">
+                                            <tr key={r.sourceId} class={r.rowClass}>
+                                                <td class="led__c-pay">
+                                                    <span class="led__pay">{r.label}</span>
+                                                    <!-- 2.4: the name column says what and when, never money -->
+                                                    <!-- 3.2: the date reads grey and carries no OVERDUE pill, by request -->
+                                                    <template lwc:if={r.dueLine}>
+                                                        <span class="led__due">{r.dueLine}</span>
+                                                    </template>
+                                                </td>
+
+                                                <!-- 3.3: the row's money in two figures, the total and what is pending; Recorded moved to the modal -->
+                                                <td class="led__c-m led__c-m--total">
+                                                    <!-- 3.11: the column's name, shown only on a phone where the row stacks -->
+                                                    <span class="led__m-lbl">{labels.LED_COL_TOTAL}</span>
+                                                    <span class="led__mv">{r.colTotal}</span>
+                                                </td>
+
+                                                <!-- the figure the button reads; a row with nothing pending says so in words -->
+                                                <td class="led__c-st">
+                                                    <span class={r.pendClass}>
+                                                        <span class={r.pendValueClass}>{r.pendValue}</span>
+                                                        <template lwc:if={r.pendWord}>
+                                                            <span class="led__pend-kw">{r.pendWord}</span>
+                                                        </template>
+                                                    </span>
+                                                </td>
+
+                                                <!-- the row is not the control. 3.0: it opens a dialog, so aria-haspopup. -->
+                                                <td class="led__c-go">
+                                                    <button
+                                                        class={r.actionClass}
+                                                        type="button"
+                                                        data-id={r.sourceId}
+                                                        aria-haspopup="dialog"
+                                                        onclick={handleRowToggle}
+                                                    >
+                                                        {r.actionLabel}
+                                                    </button>
+                                                </td>
+                                            </tr>
+
+                                            <!-- 3.0: the form row is gone; a table row opens c/mscPaymentModal -->
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </template>
+
+                    <!-- tier 2: scheduled after booking. MSC-097: one line, one button (Manage milestone payments opens c/mscMilestoneModal). Before Confirm the milestones are a reference list behind the fold. -->
+                    <template lwc:if={u.sched}>
+                        <section class="grp grp--sched">
+                            <div class="grp__head grp__head--static">
+                                <span class="grp__title">{labels.LEDGER_SCHEDULED_TITLE}</span>
+                                <span class={u.sched.countClass}>{u.sched.count}</span>
+                            </div>
+
+                            <div class="sch__line">
+                                <span class="sch__m">
+                                    <!-- 3.7: no pill on this line, by request; the sentence says it. The chip stays derived: a closed card draws it in its head. -->
+                                    <template lwc:if={u.sched.summary}>
+                                        <span class={u.sched.summaryClass}>{u.sched.summary}</span>
+                                    </template>
+                                </span>
+                                <!-- 2.9: post-Confirm the figure is gone from the line; pre-Confirm it stays -->
+                                <template lwc:if={u.sched.showFigure}>
+                                    <span class={u.sched.figureClass}>{u.sched.figure}</span>
+                                </template>
+                                <span class="sch__acts">
+                                    <template lwc:if={u.sched.showManage}>
+                                        <!-- brand-weight, by request: the one action the tier offers -->
+                                        <button
+                                            class="btn btn-primary btn-sm sch__btn"
+                                            type="button"
+                                            data-so={u.sched.salesOrderId}
+                                            onclick={handleManageMilestones}
+                                            disabled={busy}
+                                        >
+                                            {labels.CTA_MANAGE_MILESTONES}
+                                        </button>
+                                    </template>
+                                    <template lwc:if={u.sched.showToggle}>
+                                        <button
+                                            class="sch__chev"
+                                            type="button"
+                                            data-so={u.sched.salesOrderId}
+                                            aria-expanded={u.sched.ariaExpanded}
+                                            aria-label={labels.LEDGER_SCHEDULED_TITLE}
+                                            onclick={handleBoxToggle}
+                                        >
+                                            <c-modon-icon
+                                                name={u.sched.chevron}
+                                                size="14"
+                                                color="var(--text-muted, #a3a3a3)"
+                                            ></c-modon-icon>
+                                        </button>
+                                    </template>
+                                </span>
+                            </div>
+
+                            <template lwc:if={u.sched.showRows}>
+                                <ul class="obligs sch__rows">
+                                    <template for:each={u.sched.rows} for:item="r">
+                                        <li key={r.sourceId} class={r.rowClass}>
+                                            <button
+                                                class="oblig__hit"
+                                                type="button"
+                                                data-id={r.sourceId}
+                                                aria-expanded={r.ariaExpanded}
+                                                onclick={handleRowToggle}
+                                            >
+                                                <span class="oblig__main">
+                                                    <span class="oblig__name">
+                                                        <span>{r.label}</span>
+                                                        <template lwc:if={r.ddTag}>
+                                                            <span class="oblig__tag">{r.ddTag}</span>
+                                                        </template>
+                                                    </span>
+                                                    <span class="oblig__meta">
+                                                        <template lwc:if={r.dueLabel}>
+                                                            <span class={r.dueClass}>{r.dueLabel}</span>
+                                                        </template>
+                                                        <template lwc:if={r.overdue}>
+                                                            <span class="chip chip--alert oblig__late">{r.overdueText}</span>
+                                                        </template>
+                                                        <template lwc:if={r.instrumentSub}>
+                                                            <span class="oblig__inst">{r.instrumentSub}</span>
+                                                        </template>
+                                                    </span>
+                                                </span>
+                                                <span class="oblig__figs">
+                                                    <span class={r.primaryClass}>{r.primary}</span>
+                                                    <template lwc:if={r.secondary}>
+                                                        <span class="oblig__sub">{r.secondary}</span>
+                                                    </template>
+                                                </span>
+                                                <span class={r.dotClass}>{r.chipText}</span>
+                                                <c-modon-icon
+                                                    name={r.chevron}
+                                                    size="14"
+                                                    color="var(--text-dim, #8a8a8a)"
+                                                ></c-modon-icon>
+                                            </button>
+
+                                            <template lwc:if={r.open}>
+                                                <div class="oblig__body">
+                                                    <template lwc:if={r.showCards}>
+                                                        <template for:each={r.cards} for:item="c">
+                                                            <div key={c.key} class="oblig__card">
+                                                                <template lwc:if={c.thumb}>
+                                                                    <img
+                                                                        class="oblig__thumb"
+                                                                        src={c.thumb}
+                                                                        alt=""
+                                                                        onerror={handleThumbError}
+                                                                    />
+                                                                </template>
+                                                                <template lwc:elseif={c.hasImage}>
+                                                                    <c-modon-icon
+                                                                        name="file-check"
+                                                                        size="16"
+                                                                        color="var(--chip-green, #4ade80)"
+                                                                    ></c-modon-icon>
+                                                                </template>
+                                                                <div class="oblig__card__text">
+                                                                    <span>{c.text}</span>
+                                                                    <template lwc:if={c.meta}>
+                                                                        <span class="oblig__card__meta">{c.meta}</span>
+                                                                    </template>
+                                                                    <!-- MSC-197: what the cheque image read -->
+                                                                    <template lwc:if={c.ocr}>
+                                                                        <span class={c.ocr.cls}>
+                                                                            <span>{c.ocr.text}</span>
+                                                                            <template lwc:if={c.ocr.canRetry}>
+                                                                                <button
+                                                                                    class="oblig__ocr__again"
+                                                                                    type="button"
+                                                                                    data-id={c.ocr.id}
+                                                                                    onclick={handleRetryRead}
+                                                                                >{labels.ROW_PAY_OCR_RETRY}</button>
+                                                                            </template>
+                                                                        </span>
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                        <template lwc:if={r.stillOpen}>
+                                                            <p class="oblig__still">{r.stillOpen}</p>
+                                                        </template>
+                                                    </template>
+                                                    <template lwc:if={r.ddNote}>
+                                                        <p class="oblig__route">
+                                                            <c-modon-icon
+                                                                name="repeat"
+                                                                size="13"
+                                                                color="var(--text-dim, #8a8a8a)"
+                                                            ></c-modon-icon>
+                                                            <span>{r.ddNote}</span>
+                                                        </p>
+                                                    </template>
+                                                    <template lwc:if={r.boxNote}>
+                                                        <p class="oblig__route">
+                                                            <c-modon-icon
+                                                                name="info"
+                                                                size="13"
+                                                                color="var(--text-dim, #8a8a8a)"
+                                                            ></c-modon-icon>
+                                                            <span>{r.boxNote}</span>
+                                                        </p>
+                                                    </template>
+                                                    <template lwc:if={r.showForm}>
+                                                        <c-msc-payment-block
+                                                            embedded
+                                                            payment-type={r.key}
+                                                            label={r.label}
+                                                            required-amount={r.requiredAmount}
+                                                            paid-amount={r.paidAmount}
+                                                            remaining-amount={r.remainingAmount}
+                                                            open-amount={r.openAmount}
+                                                            with-finance-amount={r.withFinanceAmount}
+                                                            records-payment={r.recordsPayment}
+                                                            due-date={r.dueDate}
+                                                            status={r.status}
+                                                            related-record-id={r.sourceId}
+                                                            sales-order-id={r.salesOrderId}
+                                                            proof-slot-id={r.proofSlotId}
+                                                            has-slot={r.hasSlot}
+                                                            method-options={r.allowedMethods}
+                                                            allow-direct-debit={r.allowDirectDebit}
+                                                            proofs={r.proofs}
+                                                            result={r.result}
+                                                            busy={busy}
+                                                            onrequestslot={handleRequestSlot}
+                                                            onproofuploaded={handleProofUploaded}
+                                                            oncaptureproof={handleCaptureProof}
+                                                            onproofremoved={handleProofRemoved}
+                                                            onsubmitproof={handleSubmitProof}
+                                                            onsetupdirectdebit={handleSetupDirectDebit}
+                                                        ></c-msc-payment-block>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+
+                            <!-- 2.3: the cheque sheet and the mandate form/view moved to c/mscMilestoneModal -->
+                        </section>
+                    </template>
+                </div>
+            </template>
+        </section>
+    </template>
+</template>

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Log_Flow_Exception</name>
+        <label>Log Flow Exception</label>
+        <locationX>1000</locationX>
+        <locationY>1000</locationY>
+        <actionName>LoggerService</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>faultErrorMessage</name>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>flowName</name>
+            <value>
+                <stringValue>get related record (experience)</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>LoggerService</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>63.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>is_there_value_in_Formula_or_not</name>
+        <label>is there value in Formula or not</label>
+        <locationX>446</locationX>
+        <locationY>431</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Account</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>AccountRecord</leftValueReference>
+                <operator>StartsWith</operator>
+                <rightValue>
+                    <stringValue>001</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>get_account</targetReference>
+            </connector>
+            <label>Account</label>
+        </rules>
+        <rules>
+            <name>Lead</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>LeadRecord</leftValueReference>
+                <operator>StartsWith</operator>
+                <rightValue>
+                    <stringValue>00Q</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>get_lead</targetReference>
+            </connector>
+            <label>Lead</label>
+        </rules>
+        <rules>
+            <name>Contact</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>ContactRecord</leftValueReference>
+                <operator>StartsWith</operator>
+                <rightValue>
+                    <stringValue>003</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>get_contact</targetReference>
+            </connector>
+            <label>Contact</label>
+        </rules>
+    </decisions>
+    <description>Updated the get contact as the value was &quot; LeadRecord &quot; instead of being &quot; ContactRecord &quot;</description>
+    <environments>Default</environments>
+    <formulas>
+        <description>This formula extracts the value of &quot;AccountRecord&quot; from the genesysps__Customer_Data__c field. It searches for &quot;AccountRecord&quot;:&quot;, moves past it, and retrieves the value inside the next set of quotation marks</description>
+        <name>AccountRecord</name>
+        <dataType>String</dataType>
+        <expression>MID(
+    {!$Record.genesysps__Customer_Data__c},
+    FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;AccountRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+    FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;AccountRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+    (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;AccountRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+)</expression>
+    </formulas>
+    <formulas>
+        <description>This formula extracts the value of &quot;ContactRecord&quot; from the genesysps__Customer_Data__c field. It searches for &quot;ContactRecord&quot;:&quot;, moves past it, and retrieves the value inside the next set of quotation marks</description>
+        <name>ContactRecord</name>
+        <dataType>String</dataType>
+        <expression>MID(
+    {!$Record.genesysps__Customer_Data__c},
+    FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;ContactRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+    FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;ContactRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+    (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;ContactRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+)</expression>
+    </formulas>
+    <formulas>
+        <name>Email</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    CONTAINS({!$Record.genesysps__Customer_Data__c}, &apos;email&quot;:&quot;&apos;),
+    MID(
+        {!$Record.genesysps__Customer_Data__c},
+        FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;email&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+        FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;email&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+        (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;email&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+    ),
+    &quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>firstName</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    CONTAINS({!$Record.genesysps__Customer_Data__c}, &apos;&quot;firstName&quot;:&quot;&apos;),
+    MID(
+        {!$Record.genesysps__Customer_Data__c},
+        FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;firstName&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+        FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;firstName&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+        (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;firstName&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+    ),
+    &quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <name>GenesysURL</name>
+        <dataType>String</dataType>
+        <expression>&apos;https://apps.mec1.pure.cloud/directory/#/analytics/interactions/&apos;+{!$Record.genesysps__Interaction_Id__c}+&apos;/recording/&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>Lastname</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    CONTAINS({!$Record.genesysps__Customer_Data__c}, &apos;lastName&quot;:&quot;&apos;),
+    MID(
+        {!$Record.genesysps__Customer_Data__c},
+        FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;lastName&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+        FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;lastName&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+        (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;lastName&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+    ),
+    &quot;&quot;
+)</expression>
+    </formulas>
+    <formulas>
+        <description>This formula extracts the value of &quot;LeadRecord&quot; from the genesysps__Customer_Data__c field. It searches for &quot;LeadRecord&quot;:&quot;, moves past it, and retrieves the value inside the next set of quotation marks</description>
+        <name>LeadRecord</name>
+        <dataType>String</dataType>
+        <expression>MID(
+    {!$Record.genesysps__Customer_Data__c},
+    FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;LeadRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+    FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;LeadRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+    (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;LeadRecord&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+)</expression>
+    </formulas>
+    <formulas>
+        <name>PhoneNumber</name>
+        <dataType>String</dataType>
+        <expression>IF(
+    CONTAINS({!$Record.genesysps__Customer_Data__c}, &apos;phoneNumber&quot;:&quot;&apos;),
+    MID(
+        {!$Record.genesysps__Customer_Data__c},
+        FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;phoneNumber&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3,
+        FIND(&apos;&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;phoneNumber&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3) - 
+        (FIND(&apos;&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c}, FIND(&apos;phoneNumber&quot;:&quot;&apos;, {!$Record.genesysps__Customer_Data__c})) + 3)
+    ),
+    &quot;&quot;
+)</expression>
+    </formulas>
+    <interviewLabel>get related record (experience) {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>get related record (experience)</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>get_account</name>
+        <label>get account</label>
+        <locationX>50</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>update_account</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>AccountRecord</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Account</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>get_contact</name>
+        <label>get contact</label>
+        <locationX>578</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>update_contact</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>ContactRecord</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Contact</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>get_lead</name>
+        <label>get lead</label>
+        <locationX>314</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>update_lead</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>LeadRecord</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Lead</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>update_account</name>
+        <label>update account</label>
+        <locationX>50</locationX>
+        <locationY>647</locationY>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>genesysps__Account__c</field>
+            <value>
+                <elementReference>AccountRecord</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>update_contact</name>
+        <label>update contact</label>
+        <locationX>578</locationX>
+        <locationY>647</locationY>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>genesysps__Contact__c</field>
+            <value>
+                <elementReference>ContactRecord</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>update_customer_details</name>
+        <label>update customer details</label>
+        <locationX>446</locationX>
+        <locationY>323</locationY>
+        <connector>
+            <targetReference>is_there_value_in_Formula_or_not</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Email__c</field>
+            <value>
+                <elementReference>Email</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>First_name__c</field>
+            <value>
+                <elementReference>firstName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Last_Name__c</field>
+            <value>
+                <elementReference>Lastname</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Phone_Number__c</field>
+            <value>
+                <elementReference>PhoneNumber</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>update_lead</name>
+        <label>update lead</label>
+        <locationX>314</locationX>
+        <locationY>647</locationY>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Lead__c</field>
+            <value>
+                <elementReference>LeadRecord</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>320</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>update_customer_details</targetReference>
+        </connector>
+        <object>genesysps__Experience__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

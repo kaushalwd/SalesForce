@@ -1,0 +1,314 @@
+/* The overlay layer. Both children are position:fixed and are rendered at the
+   host's top level - see the note in the JS about staying a sibling of the hub,
+   whose scale and blur would otherwise become their containing block. */
+
+:host {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  /* Tokenised: a hard black scrim over a light page reads as a different app. */
+  background: var(--overlay, rgba(0, 0, 0, 0.62));
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: backdropIn 160ms linear;
+}
+.backdrop--closing {
+  animation: backdropOut 140ms linear forwards;
+}
+
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 9101;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  outline: none;
+  background: var(--page-bg, #0a0a0a);
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+  /* Phone: a bottom sheet. At full-screen a scale is indistinguishable from a
+     page load, whereas sliding up is unmistakably a layer. */
+  animation: sheetUp 280ms cubic-bezier(0.2, 0, 0, 1);
+}
+.panel--closing {
+  animation: sheetDown 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* ── header ── */
+.head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* Phone: the panel is full-screen (inset:0), so the header sits under the
+     status bar / notch. Pad it clear of the safe area on all three edges the
+     header touches; the tablet rule below resets it once the panel is inset. */
+  padding: calc(14px + env(safe-area-inset-top))
+    calc(16px + env(safe-area-inset-right)) 14px
+    calc(16px + env(safe-area-inset-left));
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+}
+.titles {
+  min-width: 0;
+}
+.title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted, #a3a3a3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-muted, #a3a3a3);
+  transition: background 0.15s ease;
+}
+.close:hover {
+  background: var(--row-bg, rgba(255, 255, 255, 0.06));
+}
+.close:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+.close c-modon-icon {
+  color: inherit;
+}
+
+/* ── footer ── */
+.foot {
+  flex-shrink: 0;
+  /* All three edges, matching .head above. Bottom-only was fine in portrait but
+     put footer buttons under the cutout in landscape on a notched phone - and
+     landscape is exactly where a full-screen sheet has least room to spare. */
+  padding: 12px calc(16px + env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+  background: var(--page-bg, #0a0a0a);
+}
+
+/* The host's content sits between header and footer and owns its own scroll.
+   min-height:0 or the overflow escapes the panel. */
+slot {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes backdropOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes sheetDown {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* ── tablet: inset panel, scale rather than slide ── */
+@media (min-width: 768px) {
+  .panel {
+    inset: 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    animation: sheetIn 220ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .panel--closing {
+    animation: sheetOut 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  .head,
+  .foot {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  /* The inset panel (inset:24px) already clears the notch, so drop the
+     safe-area top padding the phone rule added. */
+  .head {
+    padding-top: 14px;
+  }
+
+  @keyframes sheetIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes sheetOut {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+  }
+}
+
+/* ── laptop: centred, hub visible on all four sides ── */
+@media (min-width: 1024px) {
+  .panel {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: min(1180px, calc(100vw - 64px));
+    height: min(780px, calc(100vh - 64px));
+    transform: translate(-50%, -50%);
+  }
+  /* The booking journey: the tour is the canvas, so it gets the room. Still
+     capped and centred so the hub stays visible around it on a wide monitor. */
+  .panel--immersive {
+    width: min(1600px, calc(100vw - 80px));
+    height: min(1000px, calc(100vh - 80px));
+  }
+  /* The centring transform has to be carried through every keyframe, or the
+     panel jumps to the top-left corner for the duration of the animation. */
+  @keyframes sheetIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+  @keyframes sheetOut {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) translateY(8px) scale(0.985);
+    }
+  }
+}
+
+/* ── right-side drawer variant (Learning) ──
+   ≥768: dock to the right edge, full height, slide in from the right. Placed
+   after the dialog breakpoint rules so it overrides their inset/transform/
+   animation. <768 is untouched, so the drawer falls back to the full-screen
+   bottom sheet the base .panel already provides. */
+@media (min-width: 768px) {
+  .panel--drawer {
+    inset: 0 0 0 auto;
+    top: 0;
+    left: auto;
+    width: min(440px, 92vw);
+    max-width: 92vw;
+    height: 100%;
+    border-radius: 0;
+    transform: none;
+    animation: drawerIn 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .panel--drawer.panel--closing {
+    animation: drawerOut 180ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  @keyframes drawerIn {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes drawerOut {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+}
+
+/* 1ms, deliberately NOT `animation: none`. Closing waits for animationend to
+   unmount the panel, and a removed animation never fires it - the sheet would
+   be stuck open for exactly the users who asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel,
+  .backdrop--closing,
+  .panel--closing {
+    animation-duration: 1ms;
+  }
+  .close {
+    transition: none;
+  }
+}
+
+/* ── Hide scrollbars app-wide (scroll still works) ────────────────────────
+   Requested: no visible scrollbar on any page or device. Chromium/Safari use
+   ::-webkit-scrollbar; Firefox uses scrollbar-width; legacy Edge uses
+   -ms-overflow-style. Applied to :host and every element in this shadow tree
+   so it covers whichever element owns the scroll region. */
+:host,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

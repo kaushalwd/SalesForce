@@ -1,0 +1,40 @@
+<template>
+    <!-- a touch screen keeps the phone's own picker -->
+    <template lwc:if={isNative}>
+        <select class={nativeClass} aria-label={label} disabled={disabled}
+                onchange={handleNative} onblur={handleNativeBlur}>
+            <option value="">{placeholder}</option>
+            <template for:each={items} for:item="o">
+                <option key={o.key} value={o.value} selected={o.selected}>{o.label}</option>
+            </template>
+        </select>
+    </template>
+    <template lwc:else>
+        <div class="pk" onkeydown={handleKey} onmousedown={handleInsideDown}>
+            <button type="button" class={triggerClass} aria-haspopup="listbox"
+                    aria-expanded={expandedAttr} aria-label={label} disabled={disabled}
+                    onclick={toggle}>
+                <span class={displayClass}>{displayText}</span>
+            </button>
+            <template lwc:if={open}>
+                <div class={panelClass}>
+                    <template lwc:if={searchable}>
+                        <input class="pk__search" type="text" placeholder="Search" value={query}
+                               oninput={handleQuery} autocomplete="off" spellcheck="false"
+                               aria-label="Search" />
+                    </template>
+                    <ul class="pk__list" role="listbox" aria-label={label}>
+                        <template for:each={visible} for:item="o">
+                            <li key={o.key} class={o.cls} role="option" aria-selected={o.ariaSelected}
+                                data-value={o.value} data-index={o.index}
+                                onmousedown={handleOptionDown} onmouseenter={handleOptionHover}>{o.label}</li>
+                        </template>
+                        <template lwc:if={noMatch}>
+                            <li class="pk__empty">No match</li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

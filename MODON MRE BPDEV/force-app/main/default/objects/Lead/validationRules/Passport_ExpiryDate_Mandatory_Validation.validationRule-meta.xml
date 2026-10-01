@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Passport_ExpiryDate_Mandatory_Validation</fullName>
+    <active>false</active>
+    <description>If not a UAE Resident, then Passport Expiry Date field is mandatory</description>
+    <errorConditionFormula>AND(
+    TEXT(UAEResidentStatus__c) = &apos;Non-Resident&apos;,
+    ISBLANK(PassportExpiryDate__c),
+    IsConverted,
+    ISPICKVAL(LeadSource, &quot;Self Generated&quot;),
+    NOT(ISPICKVAL(Source_Entity__c, &quot;Modon - Egypt&quot;))
+)</errorConditionFormula>
+    <errorDisplayField>PassportExpiryDate__c</errorDisplayField>
+    <errorMessage>Passport Expiry Date field is mandatory if the Lead is not a UAE Resident</errorMessage>
+</ValidationRule>

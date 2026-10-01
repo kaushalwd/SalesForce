@@ -1,0 +1,267 @@
+<template>
+    <aside class={rootClass} aria-label="Booking Summary">
+        <!-- ── Tier 1 · the masthead ───────────────────────────────────────────
+             1.8 - NEVER COLLAPSES. The reference and the stage used to sit above
+             the groups as two loose lines and the total was inside a group that
+             started shut, so the panel's default state answered nothing. This is
+             the one figure the current step is about, always in the same place. -->
+        <div class="summary__mast">
+            <div class="summary__mastrow">
+                <span class="summary__ref">{head.reference}</span>
+                <template lwc:if={hasStage}>
+                    <span class={stageClass}>{head.stage}</span>
+                </template>
+            </div>
+
+            <p class="summary__figlbl">{head.label}</p>
+            <p class={figureClass}>{head.figure}</p>
+            <template lwc:if={head.sub}>
+                <p class="summary__figsub">{head.sub}</p>
+            </template>
+
+            <!-- 1.9 - the four-segment meter is GONE. The progress tape sits
+                 directly above this panel carrying the same four steps in the
+                 same order, in words, so this was the third statement of one
+                 fact on one screen. -->
+        </div>
+
+        <!-- ── Tier 2 · the focus line ─────────────────────────────────────────
+             One sentence: what is needed to move on, or what is running out.
+             Derived entirely by the parent from state already on the page, so it
+             can never disagree with the banner or the disabled button saying the
+             same thing elsewhere on screen. -->
+        <template lwc:if={hasFocus}>
+            <div class={focusClass}>
+                <i class="summary__focusdot"></i>
+                <span>{focusLine.text}</span>
+            </div>
+        </template>
+
+        <!-- ── Tier 3 · the record ─────────────────────────────────────────────
+             The same five groups, always, in the same order. A group with nothing
+             in it yet says what would fill it rather than disappearing - a panel
+             whose groups come and go as the journey moves never settles. -->
+        <div class="summary__scroll">
+
+        <!-- Units -->
+        <div class="summary__group">
+            <button
+                class="summary__grouphead"
+                type="button"
+                data-group="units"
+                aria-expanded={unitsOpen}
+                onclick={handleGroupToggle}
+            >
+                <span class="summary__lbl"><span class="field__label">{unitsLabel}</span></span>
+                <template lwc:if={unitsClosed}>
+                    <span class="summary__val">{unitsClosed}</span>
+                </template>
+                <c-modon-icon name={unitsChevron} size="14" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+            </button>
+            <template lwc:if={unitsOpen}>
+                <div class="summary__body">
+                <template lwc:if={hasLines}>
+                    <div class="uline__list">
+                        <template for:each={lineList} for:item="l">
+                            <div key={l.id} class="uline">
+                                <span class="uline__main">
+                                    <span class="uline__name">{l.name}</span>
+                                    <template lwc:if={l.meta}>
+                                        <span class="uline__meta">{l.meta}</span>
+                                    </template>
+                                    <template lwc:if={l.where}>
+                                        <span class="uline__where">{l.where}</span>
+                                    </template>
+                                </span>
+                                <!-- MSC-093 - the PLAN is not repeated here. Each
+                                     unit row used to carry its plan chip as well,
+                                     directly above a Payment plan group that lists
+                                     exactly the same unit-and-plan pairs. The unit
+                                     rows answer "what am I buying and for how much";
+                                     the plan group answers "on what terms". -->
+                                <span class="uline__right">
+                                    <template lwc:if={l.price}>
+                                        <span class="uline__price">{l.price}</span>
+                                    </template>
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:else>
+                    <p class="summary__empty">{labels.EMPTY_UNIT}</p>
+                </template>
+
+                <!-- 1.12 - THE REST OF THE BOOKING.
+                     A basket writes one Sales Order per unit but resume restores one,
+                     so this list is the whole booking on a fresh journey and half of it
+                     on a resumed one - with nothing distinguishing the two. Said only
+                     when the counts actually differ. -->
+                <template lwc:if={showBookingCovers}>
+                    <p class="uline__covers">
+                        <span class="uline__covers-lead">{bookingCoversText}</span>
+                        <template lwc:if={bookingCoversNames}>
+                            <span class="uline__covers-names">{bookingCoversNames}</span>
+                        </template>
+                    </p>
+                </template>
+
+                <!-- 1.15 - THE OTHER UNITS, AS A WAY IN.
+                     One order of a multi-unit booking is open (Modon's per-order
+                     Resume). This rail rightly shows that one unit; here it says which
+                     one of how many, and each other unit is a row the agent can press
+                     to open its own booking - the same page, that order. -->
+                <template lwc:if={hasSiblings}>
+                    <div class="sib">
+                        <p class="sib__lead">{siblingLead}</p>
+                        <template for:each={siblingList} for:item="s">
+                            <button key={s.id} type="button" class="sib__row"
+                                    data-id={s.id} title={s.title}
+                                    onclick={handleSiblingOpen}>
+                                <span class="sib__main">
+                                    <span class="sib__name">{s.name}</span>
+                                    <template lwc:if={s.meta}>
+                                        <span class="sib__meta">{s.meta}</span>
+                                    </template>
+                                </span>
+                                <template lwc:if={s.ref}>
+                                    <span class="sib__ref">{s.ref}</span>
+                                </template>
+                                <c-modon-icon name="chevron-right" size="14" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Customer -->
+        <div class="summary__group">
+            <button
+                class="summary__grouphead"
+                type="button"
+                data-group="customer"
+                aria-expanded={customerOpen}
+                onclick={handleGroupToggle}
+            >
+                <span class="summary__lbl">
+                    <span class="field__label">Customer</span>
+                    <template lwc:if={showNotSaved}>
+                        <span class="chip chip--pending summary__flag">{labels.NOT_SAVED}</span>
+                    </template>
+                </span>
+                <template lwc:if={customerClosed}>
+                    <span class="summary__val">{customerClosed}</span>
+                </template>
+                <c-modon-icon name={customerChevron} size="14" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+            </button>
+            <template lwc:if={customerOpen}>
+                <div class="summary__body">
+                <template lwc:if={hasCustomer}>
+                    <template for:each={customerRows} for:item="r">
+                        <div key={r.key} class="summary-row summary-row--static">
+                            <span class="summary-row__label">{r.label}</span>
+                            <span class="summary-row__value">{r.value}</span>
+                        </div>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <p class="summary__empty">{labels.EMPTY_CUSTOMER}</p>
+                </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Payment plan. 1.8 - present for a basket too; it carries one row per
+             unit and "2 of 3 plans chosen" while shut. It used to be removed
+             entirely whenever there was more than one unit. -->
+        <div class="summary__group">
+            <button
+                class="summary__grouphead"
+                type="button"
+                data-group="plan"
+                aria-expanded={planOpen}
+                onclick={handleGroupToggle}
+            >
+                <span class="summary__lbl"><span class="field__label">Payment Plan</span></span>
+                <template lwc:if={planClosed}>
+                    <span class="summary__val">{planClosed}</span>
+                </template>
+                <c-modon-icon name={planChevron} size="14" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+            </button>
+            <template lwc:if={planOpen}>
+                <div class="summary__body">
+                <template lwc:if={hasLines}>
+                    <div class="uline__list">
+                        <template for:each={planLines} for:item="l">
+                            <div key={l.id} class="planline">
+                                <span class="planline__name">{l.name}</span>
+                                <span class={l.planCls}>{l.planName}</span>
+                            </div>
+                        </template>
+                    </div>
+                    <template lwc:if={planMilestones}>
+                        <div class="summary-row summary-row--static">
+                            <span class="summary-row__label">{labels.MILESTONES}</span>
+                            <span class="summary-row__value">{planMilestones}</span>
+                        </div>
+                    </template>
+                    <!-- 1.3 - the milestone LIST stays out of the rail. It lives
+                         under the plan it describes in the payment-plan card, and
+                         showing it in both places meant the agent read the same
+                         schedule twice and had to work out whether the two
+                         agreed. 1.8 keeps that decision for a basket as well:
+                         the per-unit tabs in that card now carry it. -->
+                </template>
+                <template lwc:else>
+                    <p class="summary__empty">{labels.EMPTY_PLAN}</p>
+                </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Amounts -->
+        <div class="summary__group">
+            <button
+                class="summary__grouphead"
+                type="button"
+                data-group="amounts"
+                aria-expanded={amountsOpen}
+                onclick={handleGroupToggle}
+            >
+                <span class="summary__lbl"><span class="field__label">Amounts</span></span>
+                <template lwc:if={amountsClosed}>
+                    <span class="summary__val">{amountsClosed}</span>
+                </template>
+                <c-modon-icon name={amountsChevron} size="14" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+            </button>
+            <template lwc:if={amountsOpen}>
+                <div class="summary__body">
+                <template lwc:if={hasAmounts}>
+                    <template for:each={amountRows} for:item="r">
+                        <div key={r.key} class={r.cls}>
+                            <span class="summary-row__label">{r.label}</span>
+                            <span class="summary-row__value">{r.value}</span>
+                        </div>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <p class="summary__empty">{labels.EMPTY_AMOUNTS}</p>
+                </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- 1.13 - THE PAYMENT STATUS GROUP IS REMOVED, permanently and by request.
+             It listed every obligation with its amount and chip - which is exactly
+             what the obligation ledger on the payment step states, in full, with the
+             money and the actions attached to each row. The rail is the RECORD of the
+             booking; the ledger is the work. A collapsed heading reading
+             "2 of 8 paid · 1 sched…", truncated at the rail's width, was a worse copy
+             of a better list.
+             Amounts keeps Total Price, Booking fee, Collected and Balance - the
+             arithmetic the rail is actually for. -->
+        </div>
+    </aside>
+</template>

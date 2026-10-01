@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <description>Call method escalateLeads() of class Modon_Egypt_LeadEscalationHelper2Hours.</description>
+        <name>Modon_Egypt_Lead_Escalation_Helper_2_Hours</name>
+        <label>Modon Egypt Lead Escalation Helper 2 Hours</label>
+        <locationX>176</locationX>
+        <locationY>276</locationY>
+        <actionName>Modon_Egypt_LeadEscalationHelper2Hours</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>leadsToEscalate</name>
+            <value>
+                <elementReference>$Record</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Modon_Egypt_LeadEscalationHelper2Hours</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Modon_Egypt_Lead_Escalation_Helper_30_mins</name>
+        <label>Modon Egypt Lead Escalation Helper 30 mins</label>
+        <locationX>440</locationX>
+        <locationY>276</locationY>
+        <actionName>Modon_Egypt_LeadEscalationHelper30Mins</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>leadsToReassign</name>
+            <value>
+                <elementReference>$Record</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Modon_Egypt_LeadEscalationHelper30Mins</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>63.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <description>Scheduled flow for modon egypt lead escalation and reassignment implementation. Ignoring Broker Egypt Lead Source</description>
+    <environments>Default</environments>
+    <interviewLabel>Modon Egypt Lead Escalation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Modon Egypt Lead Escalation</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Source_Entity__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Modon - Egypt</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>First_Escalation_Time__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>New</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>LeadSource</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Broker - Egypt</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>LeadSource</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Social Media</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>LeadSource</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Webform - Egypt Website</stringValue>
+            </value>
+        </filters>
+        <object>Lead</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <scheduledPaths>
+            <name>X2_Hours_Escalation_Time</name>
+            <connector>
+                <targetReference>Modon_Egypt_Lead_Escalation_Helper_2_Hours</targetReference>
+            </connector>
+            <label>2 Hours Escalation Time</label>
+            <offsetNumber>0</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>First_Escalation_Time__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>X30_Mins_Escalation_Time</name>
+            <connector>
+                <targetReference>Modon_Egypt_Lead_Escalation_Helper_30_mins</targetReference>
+            </connector>
+            <label>30 Mins Escalation Time</label>
+            <offsetNumber>30</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>First_Escalation_Time__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

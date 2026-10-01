@@ -1,0 +1,41 @@
+<template>
+    <template lwc:if={open}>
+        <div class="workspace-layer" onclick={handleOverlayClick}>
+            <section
+                class={workspaceClass}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="workspace-title"
+                aria-describedby="workspace-subtitle"
+                onclick={stopPropagation}
+                onkeydown={handleKeydown}
+            >
+                <div class="workspace__glow" aria-hidden="true"></div>
+
+                <header class="workspace__header">
+                    <div class={titleBlockClass}>
+                        <template lwc:if={eyebrow}>
+                            <p class="workspace__eyebrow">{eyebrow}</p>
+                        </template>
+                        <h2 id="workspace-title" class="workspace__title">{title}</h2>
+                        <template lwc:if={subtitle}>
+                            <p id="workspace-subtitle" class="workspace__subtitle">{subtitle}</p>
+                        </template>
+                    </div>
+                    <slot name="header-actions"></slot>
+                    <button class="workspace__close" type="button" onclick={handleClose} aria-label={closeLabel}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text=""></lightning-icon>
+                    </button>
+                </header>
+
+                <div class="workspace__body">
+                    <slot></slot>
+                </div>
+
+                <footer class={footerClass}>
+                    <slot name="footer" onslotchange={handleFooterSlotChange}></slot>
+                </footer>
+            </section>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,171 @@
+<template>
+    <div class="reg-wrap">
+        <div class="reg-logo">
+            <div class="m">M</div>
+            <div>
+                <h1>Modon DCT Portal</h1>
+                <div class="page-subtitle">3rd Party Development Control</div>
+            </div>
+        </div>
+
+        <div class="eyebrow">Create an account</div>
+        <p class="page-subtitle" style="margin-bottom:1.25rem">
+            Register as a property owner or an appointed service provider to submit and track development control applications.
+        </p>
+
+        <div class="seg">
+            <button data-id="owner" class={ownerBtnClass} onclick={handleMode}>Property Owner</button>
+            <button data-id="sp" class={spBtnClass} onclick={handleMode}>Service Provider</button>
+        </div>
+
+        <template lwc:if={submitted}>
+            <div class="alert alert-success">
+                <span>&#10003;</span>
+                <span>Registration request submitted. You will be notified by email.</span>
+            </div>
+        </template>
+
+        <!-- OWNER FORM -->
+        <template lwc:if={isOwner}>
+            <form onsubmit={handleSubmit}>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Property Owner Registration</h3>
+                        <span class="count">All fields marked * are required</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="e.g. Ahmed Al Mansoori" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Email <span class="required">*</span></label>
+                                <input type="email" class="form-control" placeholder="name@example.ae" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Phone <span class="required">*</span></label>
+                                <input type="tel" class="form-control" placeholder="+971 50 123 4567" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Company Name</label>
+                                <input type="text" class="form-control" placeholder="Optional" />
+                            </div>
+                            <div class="form-group">
+                                <label>Emirates ID</label>
+                                <input type="text" class="form-control" placeholder="784-XXXX-XXXXXXX-X" />
+                            </div>
+                            <div class="form-group">
+                                <label>Plot Number</label>
+                                <input type="text" class="form-control" placeholder="e.g. PLT-001-2024" />
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <select class="form-control">
+                                    <option>Yas Island</option>
+                                    <option>Al Reem Island</option>
+                                    <option>Saadiyat Island</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>Notes</label>
+                                <textarea class="form-control" placeholder="Anything we should know about this property or request..."></textarea>
+                            </div>
+                            <div class="form-group full">
+                                <label>Supporting Documents</label>
+                                <div class="file-drop">
+                                    <div class="drop-icon">&#8682;</div>
+                                    <p>Upload: Affection Plan, Title Deed, SPA, Authorization Letter</p>
+                                </div>
+                                <div class="form-hint">PDF, JPG or PNG up to 10 MB each.</div>
+                            </div>
+                            <div class="form-group full">
+                                <label class="checkrow">
+                                    <input type="checkbox" required />
+                                    <span>I confirm the information provided is accurate and I agree to the Modon DCT Portal Terms &amp; Conditions and Privacy Policy.</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Registration</button>
+                    </div>
+                </div>
+            </form>
+        </template>
+
+        <!-- SERVICE PROVIDER FORM -->
+        <template lwc:if={isSp}>
+            <form onsubmit={handleSubmit}>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Service Provider Registration</h3>
+                        <span class="count">All fields marked * are required</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <span>&#8505;</span>
+                            <span>Service providers act on behalf of a property owner. A signed authorization letter from the owner is required.</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Company Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="e.g. Horizon Consultants LLC" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Email <span class="required">*</span></label>
+                                <input type="email" class="form-control" placeholder="contact@company.ae" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Phone <span class="required">*</span></label>
+                                <input type="tel" class="form-control" placeholder="+971 2 123 4567" required />
+                            </div>
+                            <div class="form-group full">
+                                <label>Address</label>
+                                <input type="text" class="form-control" placeholder="Office address, Abu Dhabi" />
+                            </div>
+                            <div class="form-group">
+                                <label>Plot Number</label>
+                                <input type="text" class="form-control" placeholder="e.g. PLT-002-2024" />
+                            </div>
+                            <div class="form-group">
+                                <label>Owner Name</label>
+                                <input type="text" class="form-control" placeholder="Property owner full name" />
+                            </div>
+                            <div class="form-group">
+                                <label>Owner Contact</label>
+                                <input type="text" class="form-control" placeholder="Owner phone or email" />
+                            </div>
+                            <div class="form-group">
+                                <label>TRN <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="100XXXXXXXXXXXX" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Trade License</label>
+                                <input type="text" class="form-control" placeholder="CN-XXXXXXX" />
+                            </div>
+                            <div class="form-group full">
+                                <label>Authorization</label>
+                                <div class="file-drop">
+                                    <div class="drop-icon">&#8682;</div>
+                                    <p>Upload Authorization Letter (signed by the owner)</p>
+                                </div>
+                                <div class="form-hint">PDF up to 10 MB.</div>
+                            </div>
+                            <div class="form-group full">
+                                <label class="checkrow">
+                                    <input type="checkbox" required />
+                                    <span>I confirm I am authorized to act on behalf of the property owner and I agree to the Modon DCT Portal Terms &amp; Conditions and Privacy Policy.</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Registration</button>
+                    </div>
+                </div>
+            </form>
+        </template>
+
+        <div class="reg-footer">
+            <a href={loginUrl}>Back to sign in</a>
+        </div>
+    </div>
+</template>

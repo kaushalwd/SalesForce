@@ -1,0 +1,101 @@
+<!--
+  @description
+  Template for AdjustEoiPaymentLwc component.
+  - Shows list of Receipt__c records related to EOIs for a Sales Order.
+  - Allows user to apply selected receipts to milestone 1 installment.
+-->
+
+<template>
+    <lightning-layout multiple-rows >
+        <lightning-layout-item size="12">
+
+            <!-- Header -->
+            <lightning-layout class="slds-p-vertical_small slds-border_bottom" horizontal-align="center">
+                <lightning-layout-item>
+                    <h2 class="slds-text-heading_medium">Adjust EOI Payments</h2>
+                </lightning-layout-item>
+            </lightning-layout>
+
+            <!-- Spinner while loading -->
+            <template lwc:if={isLoading}>
+                <lightning-spinner alternative-text="Loading payments..." size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Data Table with Apply/Cancel Buttons -->
+            <template lwc:elseif={hasData}>
+
+                <!-- Info Message -->
+                <lightning-layout class="slds-m-vertical_xx-small slds-m-bottom_medium" horizontal-align="left">
+                    <lightning-layout-item>
+                        <p class="slds-text_small">
+                            <lightning-icon icon-name='utility:info' alternative-text='info' size='small' title='info' class="slds-p-horizontal_xx-small"></lightning-icon>
+                            <i> You can apply partial amount by editing cell under <b>Amount to Apply</b> column. Make sure to click on Save button before Apply button if you edit amount under  <b>Amount to Apply</b> column for selected receipt. Only Selected receipts will be sent for adjustment when you click on Apply button.</i></p>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <!-- Checkbox for Single or Multi installment logic -->
+                <lightning-layout class="slds-m-vertical_x-small slds-m-bottom_medium" horizontal-align="left">
+                    <lightning-layout-item>
+                        <lightning-input
+                            type="checkbox"
+                            label="Split Applied Amount across multiple installments"
+                            checked={isMultiInstallment}
+                            onchange={handleMultiInstallmentChange}>
+                        </lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <!-- 
+                *** NEW WARNING MESSAGE ***
+                This template conditionally renders a warning box 
+                when 'isMultiInstallment' is true.
+                -->
+                <template if:true={isMultiInstallment}>
+                    <div class="slds-box slds-box_x-small slds-theme_warning slds-m-bottom_small" role="alert">
+                        <p class="slds-text-body_small">
+                            <lightning-icon icon-name="utility:warning" alternative-text="Warning!" variant="inverse" size="x-small"
+                                class="slds-m-right_x-small"></lightning-icon>
+                            <strong>Warning:</strong> Selecting this checkbox will adjust the applied amount across multiple installments of this sales order. Please ensure this is the intended action.
+                        </p>
+                    </div>
+                </template>
+                <!-- Data Table -->
+                <lightning-datatable key-field="Id" data={receipts} columns={columns}
+                    onrowselection={handleRowSelection} onsave={handleSave} oncellchange={handleCellChange} oncancel={handleCancelEdit}
+                    draft-values={draftValues}>
+                </lightning-datatable>
+
+                <lightning-layout class="slds-m-top_medium" horizontal-align="center">
+                    <lightning-layout-item class="slds-m-right_small">
+                        <lightning-button label="Apply" variant="brand" onclick={handleApply}
+                            disabled={isApplyDisabled}>
+                        </lightning-button>
+                    </lightning-layout-item>
+                    <lightning-layout-item>
+                        <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}>
+                        </lightning-button>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+
+            <!-- Error message if loading failed -->
+            <template lwc:elseif={showError}>
+                <lightning-layout horizontal-align="center">
+                    <lightning-layout-item>
+                        <p class="slds-text-color_error">
+                            Error: {error}
+                        </p>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+
+            <!-- Empty state -->
+            <template lwc:else>
+                <lightning-layout horizontal-align="center">
+                    <lightning-layout-item>
+                        There is currently no EOI available for settlement.
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+
+        </lightning-layout-item>
+    </lightning-layout>
+</template>

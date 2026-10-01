@@ -1,0 +1,421 @@
+<template>
+  <template lwc:if={errorMsg}>
+    <div class="banner banner--error" role="alert">{errorMsg}</div>
+  </template>
+
+  <!-- SCREEN 1: the list -->
+  <template lwc:if={isList}>
+    <!-- 1.3: the Total contract value line was removed (it summed voided orders) -->
+    <!-- MSC-220 / MSC-221: one row - find on the left, the status tabs beside it. No
+         dropdowns, no prose, and nothing above the grid but this. -->
+    <template lwc:if={showToolbar}>
+      <div class="toolbar">
+        <div class={searchClass}>
+          <c-modon-icon
+            name="search"
+            size="14"
+            color="currentColor"
+            class="search__icon"
+          ></c-modon-icon>
+          <input
+            type="text"
+            placeholder="Booking, unit or customer"
+            value={search}
+            oninput={handleSearch}
+            aria-label="Search bookings"
+          />
+          <!-- R2-04: Ctrl K on Windows, the Command sign on a Mac -->
+          <span class="kbd" aria-hidden="true"><span>{kbdMod}</span><span>K</span></span>
+          <template lwc:if={hasSearch}>
+            <button class="clr" onclick={clearSearch}>Clear</button>
+          </template>
+        </div>
+
+        <template lwc:if={showTabs}>
+          <div class="tabs" role="tablist" aria-label="Filter by status">
+            <template for:each={statusTabs} for:item="t">
+              <button
+                key={t.key}
+                class={t.cls}
+                type="button"
+                role="tab"
+                data-tab={t.value}
+                aria-selected={t.selected}
+                onclick={setStatusTab}
+              >
+                <span>{t.label}</span><em>{t.count}</em>
+              </button>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- 2. one grid: awaiting-payment rows first, then the orders -->
+    <div class="grid-scroll">
+      <!-- MSC-220: Customer, Value and Date sort on a click; the rest are plain headings -->
+      <template lwc:if={showHead}>
+        <div class="list-head">
+          <template for:each={headColumns} for:item="c">
+            <span key={c.key} class={c.cls}>
+              <template lwc:if={c.sortable}>
+                <button
+                  class={c.btnClass}
+                  type="button"
+                  data-key={c.key}
+                  aria-label={c.sortLabel}
+                  onclick={sortBy}
+                >
+                  <span>{c.label}</span>
+                  <template lwc:if={c.showArrow}>
+                    <i class="arw" aria-hidden="true">{c.arrow}</i>
+                  </template>
+                </button>
+              </template>
+              <template lwc:else>{c.label}</template>
+            </span>
+          </template>
+        </div>
+      </template>
+
+      <div class="list" aria-live="polite">
+        <template lwc:if={loading}>
+          <div class="sk"></div>
+          <div class="sk"></div>
+          <div class="sk"></div>
+          <div class="sk"></div>
+        </template>
+
+        <!-- MSC-220: both shapes fill the same six columns; an empty cell is left empty -->
+        <template for:each={paged} for:item="r">
+          <template lwc:if={r.isAwait}>
+            <!-- 1.1: waiting for money, no Sales Order yet: only Resume -->
+            <article key={r.key} class="row row--await">
+              <div class="row-main row-main--static">
+                <!-- no Sales Order behind this row, so no reference: the cell stays empty -->
+                <span class="cell ref" data-label="Booking">{r.bookingRef}</span>
+                <span class="cell" data-label="Unit" title={r.unitText}>{r.unitText}</span>
+                <div class="cell cell-cust" data-label="Customer">
+                  <span class="name" title={r.customerName}>{r.customerName}</span>
+                </div>
+                <span class="cell amt" data-label="Value">{r.amountText}</span>
+                <span class="cell cell-status">
+                  <template lwc:if={r.hasStatus}>
+                    <!-- MSC-218 lives on as the tooltip: the hold state, without a second line -->
+                    <span class={r.chipClass} title={r.holdTitle}>
+                      <i></i><span>{r.statusText}</span>
+                    </span>
+                  </template>
+                </span>
+                <span class="cell mono" data-label="Date">{r.createdText}</span>
+                <span class="cell cell-act">
+                  <!-- MSC-218: no Resume into a unit that is no longer for sale -->
+                  <template lwc:if={r.canResume}>
+                    <button
+                      class="btn btn-xs"
+                      type="button"
+                      data-opp={r.opportunityId}
+                      onclick={resumeAwaiting}
+                    >
+                      Resume
+                    </button>
+                  </template>
+                  <template lwc:else>
+                    <span class="blocked">{r.blockedText}</span>
+                  </template>
+                  <span class="chev chev--none" aria-hidden="true"></span>
+                </span>
+              </div>
+            </article>
+          </template>
+
+          <template lwc:else>
+            <article key={r.key} class="row">
+              <div
+                class="row-main"
+                role="button"
+                tabindex="0"
+                data-id={r.id}
+                aria-label={r.openLabel}
+                onclick={openBooking}
+                onkeydown={handleRowKey}
+              >
+                <span class="cell ref" data-label="Booking">{r.bookingRef}</span>
+                <span class="cell" data-label="Unit" title={r.unitText}>{r.unitText}</span>
+                <div class="cell cell-cust" data-label="Customer">
+                  <span class="name" title={r.customerName}>{r.customerName}</span>
+                </div>
+                <span class="cell amt" data-label="Value">{r.amountText}</span>
+                <span class="cell cell-status">
+                  <template lwc:if={r.hasStatus}>
+                    <span class={r.chipClass} title={r.statusText}>
+                      <i></i><span>{r.statusText}</span>
+                    </span>
+                  </template>
+                </span>
+                <span class="cell mono" data-label="Date">{r.createdText}</span>
+                <!-- two slots, Resume then the chevron, so Resume sits on one line -->
+                <span class="cell cell-act">
+                  <template lwc:if={r.canResume}>
+                    <button
+                      class="btn btn-xs"
+                      type="button"
+                      data-id={r.id}
+                      onclick={resumeBooking}
+                    >
+                      Resume
+                    </button>
+                  </template>
+                  <template lwc:else>
+                    <span></span>
+                  </template>
+                  <span class="chev" aria-hidden="true">
+                    <c-modon-icon
+                      name="chevron-right"
+                      size="16"
+                      color="currentColor"
+                    ></c-modon-icon>
+                  </span>
+                </span>
+              </div>
+            </article>
+          </template>
+        </template>
+      </div>
+    </div>
+
+    <!-- EMPTY / NO MATCH. MSC-220: a heading and, where there is one, the way out. -->
+    <template lwc:if={isEmpty}>
+      <div class="empty">
+        <div class="ring">
+          <c-modon-icon name="home" size="22" color="currentColor"></c-modon-icon>
+        </div>
+        <h3>No bookings yet</h3>
+      </div>
+    </template>
+
+    <template lwc:if={noMatch}>
+      <div class="empty">
+        <div class="ring">
+          <c-modon-icon name="home" size="22" color="currentColor"></c-modon-icon>
+        </div>
+        <h3>Nothing matches</h3>
+        <p>
+          <a href="#" class="empty__link" onclick={clearFilters}>Clear filters</a>
+        </p>
+      </div>
+    </template>
+
+    <!-- PAGER (MSC-057): pinned to the bottom; page size fitted to the visible height -->
+    <template lwc:if={showPager}>
+      <nav class="pager" aria-label="Pages">
+        <span class="pager__info">Showing {pageInfoText}</span>
+        <div class="pager__nav">
+          <button
+            class="pager__btn pager__arrow"
+            type="button"
+            data-page="prev"
+            disabled={isFirstPage}
+            onclick={goPage}
+            aria-label="Previous page"
+          >
+            <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+          </button>
+          <template for:each={pageItems} for:item="p">
+            <template lwc:if={p.gap}>
+              <span key={p.key} class="pager__gap" aria-hidden="true">…</span>
+            </template>
+            <template lwc:else>
+              <button
+                key={p.key}
+                class={p.cls}
+                type="button"
+                data-page={p.n}
+                aria-current={p.current}
+                aria-label={p.label}
+                onclick={goPage}
+              >
+                {p.n}
+              </button>
+            </template>
+          </template>
+          <span class="pager__compact">{pageCompact}</span>
+          <button
+            class="pager__btn pager__arrow"
+            type="button"
+            data-page="next"
+            disabled={isLastPage}
+            onclick={goPage}
+            aria-label="Next page"
+          >
+            <c-modon-icon name="chevron-right" size="14" color="currentColor"></c-modon-icon>
+          </button>
+        </div>
+      </nav>
+    </template>
+  </template>
+
+  <!-- SCREEN 2: the detail -->
+  <template lwc:if={isDetail}>
+    <div class="detail">
+      <div class="dbar">
+        <button class="btn btn-ghost btn-sm" type="button" onclick={backToList}>
+          <c-modon-icon name="chevron-left" size="14" color="currentColor"></c-modon-icon>
+          <span>All bookings</span>
+        </button>
+        <div class="dtitle">
+          <h3>{headerRef}</h3>
+          <span class={headerChipClass}><i></i><span>{headerStatus}</span></span>
+          <span class="sub">{headerSub}</span>
+        </div>
+        <div class="dact">
+          <template lwc:if={headerCanResume}>
+            <button
+              class="btn btn-sm"
+              type="button"
+              data-id={bookingId}
+              onclick={resumeBooking}
+            >
+              Resume booking
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <template lwc:if={detailLoading}>
+        <div class="sk sk--facts"></div>
+        <div class="sk sk--card"></div>
+      </template>
+      <template lwc:else>
+        <!-- the facts card: one field per cell -->
+        <div class="facts">
+          <template for:each={facts} for:item="f">
+            <div key={f.key} class="fact">
+              <b>{f.label}</b>
+              <span class={f.cls} title={f.value}>{f.value}</span>
+            </div>
+          </template>
+        </div>
+
+        <div class="seg" role="group" aria-label="Sections">
+          <template for:each={tabs} for:item="t">
+            <button
+              key={t.key}
+              type="button"
+              data-key={t.key}
+              aria-pressed={t.pressed}
+              onclick={setTab}
+            >
+              {t.label}
+              <template lwc:if={t.showCount}><em>{t.count}</em></template>
+            </button>
+          </template>
+        </div>
+
+        <template lwc:if={isPlan}>
+          <div class="plan">
+            <div class="plan-sum">
+              <div>
+                <b>Paid</b>
+                <span class="big"><em>AED</em>{paidNumber}</span>
+              </div>
+              <div class="of">
+                <span>of {scheduledLabel} scheduled</span>
+                <span>{paidCount} of {planCount} milestones paid</span>
+              </div>
+              <div
+                class="bar"
+                role="progressbar"
+                aria-valuenow={paidPct}
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <i style={barStyle}></i>
+              </div>
+            </div>
+            <template lwc:if={hasPaymentRows}>
+              <div class="tbl-x">
+                <div class="tbl">
+                  <div class="tr th">
+                    <span>#</span>
+                    <span>Milestone</span>
+                    <span class="due">Due</span>
+                    <span class="amt">Amount</span>
+                    <span class="st">Status</span>
+                  </div>
+                  <template for:each={paymentRows} for:item="p">
+                    <div key={p.key} class="tr">
+                      <span class="n">{p.number}</span>
+                      <span title={p.title}>{p.title}</span>
+                      <span class="mono due">{p.dueLabel}</span>
+                      <span class="amt">{p.amountLabel}</span>
+                      <span class="st"><span class={p.chipClass}><i></i>{p.statusText}</span></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <template lwc:else>
+              <p class="none">No payment schedule has been generated yet.</p>
+            </template>
+          </div>
+        </template>
+
+        <!-- MSC-084: the ownership module, mounted once and kept (not under lwc:if): it holds what it read and its drawers own their exit -->
+        <c-msc-owners-pane
+          active={isOwnersPane}
+          view={paneView}
+          summary={summary}
+          can-resume={headerCanResume}
+          onownerscount={handleOwnersCount}
+          onleaveconfirmed={handleLeaveConfirmed}
+        ></c-msc-owners-pane>
+
+        <template lwc:if={isDocuments}>
+          <div class="plan docs">
+            <template lwc:if={hasDocuments}>
+              <!-- MSC-086: what is in against what was asked for -->
+              <div class="plan-sum">
+                <div>
+                  <b>Received</b>
+                  <span class="big">{docsReceived}<em class="aft">of {docsTotal}</em></span>
+                </div>
+                <div class="of">
+                  <span>{docsOutstandingLabel}</span>
+                </div>
+                <div
+                  class="bar"
+                  role="progressbar"
+                  aria-valuenow={docsPct}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <i style={docsBarStyle}></i>
+                </div>
+              </div>
+              <div class="tbl-x">
+                <div class="tbl">
+                  <div class="tr th">
+                    <span>Document</span>
+                    <span class="typ">Received</span>
+                    <span class="st">Status</span>
+                  </div>
+                  <template for:each={documentRows} for:item="d">
+                    <div key={d.key} class="tr">
+                      <span title={d.name}>{d.name}</span>
+                      <span class="typ mono">{d.receivedLabel}</span>
+                      <span class="st"><span class={d.chipClass}><i></i>{d.statusText}</span></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <template lwc:else>
+              <p class="none none--first">No documents on this booking yet.</p>
+            </template>
+          </div>
+        </template>
+      </template>
+    </div>
+  </template>
+</template>

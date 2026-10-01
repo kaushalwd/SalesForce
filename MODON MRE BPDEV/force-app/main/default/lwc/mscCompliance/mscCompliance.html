@@ -1,0 +1,124 @@
+<template>
+    <div class="cmp">
+        <!-- head: what it is · where it stands · when it was last checked -->
+        <div class="cmp__head">
+            <span class="cmp__eyebrow">{labels.KYC}</span>
+            <span class="cmp__head-right">
+                <template lwc:if={statusText}>
+                    <span class={statusChipClass}><i></i><span>{statusText}</span></span>
+                </template>
+                <template lwc:if={showRefresh}>
+                    <template lwc:if={checkedText}>
+                        <span class="cmp__checked">{checkedText}</span>
+                    </template>
+                    <button
+                        class="cmp__refresh-btn"
+                        type="button"
+                        title={refreshTitle}
+                        disabled={refreshDisabled}
+                        onclick={handleRefresh}
+                    >
+                        <span class={refreshIconClass}>
+                            <c-modon-icon
+                                name="refresh-cw"
+                                size="14"
+                                color="currentColor"
+                            ></c-modon-icon>
+                        </span>
+                        <span class="assistive">{refreshTitle}</span>
+                    </button>
+                </template>
+            </span>
+        </div>
+
+        <!-- 1.2 - the path: four segments, edge to edge. Each carries its own fact. -->
+        <template lwc:if={showChain}>
+            <div class="steps" role="list">
+                <template for:each={steps} for:item="s">
+                    <div key={s.key} class={s.cls} role="listitem" aria-label={s.label}>
+                        <div class="head">
+                            <span class="tile">
+                                <template lwc:if={s.done}>
+                                    <c-modon-icon name="check" size="14" color="currentColor"></c-modon-icon>
+                                </template>
+                                <template lwc:else>
+                                    <c-modon-icon name={s.icon} size="14" color="currentColor"></c-modon-icon>
+                                </template>
+                            </span>
+                            <span class="lbl">{s.label}</span>
+                        </div>
+                        <span class="bar" aria-hidden="true"></span>
+                        <div class={s.metaCls}>
+                            {s.lead}<template lwc:if={s.hasStrong}><b class={s.strongCls}>{s.strong}</b></template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- notes: only when there is something to say -->
+        <template lwc:if={showBlocked}>
+            <div class="note note--warn">
+                <c-modon-icon name="alert-triangle" size="15" color="currentColor"></c-modon-icon>
+                <div><b>{labels.KYC_BLOCKED_TITLE}</b>{blockedReason}</div>
+            </div>
+        </template>
+        <template lwc:if={showComment}>
+            <div class="note">
+                <c-modon-icon name="info" size="15" color="currentColor"></c-modon-icon>
+                <div><b>Note from compliance</b><q>{comment}</q></div>
+            </div>
+        </template>
+        <template lwc:if={showRefreshMessage}>
+            <div class="note">
+                <c-modon-icon name="info" size="15" color="currentColor"></c-modon-icon>
+                <div><b>Last check</b>{refreshMessage}</div>
+            </div>
+        </template>
+        <template lwc:if={isCorporate}>
+            <div class="note">
+                <c-modon-icon name="building" size="15" color="currentColor"></c-modon-icon>
+                <div>{labels.KYC_CORPORATE}</div>
+            </div>
+        </template>
+
+        <!-- actions -->
+        <template lwc:if={showActs}>
+            <div class="acts">
+                <template lwc:if={showSend}>
+                    <button
+                        class={sendClass}
+                        type="button"
+                        disabled={canSendDisabled}
+                        onclick={handleSend}
+                    >
+                        <c-modon-icon name="send" size="14" color="currentColor"></c-modon-icon>
+                        <span>{sendLabel}</span>
+                    </button>
+                    <template lwc:if={showCopy}>
+                        <button class="btn btn-ghost btn-sm" type="button" onclick={handleCopy}>
+                            <c-modon-icon name="link" size="14" color="currentColor"></c-modon-icon>
+                            <span>{copyLabel}</span>
+                        </button>
+                    </template>
+                    <template lwc:if={linkHint}>
+                        <span class="acts__hint">{linkHint}</span>
+                    </template>
+                </template>
+
+                <!-- 1.3 - the rep's move once the customer has verified -->
+                <template lwc:if={showCheck}>
+                    <button
+                        class="btn btn-primary btn-sm"
+                        type="button"
+                        disabled={busy}
+                        onclick={handleCheck}
+                    >
+                        <c-modon-icon name="shield-check" size="14" color="currentColor"></c-modon-icon>
+                        <span>{labels.COMPLIANCE_CTA}</span>
+                    </button>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

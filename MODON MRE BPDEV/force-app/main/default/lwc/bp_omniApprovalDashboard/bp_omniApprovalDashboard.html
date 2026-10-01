@@ -1,0 +1,257 @@
+<template>
+
+    <!-- ====================================================== -->
+    <!-- APPROVAL DASHBOARD -->
+    <!-- ====================================================== -->
+    <template if:false={showApprovalForm}>
+
+        <div class="approval-container">
+
+            <!-- ================================================= -->
+            <!-- HEADER -->
+            <!-- ================================================= -->
+            <div class="page-header">
+
+                <div class="header-content">
+                    <h1>Business Process Approvals</h1>
+                    <p>Business processes assigned to you</p>
+                </div>
+
+                <lightning-button-icon
+                    icon-name="utility:refresh"
+                    alternative-text="Refresh"
+                    title="Refresh"
+                    onclick={handleRefresh}>
+                </lightning-button-icon>
+
+            </div>
+
+            <!-- ================================================= -->
+            <!-- COMBINED PENDING / IN PROGRESS TAB -->
+            <!-- ================================================= -->
+            <div class="tabs">
+                <button class="tab active">
+                    Pending / In Progress
+                    <span class="tab-count">
+                        {pendingInProgressCount}
+                    </span>
+                </button>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- SECTION HEADER -->
+            <!-- ================================================= -->
+            <div class="section-header">
+
+                <div class="section-title">
+                    <span class="green-dot">●</span>
+                    <span>{sectionHeaderText}</span>
+                </div>
+
+                <div class="total-count">
+                    Total Count - {filteredList.length}
+                </div>
+
+            </div>
+
+            <!-- ================================================= -->
+            <!-- LOADING -->
+            <!-- ================================================= -->
+            <template if:true={isLoading}>
+                <div class="spinner-container">
+                    <lightning-spinner
+                        alternative-text="Loading"
+                        size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- ================================================= -->
+            <!-- EMPTY -->
+            <!-- ================================================= -->
+            <template if:true={showEmpty}>
+                <div class="empty-state">
+                    <lightning-icon
+                        icon-name="utility:inbox"
+                        size="medium">
+                    </lightning-icon>
+
+                    <h2>No Business Processes</h2>
+                    <p>No pending or in-progress management approvals are currently assigned to you.</p>
+                </div>
+            </template>
+
+            <!-- ================================================= -->
+            <!-- BUSINESS PROCESS LIST -->
+            <!-- ================================================= -->
+            <div class="bp-grid">
+
+                <template for:each={filteredList} for:item="item">
+
+                    <div
+                        key={item.currentStepId}
+                        class="bp-row">
+
+                        <!-- ===================================== -->
+                        <!-- BP HEADER -->
+                        <!-- ===================================== -->
+                        <div class="bp-header">
+
+                            <div class="bp-header-left">
+
+                                <div class="bp-header-text">
+
+                                    <div class="bp-name">
+                                        <a
+                                            href="javascript:void(0)"
+                                            data-id={item.businessProcessId}
+                                            onclick={openRecord}>
+                                            {item.businessProcessName}
+                                        </a>
+                                    </div>
+
+                                    <div class="bp-current-step">
+                                        Business Process Type:
+                                        <strong>{item.businessProcessType}</strong>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="bp-header-right">
+                                <template if:true={item.hasPreviousSteps}>
+                                    <span
+                                        class="history-count clickable-history"
+                                        data-id={item.currentStepId}
+                                        onclick={toggleBusinessProcess}>
+                                        {item.previousStepCount} Previous
+                                    </span>
+                                </template>
+                            </div>
+
+                        </div>
+
+                        <!-- ===================================== -->
+                        <!-- CURRENT MANAGEMENT STEP -->
+                        <!-- ===================================== -->
+                        <div class="current-step">
+
+                            <div class="step-heading">
+                              <div class="step-title">
+                                <span class="current-label">CURRENT STEP</span>
+                                <span>{item.currentStepName}</span>
+                              </div>
+                            </div>
+
+                            <!-- ================================= -->
+                            <!-- CONFIGURED FIELDS -->
+                            <!-- ================================= -->
+                            <div class="field-grid">
+                                <template for:each={item.currentStepFields} for:item="field">
+                                    <div key={field.apiName} class="field-item">
+                                        <div class="field-label">{field.label}</div>
+                                        <div class="field-value">{field.value}</div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- ================================= -->
+                            <!-- APPROVAL ACTION -->
+                            <!-- ================================= -->
+                            <div class="action-container">
+                                <lightning-button
+                                    label="Take Action"
+                                    variant="brand"
+                                    data-id={item.businessProcessId}
+                                    data-step-id={item.currentStepId}
+                                    data-name={item.businessProcessName}
+                                    onclick={handleAction}>
+                                </lightning-button>
+                            </div>
+
+                        </div>
+
+                        <!-- ===================================== -->
+                        <!-- PREVIOUS APPROVED MANAGEMENT STEPS -->
+                        <!-- ===================================== -->
+                        <template if:true={item.expanded}>
+
+                            <div class="history-section">
+
+                                <div class="history-title">
+                                    Previous Approved Management Steps
+                                </div>
+
+                                <template for:each={item.previousSteps} for:item="step">
+
+                                    <div key={step.id} class="history-step">
+
+                                        <div class="timeline">
+                                            <div class="timeline-dot">✓</div>
+                                            <div class="timeline-line"></div>
+                                        </div>
+
+                                        <div class="history-content">
+
+                                            <div class="history-header">
+                                                <div>
+                                                    <div class="history-step-name">
+                                                        {step.stepName}
+                                                    </div>
+
+                                                    <div class="history-assigned">
+                                                        Approved by: {step.assignedTo}
+                                                    </div>
+                                                </div>
+
+                                                <span class="status-approved">
+                                                    Approved
+                                                </span>
+                                            </div>
+
+                                            <div class="field-grid">
+                                                <template for:each={step.fields} for:item="field">
+                                                    <div key={field.apiName} class="field-item">
+                                                        <div class="field-label">{field.label}</div>
+                                                        <div class="field-value">{field.value}</div>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                        </template>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </div>
+
+    </template>
+
+    <!-- ====================================================== -->
+    <!-- EXISTING APPROVAL DETAIL / ACTION COMPONENT -->
+    <!-- ====================================================== -->
+    <template if:true={showApprovalForm}>
+
+        <c-bp-omni-approval-child
+            bp-record-id={businessProcessId}
+            bp-step-id={bpStepRecordId}
+            business-process-name={businessProcessName}
+            onbackhandle={backBtnHandler}
+            onactioncomplete={handleChildActionComplete}>
+        </c-bp-omni-approval-child>
+
+    </template>
+
+</template>

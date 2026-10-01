@@ -1,0 +1,1277 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 09-08-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+  Fatima
+-->
+<template>
+    <!-- <lightning-card > -->
+    <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+    <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+
+
+    <!-- Mobile View - Clean Version -->
+    <div class="mobile-container" if:true={isMobileView}>
+        <div class="mobile-main-content">
+            <!-- Simple Units Title with Select All -->
+            <div class="mobile-units-title-container">
+                <!--  <div class="mobile-units-title">Units</div>-->
+                <div class="mobile-select-all-container">
+                    <label class="mobile-select-all-checkbox">
+                        <input type="checkbox" onchange={handleMobileSelectAll} checked={isAllMobileUnitsSelected} />
+                        Select All
+                    </label>
+                </div>
+            </div>
+
+            <!-- Floating Filter Icon -->
+            <div class="mobile-filter-wrapper">
+                <img src={filterIcon} alt="Filter" class="mobile-filter-icon" onclick={toggleMobileFilter} />
+
+                <!-- Floating Filter Box -->
+                <div class={mobileFilterBoxClass} onclick={stopPropagation}>
+                    <div class="mobile-filter-header">
+                        <b>Filters</b>
+                        <button class="mobile-filter-close" onclick={closeMobileFilter}>×</button>
+                    </div>
+                    <div class="mobile-filter-content">
+                        <lightning-input type="search" label="Search" value={searchTerm}
+                            placeholder="Search across Unit Name, Project Name…" onchange={handleMobileSearchChange}
+                            class="placeholder mt-2">
+                        </lightning-input>
+
+                        <template for:each={mobileFilterableColumns} for:item="col">
+                            <div key={col.fieldName} class="slds-col slds-size_1-of-1">
+                                <lightning-combobox label={col.label} data-field={col.fieldName} value={col.filterValue}
+                                    options={col.filterOptions} onchange={handleMobileColumnFilterChange}
+                                    class="placeholder mt-2">
+                                </lightning-combobox>
+                            </div>
+                        </template>
+
+                        <div class="button-row filter-buttons">
+                            <button class="reset-btn" onclick={resetMobileFilters}>Reset</button>
+                            <button class="apply-btn" onclick={applyMobileFilters}>Apply Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="align_right filter-btn">
+                    <!--<button onclick={handleSendOffer}
+                        class="slds-button slds-button_brand ms-2">Send Sales Offer</button>
+                        <button class="slds-button slds-button_brand ms-2" onclick={openUnitModal}>Unit
+                        Allocation</button>-->
+                    <template if:false={showNoAccess}>
+                   <!--     <lightning-button label="Unit Allocation" variant="brand" onclick={openUnitAllocation}
+                            class="slds-m-right_x-small">
+                        </lightning-button>-->
+                    </template>
+
+
+
+                <template if:true={showGenerateOffer}>
+                    <button onclick={handleSendOffer} class="slds-button slds-button_brand ms-2"
+                        disabled={isSendOfferDisabled}>
+                        Generate Offer
+                    </button>
+                </template>
+                    <button onclick={handleExport} disabled={exportDisabled}
+                        class="slds-button slds-button_brand ">Export</button>
+                </div>
+            </div>
+
+            <!-- Mobile Loading State -->
+            <template if:true={isLoading}>
+                <div class="mobile-loading">
+                    <div class="mobile-spinner"></div>
+                    <p>Loading units...</p>
+                </div>
+            </template>
+
+            <!-- Mobile Units List with Checkboxes -->
+            <template if:false={isLoading}>
+                <div class="mobile-data-grid">
+                    <template if:true={mobileUnitsData.length}>
+                        <template for:each={mobileUnitsData} for:item="unit">
+                            <div key={unit.Id} class={unit.unitCssClass}>
+                                <!-- Unit Checkbox -->
+                                <div class="mobile-unit-checkbox">
+                                    <label class="unit-checkbox-label">
+                                        <input type="checkbox" data-id={unit.Id} checked={unit.isSelected}
+                                            onchange={handleMobileUnitCheckbox} class="unit-checkbox-input" />
+                                        <span class="unit-checkbox-custom"></span>
+                                    </label>
+                                </div>
+
+                                <div class="mobile-unit-header">
+                                    <div class="mobile-unit-name">{unit.Name}</div>
+                                    <div class="mobile-unit-status {unit.Status__c?.toLowerCase()}">{unit.Status__c}
+                                    </div>
+                                </div>
+
+                                <div class="mobile-unit-details">
+                                    <div class="mobile-unit-detail">
+                                        <span class="mobile-data-label">Project:</span>
+                                        <span class="mobile-data-value">{unit.Project_Name__c}</span>
+                                    </div>
+                                    <div class="mobile-unit-detail">
+                                        <span class="mobile-data-label">Type:</span>
+                                        <span class="mobile-data-value">{unit.Unit_Type__c}</span>
+                                    </div>
+                                    <div class="mobile-unit-detail">
+                                        <span class="mobile-data-label">Bedrooms:</span>
+                                        <span class="mobile-data-value">{unit.Number_of_Bedrooms__c}</span>
+                                    </div>
+                                    <div class="mobile-unit-detail">
+                                        <span class="mobile-data-label">Price:</span>
+                                        <span class="mobile-data-value">AED {unit.BasePrice__c}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Remove the old button since we have checkbox -->
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:false={mobileUnitsData.length}>
+                        <div class="mobile-empty-state">
+                            <p>No units found matching your filters</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Mobile Pagination -->
+                <div class="mobile-pagination">
+                    <div class="mobile-btn-group">
+                        <button class="mobile-btn mobile-btn-secondary" onclick={handleMobilePrevPage}
+                            disabled={disableMobilePrev}>
+                            ← Previous
+                        </button>
+                        <span class="mobile-page-info">Page {currentMobilePage} of {totalMobilePages}</span>
+                        <button class="mobile-btn mobile-btn-secondary" onclick={handleMobileNextPage}
+                            disabled={disableMobileNext}>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+                <div style="display: none;">
+                    <a data-id="download-anchor"></a>
+                </div>
+
+                <!-- Bottom Action Buttons -->
+                <div class="mobile-bottom-actions">
+                    <button class="mobile-bottom-btn mobile-export-btn" onclick={handleMobileExport}>
+                        Export All Units <!-- ({filteredData.length})-->
+                    </button>
+                    <template if:true={showGenerateOffer}>
+    <template if:true={selectedRowIds.size}>
+        <button class="mobile-bottom-btn mobile-generate-btn" onclick={handleMobileSendOffer}>
+            Generate Offer
+        </button>
+    </template>
+</template>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Mobile Modal View - Cards Version -->
+    <template if:true={showUnitSearchModal}>
+        <template if:true={isMobileView}>
+            <div class="backdrop">
+                <div class="modal unit-search-modal mobile-modal">
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <h2>Generate Sales Offer</h2>
+                        <span class="close-button" onclick={closeUnitSearch}>×</span>
+                    </div>
+
+                    <!-- Progress Steps -->
+                    <div class="simple-mobile-ticks">
+                        <!-- Step 1 -->
+                        <div class="step-tick-item" data-step="1" onclick={handleStepClick}>
+                            <template if:true={isStepOneCompleted}>
+                                <span class="step-tick">✓</span>
+                            </template>
+                            <template if:false={isStepOneCompleted}>
+                                <span class="step-number">1</span>
+                            </template>
+                            <span class="step-text">Lead</span>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="step-tick-item" data-step="2" onclick={handleStepClick}>
+                            <template if:true={isStepTwoCompleted}>
+                                <span class="step-tick">✓</span>
+                            </template>
+                            <template if:false={isStepTwoCompleted}>
+                                <span class="step-number">2</span>
+                            </template>
+                            <span class="step-text">Payment</span>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="step-tick-item" data-step="3" onclick={handleStepClick}>
+                            <template if:true={isStepThreeCompleted}>
+                                <span class="step-tick">✓</span>
+                            </template>
+                            <template if:false={isStepThreeCompleted}>
+                                <span class="step-number">3</span>
+                            </template>
+                            <span class="step-text">Offer</span>
+                        </div>
+                    </div>
+                    <!-- Modal Body - MOBILE CARDS VERSION -->
+                    <div class="modal-body mobile-modal-body">
+
+                        <!-- STEP 1: MOBILE LEAD CARDS -->
+                        <div data-step="1" class={mobileStepOneClass}>
+                            <div class="step-content mobile-step-content">
+
+                                <!-- Mobile Lead Filter -->
+                                <div class="mobile-lead-filter-wrapper">
+                                    <img src={filterIcon} alt="Filter" class="mobile-lead-filter-icon"
+                                        onclick={toggleMobileLeadFilter} />
+
+                                    <div class={mobileLeadFilterBoxClass} onclick={stopPropagation}>
+                                        <div class="mobile-lead-filter-header">
+                                            <b>Lead Filters</b>
+                                            <button class="mobile-lead-filter-close"
+                                                onclick={closeMobileLeadFilter}>×</button>
+                                        </div>
+                                        <div class="mobile-lead-filter-content">
+                                            <lightning-input type="search" label="Search" data-id="searchKey"
+                                                value={leadFilters.searchKey} onchange={handleLeadFilterChange}
+                                                placeholder="Search by Name, Email, Mobile" variant="label-stacked">
+                                            </lightning-input>
+
+                                            <lightning-combobox label="Status" data-id="status"
+                                                value={leadFilters.status} options={leadStatusOptions}
+                                                onchange={handleLeadFilterChange} variant="label-stacked">
+                                            </lightning-combobox>
+                                            <lightning-input type="date" label="Start Date" data-id="startDate"
+                                                value={leadFilters.startDate} onchange={handleLeadFilterChange}
+                                                variant="label-stacked">
+                                            </lightning-input>
+
+                                            <lightning-input type="date" label="End Date" data-id="endDate"
+                                                value={leadFilters.endDate} onchange={handleLeadFilterChange}
+                                                variant="label-stacked">
+                                            </lightning-input>
+
+                                            <div class="button-row mobile-filter-buttons">
+                                                <button class="reset-btn" onclick={resetLeadFilters}>Reset</button>
+                                                <button class="apply-btn" onclick={applyLeadFilters}>Apply</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Loading State -->
+                                <div data-loading={isLoading} class="mobile-loading-container">
+                                    <div class="mobile-loading">
+                                        <div class="mobile-spinner"></div>
+                                        <p>Loading leads...</p>
+                                    </div>
+                                </div>
+
+                                <!-- Lead Cards -->
+                                <div data-has-leads={hasMobileLeads} class="mobile-leads-container">
+                                    <div class="mobile-leads-cards-container">
+                                        <template for:each={mobilePagedLeads} for:item="lead">
+                                            <div key={lead.id} class={lead.cardClass}
+                                                onclick={handleMobileLeadCardClick} data-id={lead.id}>
+
+                                                <!-- Radio Button -->
+                                                <div class="mobile-lead-radio">
+                                                    <div class={lead.radioClass}>
+                                                        <div class="mobile-radio-inner"></div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Lead Info -->
+                                                <div class="mobile-lead-info">
+                                                    <div class="mobile-lead-name">{lead.fullName}</div>
+                                                    <div class="mobile-lead-contact">
+                                                        <span class="mobile-lead-email">{lead.email}</span>
+                                                        <span class="mobile-lead-mobile">{lead.mobile}</span>
+                                                    </div>
+                                                    <div class="mobile-lead-meta">
+                                                        <span class="mobile-lead-status">{lead.status}</span>
+                                                        <span class="mobile-lead-number">{lead.leadNumber}</span>
+                                                    </div>
+                                                    <div class="mobile-lead-date">
+                                                        <lightning-formatted-date-time value={lead.createdDate}
+                                                            year="numeric" month="2-digit" day="2-digit">
+                                                        </lightning-formatted-date-time>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Lead Pagination -->
+                                    <div class="lead-pagination-container">
+                                        <div class="lead-pagination-btn-group">
+                                            <button class="lead-pagination-btn mobile-btn-secondary"
+                                                onclick={handleLeadPrevious} data-disabled={disableLeadPrev}
+                                                title="Previous">
+                                                &laquo;
+                                            </button>
+
+                                            <button class="lead-pagination-btn mobile-btn-secondary"
+                                                onclick={handleLeadNext} data-disabled={disableLeadNext} title="Next">
+                                                &raquo;
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+
+                                <!-- No Leads State -->
+                                <div data-empty={noMobileLeads} class="mobile-no-leads">
+                                    <div class="slds-box slds-box_small slds-align_absolute-center">
+                                        <p class="slds-m-top_x-small slds-text-color_weak">No leads available for
+                                            your broker account.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Validation Error -->
+                                <div data-error={showLeadValidationError} class="mobile-validation-error">
+                                    <div class="validation-error-message">
+                                        <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                                        Please select one lead to proceed to the next step.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: MOBILE PAYMENT PLAN CARDS -->
+                        <div data-step="2" class={mobileStepTwoClass}>
+                            <div class="step-content mobile-step-content">
+                                <c-mbp_customspinner is-loading={isStepTwoLoading}></c-mbp_customspinner>
+
+                                <!-- Unit Tabs -->
+                                <div class="mobile-unit-tabs-wrapper">
+                                    <div class="mobile-unit-tabs">
+                                        <template for:each={selectedUnitsData} for:item="unit" for:index="idx">
+                                            <div key={unit.id} class={unit.tabClass} onclick={handleMobileUnitTabClick}
+                                                data-index={idx}>
+                                                {unit.name}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Plan Selection -->
+                                <div data-show-payment={showPaymentDetails} class="mobile-payment-container">
+                                    <div class="mobile-payment-plan-selection">
+                                        <lightning-combobox name="paymentPlan" label="Payment Details"
+                                            value={selectedPaymentPlan} options={paymentPlanOptions}
+                                            onchange={handlePaymentPlanChange} placeholder="Choose a payment plan"
+                                            required>
+                                        </lightning-combobox>
+                                    </div>
+
+                                    <!-- Facade Style -->
+                                    <div data-show-facade={isActiveUnitAlNaseem} class="mobile-facade-selection">
+                                        <lightning-combobox label="Facade Style" value={selectedDesign}
+                                            options={alNaseemDesignOptions} onchange={handleDesignChange} required>
+                                        </lightning-combobox>
+                                    </div>
+
+                                    <!-- Installment Cards -->
+                                    <div class="mobile-installment-cards-container">
+                                        <template for:each={installments} for:item="inst">
+                                            <div key={inst.Id} class="mobile-installment-card">
+                                                <div class="installment-header">
+                                                    <span class="installment-number">Installment
+                                                        #{inst.milestoneNumber}</span>
+                                                    <span
+                                                        class="installment-percentage">{inst.milestonePercentage}%</span>
+                                                </div>
+                                                <div class="installment-details">
+                                                    <div class="installment-milestone">{inst.milestoneDescription}
+                                                    </div>
+                                                    <div class="installment-amount">
+                                                        Amount: <lightning-formatted-number value={inst.amount}
+                                                            format-style="currency" currency-code="AED"
+                                                            minimum-fraction-digits="2" maximum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+                                                    </div>
+                                                    <!--    <div class="installment-payout">Broker Payout:
+                                                            {inst.brokerPayout}%</div>-->
+                                                    <div class="installment-date">
+                                                        Date: <lightning-formatted-date-time value={inst.milestoneDate}
+                                                            year="numeric" month="2-digit" day="2-digit">
+                                                        </lightning-formatted-date-time>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- No Installments -->
+                                        <div data-empty-installments={emptyInstallments}
+                                            class="mobile-empty-installments">
+                                            No installments available for this payment plan.
+                                        </div>
+                                    </div>
+
+                                    <!-- Validation Messages -->
+                                    <div data-error-payment={showPaymentPlanValidationError}
+                                        class="mobile-payment-error">
+                                        <div class="validation-error-message">
+                                            <lightning-icon icon-name="utility:error" size="x-small">
+                                            </lightning-icon>
+                                            Please select a payment plan to proceed.
+                                        </div>
+                                    </div>
+
+                                    <div data-error-facade={showFacadeValidationError} class="mobile-facade-error">
+                                        <div class="validation-error-message">
+                                            <lightning-icon icon-name="utility:error" size="x-small">
+                                            </lightning-icon>
+                                            Please select a Facade Style for Al Naseem units.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: MOBILE OFFER GENERATION -->
+                        <div data-step="3" class={mobileStepThreeClass}>
+                            <div class="step-content mobile-step-content step-three-content">
+
+                                <!-- Unit Tabs -->
+                                <div class="mobile-preview-tabs-wrapper">
+                                    <div class="mobile-preview-tabs">
+                                        <template for:each={selectedUnitsData} for:item="unit">
+                                            <div key={unit.id} class={unit.previewTabClass}
+                                                onclick={handleMobilePreviewTabClick} data-unitid={unit.id}>
+                                                {unit.name}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Offer Summary -->
+                                <div class="mobile-review-summary">
+                                    <div class="slds-card">
+                                        <div class="slds-card__body">
+
+                                            <h4 class="slds-text-heading_small slds-m-bottom_small">
+                                                <strong>Offer Summary</strong>
+                                            </h4>
+
+                                            <div class="mobile-summary-grid">
+                                                <div class="mobile-summary-item">
+                                                    <strong>Selected Lead:</strong>
+                                                    <span>{selectedLeadName}</span>
+                                                </div>
+
+                                                <div class="mobile-summary-item">
+                                                    <strong>Unit:</strong>
+                                                    <span>{activeUnitName}</span>
+                                                </div>
+
+                                                <div class="mobile-summary-item">
+                                                    <strong>Payment Plan:</strong>
+                                                    <span>{paymentPlanName}</span>
+                                                </div>
+
+                                                <div data-show-facade-summary={showFacadeInSummary}
+                                                    class="mobile-summary-item facade-summary">
+                                                    <strong>Facade Style:</strong>
+                                                    <span>{activeUnitDesign}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Preview Row INSIDE Card -->
+                                            <div class="mobile-offer-preview-row slds-m-top_medium">
+                                                <span class="mobile-offer-preview-label">Preview</span>
+
+                                                <button class="mobile-offer-preview-eye-btn"
+                                                    onclick={openPreviewInNewWindow} disabled={isPreviewDisabled}
+                                                    title="Preview Offer">
+
+                                                    <svg class="mobile-offer-preview-eye-icon" viewBox="0 0 24 24"
+                                                        aria-hidden="true">
+                                                        <path
+                                                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 
+                                    17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="modal-footer mobile-modal-footer">
+                            <div class="navigation-buttons slds-grid slds-grid_align-spread">
+                                <template if:true={showPreviousButton}>
+                                    <button class="slds-button slds-button_outline-brand" onclick={handlePreviousStep}>
+                                        Previous
+                                    </button>
+                                </template>
+
+
+
+                                <div class="right-buttons">
+                                    <!--  <button class="slds-button slds-button_outline-brand"
+                                            onclick={closeUnitSearch}>Cancel</button>-->
+
+                                    <div data-not-last={isNotLastStep} class="next-button-container">
+                                        <button class="slds-button slds-button_brand"
+                                            onclick={handleNextStep}>Next</button>
+                                    </div>
+
+                                    <div data-last-step={isLastStep} class="generate-button-container">
+                                        <button class="slds-button slds-button_brand" onclick={handleGenerateOffer}
+                                            data-disabled={isGenerateOfferDisabled}>
+                                            <div data-loading={isLoading} class="loading-button-content">
+                                                <lightning-spinner alternative-text="Processing"
+                                                    size="small"></lightning-spinner>
+                                                Generating...
+                                            </div>
+                                            <div data-not-loading={notLoading} class="normal-button-content">
+                                                Generate Offer
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Footer Navigation -->
+
+                </div>
+            </div>
+        </template>
+    </template>
+
+
+    <!--Desktop-->
+    <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+    <div class="desktop-container" if:false={isMobileView}>
+        <div class="filter-wrapper">
+            <!-- Sticky filter icon (top right corner) -->
+            <img src={filterIcon} alt="Filter" class="filter-icon" onclick={toggleFilterBox} />
+
+            <!-- Floating filter box -->
+            <div class={filterBoxClass} onmousedown={stopEvent}>
+                <b>Filters</b>
+
+                <!-- Search input -->
+                <lightning-input type="search" label="Search" value={searchTerm}
+                    placeholder="Search across Unit Name, Project Name…" onchange={handleSearchChange}
+                    class="placeholder ms-2">
+                </lightning-input>
+
+                <!-- Dynamic column filters -->
+                <template for:each={filterableColumnsWithFilters} for:item="col">
+                    <div key={col.fieldName}
+                        class="slds-col slds-size_1-of-1 slds-medium-size_12-of-12 slds-large-size_12-of-12">
+                        <lightning-combobox label={col.label} value={col.filterValue} options={col.filterOptions}
+                            data-field={col.fieldName} onchange={handleColumnFilterChange} class="placeholder">
+                        </lightning-combobox>
+                    </div>
+                </template>
+
+                <!-- Buttons row -->
+                <div class="button-row filter-buttons">
+                    <button class="reset-btn" onclick={resetFilters}>Reset</button>
+                    <button class="apply-btn" onclick={applyFilters}>Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium filtersWrap">
+            <div class="slds-grid slds-gutters slds-wrap">
+
+                <!-- <div class="slds-col slds-size_1-of-12 slds-hide_small"></div> -->
+
+                <!--<template if:false={showNoAccess}>
+
+              <div class="unit-allocation-wrapper">
+
+          <div class="modal-backdrop project-modal-backdrop"></div>
+          <div class="modal-box project-modal">
+            <div class="modal-header">
+              <h2>
+                <span class="material-icon"></span> Select Project
+              </h2>
+              <button class="close-btn" onclick={closeAll}>×</button>
+            </div>
+            <div class="modal-body">
+              <lightning-combobox
+                name="project"
+                label="Project"
+                placeholder="Select a Project"
+                options={projectOptions}
+                onchange={handleProjectChange}>
+              </lightning-combobox>
+            </div>
+          </div>
+
+          <div class="modal-backdrop unit-modal-backdrop"></div>
+          <div class="modal-box unit-modal">
+            <div class="modal-header">
+              <h2>Unit Allocation</h2>
+              <button class="close-btn" onclick={closeAll}>×</button>
+            </div>
+            <div class="modal-body">
+              <table class="amazon-table">
+                <thead>
+                  <tr>
+                    <th>Unit Name</th>
+                    <th>Bedrooms</th>
+                    <th>Price</th>
+                    <th>Area</th>
+                    <th>Allocated Agent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={unitList} for:item="unit">
+                    <tr key={unit.unitId}>
+                      <td>{unit.unitName}</td>
+                      <td>{unit.bedrooms}</td>
+                      <td>₹{unit.price}</td>
+                      <td>{unit.area}</td>
+                      <td>
+                        <div class="lookup unit-lookup">
+                          <template if:true={unit.allocatedAgentName}>
+                            <span class="agent-pill">
+                              {unit.allocatedAgentName}
+                              <button class="pill-close" title="Remove"
+                                onclick={handleClearAgent}
+                                data-id={unit.unitId}>×</button>
+                            </span>
+                          </template>
+                          <template if:false={unit.allocatedAgentName}>
+                            <div class="lookup-box">
+                              <input type="text" class="lookup-input"
+                                placeholder="Search agent..."
+                                data-id={unit.unitId}
+                                oninput={handleLookupSearch}
+                                onfocus={handleLookupFocus}/>
+                              <template if:true={unit.searchResults}>
+                                <div class="agent-list-box">
+                                  <template for:each={unit.searchResults}
+                                    for:item="opt">
+                                    <div key={opt.value} class="agent-option"
+                                      data-id={unit.unitId}
+                                      data-value={opt.value}
+                                      onclick={handleSelectAgent}>
+                                      <span
+                                        class="agent-name">{opt.label}</span>
+                                    </div>
+                                  </template>
+                                </div>
+                              </template>
+                            </div>
+                          </template>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button class="amazon-btn secondary"
+                onclick={handleRemoveAll}>Remove All Allocations</button>
+              <button class="amazon-btn primary"
+                onclick={handleSubmit}>Submit</button>
+            </div>
+          </div>
+           </div>
+         </template>-->
+
+                <div class="slds-col slds-size_1-of-1 align_right">
+                    <div class="align_right filter-btn">
+                        <!--<button onclick={handleSendOffer}
+                        class="slds-button slds-button_brand ms-2">Send Sales Offer</button>
+                        <button class="slds-button slds-button_brand ms-2" onclick={openUnitModal}>Unit
+                        Allocation</button>-->
+                        <template if:false={showNoAccess}>
+                        <!--    <lightning-button label="Unit Allocation" variant="brand" onclick={openUnitAllocation}
+                                class="slds-m-right_x-small">
+                            </lightning-button>-->
+                        </template>
+
+
+<template if:true={showGenerateOffer}>
+                        <button onclick={handleSendOffer} class="slds-button slds-button_brand ms-2"
+                            disabled={isSendOfferDisabled}>
+                            Generate Offer
+                        </button>
+                        </template>
+                        <button onclick={handleExport} disabled={exportDisabled}
+                            class="slds-button slds-button_brand ">Export</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="datatable-wrapper slds-scrollable_x slds-text-body_small">
+            <lightning-datatable key-field={keyField} data={pagedData} columns={columns}
+                selected-rows={selectedRowsOnPage} max-row-selection="9999" sorted-by={sortedBy}
+                sorted-direction={sortedDirection} onsort={handleSort} onrowselection={handleRowSelection}
+                onrowaction={handleRowAction} variant="standard">
+            </lightning-datatable>
+        </div>
+        <div class="slds-grid slds-wrap align_right slds-gutters">
+            <div class="custom-pagination slds-text-body_small ">
+                <lightning-button label="⟵ Prev" onclick={handlePrevious} variant="base" disabled={disablePrev}
+                    class={prevButtonClass}>
+                </lightning-button>
+
+                <span class="page-info">Page {currentPage} of {totalPages}</span>
+
+                <lightning-button label="Next ⟶" onclick={handleNext} variant="base" disabled={disableNext}
+                    class={nextButtonClass}>
+                </lightning-button>
+            </div>
+
+        </div>
+        <div style="display: none;">
+            <a data-id="download-anchor"></a>
+        </div>
+
+        <!-- </lightning-card> -->
+
+        <!-- ADD THIS SIMPLE ERROR MESSAGE FOR DESKTOP -->
+        <template if:true={showUnavailableUnitsError}>
+            <div class="slds-m-top_small">
+                <span class="tiny-msg">
+                    <strong>Offer Generation is Only for Available units</strong>
+                </span>
+            </div>
+        </template>
+
+        <!-- Enhanced Unit Search Modal -->
+        <template if:true={showUnitSearchModal}>
+            <div class="backdrop">
+                <div class="modal unit-search-modal">
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <h2>Generate Sales Offer</h2>
+                        <span class="close-button" onclick={closeUnitSearch}>×</span>
+                    </div>
+
+                    <!-- Progress Steps -->
+                    <div class="custom-progress-container">
+                        <div class="custom-progress-bar">
+                            <div class="custom-progress-fill" style={progressFillStyle}></div>
+                        </div>
+
+                        <div class="custom-steps">
+                            <div class="custom-step" data-step="1" onclick={handleStepClick}>
+                                <div class={stepOneClass}>
+                                    <span class="step-number">1</span>
+                                </div>
+                                <span class="step-label">Lead Selection</span>
+                            </div>
+
+                            <div class="custom-step" data-step="2" onclick={handleStepClick}>
+                                <div class={stepTwoClass}>
+                                    <span class="step-number">2</span>
+                                </div>
+                                <span class="step-label">Payment Selection</span>
+                            </div>
+
+                            <div class="custom-step" data-step="3" onclick={handleStepClick}>
+                                <div class={stepThreeClass}>
+                                    <span class="step-number">3</span>
+                                </div>
+                                <span class="step-label">Offer Generation</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="modal-body">
+
+                        <!-- Step 1: Select Leads -->
+                        <template if:true={isStepOne}>
+                            <div class="step-content">
+
+                                <!-- Compact Filter Wrapper for Leads -->
+                                <div class="unit-lead-filter-wrapper">
+                                    <img src={filterIcon} alt="Filter" class="unit-lead-filter-icon"
+                                        onclick={toggleUnitLeadFilterBox} />
+
+                                    <!-- Floating Filter Box for Leads -->
+                                    <div class={unitLeadFilterBoxClass} onclick={stopPropagation}>
+                                        <b>Lead Filters</b>
+
+                                        <lightning-input class="placeholder mt-2" label="Search Lead"
+                                            data-id="searchKey" value={leadFilters.searchKey}
+                                            onchange={handleLeadFilterChange}
+                                            placeholder="Search by Name, Email, Mobile, Lead Number"
+                                            variant="label-hidden">
+                                        </lightning-input>
+
+                                        <lightning-combobox class="placeholder mt-2" label="Status" data-id="status"
+                                            value={leadFilters.status} options={leadStatusOptions}
+                                            onchange={handleLeadFilterChange} variant="label-hidden"
+                                            onclick={stopPropagation}>
+                                        </lightning-combobox>
+
+                                        <lightning-input type="date" class="placeholder mt-2" label="Start Date"
+                                            data-id="startDate" value={leadFilters.startDate}
+                                            onchange={handleLeadFilterChange} variant="label-hidden"
+                                            onclick={stopPropagation}>
+                                        </lightning-input>
+
+                                        <lightning-input type="date" class="placeholder mt-2" label="End Date"
+                                            data-id="endDate" value={leadFilters.endDate}
+                                            onchange={handleLeadFilterChange} variant="label-hidden"
+                                            onclick={stopPropagation}>
+                                        </lightning-input>
+
+                                        <div class="button-row unit-lead-filter-buttons" onclick={stopPropagation}>
+                                            <button class="reset-btn" onclick={resetLeadFilters}>Reset</button>
+                                            <button class="apply-btn" onclick={applyLeadFilters}>Apply</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <template if:true={isLoading}>
+                                    <div class="slds-align_absolute-center slds-m-vertical_large">
+                                        <lightning-spinner alternative-text="Loading leads"></lightning-spinner>
+                                        <div class="slds-m-top_small">Loading leads...</div>
+                                    </div>
+                                </template>
+
+                                <template if:false={isLoading}>
+                                    <template if:true={filteredLeads.length}>
+                                        <div class="leads-table-container">
+                                            <table
+                                                class="slds-table slds-table_bordered slds-table_cell-buffer compact-leads-table">
+                                                <thead>
+                                                    <tr class="slds-text-title_caps">
+                                                        <th scope="col" style="width: 60px;">Select</th>
+                                                        <th scope="col">Lead Name</th>
+                                                        <th scope="col">Email</th>
+                                                        <th scope="col">Mobile</th>
+                                                        <th scope="col">Status</th>
+                                                        <th scope="col">Lead Number</th>
+                                                        <th scope="col">Created Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={pagedLeads} for:item="lead">
+                                                        <tr key={lead.id} class={lead.rowClass}>
+                                                            <td style="text-align: center;">
+                                                                <div class="slds-radio">
+                                                                    <input type="radio" id={lead.id}
+                                                                        name="leadSelection" value={lead.id}
+                                                                        checked={lead.isSelected}
+                                                                        onchange={handleLeadRadioSelection}
+                                                                        class="slds-radio__input" />
+                                                                    <label class="slds-radio__label" for={lead.id}>
+                                                                        <span class="slds-radio_faux"></span>
+                                                                    </label>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="slds-truncate" title={lead.fullName}>
+                                                                    {lead.fullName}</div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="slds-truncate" title={lead.email}>
+                                                                    {lead.email}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="slds-truncate" title={lead.mobile}>
+                                                                    {lead.mobile}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="slds-badge">{lead.status}</span>
+                                                            </td>
+                                                            <td>
+                                                                <div class="slds-truncate" title={lead.leadNumber}>
+                                                                    {lead.leadNumber}</div>
+                                                            </td>
+                                                            <td>
+                                                                <lightning-formatted-date-time value={lead.createdDate}
+                                                                    year="numeric" month="2-digit" day="2-digit">
+                                                                </lightning-formatted-date-time>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Lead Selection Validation Error -->
+                                        <div if:true={showLeadValidationError} class="validation-error-message">
+                                            <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                                            Please select one lead to proceed to the next step.
+                                        </div>
+
+                                        <!-- Lead Pagination -->
+                                        <div class="slds-grid slds-wrap align_right slds-gutters slds-m-top_small">
+                                            <div class="custom-pagination slds-text-body_small">
+                                                <lightning-button label="⟵ Prev" onclick={handleLeadPrevious}
+                                                    variant="base" disabled={disableLeadPrev}
+                                                    class={leadPrevButtonClass}>
+                                                </lightning-button>
+
+                                                <span class="page-info">Page {currentLeadPage} of
+                                                    {totalLeadPages}</span>
+
+                                                <lightning-button label="Next ⟶" onclick={handleLeadNext} variant="base"
+                                                    disabled={disableLeadNext} class={leadNextButtonClass}>
+                                                </lightning-button>
+                                            </div>
+                                        </div>
+
+                                    </template>
+
+                                    <template if:false={filteredLeads.length}>
+                                        <div class="slds-align_absolute-center slds-m-top_medium">
+                                            <div class="slds-box slds-box_small slds-align_absolute-center">
+                                                <p class="slds-m-top_x-small slds-text-color_weak">No leads available
+                                                    for
+                                                    your broker account.</p>
+                                                <p class="slds-text-color_weak slds-text-body_small">
+
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Step 2: Payment Plan with Unit Tabs -->
+                        <!-- In Step 2: Payment Plan with Unit Tabs -->
+                        <template if:true={isStepTwo}>
+                            <div class="step-content">
+                                <c-mbp_customspinner is-loading={isStepTwoLoading}></c-mbp_customspinner>
+
+                                <!-- UNIT TABS -->
+                                <div class="unit-tabs-wrapper slds-m-bottom_medium">
+                                    <div class="slds-tabs_default">
+                                        <ul class="slds-tabs_default__nav clean-tabs-nav" role="tablist">
+                                            <template for:each={selectedUnitsData} for:item="unit" for:index="idx">
+                                                <li key={unit.id}
+                                                    class="slds-tabs_default__item {unit.isActive ? 'slds-is-active' : ''}"
+                                                    role="presentation">
+                                                    <a class="slds-tabs_default__link" href="javascript:void(0);"
+                                                        role="tab" aria-selected={unit.isActive} data-index={idx}
+                                                        onclick={handleUnitTabClick}>
+                                                        {unit.name}
+                                                    </a>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Plan Details -->
+                                <template if:true={showPaymentDetails}>
+                                    <div class="payment-plan-container">
+                                        <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                            <div class="slds-col slds-size_1-of-2">
+                                                <lightning-combobox name="paymentPlan" label="Payment Details"
+                                                    value={selectedPaymentPlan} options={paymentPlanOptions}
+                                                    onchange={handlePaymentPlanChange}
+                                                    placeholder="Choose a payment plan" required>
+                                                </lightning-combobox>
+
+                                                <!-- Payment Plan Validation Message -->
+                                                <div if:true={showPaymentPlanValidationError}
+                                                    class="validation-error-message">
+                                                    <lightning-icon icon-name="utility:error" size="x-small">
+                                                    </lightning-icon>
+                                                    Please select a payment plan to proceed.
+                                                </div>
+                                            </div>
+
+                                            <!-- Facade Style Selection - Show only if CURRENT ACTIVE unit is Al Naseem -->
+                                            <template if:true={isActiveUnitAlNaseem}>
+                                                <div class="slds-col slds-size_1-of-2">
+                                                    <lightning-combobox label="Facade Style" value={selectedDesign}
+                                                        options={alNaseemDesignOptions} onchange={handleDesignChange}
+                                                        required>
+                                                    </lightning-combobox>
+
+                                                    <!-- Facade Style Validation Message -->
+                                                    <div if:true={showFacadeValidationError}
+                                                        class="validation-error-message">
+                                                        <lightning-icon icon-name="utility:error" size="x-small">
+                                                        </lightning-icon>
+                                                        Please select a Facade Style for Al Naseem units.
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <!-- Payment Tab Content -->
+                                        <div class="slds-tabs_default__content slds-show tab-payment-content"
+                                            role="tabpanel">
+                                            <template if:true={activeUnitData}>
+                                                <div class="payment-panel">
+                                                    <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                                        <div class="slds-col slds-size_1-of-1">
+                                                            <div class="payment-plan-name">{paymentPlanName}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Installments Table -->
+                                                    <div class="payment-table-container">
+                                                        <table class="payment-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Installment #</th>
+                                                                    <th>Milestone</th>
+                                                                    <th>Installment Percentage</th>
+                                                                    <th>Installment Amount</th>
+                                                                    <!--  <th>Broker Payout Percentage</th>-->
+                                                                    <th>Installment Date</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <template if:true={installments.length}>
+                                                                    <template for:each={installments} for:item="inst">
+                                                                        <tr key={inst.Id}>
+                                                                            <td>{inst.milestoneNumber}</td>
+                                                                            <td>{inst.milestoneDescription}</td>
+                                                                            <td>{inst.milestonePercentage}%</td>
+                                                                            <td>
+                                                                                <lightning-formatted-number
+                                                                                    value={inst.amount}
+                                                                                    format-style="currency"
+                                                                                    currency-code="AED"
+                                                                                    minimum-fraction-digits="2"
+                                                                                    maximum-fraction-digits="2">
+                                                                                </lightning-formatted-number>
+                                                                            </td>
+                                                                            <!--  <td>{inst.brokerPayout}%</td>-->
+                                                                            <td>
+                                                                                <lightning-formatted-date-time
+                                                                                    value={inst.milestoneDate}
+                                                                                    year="numeric" month="2-digit"
+                                                                                    day="2-digit">
+                                                                                </lightning-formatted-date-time>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </template>
+                                                                <template if:false={installments.length}>
+                                                                    <tr>
+                                                                        <td colspan="6"
+                                                                            class="slds-text-align_center slds-text-color_weak">
+                                                                            No installments available for this payment
+                                                                            plan.
+                                                                        </td>
+                                                                    </tr>
+                                                                </template>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Step 3: Generate Offer -->
+                        <template if:true={isStepThree}>
+                            <div class="step-content step-three-content">
+                                <!-- Unit Tabs for Offer Previews - AT THE TOP -->
+                                <div class="unit-preview-tabs clean-tabs-container slds-m-bottom_medium">
+                                    <div class="slds-tabs_default">
+                                        <ul class="slds-tabs_default__nav clean-tabs-nav" role="tablist">
+                                            <template for:each={selectedUnitsData} for:item="unit">
+                                                <li key={unit.id}
+                                                    class="slds-tabs_default__item clean-tab-item {unit.isActivePreview ? 'slds-is-active' : ''}"
+                                                    role="presentation">
+                                                    <a class="slds-tabs_default__link clean-tab-link step3-link"
+                                                        href="javascript:void(0);" role="tab"
+                                                        aria-selected={unit.isActivePreview} data-unitid={unit.id}
+                                                        onclick={handlePreviewUnitTabClick}>
+                                                        {unit.name}
+                                                    </a>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic Offer Summary - IN THE MIDDLE -->
+                                <div class="review-summary slds-m-bottom_medium">
+                                    <div class="slds-card">
+                                        <div class="slds-card__body">
+                                            <h4 class="slds-text-heading_small slds-m-bottom_small">
+                                                <strong>Offer Summary</strong>
+                                            </h4>
+                                            <!-- In Step 3: Update the Offer Summary section -->
+                                            <div class="slds-grid slds-wrap">
+                                                <div class="slds-col slds-size_1-of-2 slds-p-vertical_x-small">
+                                                    <strong>Selected Lead:</strong> <span>{selectedLeadName}</span>
+                                                </div>
+                                                <div class="slds-col slds-size_1-of-2 slds-p-vertical_x-small">
+                                                    <strong>Unit:</strong> <span>{activeUnitName}</span>
+                                                </div>
+
+                                                <div class="slds-col slds-size_1-of-2 slds-p-vertical_x-small">
+                                                    <strong>Payment Plan:</strong> <span>{paymentPlanName}</span>
+                                                </div>
+
+                                                <!-- Show Facade Style ONLY when active unit is Al Naseem -->
+                                                <!-- Show Facade Style ONLY when active unit is Al Naseem -->
+                                                <template if:true={isActiveUnitAlNaseem}>
+                                                    <div class="slds-col slds-size_1-of-2 slds-p-vertical_x-small">
+                                                        <strong>Facade Style:</strong>
+                                                        <span>
+                                                            <template if:true={activeUnitData.selectedDesign}>
+                                                                {activeUnitData.selectedDesign}
+                                                            </template>
+                                                            <template if:false={activeUnitData.selectedDesign}>
+                                                                <span class="slds-text-color_error">Not Selected</span>
+                                                            </template>
+                                                        </span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Preview Content -->
+                                    <div class="slds-tabs_default__content slds-show tab-preview-content"
+                                        role="tabpanel">
+                                        <template if:true={activeUnitData}>
+                                            <div class="slds-card__body">
+                                                <div class="offer-preview-content"
+                                                    style="position: relative; min-height: 600px;">
+
+                                                    <div if:true={isPdfLoading} class="pdf-loading-overlay">
+                                                        <div class="loading-content">
+                                                            <div class="spinner-container">
+                                                                <div class="spinner-ring"></div>
+                                                            </div>
+                                                            <h3>Please wait until the preview loads...</h3>
+                                                            <p>This may take up to 15 seconds</p>
+                                                        </div>
+                                                    </div>
+                                                    <!-- If we have an active PDF preview show iframe -->
+                                                    <template if:true={hasActivePreview}>
+                                                        <iframe src={activePreviewUrl} width="100%" height="600"
+                                                            style="border: 1px solid #dddbda; border-radius: 0.25rem;"></iframe>
+                                                            
+                                                    </template>
+
+                                                    <!-- If not, show spinner when loading, otherwise show empty state -->
+                                                    <template if:false={hasActivePreview}>
+                                                        <template if:true={isLoading}>
+                                                            <div class="slds-align_absolute-center slds-p-around_large">
+                                                                <c-mbp_customspinner
+                                                                    is-loading={isLoading}></c-mbp_customspinner>
+                                                            </div>
+                                                        </template>
+                                                        <template if:false={isLoading}>
+                                                            <div class="slds-align_absolute-center slds-p-around_large">
+                                                                <lightning-icon icon-name="utility:preview"
+                                                                    size="large"></lightning-icon>
+                                                                <p class="slds-m-top_small slds-text-color_weak">Preview
+                                                                    not
+                                                                    available</p>
+                                                            </div>
+                                                        </template>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </template>
+
+                    </div>
+
+                    <!-- Footer Navigation -->
+                    <div class="modal-footer">
+                        <div class="navigation-buttons slds-grid slds-grid_align-spread">
+                            <div>
+                                <button class="slds-button slds-button_outline-brand" onclick={handlePreviousStep}
+                                    disabled={isFirstStep}>
+                                    Previous
+                                </button>
+                            </div>
+                            <div class="right-buttons">
+                                <button class="slds-button slds-button_outline-brand" onclick={closeUnitSearch}>
+                                    Cancel
+                                </button>
+
+                                <template if:true={isNotLastStep}>
+                                    <button class="slds-button slds-button_brand" onclick={handleNextStep}>
+                                        Next
+                                    </button>
+                                </template>
+
+                                <template if:true={isLastStep}>
+                                    <button class="slds-button slds-button_brand" onclick={handleGenerateOffer}
+                                        disabled={isGenerateOfferDisabled}>
+                                        <template if:true={isLoading}>
+                                            <lightning-spinner alternative-text="Processing"
+                                                size="small"></lightning-spinner>
+                                            Generating...
+                                        </template>
+                                        <template if:false={isLoading}>
+                                            Send Sales Offer
+                                        </template>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </div>
+    <template if:true={showUnitAllocationModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_large" aria-modal="true">
+
+            <div class="slds-modal__container">
+
+                <header class="slds-modal__header">
+
+                    <h2 class="slds-text-heading_medium align_left text-bold">
+                        Unit Allocation
+                    </h2>
+                    <button class="slds-button slds-button_icon slds-modal__close close-btn" title="Close"
+                        onclick={closeUnitAllocation}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small">
+                        </lightning-icon>
+                    </button>
+
+                </header>
+              <!--  <div class="slds-modal__content ">
+                    <c-mbp-units onshowtoast={handleShowToast}  onclosepopup={handleCloseUnitAllocation}></c-mbp-units>
+                </div>-->
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

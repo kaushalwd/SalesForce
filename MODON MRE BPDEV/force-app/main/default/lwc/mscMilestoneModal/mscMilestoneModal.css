@@ -1,0 +1,799 @@
+@import "c/mscStyles";
+
+/* display: contents - this element adds no box between the layer and whatever it
+   is mounted in, and it is mounted at .page, never inside a card. See the header
+   in the JS for why that placement is the whole design. */
+:host {
+    display: contents;
+}
+
+/* ── the layer ──────────────────────────────────────────────────────────────
+   Fixed, covering the booking, centring the panel. Mounted at .page the nearest
+   containing block is modonSheet's own panel, so this covers the entire journey -
+   which is as far as anything can reach, because that panel sets overflow:hidden.
+   It animates nothing itself; the scrim and the panel each animate one property
+   (see c/mscDrawer for the day that rule was learned). */
+.layer {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(12px, 3vh, 32px) clamp(12px, 2vw, 28px);
+}
+
+/* No backdrop-filter, deliberately: the cards behind already run blur(22px) each,
+   and stacking a live blur over them shimmers. One dim, composited once. */
+.scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    /* Deep, by request: the booking behind is context, not content, while the
+       schedule is being arranged. */
+    background: rgba(0, 0, 0, 0.82);
+    animation: mm-scrim-in 240ms ease-out both;
+}
+
+/* ── the panel ──────────────────────────────────────────────────────────────
+   A FIXED frame, by request: the height and width hold whatever the schedule
+   inside them is - six milestones or sixty, a list or a panel - so the modal
+   never resizes underneath the rep mid-task. ONLY the body scrolls; the head
+   and the foot hold, so the decision never scrolls away from the schedule it
+   is about. The viewport minimums only bite on a laptop smaller than the frame. */
+.mm {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(960px, 100%);
+    height: min(760px, 92vh);
+    min-height: 0;
+    background: var(--page-bg, #0f0f0f);
+    border: 1px solid var(--section-active-border, rgba(255, 255, 255, 0.42));
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.95);
+    animation: mm-panel-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The rail earns the extra width; a single unit does not pay for it. */
+.mm--wide {
+    width: min(1060px, 100%);
+}
+
+.layer--closing .scrim {
+    animation: mm-scrim-out 200ms ease-in both;
+}
+
+.layer--closing .mm {
+    animation: mm-panel-out 200ms ease-in both;
+}
+
+@keyframes mm-scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes mm-scrim-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes mm-panel-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mm-panel-out {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.985); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scrim,
+    .mm,
+    .layer--closing .scrim,
+    .layer--closing .mm {
+        animation: none;
+    }
+}
+
+/* ── head ─────────────────────────────────────────────────────────────────── */
+
+.mm__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    flex: 0 0 auto;
+}
+
+.mm__headings {
+    min-width: 0;
+}
+
+.mm__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text, #fafafa);
+}
+
+/* The unit and the reference a rep reads out to Finance, in the tabular face the
+   console gives every identifier. */
+.mm__subline {
+    margin: 3px 0 0;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The whole schedule answered in one phrase. A state, never a figure - the
+   card's line is the only place the total is stated. */
+.mm__state {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.mm__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim, #8a8a8a);
+    flex: 0 0 auto;
+}
+
+.mm__dot--on {
+    background: var(--chip-blue, #60a5fa);
+}
+
+.mm__dot--done {
+    background: var(--chip-green, #4ade80);
+}
+
+.mm__x {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+/* Without the state line the close button holds the right edge itself. */
+.mm__head .mm__x {
+    margin-left: 0;
+}
+
+.mm__head .mm__headings {
+    flex: 1 1 auto;
+}
+
+.mm__x:hover {
+    border-color: var(--section-active-border, rgba(255, 255, 255, 0.42));
+    color: var(--text, #fafafa);
+}
+
+.mm__x:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+/* ── columns: the rail and the pane ───────────────────────────────────────── */
+
+.mm__cols {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.mm__rail {
+    width: 224px;
+    flex: 0 0 auto;
+    border-right: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    padding: 14px 10px;
+    overflow-y: auto;
+}
+
+.mm__rail-h {
+    margin: 0 10px 10px;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.mm__rail-u {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    border-radius: 9px;
+    padding: 10px 12px;
+    margin-bottom: 3px;
+    color: var(--text-muted, #a3a3a3);
+    font: inherit;
+    cursor: pointer;
+}
+
+.mm__rail-u:hover {
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+}
+
+.mm__rail-u:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+}
+
+.mm__rail-u--on {
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+    box-shadow: inset 0 0 0 1px var(--input-border, rgba(255, 255, 255, 0.16));
+    color: var(--text, #fafafa);
+}
+
+.mm__rail-n {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The reference and whether the unit is arranged - in words, not marks. */
+.mm__rail-s {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 10.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+}
+
+.mm__rail-w {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mm__pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* ── tools: the long-plan filter ──────────────────────────────────────────── */
+
+.mm__tools {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    flex: 0 0 auto;
+}
+
+.mm__seg {
+    display: inline-flex;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mm__seg-b {
+    border: 0;
+    background: transparent;
+    color: var(--text-dim, #8a8a8a);
+    font: inherit;
+    font-size: 11.5px;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-right: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.mm__seg-b:last-child {
+    border-right: 0;
+}
+
+.mm__seg-b:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+}
+
+.mm__seg-b--on {
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    color: var(--text, #fafafa);
+}
+
+/* ── body: the one region that scrolls ────────────────────────────────────── */
+
+.mm__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    /* 1.9 - the thumb was the platform default: a light bar on a #0f0f0f panel.
+       Firefox takes the pair; WebKit needs the pseudo-elements below. */
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+    padding: 0 0 8px;
+}
+
+.mm__body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.mm__body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* border + background-clip insets the thumb without a track colour. */
+.mm__body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: 6px;
+}
+
+.mm__body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.32);
+    background-clip: content-box;
+}
+
+/* ── year labels and folded years ─────────────────────────────────────────── */
+
+/* Sticky, and on the OPAQUE page ground: rows scrolling under a translucent
+   label read through it. */
+.mm__ylabel {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    /* 20 (row padding) + 16 (chevron track) + 14 (gap): the count's right edge
+       IS the totals' right edge, so the label reads as part of the table. */
+    padding: 8px 50px 8px 20px;
+    background: var(--page-bg, #0f0f0f);
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.mm__ylabel-y {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+.mm__ylabel-n {
+    font-size: 10.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+/* A folded year: one line, its coverage in words. No marks, no subtotals. */
+.mm__yfold {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 0 20px;
+    height: 42px;
+    border: 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mm__yfold:hover {
+    background: var(--input-bg, rgba(255, 255, 255, 0.02));
+}
+
+.mm__yfold:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+}
+
+.mm__yfold--open {
+    background: var(--input-bg, rgba(255, 255, 255, 0.025));
+}
+
+.mm__yfold-y {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+}
+
+.mm__yfold-n {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── rows ─────────────────────────────────────────────────────────────────── */
+
+/* 1.6 - the row's own node: it holds the row and, when open, that row's panel.
+   Deliberately styleless - a plain block, so the wrapper changed nothing on screen.
+   The panel lives in here rather than beside the row so the body's child list keeps
+   its shape when a row opens (see the JS header). */
+.mm__rw {
+    display: block;
+}
+
+.mm__row {
+    display: grid;
+    /* 1.8 - number · name+date · total · pending · chevron. Five, not six: the due
+       date folds under the name and gives its 90px to the column that needed it.
+       Each numeric track is sized to its widest tenant (a 9.7m total, a pending
+       figure with its word), so nothing overflows into a gap and every column keeps
+       one straight right edge with the same 14px of air between them. */
+    grid-template-columns: 28px minmax(0, 1fr) 150px 170px 16px;
+    align-items: center;
+    column-gap: 14px;
+    width: 100%;
+    min-height: 42px;
+    padding: 7px 20px;
+    border: 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.045));
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: default;
+}
+
+/* Only a row with something more to show reads as pressable. */
+.mm__row--live {
+    cursor: pointer;
+}
+
+.mm__row--live:hover {
+    background: var(--input-bg, rgba(255, 255, 255, 0.02));
+}
+
+.mm__row:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: -2px;
+}
+
+.mm__n {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    font-size: 10.5px;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+}
+
+.mm__row--rec .mm__n {
+    border-color: rgba(96, 165, 250, 0.45);
+    color: var(--chip-blue, #60a5fa);
+}
+
+.mm__row--done .mm__n {
+    border-color: rgba(74, 222, 128, 0.4);
+    color: var(--chip-green, #4ade80);
+}
+
+.mm__main {
+    min-width: 0;
+}
+
+.mm__name {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.mm__name-t {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 1.8 - the due date, under the name it belongs to. The row keeps its 42px minimum
+   and grows to hold the second line, the way the ledger row outside does. */
+.mm__dt {
+    display: block;
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Past its date with money still on it - the one red on this list, and the only
+   mark a late milestone gets here: this schedule has no heading counting them. */
+.mm__dt--late {
+    color: var(--chip-red, #f87171);
+}
+
+/* 1.8 - what the row still OWES, as a number and nothing else. It printed what came
+   IN until now, which left the work as the BLANK cells - on a plan where nothing has
+   been collected the whole column was empty and nothing said so. Amber marks the rows
+   that need work; a finished row says so in a word.
+
+   Still empty on a row a mandate covers: the bank collects when due, and a figure
+   there would read as a rep's work. */
+.mm__pend {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    /* 1.10 - the total's size. Two money columns side by side reading at two sizes is
+       what made them look like different kinds of thing; colour and weight carry the
+       difference now, exactly as they do on the ledger table outside. */
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* The figure a rep acts on, at the total's weight. The wordless states stay at the
+   row's own weight - they are a position, not a number. */
+.mm__pend--due {
+    font-weight: 600;
+}
+
+/* The one quiet word, in the figure's own hue one step back - the figure stays the
+   signal, the word names it.
+
+   1.10 - NO fixed slot. The 52px slot came from the column this replaced, which
+   carried two words of different widths ("recorded" / "paid") and needed one edge to
+   hold them. Only one word reaches this column, so its width is constant and every
+   figure shares a right edge without help - while the slot itself pushed the wordless
+   states ("No amount pending", "Settled") past the worded ones, which is the ragged
+   edge this removes. Every line now ends on the column's right edge. */
+.mm__pend-w {
+    flex: 0 0 auto;
+    margin-left: 5px;
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.74;
+}
+
+/* Money the rep can still record against this milestone. */
+.mm__pend--due {
+    color: var(--chip-amber, #fbbf24);
+}
+
+/* Allocated by Finance - the row is finished. */
+.mm__pend--done {
+    color: var(--chip-green, #4ade80);
+}
+
+/* Nothing to record and nothing settled: all of it is with Finance. A state, not a
+   number, so it does not compete with the rows carrying one. */
+.mm__pend--clear {
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* 1.7 - .mm__tag and its two tones left with the pill they drew. What stands
+   against a milestone is said by the recorded figure and by the number badge's
+   tone (.mm__row--rec / --done), which stay exactly as they were. */
+
+/* 1.8 - .mm__due and .mm__due--late retired with the date COLUMN. The date reads
+   under the name now (.mm__dt), where the ledger row outside puts it. */
+
+.mm__amt {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.mm__go {
+    display: inline-flex;
+    justify-content: flex-end;
+}
+
+/* ── the expanded row: the ledger fragment ──────────────────────────────────
+   One line per instrument, one still-open line. No card, no image, no prose -
+   the fragment reads as part of the schedule, sharing its right edge. */
+.mm__xp {
+    padding: 2px 20px 10px 60px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.045));
+    background: var(--input-bg, rgba(255, 255, 255, 0.015));
+}
+
+.mm__il {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+}
+
+.mm__il:last-child {
+    border-bottom: 0;
+}
+
+.mm__il-id {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.mm__il-chip {
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    padding: 1.5px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.32);
+    color: var(--chip-blue, #60a5fa);
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+/* Everything that identifies but does not decide, in one dim run - the part
+   that gives way on a narrow screen. The amount never does. */
+.mm__il-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 1.7 - a payment line's amount is money HANDED OVER, so it wears the blue every
+   with-Finance figure wears on this screen; the remainder below it is the work
+   left, so it takes the white weight the row's own total has. The two used to be
+   the other way round, which read as though the remainder were the recorded one. */
+.mm__il-amt {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--chip-blue, #60a5fa);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* The fragment's closing line: what is still open, in the blue of the recorded
+   figure it completes. Absent when nothing is. */
+.mm__il--still .mm__il-id {
+    color: var(--text-muted, #a3a3a3);
+    font-weight: 500;
+}
+
+.mm__il--still .mm__il-amt {
+    color: var(--text, #fafafa);
+    font-weight: 700;
+}
+
+/* ── a hosted panel ───────────────────────────────────────────────────────── */
+
+.mm__panelbody {
+    padding: 16px 20px 20px;
+}
+
+/* ── foot ─────────────────────────────────────────────────────────────────── */
+
+.mm__foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 20px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: var(--input-bg, rgba(255, 255, 255, 0.03));
+    flex: 0 0 auto;
+}
+
+.mm__foot-q {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+}
+
+.mm__foot-b {
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* ── narrow viewports ─────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    /* The rail folds above the pane rather than beside it: 224px out of a phone's
+       width would starve the schedule. */
+    .mm__cols {
+        flex-direction: column;
+    }
+
+    .mm__rail {
+        width: 100%;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+        padding: 10px 12px;
+    }
+
+    .mm__rail-h {
+        display: none;
+    }
+
+    .mm__rail-u {
+        flex: 0 0 auto;
+        width: auto;
+        margin-bottom: 0;
+    }
+
+    /* 1.8 - nothing gives way here any more. The date column was what went first,
+       and it is not a column now: it rides under the name, which costs no width at
+       all. Four content tracks fit this breakpoint as they are. */
+
+    .mm__xp {
+        padding-left: 20px;
+    }
+}
+
+@media (max-width: 620px) {
+    /* 1.8 - the TOTAL gives way here, not the pending figure. That is the reverse of
+       what this rule used to say, and deliberately so: the column that survives is
+       the one the rep acts on, which is how the ledger table outside sheds Total at
+       its own narrow breakpoint. The milestone's full amount is still one tap away,
+       inside the row. */
+    .mm__row {
+        grid-template-columns: 28px minmax(0, 1fr) 170px 16px;
+    }
+
+    .mm__amt {
+        display: none;
+    }
+}

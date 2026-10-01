@@ -1,0 +1,88 @@
+<template>
+    <lightning-quick-action-panel header="Recalculate External Commission">
+        <template lwc:if={isLoading}>
+            <div class="slds-p-around_medium slds-align_absolute-center">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:if={hasData}>
+            <div class="slds-p-around_medium slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                    <lightning-input
+                        label="Broker Agency"
+                        value={brokerAgency}
+                        disabled>
+                    </lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                    <lightning-input
+                        label="Unit"
+                        value={unitName}
+                        disabled>
+                    </lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                    <lightning-input
+                        label="Total Unit Price"
+                        value={totalUnitPrice}
+                        disabled>
+                    </lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                    <lightning-input
+                        label="Commission Percent"
+                        type="number"
+                        value={commissionPercent}
+                        step="0.01"
+                        min="0"
+                        max="5"
+                        required
+                        onchange={handlePercentChange}>
+                    </lightning-input>
+                    <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                        Enter a value from 0 to 100 (example: 2.5 for 2.5%).
+                    </div>
+                </div>
+
+                 <!-- Recalculate Reason -->
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-textarea
+                        name="reCalcReason"
+                        label="Recalculate Reason"
+                        placeholder="Enter recalculate reason"
+                        required
+                        value={comments}
+                        onchange={handleCommentsChange}>
+                    </lightning-textarea>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:if={loadError}>
+            <div class="slds-p-around_medium slds-text-color_error">
+                {loadError}
+            </div>
+        </template>
+
+        <div slot="footer">
+            <lightning-button
+                variant="neutral"
+                label="Cancel"
+                onclick={handleCancel}
+                disabled={isLoading}>
+            </lightning-button>
+
+            <lightning-button
+                class="slds-m-left_small"
+                variant="brand"
+                label="Recalculate"
+                onclick={handleRecalculate}
+                disabled={disableRecalculate}>
+            </lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>

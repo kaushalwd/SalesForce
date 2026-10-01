@@ -1,0 +1,209 @@
+:host {
+    display: block;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+}
+
+.login-shell {
+    /* Same ground as the home page in dark theme: --mbpr-page-bg and
+       --mbpr-page-gradient from THEME_TOKENS.dark in mbpr_homeGateway.js.
+       Painted on the shell itself rather than on a child layer, because below
+       1200px the shell scrolls; a child layer would scroll away and expose
+       flat colour. An element's own background does not move when its content
+       scrolls, so the gradient stays anchored at every breakpoint. */
+    background-color: #08090b;
+    background-image: linear-gradient(180deg, #1a1e24 0%, #08090b 100%);
+    background-repeat: no-repeat;
+    color: #fff;
+    inset: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    z-index: 9000;
+}
+
+.login-main {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: calc(100dvh - 4.75rem);
+    padding:
+        max(2.75rem, env(safe-area-inset-top))
+        max(2rem, env(safe-area-inset-right))
+        max(5.5rem, env(safe-area-inset-bottom))
+        max(2rem, env(safe-area-inset-left));
+    position: relative;
+    z-index: 1;
+}
+
+.login-stack {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 30rem);
+}
+
+.brand-mark {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 0.9rem;
+}
+
+.brand-logo {
+    color: #ffffff;
+    display: block;
+    height: 1.65rem;
+    width: auto;
+}
+
+.brand-divider {
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.brand-label {
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.brand-subtitle {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 1rem;
+    line-height: 1.35;
+    margin: 0 0 1.75rem;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+/* Short fine-pointer windows scroll instead of clipping the card. The
+   >=1200px overflow clip is pre-existing desktop behaviour, left alone. */
+@media (max-width: 1199px) {
+    .login-shell {
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 980px) {
+    .login-shell {
+        overflow-y: auto;
+        position: fixed;
+    }
+
+    .login-main {
+        min-height: auto;
+        padding:
+            max(2rem, env(safe-area-inset-top, 0px))
+            max(1rem, env(safe-area-inset-right, 0px))
+            max(6.5rem, env(safe-area-inset-bottom, 0px))
+            max(1rem, env(safe-area-inset-left, 0px));
+    }
+
+    .brand-mark {
+        margin-bottom: 0.7rem;
+    }
+}
+
+/* Responsive: phone and touch-tablet band. The 6rem bottom padding reserves
+   the fixed footer on tablets; phones drop it, the footer goes in-flow. */
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .login-shell {
+        -webkit-overflow-scrolling: touch;
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+        overflow-y: auto;
+    }
+
+    .login-main {
+        min-height: calc(100svh - 4.75rem);
+        min-height: calc(100dvh - 4.75rem);
+        padding:
+            max(2rem, env(safe-area-inset-top, 0px))
+            max(1rem, env(safe-area-inset-right, 0px))
+            max(6rem, env(safe-area-inset-bottom, 0px))
+            max(1rem, env(safe-area-inset-left, 0px));
+    }
+}
+
+/* Phone: in-flow footer, so the shell is a flex column with the main area
+   growing. The footer sits at the viewport bottom on short pages and after
+   the content when it scrolls. */
+@media (max-width: 767px) {
+    .login-shell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-main {
+        align-items: flex-start;
+        flex: 1 0 auto;
+        min-height: auto;
+        padding:
+            max(1.5rem, env(safe-area-inset-top, 0px))
+            max(1.35rem, env(safe-area-inset-right, 0px))
+            2rem
+            max(1.35rem, env(safe-area-inset-left, 0px));
+    }
+
+    /* Auto margins centre the brand and card while there is free space, then
+       collapse to zero once the content outgrows the viewport (keyboard open,
+       OTP view) so nothing clips. */
+    .login-stack {
+        margin-block: auto;
+        width: min(100%, 26rem);
+    }
+}
+
+@media (max-width: 599px) {
+    .login-main {
+        padding-block-start: max(1.2rem, env(safe-area-inset-top, 0px));
+    }
+
+    .brand-mark {
+        flex-wrap: wrap;
+        row-gap: 0.35rem;
+    }
+
+    .brand-logo {
+        height: 1.35rem;
+    }
+
+    .brand-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 374px) {
+    .login-main {
+        padding-inline:
+            max(1rem, env(safe-area-inset-left, 0px))
+            max(1rem, env(safe-area-inset-right, 0px));
+    }
+}
+
+@media (max-height: 479px) and (max-width: 899px) {
+    .login-main {
+        align-items: flex-start;
+        padding-block:
+            max(0.7rem, env(safe-area-inset-top, 0px))
+            max(1rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .brand-mark,
+    .brand-subtitle {
+        margin-bottom: 0.55rem;
+    }
+}
+
+/* The footer is still fixed at 768-899px, so keep clearance for it. */
+@media (max-height: 479px) and (min-width: 768px) and (max-width: 899px) {
+    .login-main {
+        padding-block-end: max(5.5rem, env(safe-area-inset-bottom, 0px));
+    }
+}

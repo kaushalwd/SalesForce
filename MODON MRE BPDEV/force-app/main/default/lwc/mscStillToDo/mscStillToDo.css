@@ -1,0 +1,121 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+.todo {
+    margin: 0;
+}
+
+/* Same eyebrow treatment as the ledger's group headings, because this IS a group
+   heading - it just happens to gather three kinds of work rather than one. */
+.todo__title {
+    margin: 0 0 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.todo__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ── the rows ───────────────────────────────────────────────────────────────
+   A whole row is the target, not a link at the end of it. These are read on a
+   laptop by someone holding a phone to their ear, and a 13px "Open" is a small
+   thing to hit accurately. */
+.todo__hit {
+    display: grid;
+    grid-template-columns: 15px minmax(0, 1fr) auto 14px;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+    border-radius: 10px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.03));
+    text-align: left;
+    font: inherit;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.todo__hit:hover {
+    border-color: var(--pill-border, rgba(255, 255, 255, 0.28));
+    color: var(--text, #fafafa);
+}
+
+.todo__hit:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+.todo__text {
+    font-size: 13px;
+    line-height: 1.45;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Present on every row so the whole list reads as navigable, but quiet enough that
+   it does not compete with the text it sits beside. */
+.todo__go {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+}
+
+/* ── the one that is next ───────────────────────────────────────────────────
+   The design language for this screen allows one primary at a time. Rather than
+   put a button here and have it fight Confirm / Continue to Verification, the
+   FIRST row carries the emphasis: brighter ground, an amber left edge, and its
+   text at full strength. It reads as the thing to do next without becoming a
+   fourth button on a card that already has one. */
+.todo__row--next .todo__hit {
+    background:
+        linear-gradient(rgba(245, 158, 11, 0.09), rgba(245, 158, 11, 0.09)),
+        var(--input-bg, rgba(255, 255, 255, 0.03));
+    border-color: rgba(245, 158, 11, 0.32);
+    color: var(--text, #fafafa);
+}
+
+.todo__row--next .todo__text {
+    font-weight: 500;
+}
+
+.todo__row--next .todo__go {
+    color: var(--chip-amber, #fbbf24);
+}
+
+.todo__row--next .todo__hit:hover {
+    border-color: rgba(245, 158, 11, 0.55);
+}
+
+/* ── phones ─────────────────────────────────────────────────────────────────
+   "Open" is the first thing to go: the row is entirely tappable, so the word is
+   reassurance rather than instruction, and the arrow keeps the affordance. */
+@media (max-width: 640px) {
+    .todo__hit {
+        grid-template-columns: 15px minmax(0, 1fr) 14px;
+        padding: 12px 10px;
+    }
+
+    .todo__go {
+        display: none;
+    }
+}

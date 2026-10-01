@@ -1,0 +1,112 @@
+<template>
+    <template if:true={isSpinner}>
+        <div class="slds-is-relative" style="min-height: 50vh" if:true={isSpinner}>
+            <lightning-spinner alternative-text="Loading" 
+                               size="medium">
+            </lightning-spinner>
+        </div>
+    </template>
+    <template if:true={showUploadModal}>
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-var-m-top_small">
+        <thead>
+            <tr class="slds-line-height_reset">
+               <th scope="col">
+                    <div class="slds-truncate">Document selected for upload</div>
+                </th>
+                <th scope="col">
+                    <div class="slds-truncate"></div>
+                </th>
+                <th scope="col">
+                    <div class="slds-truncate"></div>
+                </th>
+                </tr>
+                </thead>
+    <tbody>            
+        <tr>
+            <td> <div class="slds-truncate">{uploadFileName}</div> </td>
+            <td> <div class="slds-truncate  slds-p-bottom_x-small">
+                    <lightning-file-upload                    
+                        label=''
+                        name="fileUploader"
+                        accept={acceptedFormats}
+                        record-id={uploadFileRow.Id}
+                        onuploadfinished={handleUploadFinished}
+                        multiple="false"
+                   ></lightning-file-upload>
+              
+                </div>
+            </td>
+            <td>
+                <div class="slds-truncate slds-m-left_x-small slds-p-bottom_x-small">
+                <lightning-button variant="brand" 
+                    label=""
+                    title="Close upload section"
+                    icon-name="utility:close"
+                    onclick={handleCloseUploadSection}>
+                </lightning-button>
+            </div>
+            </td>
+        </tr>
+        </tbody>
+        </table>
+    </template>
+<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-var-m-top_small">
+    <thead>
+        <tr class="slds-line-height_reset">
+            <th scope="col">
+                <div class="slds-truncate">Name</div>
+            </th>
+            <th scope="col">
+                <div class="slds-truncate">Status</div>
+            </th>
+            <th scope="col">
+                <div class="slds-truncate">Actions</div>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={lstOfDocuments} for:item="document">
+            <tr key={document.Index}>
+                <td>
+                    {document.Name}
+                </td>
+                <td>
+                    {document.Status}
+                </td>
+                <td>
+                  <template if:false={document.IsDocumentUploaded}>
+                       <lightning-button
+                           data-row-index={document.Index}
+                           class="slds-m-left_x-small"
+                           variant="brand"
+                           onclick={handleUpload}
+                           name="Upload"
+                           label="Upload"
+                       ></lightning-button>
+                   </template>
+                   <template if:true={document.IsDocumentUploaded}>
+                       <lightning-button 
+                            data-row-index={document.Index}
+                           class="slds-m-left_x-small"
+                           variant="brand"
+                           onclick={handleUpload}
+                           name="Replace"
+                           label="Replace"
+                       ></lightning-button>
+                       <lightning-button
+                            data-row-index={document.Index}
+                           class="slds-m-left_x-small slds-p-left_large"
+                           data-id={document.ContentVersionId}
+                           variant="brand"
+                           onclick={handlePreview}
+                           name="Preview"
+                           label="Preview"
+                       ></lightning-button>
+                   </template>
+               </td>
+            </tr>
+        </template>
+    </tbody>
+</table>
+
+</template>

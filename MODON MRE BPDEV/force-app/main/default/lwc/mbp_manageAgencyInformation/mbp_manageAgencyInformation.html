@@ -1,0 +1,1162 @@
+<template>
+  <template if:true={isMobile}>
+  <!-- Agency Info -->
+  <template if:true={showAgencyInfoSection}>
+    <h2 class="section-title">Agency Information</h2>
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Agency Name:</span>
+          <span class="value">{account.Name}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Phone:</span>
+          <span class="value">{account.Phone}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Email:</span>
+          <span class="value">{account.Company_Email_Address__c}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">City:</span>
+          <span class="value">{account.BillingCity}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Country:</span>
+          <span class="value">{account.BillingCountry}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">PO Box:</span>
+          <span class="value">{account.BillingPostalCode}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Region:</span>
+          <span class="value">{account.Agency_Region__c}</span>
+        </div>
+      </div>
+    </div>
+  </template>
+  <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+
+
+ 
+  <!-- VAT Info Section -->
+  <template if:true={showVatSection}>
+  <h2 class="section-title">
+  VAT Information
+  <span class="help-icon" tabindex="0">
+    <img src={guidelinesIcon} alt="Help" class="info-icon" />
+    <div class="tooltip">
+      <ul>
+        <li>VAT number must match your VAT registration document exactly.</li>
+        <li>Start and expiry dates must be valid and within the active VAT period.</li>
+        <li>Upload a scanned PDF of the VAT certificate or undertaking (max 5MB).</li>
+        <li>
+          Use file name format:
+          <em>VAT_Certificate_AgencyName.pdf</em> or
+          <em>VAT_Undertaking_AgencyName.pdf</em>
+        </li>
+      </ul>
+    </div>
+  </span>
+ </h2>
+
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">VAT Type:</span>
+          <span class="value">{vatCertificateType}</span>
+        </div>
+        <template if:false={isVatUndertakingSelected}>
+        <div class="field-block">
+          <span class="label">VAT Registration Number:</span>
+          <span class="value">{vatNumber}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">VAT Start Date:</span>
+          <span class="value">{vatStartDate}</span>
+        </div>
+        </template>
+      </div>
+      <div class="field-row">
+        <div class="field-block file-block">
+          <label class="label">VAT Document:</label>
+          <template if:true={vatDownloadUrl}>
+            <a href={vatDownloadUrl} target="_blank"> {vatDocumentLabel} </a>
+          </template>
+          <template if:false={vatDownloadUrl}>
+            <span class="file-missing">No VAT File Available</span>
+          </template>
+        </div>
+        <div class="field-block btn-align">
+          <template if:true={canShowVatButton}>
+            <div class="btn-footer align-right">
+              <button class="slds-button slds-button_brand" onclick={openVatModal}> Update VAT Details </button>
+            </div>
+          </template>
+        <template if:true={vatRejectionComment}>
+                <div class="rejection-comment">
+                    <p><strong class="rejection-text">Rejection Comment:</strong> {vatRejectionComment}</p>
+                </div>
+            </template>
+
+          <template if:true={vatSubmitted}>
+            <div class="approval-msg error-msg"> ⚠️ Your VAT info update is under approval. You cannot make further changes until it is completed. </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- Trade License Section -->
+  <template if:true={showTradeSection}>
+    <h2 class="section-title">
+  Trade License Information
+  <span class="help-icon" tabindex="0">
+    <img src={guidelinesIcon} alt="Help" class="info-icon" />
+    <div class="tooltip">
+      <ul>
+        <li>License number must match your trade license exactly.</li>
+        <li>Expiry date must be valid and active.</li>
+        <li>Upload a scanned PDF of the license showing all details (max 5MB).</li>
+        <li>
+          Use file name format:
+          <em>Trade_License_AgencyName.pdf</em>
+        </li>
+      </ul>
+    </div>
+  </span>
+ </h2>
+
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Company Name as per Trade License:</span>
+          <span class="value">{account.Company_Name_as_per_Trade_License__c}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Trade License Number:</span>
+          <span class="value">{tradeNumber}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Licensing Authority:</span>
+          <span class="value">{account.Licensing_Authority__c}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Issuance Date:</span>
+          <span class="value">{account.Issuance_Date__c}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Trade Expiry Date:</span>
+          <span class="value">{tradeExpiryDate}</span>
+        </div>
+      </div>
+      <div class="field-row align-file-btn">
+        <div class="field-block file-block">
+          <label class="label">Trade License File:</label>
+          <template if:true={tradeDownloadUrl}>
+            <a href={tradeDownloadUrl} target="_blank" class="file-link">View Trade License</a>
+          </template>
+          <template if:false={tradeDownloadUrl}>
+            <span class="file-missing">No Trade License Available</span>
+          </template>
+        </div>
+        <div class="field-block btn-align">
+          <template if:true={canShowTradeButton}>
+            <div class="btn-footer align-right">
+              <button class="slds-button slds-button_brand" onclick={openTradeModal}>Update TradeLicense Details</button>
+            </div>
+          </template>
+          <template if:true={tradeRejectionComment}>
+                <div class="rejection-comment">
+                    <p><strong class="rejection-text">Rejection Comment:</strong> {tradeRejectionComment}</p>
+                </div>
+            </template>
+          <template if:true={tradeSubmitted}>
+            <div class="approval-msg error-msg"> ⚠️ Your trade Info update is under approval. You cannot make further changes until it is completed. </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- Bank Section -->
+  <template if:true={showBankSection}>
+   <h2 class="section-title">
+  Bank Information
+  <span class="help-icon" tabindex="0">
+    <img src={guidelinesIcon} alt="Help" class="info-icon" />
+    <div class="tooltip">
+      <ul>
+        <li>Bank details must match your official bank documents.</li>
+        <li>IBAN must start with country code and have 21 digits (e.g., AE...)</li>
+        <li>Account number should match the last part of the IBAN.</li>
+        <li>Upload a stamped bank letter or statement in PDF format (max 5MB).</li>
+        <li>
+          Use file name format: <em>Bank_Letter_AgencyName.pdf</em>
+        </li>
+      </ul>
+    </div>
+  </span>
+ </h2>
+
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Bank Name:</span>
+          <span class="value">{bankName}</span>
+        </div>
+        <!-- Added Newly By Raghu-->
+        <div class="field-block">
+          <span class="label">Beneficiary Name:</span>
+          <span class="value">{beneficiaryName}</span>
+        </div>
+        <!--Upto here Added By Raghu-->
+        <div class="field-block">
+          <span class="label">Account Number:</span>
+          <span class="value">{accountNumber}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Bank Country:</span>
+          <span class="value">{bankCountry}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">IBAN Number:</span>
+          <span class="value">{ibanNumber}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">SWIFT Code:</span>
+          <span class="value">{swiftCode}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Country:</span>
+          <span class="value">{accountcountry}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <div class="field-row align-file-btn">
+            <div class="field-block file-block">
+              <label class="label">Bank File:</label>
+              <template if:true={bankDownloadUrl}>
+                <a href={bankDownloadUrl} target="_blank" class="file-link">{bankFileIcon} View Bank File</a>
+              </template>
+              <template if:false={bankDownloadUrl}>
+                <span class="file-missing">No Bank File Available</span>
+              </template>
+            </div>
+          </div>
+          <div class="field-block btn-align">
+            <template if:true={canShowBankButton}>
+              <div class="btn-footer align-right">
+                <button class="slds-button slds-button_brand" onclick={openBankModal}>Update Bank Details</button>
+              </div>
+            </template>
+            <template if:true={bankRejectionComment}>
+                <div class="rejection-comment">
+                    <p><strong class="rejection-text">Rejection Comment:</strong> {bankRejectionComment}</p>
+                </div>
+            </template>
+            <template if:true={bankSubmitted}>
+              <div class="approval-msg error-msg"> ⚠️ Your Bank Info update is under approval. You cannot make further changes until it is completed. </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- OTP Modal -->
+  <template if:true={showOtpModal}>
+    <div class="modal otp-modal">
+      <div class="modal-content">
+            <button
+    class="mobile-modal-close"
+    onclick={closeOtpModal}
+    title="Close">
+    ✕
+ </button>
+        <h2>OTP Verification</h2>
+         <p>Enter the OTP sent to the Primary Owner email <b><i>({contact.Email})</i></b> to continue.</p> 
+        <lightning-input label="Enter OTP" value={enteredOtp} onchange={handleOtpChange} class="placeholder customSelect"></lightning-input>
+        <div class="modal-footer">
+          <button class="slds-button slds-button_outline-brand" onclick={closeOtpModal}>Cancel</button>
+          <button class="slds-button slds-button_brand" onclick={validateOtpAndOpenBankForm}>Verify OTP</button>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop"></div>
+  </template>
+  <!-- Consent Modal -->
+  <template if:true={showConsentModal}>
+    <div class="modal">
+      <div class="modal-content">
+            <button
+    class="mobile-modal-close"
+    onclick={closeOtpModal}
+    title="Close">
+    ✕
+ </button>
+        <h2>Consent Confirmation</h2>
+        <p class="slds-m-bottom_medium"> Please review the following points. By proceeding, you confirm your agreement with Modon's data privacy and policy terms: </p>
+        <p class="slds-text-body_regular slds-p-bottom_small" style="font-size: 14px;">
+  Please review the following carefully. By proceeding, you confirm your agreement with Modon’s data privacy and policy terms:
+ </p>
+
+ <ul class="slds-list_dotted slds-p-left_medium slds-text-body_regular" style="font-size: 14px;">
+  <li>All bank details must be accurate and verifiable.</li>
+  <li>Uploaded documents are stored securely in accordance with Modon’s data protection policies.</li>
+  <li>Third-party banking is not permitted.</li>
+  <li>Only licensed banks operating in approved regions will be accepted.</li>
+  <li>Any changes to bank details will trigger an internal compliance review.</li>
+  <li>Submitting false or misleading information may result in disqualification from the process.</li>
+  <li>Bank letters must be signed and stamped by the issuing bank.</li>
+  <li>IBAN and Account Number must match exactly as provided in the documentation.</li>
+  <li>We respect your privacy - your data will not be shared externally.</li>
+  <li>Submission of your details implies consent to all the terms above.</li>
+ </ul>
+
+        <div class="modal-footer">
+          <button class="slds-button slds-button_outline-brand" onclick={closeConsentModal}>Cancel</button>
+          <lightning-button label="I Accept" onclick={confirmConsentAndSubmitBank}></lightning-button>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop"></div>
+  </template>
+  <!-- Modal -->
+  <template if:true={isModalOpen}>
+    <div class="modal">
+      <div class="modal-content">
+            <!-- Mobile-only Close X -->
+ <button
+    class="mobile-modal-close"
+    onclick={closeModal}
+    title="Close">
+    ✕
+ </button>
+        <h2 class="modal-title">{modalTitle}</h2>
+        <!-- VAT Modal -->
+         <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+        <template if:true={isVatModal}>
+          <!-- VAT Certificate Type Picklist -->
+          <!-- VAT Certificate Type Picklist -->
+          <lightning-combobox class="placeholder customSelect" label="Select VAT Certificate Type" value={vatTypeSelection} options={vatOptions} onchange={handleVatTypeSelection}></lightning-combobox>
+          <!-- Download link shown only for VAT Undertaking Certificate -->
+       <template if:true={isVatUndertakingSelected}>
+  <div class="slds-grid slds-wrap slds-grid_align-center slds-p-around_medium">
+    <div class="slds-box slds-theme_default slds-text-align_center slds-box_x-small">
+      <!-- Icon -->
+      <lightning-icon icon-name="doctype:word" size="large" alternative-text="VAT Undertaking Template" class="slds-icon-text-default slds-m-bottom_small"></lightning-icon>
+
+      <!-- Title -->
+      <p class="slds-text-heading_small slds-m-bottom_x-small" style="font-weight: 600;">
+        VAT Undertaking Certificate
+      </p>
+
+      <!-- Download Link -->
+      <a onclick={downloadVAT} style="font-size: 14px; cursor: pointer; text-decoration: underline;">
+        📥 Download Template (DOCX)
+      </a>
+
+      <!-- Instructions -->
+      <p class="slds-m-top_small slds-text-body_small slds-text-color_weak">
+        Please download the VAT Undertaking Certificate, sign it, and upload it under the file section below.
+      </p>
+    </div>
+  </div>
+</template>
+
+          <template if:false={isVatUndertakingSelected}>
+          <!-- VAT Registration Number -->
+          <lightning-input class="placeholder customSelect" label="VAT Registration Number" value={vatNumberTemp} onchange={handleChange} data-field="vatNumberTemp"></lightning-input>
+          <!-- VAT Start Date -->
+          <lightning-input class="placeholder customSelect" type="date" label="VAT Start Date" value={vatStartDateTemp} onchange={handleChange} data-field="vatStartDateTemp"></lightning-input>
+          <!-- Upload VAT File (always shown) -->
+           </template>
+          <lightning-input class="placeholder customSelect" type="file" label="Upload VAT File" onchange={handleFileChange} data-section="VAT"></lightning-input>
+          <!-- Show uploaded file name (optional) -->
+           
+         <template if:true={fileName}>
+  <div class="slds-m-top_small">
+    <p>
+      <a href={previewUrl} target="_blank" style="text-decoration: underline; font-size: 14px;">
+        {fileName}
+      </a>
+      <lightning-icon
+        icon-name="utility:delete"
+        alternative-text="Delete"
+        title="Delete File"
+        onclick={handleDeleteFile}
+        data-section="VAT"
+        size="xx-small"
+        class="slds-m-left_x-small delete-icon"
+      ></lightning-icon>
+    </p>
+  </div>
+</template>
+
+
+    <template if:true={vatDownloadUrl}>
+  <div class="slds-m-top_small">
+    <a href={vatDownloadUrl} target="_blank">{vatDocumentLabel}</a>
+    <lightning-icon
+      icon-name="utility:delete"
+      alternative-text="Delete File"
+      title="Delete VAT File"
+      onclick={handleDeleteDocument}
+      data-section="VAT"
+      size="x-small"
+      class="slds-m-left_x-small delete-icon"
+    ></lightning-icon>
+  </div>
+</template>
+<template if:false={isVatUndertakingSelected}>
+<div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    
+  </ul>
+</div>
+</template>
+<template if:true={isVatUndertakingSelected}>
+<div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    <li>Please download the VAT Undertaking Certificate and <strong>upload the signed copy</strong>.</li>
+
+    
+  </ul>
+</div>
+</template>
+
+        </template>
+        <!-- Trade Modal -->
+        <template if:true={isTradeModal}>
+          <lightning-input label="Trade License Number" value={tradeNumberTemp} onchange={handleChange} disabled></lightning-input>
+          <lightning-input type="date" label="Issuance Date" value={tradeIssuanceDateTemp} onchange={handleChange}></lightning-input>
+          <lightning-input type="date" label="Trade Expiry Date" value={tradeExpiryDateTemp} onchange={handleChange}></lightning-input>
+          <lightning-input label="Company Name as per Trade License" value={companyNameTradeLicenseTemp} onchange={handleChange} disabled></lightning-input>
+          <lightning-input label="Licensing Authority" value={licensingAuthorityTemp} onchange={handleChange} disabled></lightning-input>
+          <lightning-input type="file" onchange={handleFileChange} data-section="TRADE"></lightning-input>
+        <template if:true={fileName}>
+  <div class="slds-m-top_small">
+    <p>
+      <a href={previewUrl} target="_blank" style="text-decoration: underline; font-size: 14px;">
+        {fileName}
+      </a>
+      <lightning-icon
+        icon-name="utility:delete"
+        alternative-text="Delete"
+        title="Delete File"
+        onclick={handleDeleteFile}
+        data-section="TRADE"
+        size="xx-small"
+        class="slds-m-left_x-small delete-icon"
+      ></lightning-icon>
+    </p>
+  </div>
+</template>
+
+            <template if:true={tradeDownloadUrl}>
+  <div class="slds-m-top_small">
+    <a href={tradeDownloadUrl} target="_blank">View Trade License</a>
+    <lightning-icon
+      icon-name="utility:delete"
+      alternative-text="Delete File"
+      title="Delete Trade File"
+      onclick={handleDeleteDocument}
+      data-section="TRADE"
+      size="x-small"
+      class="slds-m-left_x-small delete-icon"
+    ></lightning-icon>
+  </div>
+</template>
+<div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    <li><strong>Trade License Number must be unique</strong> — please ensure it is not duplicate.</li>
+  </ul>
+</div>
+        </template>
+        <!-- Bank Modal -->
+        <template if:true={isBankModal}>
+           <lightning-input label="Bank Name" value={bankNameTemp} onchange={handleChange} data-field="Bank_Name__c"></lightning-input>
+          <!-- New Field added By Raghu sharma-->
+          <lightning-input label="Beneficiary Name" value={beneficiaryNameTemp} onchange={handleChange}
+            data-field="Beneficiary_Name__c" pattern="^[a-zA-Z0-9\s\-\.\,\&\(\)]+$"
+            message-when-pattern-mismatch="Beneficiary Name should not contain special characters">
+          </lightning-input>
+            <!-- Upto here Updated By Raghu-->
+  <lightning-input label="Account Number" value={accountNumberTemp} onchange={handleChange} data-field="Account_Number__c"></lightning-input>
+  <lightning-combobox
+      name="bankCountry"
+      label="Bank Country"
+      value={bankCountryTemp}
+      placeholder="Select Country"
+      options={bankCountryOptions}
+      onchange={handleChange}
+      data-field="Bank_Country__c">
+  </lightning-combobox>
+  <lightning-input label="IBAN Number" value={ibanNumberTemp} onchange={handleChange} data-field="IBAN_Country_Bank_Code__c"></lightning-input>
+  <lightning-input label="SWIFT Code" value={swiftCodeTemp} onchange={handleChange} data-field="SWIFT_Sort_Code__c"></lightning-input>
+
+          <lightning-input type="file" onchange={handleFileChange} data-section="BANK"></lightning-input>
+         <template if:true={fileName}>
+  <div class="slds-m-top_small">
+    <p>
+      <a href={previewUrl} target="_blank" style="text-decoration: underline; font-size: 14px;">
+        {fileName}
+      </a>
+      <lightning-icon
+        icon-name="utility:delete"
+        alternative-text="Delete"
+        title="Delete File"
+        onclick={handleDeleteFile}
+        data-section="BANK"
+        size="xx-small"
+        class="slds-m-left_x-small delete-icon"
+      ></lightning-icon>
+    </p>
+  </div>
+</template>
+
+<template if:true={bankDownloadUrl}>
+  <div class="slds-m-top_small">
+    <a href={bankDownloadUrl} target="_blank">View Bank File</a>
+    <lightning-icon
+      icon-name="utility:delete"
+      alternative-text="Delete File"
+      title="Delete Bank File"
+      onclick={handleDeleteDocument}
+      data-section="BANK"
+      size="x-small"
+      class="slds-m-left_x-small delete-icon"
+    ></lightning-icon>
+  </div>
+
+  
+</template>
+ <div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    <li>While updating bank details, please <strong>delete the existing bank copy</strong> and <strong>upload the updated one</strong>.</li>
+  </ul>
+</div>
+        </template>
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button class="slds-button slds-button_outline-brand cancel" onclick={closeModal}>Cancel</button>
+          <button class="slds-button slds-button_brand" onclick={submitModal}>Submit</button>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop"></div>
+  </template>
+  <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+  </template>
+
+<!---- desktop--------------------------------------------->
+    <template if:false={isMobile}>
+  <!-- Agency Info -->
+  <template if:true={showAgencyInfoSection}>
+    <h2 class="section-title">Agency Information</h2>
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Agency Name:</span>
+          <span class="value">{account.Name}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Phone:</span>
+          <span class="value">{account.Phone}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Email:</span>
+          <span class="value">{account.Company_Email_Address__c}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">City:</span>
+          <span class="value">{account.BillingCity}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Country:</span>
+          <span class="value">{account.BillingCountry}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">PO Box:</span>
+          <span class="value">{account.BillingPostalCode}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Region:</span>
+          <span class="value">{account.Agency_Region__c}</span>
+        </div>
+      </div>
+    </div>
+  </template>
+  <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+
+
+ 
+  <!-- VAT Info Section -->
+  <template if:true={showVatSection}>
+  <h2 class="section-title">
+  VAT Information
+  <span class="help-icon" tabindex="0">
+    <img src={guidelinesIcon} alt="Help" class="info-icon" />
+    <div class="tooltip">
+      <ul>
+        <li>VAT number must match your VAT registration document exactly.</li>
+        <li>Start and expiry dates must be valid and within the active VAT period.</li>
+        <li>Upload a scanned PDF of the VAT certificate or undertaking (max 5MB).</li>
+        <li>
+          Use file name format:
+          <em>VAT_Certificate_AgencyName.pdf</em> or
+          <em>VAT_Undertaking_AgencyName.pdf</em>
+        </li>
+      </ul>
+    </div>
+  </span>
+ </h2>
+
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">VAT Type:</span>
+          <span class="value">{vatCertificateType}</span>
+        </div>
+        <template if:false={isVatUndertakingSelected}>
+        <div class="field-block">
+          <span class="label">VAT Registration Number:</span>
+          <span class="value">{vatNumber}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">VAT Start Date:</span>
+          <span class="value">{vatStartDate}</span>
+        </div>
+        </template>
+      </div>
+      <div class="field-row">
+        <div class="field-block file-block">
+          <label class="label">VAT Document:</label>
+          <template if:true={vatDownloadUrl}>
+            <a href={vatDownloadUrl} target="_blank"> {vatDocumentLabel} </a>
+          </template>
+          <template if:false={vatDownloadUrl}>
+            <span class="file-missing">No VAT File Available</span>
+          </template>
+        </div>
+        <div class="field-block btn-align">
+          <template if:true={canShowVatButton}>
+            <div class="btn-footer align-right">
+              <button class="slds-button slds-button_brand" onclick={openVatModal}> Update VAT Details </button>
+            </div>
+          </template>
+        <template if:true={vatRejectionComment}>
+                <div class="rejection-comment">
+                    <p><strong class="rejection-text">Rejection Comment:</strong> {vatRejectionComment}</p>
+                </div>
+            </template>
+
+          <template if:true={vatSubmitted}>
+            <div class="approval-msg error-msg"> ⚠️ Your VAT info update is under approval. You cannot make further changes until it is completed. </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- Trade License Section -->
+  <template if:true={showTradeSection}>
+    <h2 class="section-title">
+  Trade License Information
+  <span class="help-icon" tabindex="0">
+    <img src={guidelinesIcon} alt="Help" class="info-icon" />
+    <div class="tooltip">
+      <ul>
+        <li>License number must match your trade license exactly.</li>
+        <li>Expiry date must be valid and active.</li>
+        <li>Upload a scanned PDF of the license showing all details (max 5MB).</li>
+        <li>
+          Use file name format:
+          <em>Trade_License_AgencyName.pdf</em>
+        </li>
+      </ul>
+    </div>
+  </span>
+ </h2>
+
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Company Name as per Trade License:</span>
+          <span class="value">{account.Company_Name_as_per_Trade_License__c}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Trade License Number:</span>
+          <span class="value">{tradeNumber}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Licensing Authority:</span>
+          <span class="value">{account.Licensing_Authority__c}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Issuance Date:</span>
+          <span class="value">{account.Issuance_Date__c}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Trade Expiry Date:</span>
+          <span class="value">{tradeExpiryDate}</span>
+        </div>
+      </div>
+      <div class="field-row align-file-btn">
+        <div class="field-block file-block">
+          <label class="label">Trade License File:</label>
+          <template if:true={tradeDownloadUrl}>
+            <a href={tradeDownloadUrl} target="_blank" class="file-link">View Trade License</a>
+          </template>
+          <template if:false={tradeDownloadUrl}>
+            <span class="file-missing">No Trade License Available</span>
+          </template>
+        </div>
+        <div class="field-block btn-align">
+          <template if:true={canShowTradeButton}>
+            <div class="btn-footer align-right">
+              <button class="slds-button slds-button_brand" onclick={openTradeModal}>Update TradeLicense Details</button>
+            </div>
+          </template>
+          <template if:true={tradeRejectionComment}>
+                <div class="rejection-comment">
+                    <p><strong class="rejection-text">Rejection Comment:</strong> {tradeRejectionComment}</p>
+                </div>
+            </template>
+          <template if:true={tradeSubmitted}>
+            <div class="approval-msg error-msg"> ⚠️ Your trade Info update is under approval. You cannot make further changes until it is completed. </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- Bank Section -->
+  <template if:true={showBankSection}>
+   <h2 class="section-title">
+  Bank Information
+  <span class="help-icon" tabindex="0">
+    <img src={guidelinesIcon} alt="Help" class="info-icon" />
+    <div class="tooltip">
+      <ul>
+        <li>Bank details must match your official bank documents.</li>
+        <li>IBAN must start with country code and have 21 digits (e.g., AE...)</li>
+        <li>Account number should match the last part of the IBAN.</li>
+        <li>Upload a stamped bank letter or statement in PDF format (max 5MB).</li>
+        <li>
+          Use file name format: <em>Bank_Letter_AgencyName.pdf</em>
+        </li>
+      </ul>
+    </div>
+  </span>
+ </h2>
+
+    <div class="info-card">
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">Bank Name:</span>
+          <span class="value">{bankName}</span>
+        </div>
+                
+        <!-- Added Newly By Raghu-->
+        <div class="field-block">
+          <span class="label">Beneficiary Name:</span>
+          <span class="value">{beneficiaryName}</span>
+        </div>
+        <!--Upto here Added By Raghu-->
+        <div class="field-block">
+          <span class="label">Account Number:</span>
+          <span class="value">{accountNumber}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Bank Country:</span>
+          <span class="value">{bankCountry}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <span class="label">IBAN Number:</span>
+          <span class="value">{ibanNumber}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">SWIFT Code:</span>
+          <span class="value">{swiftCode}</span>
+        </div>
+        <div class="field-block">
+          <span class="label">Country:</span>
+          <span class="value">{accountcountry}</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-block">
+          <div class="field-row align-file-btn">
+            <div class="field-block file-block">
+              <label class="label">Bank File:</label>
+              <template if:true={bankDownloadUrl}>
+                <a href={bankDownloadUrl} target="_blank" class="file-link">{bankFileIcon} View Bank File</a>
+              </template>
+              <template if:false={bankDownloadUrl}>
+                <span class="file-missing">No Bank File Available</span>
+              </template>
+            </div>
+          </div>
+          <div class="field-block btn-align">
+            <template if:true={canShowBankButton}>
+              <div class="btn-footer align-right">
+                <button class="slds-button slds-button_brand" onclick={openBankModal}>Update Bank Details</button>
+              </div>
+            </template>
+            <template if:true={bankRejectionComment}>
+                <div class="rejection-comment">
+                    <p><strong class="rejection-text">Rejection Comment:</strong> {bankRejectionComment}</p>
+                </div>
+            </template>
+            <template if:true={bankSubmitted}>
+              <div class="approval-msg error-msg"> ⚠️ Your Bank Info update is under approval. You cannot make further changes until it is completed. </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- OTP Modal -->
+  <template if:true={showOtpModal}>
+    <div class="modal otp-modal">
+      <div class="modal-content">
+            <button
+    class="mobile-modal-close"
+    onclick={closeOtpModal}
+    title="Close">
+    ✕
+ </button>
+        <h2>OTP Verification</h2>
+         <p>Enter the OTP sent to the Primary Owner email <b><i>({contact.Email})</i></b> to continue.</p> 
+        <lightning-input label="Enter OTP" value={enteredOtp} onchange={handleOtpChange} class="placeholder customSelect"></lightning-input>
+        <div class="modal-footer">
+          <button class="slds-button slds-button_outline-brand" onclick={closeOtpModal}>Cancel</button>
+          <button class="slds-button slds-button_brand" onclick={validateOtpAndOpenBankForm}>Verify OTP</button>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop"></div>
+  </template>
+  <!-- Consent Modal -->
+  <template if:true={showConsentModal}>
+    <div class="modal">
+      <div class="modal-content">
+            <button
+    class="mobile-modal-close"
+    onclick={closeOtpModal}
+    title="Close">
+    ✕
+ </button>
+        <h2>Consent Confirmation</h2>
+        <p class="slds-m-bottom_medium"> Please review the following points. By proceeding, you confirm your agreement with Modon's data privacy and policy terms: </p>
+        <p class="slds-text-body_regular slds-p-bottom_small" style="font-size: 14px;">
+  Please review the following carefully. By proceeding, you confirm your agreement with Modon’s data privacy and policy terms:
+ </p>
+
+ <ul class="slds-list_dotted slds-p-left_medium slds-text-body_regular" style="font-size: 14px;">
+  <li>All bank details must be accurate and verifiable.</li>
+  <li>Uploaded documents are stored securely in accordance with Modon’s data protection policies.</li>
+  <li>Third-party banking is not permitted.</li>
+  <li>Only licensed banks operating in approved regions will be accepted.</li>
+  <li>Any changes to bank details will trigger an internal compliance review.</li>
+  <li>Submitting false or misleading information may result in disqualification from the process.</li>
+  <li>Bank letters must be signed and stamped by the issuing bank.</li>
+  <li>IBAN and Account Number must match exactly as provided in the documentation.</li>
+  <li>We respect your privacy - your data will not be shared externally.</li>
+  <li>Submission of your details implies consent to all the terms above.</li>
+ </ul>
+
+        <div class="modal-footer">
+          <button class="slds-button slds-button_outline-brand" onclick={closeConsentModal}>Cancel</button>
+          <lightning-button label="I Accept" onclick={confirmConsentAndSubmitBank}></lightning-button>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop"></div>
+  </template>
+  <!-- Modal -->
+  <template if:true={isModalOpen}>
+    <div class="modal">
+      <div class="modal-content">
+            <!-- Mobile-only Close X -->
+ <button
+    class="mobile-modal-close"
+    onclick={closeModal}
+    title="Close">
+    ✕
+ </button>
+        <h2 class="modal-title">{modalTitle}</h2>
+        <!-- VAT Modal -->
+         <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+        <template if:true={isVatModal}>
+          <!-- VAT Certificate Type Picklist -->
+          <!-- VAT Certificate Type Picklist -->
+          <lightning-combobox class="placeholder customSelect" label="Select VAT Certificate Type" value={vatTypeSelection} options={vatOptions} onchange={handleVatTypeSelection}></lightning-combobox>
+          <!-- Download link shown only for VAT Undertaking Certificate -->
+       <template if:true={isVatUndertakingSelected}>
+  <div class="slds-grid slds-wrap slds-grid_align-center slds-p-around_medium">
+    <div class="slds-box slds-theme_default slds-text-align_center slds-box_x-small">
+      <!-- Icon -->
+      <lightning-icon icon-name="doctype:word" size="large" alternative-text="VAT Undertaking Template" class="slds-icon-text-default slds-m-bottom_small"></lightning-icon>
+
+      <!-- Title -->
+      <p class="slds-text-heading_small slds-m-bottom_x-small" style="font-weight: 600;">
+        VAT Undertaking Certificate
+      </p>
+
+      <!-- Download Link -->
+      <a onclick={downloadVAT} style="font-size: 14px; cursor: pointer; text-decoration: underline;">
+        📥 Download Template (DOCX)
+      </a>
+
+      <!-- Instructions -->
+      <p class="slds-m-top_small slds-text-body_small slds-text-color_weak">
+        Please download the VAT Undertaking Certificate, sign it, and upload it under the file section below.
+      </p>
+    </div>
+  </div>
+</template>
+
+          <template if:false={isVatUndertakingSelected}>
+          <!-- VAT Registration Number -->
+          <lightning-input class="placeholder customSelect" label="VAT Registration Number" value={vatNumberTemp} onchange={handleChange} data-field="vatNumberTemp"></lightning-input>
+          <!-- VAT Start Date -->
+          <lightning-input class="placeholder customSelect" type="date" label="VAT Start Date" value={vatStartDateTemp} onchange={handleChange} data-field="vatStartDateTemp"></lightning-input>
+          <!-- Upload VAT File (always shown) -->
+           </template>
+          <lightning-input class="placeholder customSelect" type="file" label="Upload VAT File" onchange={handleFileChange} data-section="VAT"></lightning-input>
+          <!-- Show uploaded file name (optional) -->
+           
+         <template if:true={fileName}>
+  <div class="slds-m-top_small">
+    <p>
+      <a href={previewUrl} target="_blank" style="text-decoration: underline; font-size: 14px;">
+        {fileName}
+      </a>
+      <lightning-icon
+        icon-name="utility:delete"
+        alternative-text="Delete"
+        title="Delete File"
+        onclick={handleDeleteFile}
+        data-section="VAT"
+        size="xx-small"
+        class="slds-m-left_x-small delete-icon"
+      ></lightning-icon>
+    </p>
+  </div>
+</template>
+
+
+    <template if:true={vatDownloadUrl}>
+  <div class="slds-m-top_small">
+    <a href={vatDownloadUrl} target="_blank">{vatDocumentLabel}</a>
+    <lightning-icon
+      icon-name="utility:delete"
+      alternative-text="Delete File"
+      title="Delete VAT File"
+      onclick={handleDeleteDocument}
+      data-section="VAT"
+      size="x-small"
+      class="slds-m-left_x-small delete-icon"
+    ></lightning-icon>
+  </div>
+</template>
+<template if:false={isVatUndertakingSelected}>
+<div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    
+  </ul>
+</div>
+</template>
+<template if:true={isVatUndertakingSelected}>
+<div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    <li>Please download the VAT Undertaking Certificate and <strong>upload the signed copy</strong>.</li>
+
+    
+  </ul>
+</div>
+</template>
+
+        </template>
+        <!-- Trade Modal -->
+        <template if:true={isTradeModal}>
+          <lightning-input label="Trade License Number" value={tradeNumberTemp} onchange={handleChange} disabled></lightning-input>
+          <lightning-input type="date" label="Issuance Date" value={tradeIssuanceDateTemp} onchange={handleChange}></lightning-input>
+          <lightning-input type="date" label="Trade Expiry Date" value={tradeExpiryDateTemp} onchange={handleChange}></lightning-input>
+          <lightning-input label="Company Name as per Trade License" value={companyNameTradeLicenseTemp} onchange={handleChange} disabled></lightning-input>
+          <lightning-input label="Licensing Authority" value={licensingAuthorityTemp} onchange={handleChange} disabled></lightning-input>
+          <lightning-input type="file" onchange={handleFileChange} data-section="TRADE"></lightning-input>
+        <template if:true={fileName}>
+  <div class="slds-m-top_small">
+    <p>
+      <a href={previewUrl} target="_blank" style="text-decoration: underline; font-size: 14px;">
+        {fileName}
+      </a>
+      <lightning-icon
+        icon-name="utility:delete"
+        alternative-text="Delete"
+        title="Delete File"
+        onclick={handleDeleteFile}
+        data-section="TRADE"
+        size="xx-small"
+        class="slds-m-left_x-small delete-icon"
+      ></lightning-icon>
+    </p>
+  </div>
+</template>
+
+            <template if:true={tradeDownloadUrl}>
+  <div class="slds-m-top_small">
+    <a href={tradeDownloadUrl} target="_blank">View Trade License</a>
+    <lightning-icon
+      icon-name="utility:delete"
+      alternative-text="Delete File"
+      title="Delete Trade File"
+      onclick={handleDeleteDocument}
+      data-section="TRADE"
+      size="x-small"
+      class="slds-m-left_x-small delete-icon"
+    ></lightning-icon>
+  </div>
+</template>
+<div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    <li><strong>Trade License Number must be unique</strong> — please ensure it is not duplicate.</li>
+  </ul>
+</div>
+        </template>
+        <!-- Bank Modal -->
+        <template if:true={isBankModal}>
+           <lightning-input label="Bank Name" value={bankNameTemp} onchange={handleChange} data-field="Bank_Name__c"></lightning-input>
+  <lightning-input label="Account Number" value={accountNumberTemp} onchange={handleChange} data-field="Account_Number__c"></lightning-input>
+  <lightning-combobox
+      name="bankCountry"
+      label="Bank Country"
+      value={bankCountryTemp}
+      placeholder="Select Country"
+      options={bankCountryOptions}
+      onchange={handleChange}
+      data-field="Bank_Country__c">
+  </lightning-combobox>
+            <!-- By Raghu sharma-->
+        <lightning-input label="Beneficiary Name" value={beneficiaryNameTemp} onchange={handleChange}
+          data-field="Beneficiary_Name__c" pattern="^[a-zA-Z0-9\s\-\.\,\&\(\)]+$"
+          message-when-pattern-mismatch="Beneficiary Name should not contain special characters">
+        </lightning-input>
+            <!--Raghu Sharma-->
+  <!-- Bank Branch Name -->
+<lightning-input
+    label="Bank Branch Name"
+    value={bankBranchNameTemp}
+    onchange={handleChange}
+    data-field="Bank_Branch_Name__c">
+</lightning-input>
+
+<!-- Bank Branch Type -->
+<lightning-combobox
+    name="bankBranchType"
+    label="Bank Branch Type"
+    value={bankBranchTypeTemp}
+    placeholder="Select Type"
+    options={bankBranchTypeOptions}
+    onchange={handleChange}
+    data-field="Bank_Branch_Type__c">
+</lightning-combobox>
+
+
+
+  <lightning-input label="IBAN Number" value={ibanNumberTemp} onchange={handleChange} data-field="IBAN_Country_Bank_Code__c"></lightning-input>
+  <lightning-input label="SWIFT Code" value={swiftCodeTemp} onchange={handleChange} data-field="SWIFT_Sort_Code__c"></lightning-input>
+
+          <lightning-input type="file" onchange={handleFileChange} data-section="BANK"></lightning-input>
+         <template if:true={fileName}>
+  <div class="slds-m-top_small">
+    <p>
+      <a href={previewUrl} target="_blank" style="text-decoration: underline; font-size: 14px;">
+        {fileName}
+      </a>
+      <lightning-icon
+        icon-name="utility:delete"
+        alternative-text="Delete"
+        title="Delete File"
+        onclick={handleDeleteFile}
+        data-section="BANK"
+        size="xx-small"
+        class="slds-m-left_x-small delete-icon"
+      ></lightning-icon>
+    </p>
+  </div>
+</template>
+
+<template if:true={bankDownloadUrl}>
+  <div class="slds-m-top_small">
+    <a href={bankDownloadUrl} target="_blank">View Bank File</a>
+    <lightning-icon
+      icon-name="utility:delete"
+      alternative-text="Delete File"
+      title="Delete Bank File"
+      onclick={handleDeleteDocument}
+      data-section="BANK"
+      size="x-small"
+      class="slds-m-left_x-small delete-icon"
+    ></lightning-icon>
+  </div>
+
+  
+</template>
+ <div class="slds-m-top_medium slds-text-color_weak" style="font-weight: bold; font-size: 14px;">
+  🔒 <span style="color: #333;">Note:</span>
+  <ul style="margin-left: 1rem; list-style-type: disc;">
+    <li>The uploaded file size should <strong>not exceed 2 MB</strong>.</li>
+    <li>While updating bank details, please <strong>delete the existing bank copy</strong> and <strong>upload the updated one</strong>.</li>
+  </ul>
+</div>
+        </template>
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button class="slds-button slds-button_outline-brand cancel" onclick={closeModal}>Cancel</button>
+          <button class="slds-button slds-button_brand" onclick={submitModal}>Submit</button>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop"></div>
+  </template>
+  <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+  </template>
+
+
+</template>

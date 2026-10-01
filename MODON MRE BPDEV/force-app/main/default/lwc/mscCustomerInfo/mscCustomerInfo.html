@@ -1,0 +1,179 @@
+<template>
+    <!-- ── 3.0  ONE CARD, ONE JOB ────────────────────────────────────────────
+         The card asks for what THIS BOOKING needs and states everything else.
+         Three regions, in the order the rep meets them:
+
+           1. the FACTS   - what the record already holds, said in a line or two
+                            rather than drawn as a column of readonly boxes
+           2. the GATE    - the fields UnitSearchLwcController.checkBookingEligibility
+                            actually blocks on, and nothing else
+         3.1 - and the verification region is gone with it: everything the KYC link
+         and compliance need leaves this card entirely, for the verification popup.
+         Nothing is deleted - c/mscOrganisation is whole and c/mscCustomerInfo still
+         holds every field's rule - it simply is not asked for here.
+
+         The 1.9 whole-card fold is gone with the problem it solved: there is no
+         longer a wall of confirmed boxes to hide, so a card that folded into a
+         summary and then unfolded into a second fold would be two doors to the
+         same room. -->
+
+    <!-- A company based outside the UAE cannot be booked here: two active
+         validation rules demand a passport for a non-resident lead. -->
+    <template lwc:if={showNonResidentOrgBlock}>
+        <div class="banner banner--warn cust__blocked">
+            <c-modon-icon name="alert-triangle" size="15" color="var(--chip-amber, #d97706)"></c-modon-icon>
+            <span>{labels.ORG_NON_RESIDENT_BLOCKED}</span>
+        </div>
+    </template>
+
+    <hr class="divider" />
+
+    <!-- ── 1. the facts ──────────────────────────────────────────────────────
+         3.0 - what is known is STATED, not asked. Every one of these was a
+         readonly input box a moment ago; a value the rep cannot change is a fact,
+         and a fact belongs in a sentence. -->
+    <template lwc:if={hasFacts}>
+        <div class="cust__facts">
+            <template lwc:if={factsMain}>
+                <p class="cust__facts-main">{factsMain}</p>
+            </template>
+            <template lwc:if={factsSub}>
+                <p class="cust__facts-sub">{factsSub}</p>
+            </template>
+        </div>
+    </template>
+
+    <!-- ── 2. the gate ───────────────────────────────────────────────────────
+         An ORGANISATION is blocked on its billing address and UnifiedNumber__c
+         (which the licence number is copied into). Its name and licence are
+         normally on file from the create form, so they appear here only when the
+         record arrived without one - a company matched from search can. -->
+    <template lwc:if={isOrganisation}>
+        <template lwc:if={showCompanyGate}>
+            <div class="field-grid">
+                <template lwc:if={showCompanyNameField}>
+                    <div class="field">
+                        <label class="field__label" for="co">{labels.ORG_NAME} *</label>
+                        <input autocapitalize="words" spellcheck="false" autocomplete="off"
+                            id="co" class={fields.companyName.cls} type="text" data-field="companyName"
+                            value={form.companyName} oninput={handleField} onblur={handleBlur}
+                            placeholder={labels.ORG_NAME_HINT} readonly={fields.companyName.locked}
+                        />
+                        <template lwc:if={fields.companyName.error}>
+                            <p class="field__error">{fields.companyName.error}</p>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:if={showLicenceField}>
+                    <div class="field">
+                        <label class="field__label" for="tln">{labels.ORG_LICENCE_NO} *</label>
+                        <input autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="off"
+                            id="tln" class={fields.tradeLicenceNumber.cls} type="text"
+                            data-field="tradeLicenceNumber" value={form.tradeLicenceNumber}
+                            oninput={handleField} onblur={handleBlur} readonly={fields.tradeLicenceNumber.locked}
+                        />
+                        <template lwc:if={fields.tradeLicenceNumber.error}>
+                            <p class="field__error">{fields.tradeLicenceNumber.error}</p>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- 3.1 - the address read-out is gone with the rest of the detail.
+             c/mscAddress sits directly below this card, renders itself only while
+             the address is incomplete, and is the one form that writes it (GAP 41).
+             The read-out was a second telling of what that form already says. -->
+    </template>
+
+    <!-- A PERSON account is blocked on nationality and resident status, so for an
+         individual buyer these two ARE the gate and stay on the card. For a company
+         they belong to the signatory and no gate reads them, so the card does not
+         ask for them at all. -->
+    <template lwc:else>
+        <!-- 3.2 - the small summary the card carried before 3.0, read-only. -->
+        <template lwc:if={hasSummary}>
+            <dl class="fold__grid">
+                <template for:each={summaryRows} for:item="r">
+                    <div key={r.key} class="fold__cell">
+                        <dt class="fold__label">{r.label}</dt>
+                        <dd class="fold__value">{r.value}</dd>
+                    </div>
+                </template>
+            </dl>
+        </template>
+
+        <template lwc:if={showPersonGate}>
+        <div class="field-grid">
+            <template lwc:if={showNationalityField}>
+            <div class="field">
+                <label class="field__label" for="nat">{labels.CUST_NATIONALITY} *</label>
+                <template lwc:if={fields.nationality.locked}>
+                    <input id="nat-ro" class="field__input" type="text" autocomplete="off"
+                        value={form.nationality} readonly />
+                </template>
+                <template lwc:else>
+                    <select
+                        id="nat" class={fields.nationality.cls} data-field="nationality"
+                        onchange={handleField} onblur={handleBlur}
+                    >
+                        <option value="">{labels.LEAD_FORM_SELECT}</option>
+                        <template for:each={nationalityChoices} for:item="n">
+                            <option key={n.value} value={n.value} selected={n.selected}>{n.label}</option>
+                        </template>
+                    </select>
+                    <template lwc:if={fields.nationality.error}>
+                        <p class="field__error">{fields.nationality.error}</p>
+                    </template>
+                </template>
+            </div>
+            </template>
+
+            <!-- 2.2 - residency, named the way Account names it. 3.2 - asked only
+                 where it is missing; a saved answer is in the summary above. -->
+            <template lwc:if={showResidencyField}>
+            <div class="field">
+                <label class="field__label" for="res">{labels.CUST_RESIDENT_STATUS} *</label>
+                <template lwc:if={fields.residentStatus.locked}>
+                    <input id="res-ro" class="field__input" type="text" autocomplete="off"
+                        value={form.residentStatus} readonly />
+                </template>
+                <template lwc:else>
+                    <select
+                        id="res" class={fields.residentStatus.cls} data-field="residentStatus"
+                        onchange={handleResidencySelect} onblur={handleBlur}
+                    >
+                        <option value="">{labels.LEAD_FORM_SELECT}</option>
+                        <template for:each={residencyChoices} for:item="o">
+                            <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                        </template>
+                    </select>
+                    <template lwc:if={fields.residentStatus.error}>
+                        <p class="field__error">{fields.residentStatus.error}</p>
+                    </template>
+                </template>
+            </div>
+            </template>
+        </div>
+        </template>
+    </template>
+
+    <template lwc:if={showSave}>
+        <div class="row-between cust__actions">
+            <span class="spacer"></span>
+            <button class="btn btn-primary" type="button" onclick={handleSave} disabled={saveDisabled}>
+                {saveLabel}
+            </button>
+        </div>
+    </template>
+
+    <!--
+      1.1 - the compliance chain has MOVED OUT of this card, to step 4.
+      It sat here because sendKYCForm needs four fields captured by this form
+      (nationality, residency, email, mobile), so offering the link before they
+      were saved only produced an error. That reasoning was sound about
+      PREREQUISITES and wrong about PLACEMENT: those fields being saved is a
+      precondition for KYC, not a reason to run KYC here. The org's sequence puts
+      verification after the Sales Order, and so does the journey now.
+    -->
+</template>

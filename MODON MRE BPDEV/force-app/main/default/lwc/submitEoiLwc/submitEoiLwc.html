@@ -1,0 +1,66 @@
+<template>
+
+    <template lwc:if={isLoading}>
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:180px; gap:12px;">
+            <lightning-spinner alternative-text="Checking eligibility" size="medium" variant="brand"></lightning-spinner>
+            <p style="font-size:13px; color:#5a6270; margin:0;">Checking eligibility...</p>
+        </div>
+    </template>
+
+    <template lwc:if={showPopup}>
+
+        <!-- Header -->
+        <div style="background:#032D60; padding:16px 20px; display:flex; align-items:center; gap:12px; margin:-16px -16px 0 -16px;">
+            <div style="background:rgba(255,255,255,0.15); border-radius:8px; padding:7px; display:flex; align-items:center; justify-content:center;">
+                <lightning-icon icon-name="standard:contract" size="small" alternative-text="EOI"></lightning-icon>
+            </div>
+            <div>
+                <p style="font-size:17px; font-weight:700; color:#ffffff; margin:0; line-height:1.3;">Submit EOI</p>
+                <p style="font-size:12px; color:rgba(255,255,255,0.7); margin:0; line-height:1.3;">Review and submit your Expression of Interest</p>
+            </div>
+        </div>
+
+        <!-- Info banner -->
+        <div style="display:flex; align-items:flex-start; gap:10px; background:#EFF7FF; border:1px solid #ADD3F0; border-left:4px solid #0176D3; border-radius:6px; padding:12px 14px; margin:16px 0 0 0;">
+            <lightning-icon icon-name="utility:info" size="x-small" style="flex-shrink:0; margin-top:1px;"></lightning-icon>
+            <span style="font-size:13px; color:#032D60; line-height:1.5;">Once submitted, this EOI will be sent for approval. Please add any relevant comments below.</span>
+        </div>
+
+        <!-- Textarea -->
+        <div style="background:#ffffff; border:1px solid #e0e5ee; border-radius:8px; padding:14px; margin:14px 0 0 0;">
+            <lightning-textarea
+                label="Comments"
+                max-length="50000"
+                value={comments}
+                onchange={handleComments}
+                placeholder="Enter any comments for the approver (optional)...">
+            </lightning-textarea>
+        </div>
+
+        <!-- Footer -->
+        <div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; padding:16px 0 0 0; margin-top:4px; border-top:1px solid #e5e8ed;">
+            <button
+                class="slds-button slds-button_neutral"
+                style="min-width:110px; height:38px; font-size:14px; border-radius:6px;"
+                onclick={navigateToRecordPage}
+                disabled={isSubmitting}>
+                Cancel
+            </button>
+            <button
+                class="slds-button slds-button_brand"
+                style="min-width:140px; height:38px; font-size:14px; font-weight:600; border-radius:6px; background:#0176D3; border-color:#0176D3; display:flex; align-items:center; justify-content:center; gap:6px;"
+                onclick={submitEoiCallout}
+                disabled={isSubmitting}>
+                <template lwc:if={isSubmitting}>
+                    <lightning-spinner alternative-text="Submitting" size="x-small" variant="inverse"></lightning-spinner>
+                    &nbsp;&nbsp;&nbsp;&nbsp;Submitting...
+                </template>
+                <template lwc:else>
+                    <lightning-icon icon-name="utility:check" size="x-small" alternative-text="submit"></lightning-icon>
+                    Submit EOI
+                </template>
+            </button>
+        </div>
+
+    </template>
+</template>

@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Log_Flow_Exception</name>
+        <label>Log Flow Exception</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>LoggerService</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>faultErrorMessage</name>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>flowName</name>
+            <value>
+                <stringValue>Egypt Refund Submit For Approval</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>LoggerService</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <description>Initiates approval process for the refund object.</description>
+        <name>Submit_Refund_Record_For_Approval_Process</name>
+        <label>Submit Refund Record For Approval Process</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>submit</actionName>
+        <actionType>submit</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>objectId</name>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>submit</nameSegment>
+        <offset>0</offset>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+    <apiVersion>66.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>Add Document Names into notUploadedDocumentsList.</description>
+        <name>Add_Document_Names_Into_Not_Uploaded_List</name>
+        <label>Add Document Names Into Not Uploaded List</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>notUploadedDocumentsList</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>Refund Document</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>notUploadedDocumentsList</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>Internal Memo</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Through_All_Related_Documents</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Assigned Refund record with updated approval status to a variable.</description>
+        <name>Assign_Updated_Refund_Record_To_Variable</name>
+        <label>Assign Updated Refund Record To Variable</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>updatedRefundRecord.Id</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>updatedRefundRecord.Approval_Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Submitted for Approval</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Update_Refund_Record</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Mark isInternalMemoUploaded as true</description>
+        <name>Update_isInternalMemoUploaded_As_True</name>
+        <label>Update isInternalMemoUploaded As True</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isInternalMemoUploaded</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>notUploadedDocumentsList</assignToReference>
+            <operator>RemoveAll</operator>
+            <value>
+                <stringValue>Internal Memo</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Through_All_Related_Documents</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Mark isRefundDocumentUploaded as true</description>
+        <name>Update_isRefundDocumentUploaded_As_True</name>
+        <label>Update isRefundDocumentUploaded As True</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isRefundDocumentUploaded</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>notUploadedDocumentsList</assignToReference>
+            <operator>RemoveAll</operator>
+            <value>
+                <stringValue>Refund Document</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Through_All_Related_Documents</targetReference>
+        </connector>
+    </assignments>
+    <customProperties>
+        <name>ScreenProgressIndicator</name>
+        <value>
+            <stringValue>{&quot;location&quot;:&quot;top&quot;,&quot;type&quot;:&quot;simple&quot;}</stringValue>
+        </value>
+    </customProperties>
+    <decisions>
+        <description>Check if All Documents are uploaded.</description>
+        <name>Check_All_Documents_Are_Uploaded</name>
+        <label>Check All Documents Are Uploaded</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>All_Documents_Are_Uploaded</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>isRefundDocumentUploaded</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>isInternalMemoUploaded</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Submit_for_Approval</targetReference>
+            </connector>
+            <label>All Documents Are Uploaded</label>
+        </rules>
+        <rules>
+            <name>Documents_Are_Not_Uploaded</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>isRefundDocumentUploaded</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>isInternalMemoUploaded</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Documents_Not_Uploaded_Error_Screen</targetReference>
+            </connector>
+            <label>Documents Are Not Uploaded</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description>Check Related Documents Length.</description>
+        <name>Check_Related_Documents_Length</name>
+        <label>Check Related Documents Length</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Greater_Than_0</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Related_Documents</leftValueReference>
+                <operator>IsEmpty</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Add_Document_Names_Into_Not_Uploaded_List</targetReference>
+            </connector>
+            <label>Greater Than 0</label>
+        </rules>
+        <rules>
+            <name>Equal_To_0</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Related_Documents</leftValueReference>
+                <operator>IsEmpty</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Missing_Related_Documents_Screen</targetReference>
+            </connector>
+            <label>Equal To 0</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description>Check document&apos;s uploaded status.</description>
+        <name>Check_Related_Documents_Status</name>
+        <label>Check Related Documents Status</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Loop_Through_All_Related_Documents</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Refund_Document_Uploaded</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Loop_Through_All_Related_Documents.Name</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Refund Document</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Loop_Through_All_Related_Documents.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Uploaded</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_isRefundDocumentUploaded_As_True</targetReference>
+            </connector>
+            <label>Refund Document Uploaded</label>
+        </rules>
+        <rules>
+            <name>Internal_Memo_Uploaded</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Loop_Through_All_Related_Documents.Name</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Internal Memo</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Loop_Through_All_Related_Documents.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Uploaded</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_isInternalMemoUploaded_As_True</targetReference>
+            </connector>
+            <label>Internal Memo Uploaded</label>
+        </rules>
+    </decisions>
+    <description>Initial version - Screen flow to initiate Submit for Approval process of Refund.</description>
+    <environments>Default</environments>
+    <interviewLabel>Egypt Refund Submit For Approval {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Egypt Refund Submit For Approval</label>
+    <loops>
+        <name>Loop_Through_All_Related_Documents</name>
+        <label>Loop Through All Related Documents</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <collectionReference>Get_Related_Documents</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Check_Related_Documents_Status</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Check_All_Documents_Are_Uploaded</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <recordLookups>
+        <description>Get Related Documents of the Refund to check their status.</description>
+        <name>Get_Related_Documents</name>
+        <label>Get Related Documents</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_Related_Documents_Length</targetReference>
+        </connector>
+        <filterLogic>1 AND (2 OR 3)</filterLogic>
+        <filters>
+            <field>Refund__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Refund Document</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Internal Memo</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Documents__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <description>Update Refund record.</description>
+        <name>Update_Refund_Record</name>
+        <label>Update Refund Record</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Submit_Refund_Record_For_Approval_Process</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputReference>updatedRefundRecord</inputReference>
+    </recordUpdates>
+    <screens>
+        <name>Documents_Not_Uploaded_Error_Screen</name>
+        <label>Documents Not Uploaded Error Screen</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>documentNotUploadedErrorMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;font-size: 14px; color: rgb(255, 0, 0);&quot;&gt;Documents not Uploaded &lt;/strong&gt;&lt;strong style=&quot;font-size: 14px; color: rgb(0, 0, 0);&quot;&gt;{!notUploadedDocumentsList}&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;&lt;em&gt;ï»¿&lt;/em&gt;&lt;/strong&gt;&lt;em&gt;Please upload these documents are retry again!&lt;/em&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <nextOrFinishButtonLabel>Close</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>Missing_Related_Documents_Screen</name>
+        <label>Missing Related Documents Screen</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>missingDocumentsErrorMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(255, 0, 0); font-size: 14px;&quot;&gt;Missing Documents &lt;/strong&gt;&lt;strong style=&quot;color: rgb(0, 0, 0); font-size: 14px; background-color: rgb(255, 255, 255);&quot;&gt;[&lt;/strong&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 14px;&quot;&gt;Refund Document&lt;/strong&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 14px; color: rgb(0, 0, 0);&quot;&gt;,&lt;/strong&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 14px;&quot;&gt;Internal Memo&lt;/strong&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 14px; color: rgb(0, 0, 0);&quot;&gt;]&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;em style=&quot;color: rgb(0, 0, 0); font-size: 13px; background-color: rgb(255, 255, 255);&quot;&gt;Documents that are required for the refund approval process are missing. &lt;/em&gt;&lt;em style=&quot;color: rgb(0, 0, 0); font-size: 13px;&quot;&gt;Please make sure all the documents are present and uploaded!&lt;/em&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <nextOrFinishButtonLabel>Close</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>Submit_for_Approval</name>
+        <label>Submit for Approval</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <backButtonLabel>Cancel</backButtonLabel>
+        <connector>
+            <targetReference>Assign_Updated_Refund_Record_To_Variable</targetReference>
+        </connector>
+        <fields>
+            <name>confirmationText</name>
+            <fieldText>&lt;p&gt;Are you sure you want to submit this refund for approval?&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/strong&gt;&lt;em&gt; After submitted for approval, you will not be able to update the record!&lt;/em&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <nextOrFinishButtonLabel>Submit</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Related_Documents</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <description>Boolean to check if &apos;Internal Memo&apos; is uploaded or not.</description>
+        <name>isInternalMemoUploaded</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
+    </variables>
+    <variables>
+        <description>Boolean to check if &apos;Refund Document&apos; is uploaded or not.</description>
+        <name>isRefundDocumentUploaded</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
+    </variables>
+    <variables>
+        <description>List of not uploaded documents.</description>
+        <name>notUploadedDocumentsList</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Holds recordId of Refund record.</description>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>Updated refund record with Refund Status euqals &apos;Submitted for Approval&apos;.</description>
+        <name>updatedRefundRecord</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <objectType>Refund__c</objectType>
+    </variables>
+</Flow>

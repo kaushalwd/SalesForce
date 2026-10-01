@@ -1,0 +1,90 @@
+@import "c/mscStyles";
+
+/* 2.0: this component is the drawer, mounted at .page; contents so no box lands in the flow */
+:host {
+    display: contents;
+}
+
+/* in the drawer: it supplies the padding and scroll */
+
+.offer__sent {
+    margin-bottom: 14px;
+}
+
+/* white ground frames a printed document; the flex box lets the iframe resolve a height */
+.offer__preview {
+    display: flex;
+    min-height: 0;
+    /* 2.3: the positioned ancestor c/mscLoader's contained variant fills */
+    position: relative;
+    /* takes what is left of the drawer body after the sent banner */
+    flex: 1 1 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: #ffffff;
+}
+
+.offer__frame {
+    display: block;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 520px;
+    border: 0;
+}
+
+/* the footer: addressee and the send, pinned */
+.offer__foot {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+}
+
+.offer__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.offer__send {
+    flex: 0 0 auto;
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+/* 2.5 (MSC-225a): the WhatsApp link is the rightmost control, after the send */
+.offer__wa {
+    flex: 0 0 auto;
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+/* it is an <a>, so it carries the ghost colour through every link state itself:
+   a site-level `a:hover` (0,1,1) would otherwise outrank a bare `.btn-ghost` (0,1,0) */
+.offer__wa,
+.offer__wa:hover,
+.offer__wa:focus,
+.offer__wa:visited {
+    text-decoration: none;
+    color: var(--text-muted, #a3a3a3);
+}
+
+@media (max-width: 767px) {
+    /* A4 in a 360px viewport is unreadable either way */
+    .offer__frame {
+        height: 560px;
+    }
+
+    /* stacked; the send takes the row */
+    .offer__foot {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .offer__send,
+    .offer__wa {
+        width: 100%;
+        justify-content: center;
+    }
+}

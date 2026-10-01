@@ -1,0 +1,1009 @@
+/* ==========================================================================
+   MODON Broker Portal revamp - global theme alignment layer (v2).
+   Loaded via loadStyle so it can reach Salesforce base-component internals
+   (labels, inputs, dropdowns, datepickers, file selectors) that
+   component-scoped CSS cannot style under synthetic shadow, and so it wins
+   over the site theme's bleeding global styles. Every rule is scoped to
+   revamp surfaces only: .mbpr-home (portal), .login-shell (sign in),
+   .reg-shell / .reg-workspace-layer / .mbpr-scope (registration + revamp
+   overlays). Colors resolve through the --mbpr-theme-* custom properties,
+   so dark theme is honored automatically wherever the portal defines them.
+
+   v2 (MBPR-UI-154): field cards converged to the Lead form's .sales-field
+   metrics, full combobox-dropdown + datepicker skins, checkbox rows,
+   label-hidden handling, and a .reg-workspace-layer re-skin of the legacy
+   registration step internals (utilities, buttons, hand-written modals).
+   ========================================================================== */
+
+/* ==========================================================================
+   A. Base text roles
+   ========================================================================== */
+
+.mbpr-home .slds-form-element__label,
+.login-shell .slds-form-element__label,
+.reg-shell .slds-form-element__label,
+.reg-workspace-layer .slds-form-element__label,
+.mbpr-scope .slds-form-element__label {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72)) !important;
+    font-weight: 600;
+}
+
+.mbpr-home .slds-required,
+.reg-workspace-layer .slds-required,
+.mbpr-scope .slds-required {
+    color: var(--mbpr-theme-error, #8b2f2f) !important;
+}
+
+.mbpr-home .slds-input::placeholder,
+.mbpr-home .slds-textarea::placeholder,
+.reg-workspace-layer .slds-input::placeholder,
+.reg-workspace-layer .slds-textarea::placeholder,
+.mbpr-scope .slds-input::placeholder,
+.mbpr-scope .slds-textarea::placeholder {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44)) !important;
+}
+
+.mbpr-home .slds-form-element__help,
+.reg-workspace-layer .slds-form-element__help,
+.mbpr-scope .slds-form-element__help {
+    color: var(--mbpr-theme-error, #8b2f2f) !important;
+    font-size: 0.68rem;
+    font-weight: 650;
+    margin-top: 0.2rem;
+}
+
+/* One family for the whole form system - no host or site font may bleed
+   into field text (the Lead form's stack, shared by every revamp bundle). */
+.mbpr-home .slds-form-element,
+.mbpr-home .slds-dropdown,
+.mbpr-home .slds-datepicker,
+.mbpr-home .slds-file-selector__button,
+.reg-workspace-layer .slds-form-element,
+.reg-workspace-layer .slds-dropdown,
+.reg-workspace-layer .slds-datepicker,
+.reg-workspace-layer .slds-file-selector__button,
+.mbpr-scope .slds-form-element,
+.mbpr-scope .slds-dropdown,
+.mbpr-scope .slds-datepicker,
+.mbpr-scope .slds-file-selector__button {
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+/* The site theme also styles bare elements (span/li/td/button), which beats
+   inheritance from the pinned roots above - so every descendant is forced
+   back to the inherited family. One source of truth per subtree. */
+.mbpr-home .slds-form-element *,
+.mbpr-home .slds-dropdown *,
+.mbpr-home .slds-datepicker *,
+.reg-workspace-layer .slds-form-element *,
+.reg-workspace-layer .slds-dropdown *,
+.reg-workspace-layer .slds-datepicker *,
+.mbpr-scope .slds-form-element *,
+.mbpr-scope .slds-dropdown *,
+.mbpr-scope .slds-datepicker * {
+    font-family: inherit !important;
+}
+
+/* ==========================================================================
+   B. Field cards - the Lead form's .sales-field metrics, by construction:
+   a bordered surface card holding a small-caps kicker and a borderless
+   compact control.
+   ========================================================================== */
+
+.mbpr-home .slds-form-element,
+.reg-workspace-layer .slds-form-element,
+.mbpr-scope .slds-form-element {
+    background: var(--mbpr-theme-surface-solid, #ffffff);
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 8px;
+    margin-bottom: 0 !important;
+    padding: 0.36rem 0.58rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.mbpr-home .slds-form-element:hover,
+.reg-workspace-layer .slds-form-element:hover,
+.mbpr-scope .slds-form-element:hover {
+    border-color: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+}
+
+.mbpr-home .slds-form-element:focus-within,
+.reg-workspace-layer .slds-form-element:focus-within,
+.mbpr-scope .slds-form-element:focus-within {
+    border-color: var(--mbpr-theme-accent, #0b7772);
+    box-shadow: 0 0 0 3px var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+}
+
+.mbpr-home .slds-form-element.slds-has-error,
+.mbpr-home .slds-has-error .slds-form-element,
+.reg-workspace-layer .slds-form-element.slds-has-error,
+.reg-workspace-layer .slds-has-error .slds-form-element,
+.mbpr-scope .slds-form-element.slds-has-error,
+.mbpr-scope .slds-has-error .slds-form-element {
+    border-color: var(--mbpr-theme-error, #8b2f2f);
+}
+
+/* Disabled fields fade like .sales-field:has(input:disabled). */
+.mbpr-home .slds-form-element:has(.slds-input:disabled),
+.mbpr-home .slds-form-element:has(.slds-select:disabled),
+.mbpr-home .slds-form-element:has(.slds-textarea:disabled),
+.mbpr-home .slds-form-element:has(.slds-combobox__input:disabled),
+.reg-workspace-layer .slds-form-element:has(.slds-input:disabled),
+.reg-workspace-layer .slds-form-element:has(.slds-select:disabled),
+.reg-workspace-layer .slds-form-element:has(.slds-textarea:disabled),
+.reg-workspace-layer .slds-form-element:has(.slds-combobox__input:disabled),
+.mbpr-scope .slds-form-element:has(.slds-input:disabled),
+.mbpr-scope .slds-form-element:has(.slds-select:disabled),
+.mbpr-scope .slds-form-element:has(.slds-textarea:disabled),
+.mbpr-scope .slds-form-element:has(.slds-combobox__input:disabled) {
+    background: var(--mbpr-theme-input-disabled-bg, #f3f0ea);
+    opacity: 0.78;
+}
+
+/* Nested form elements (base components sometimes wrap twice) must not
+   produce a card inside a card. */
+.mbpr-home .slds-form-element .slds-form-element,
+.reg-workspace-layer .slds-form-element .slds-form-element,
+.mbpr-scope .slds-form-element .slds-form-element {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    opacity: 1;
+    padding: 0;
+}
+
+/* Label becomes the card's kicker (matches .sales-field span). */
+.mbpr-home .slds-form-element__label,
+.reg-workspace-layer .slds-form-element__label,
+.mbpr-scope .slds-form-element__label {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44)) !important;
+    display: inline-block;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.56rem !important;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    margin-bottom: 0.18rem;
+    padding: 0;
+    text-transform: uppercase;
+}
+
+/* Controls sit borderless and compact inside their card. */
+.mbpr-home .slds-input,
+.mbpr-home .slds-textarea,
+.mbpr-home .slds-select,
+.mbpr-home .slds-combobox__input,
+.reg-workspace-layer .slds-input,
+.reg-workspace-layer .slds-textarea,
+.reg-workspace-layer .slds-select,
+.reg-workspace-layer .slds-combobox__input,
+.mbpr-scope .slds-input,
+.mbpr-scope .slds-textarea,
+.mbpr-scope .slds-select,
+.mbpr-scope .slds-combobox__input {
+    background-color: transparent !important;
+    border: 0 !important;
+    border-radius: 6px;
+    box-shadow: none !important;
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.85rem;
+    height: 1.55rem !important;
+    line-height: 1.45rem;
+    min-height: 1.55rem;
+    padding-bottom: 0;
+    padding-left: 0.1rem;
+    padding-top: 0;
+}
+
+.mbpr-home .slds-textarea,
+.reg-workspace-layer .slds-textarea,
+.mbpr-scope .slds-textarea {
+    height: auto !important;
+    min-height: 4rem;
+    resize: vertical;
+}
+
+.mbpr-home .slds-input:disabled,
+.mbpr-home .slds-select:disabled,
+.mbpr-home .slds-combobox__input:disabled,
+.reg-workspace-layer .slds-input:disabled,
+.reg-workspace-layer .slds-select:disabled,
+.reg-workspace-layer .slds-combobox__input:disabled,
+.mbpr-scope .slds-input:disabled,
+.mbpr-scope .slds-select:disabled,
+.mbpr-scope .slds-combobox__input:disabled {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44)) !important;
+    cursor: not-allowed;
+}
+
+/* The card owns focus feedback; the control keeps none of its own. */
+.mbpr-home .slds-input:focus,
+.mbpr-home .slds-textarea:focus,
+.mbpr-home .slds-select:focus,
+.mbpr-home .slds-combobox__input:focus,
+.mbpr-home .slds-combobox__input.slds-has-focus,
+.reg-workspace-layer .slds-input:focus,
+.reg-workspace-layer .slds-textarea:focus,
+.reg-workspace-layer .slds-select:focus,
+.reg-workspace-layer .slds-combobox__input:focus,
+.reg-workspace-layer .slds-combobox__input.slds-has-focus,
+.mbpr-scope .slds-input:focus,
+.mbpr-scope .slds-textarea:focus,
+.mbpr-scope .slds-select:focus,
+.mbpr-scope .slds-combobox__input:focus,
+.mbpr-scope .slds-combobox__input.slds-has-focus {
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: none;
+}
+
+/* Label-hidden fields (search boxes, OTP) have no kicker band: center the
+   control in a slimmer card. */
+.mbpr-home .slds-form-element:has(.slds-form-element__label.slds-assistive-text),
+.reg-workspace-layer .slds-form-element:has(.slds-form-element__label.slds-assistive-text),
+.mbpr-scope .slds-form-element:has(.slds-form-element__label.slds-assistive-text) {
+    align-content: center;
+    padding: 0.18rem 0.58rem;
+}
+
+/* Toolbar shells draw their own card (cases search); the inner form element
+   must not double the chrome. */
+.mbpr-home .cases-toolbar__search .slds-form-element {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Registration OTP code entry: centered, letter-spaced digits. */
+.mbpr-scope .otp-input .slds-input,
+.reg-workspace-layer .otp-input .slds-input {
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    text-align: center;
+}
+
+/* ==========================================================================
+   C. Combobox dropdown panels - themed option lists.
+   ========================================================================== */
+
+.mbpr-home .slds-dropdown,
+.reg-workspace-layer .slds-dropdown,
+.mbpr-scope .slds-dropdown {
+    background: var(--mbpr-theme-surface-solid, #ffffff) !important;
+    border: 1px solid var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18)) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--mbpr-theme-shadow-lg, 0 28px 64px rgba(16, 17, 18, 0.22)) !important;
+    color: var(--mbpr-theme-ink, #101112) !important;
+    margin-top: 0.25rem;
+    padding: 0.3rem;
+    scrollbar-color: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18)) transparent;
+    scrollbar-width: thin;
+}
+
+.mbpr-home .slds-dropdown::-webkit-scrollbar,
+.mbpr-home .slds-listbox::-webkit-scrollbar,
+.reg-workspace-layer .slds-dropdown::-webkit-scrollbar,
+.reg-workspace-layer .slds-listbox::-webkit-scrollbar,
+.mbpr-scope .slds-dropdown::-webkit-scrollbar,
+.mbpr-scope .slds-listbox::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.mbpr-home .slds-dropdown::-webkit-scrollbar-thumb,
+.mbpr-home .slds-listbox::-webkit-scrollbar-thumb,
+.reg-workspace-layer .slds-dropdown::-webkit-scrollbar-thumb,
+.reg-workspace-layer .slds-listbox::-webkit-scrollbar-thumb,
+.mbpr-scope .slds-dropdown::-webkit-scrollbar-thumb,
+.mbpr-scope .slds-listbox::-webkit-scrollbar-thumb {
+    background: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    border-radius: 8px;
+}
+
+.mbpr-home .slds-listbox__option,
+.reg-workspace-layer .slds-listbox__option,
+.mbpr-scope .slds-listbox__option {
+    align-items: center;
+    border-radius: 8px;
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-size: 0.82rem;
+    font-weight: 450;
+    padding: 0.4rem 0.55rem;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.mbpr-home .slds-listbox__option .slds-truncate,
+.reg-workspace-layer .slds-listbox__option .slds-truncate,
+.mbpr-scope .slds-listbox__option .slds-truncate {
+    color: inherit !important;
+    font-size: inherit;
+}
+
+.mbpr-home .slds-listbox__option .slds-media__figure,
+.reg-workspace-layer .slds-listbox__option .slds-media__figure,
+.mbpr-scope .slds-listbox__option .slds-media__figure {
+    margin-right: 0.4rem;
+}
+
+.mbpr-home .slds-listbox__option:hover,
+.mbpr-home .slds-listbox__option.slds-has-focus,
+.reg-workspace-layer .slds-listbox__option:hover,
+.reg-workspace-layer .slds-listbox__option.slds-has-focus,
+.mbpr-scope .slds-listbox__option:hover,
+.mbpr-scope .slds-listbox__option.slds-has-focus {
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1)) !important;
+    color: var(--mbpr-theme-accent-ink, #06504c) !important;
+}
+
+.mbpr-home .slds-listbox__option[aria-checked="true"],
+.mbpr-home .slds-listbox__option[aria-selected="true"],
+.mbpr-home .slds-listbox__option.slds-is-selected,
+.reg-workspace-layer .slds-listbox__option[aria-checked="true"],
+.reg-workspace-layer .slds-listbox__option[aria-selected="true"],
+.reg-workspace-layer .slds-listbox__option.slds-is-selected,
+.mbpr-scope .slds-listbox__option[aria-checked="true"],
+.mbpr-scope .slds-listbox__option[aria-selected="true"],
+.mbpr-scope .slds-listbox__option.slds-is-selected {
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1)) !important;
+    color: var(--mbpr-theme-accent-ink, #06504c) !important;
+    font-weight: 600;
+}
+
+/* Selected-option check mark. */
+.mbpr-home .slds-listbox__option .slds-listbox__option-icon,
+.reg-workspace-layer .slds-listbox__option .slds-listbox__option-icon,
+.mbpr-scope .slds-listbox__option .slds-listbox__option-icon {
+    color: var(--mbpr-theme-accent, #0b7772);
+    --slds-c-icon-color-foreground-default: var(--mbpr-theme-accent, #0b7772);
+    --sds-c-icon-color-foreground-default: var(--mbpr-theme-accent, #0b7772);
+}
+
+/* ==========================================================================
+   D. Datepicker popup - themed calendar.
+   ========================================================================== */
+
+.mbpr-home .slds-datepicker,
+.reg-workspace-layer .slds-datepicker,
+.mbpr-scope .slds-datepicker {
+    padding: 0.5rem;
+}
+
+.mbpr-home .slds-datepicker__filter h2,
+.reg-workspace-layer .slds-datepicker__filter h2,
+.mbpr-scope .slds-datepicker__filter h2 {
+    color: var(--mbpr-theme-ink, #101112);
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+/* The year select inside the picker stays a real bordered control
+   (exempt from the borderless field-card treatment). */
+.mbpr-home .slds-datepicker .slds-select,
+.reg-workspace-layer .slds-datepicker .slds-select,
+.mbpr-scope .slds-datepicker .slds-select {
+    background-color: var(--mbpr-theme-control-bg, #f7f5f1) !important;
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1)) !important;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    height: 1.7rem !important;
+    min-height: 1.7rem;
+    padding: 0 1.5rem 0 0.45rem;
+}
+
+.mbpr-home .slds-datepicker th,
+.reg-workspace-layer .slds-datepicker th,
+.mbpr-scope .slds-datepicker th {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 0.3rem 0;
+    text-transform: uppercase;
+}
+
+.mbpr-home .slds-datepicker td,
+.reg-workspace-layer .slds-datepicker td,
+.mbpr-scope .slds-datepicker td {
+    color: var(--mbpr-theme-ink, #101112);
+    font-size: 0.8rem;
+}
+
+.mbpr-home .slds-datepicker .slds-day,
+.reg-workspace-layer .slds-datepicker .slds-day,
+.mbpr-scope .slds-datepicker .slds-day {
+    border-radius: 8px;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.mbpr-home .slds-datepicker td:hover .slds-day,
+.mbpr-home .slds-datepicker .slds-has-focus .slds-day,
+.reg-workspace-layer .slds-datepicker td:hover .slds-day,
+.reg-workspace-layer .slds-datepicker .slds-has-focus .slds-day,
+.mbpr-scope .slds-datepicker td:hover .slds-day,
+.mbpr-scope .slds-datepicker .slds-has-focus .slds-day {
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1)) !important;
+    color: var(--mbpr-theme-accent-ink, #06504c);
+}
+
+.mbpr-home .slds-datepicker .slds-is-selected .slds-day,
+.mbpr-home .slds-datepicker td[aria-selected="true"] .slds-day,
+.reg-workspace-layer .slds-datepicker .slds-is-selected .slds-day,
+.reg-workspace-layer .slds-datepicker td[aria-selected="true"] .slds-day,
+.mbpr-scope .slds-datepicker .slds-is-selected .slds-day,
+.mbpr-scope .slds-datepicker td[aria-selected="true"] .slds-day {
+    background: var(--mbpr-theme-accent, #0b7772) !important;
+    color: var(--mbpr-theme-surface-solid, #ffffff) !important;
+    font-weight: 800;
+}
+
+.mbpr-home .slds-datepicker .slds-is-today .slds-day,
+.reg-workspace-layer .slds-datepicker .slds-is-today .slds-day,
+.mbpr-scope .slds-datepicker .slds-is-today .slds-day {
+    box-shadow: inset 0 0 0 1px var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    color: var(--mbpr-theme-accent-ink, #06504c);
+    font-weight: 800;
+}
+
+.mbpr-home .slds-datepicker .slds-day_adjacent-month,
+.mbpr-home .slds-datepicker .slds-disabled-text,
+.reg-workspace-layer .slds-datepicker .slds-day_adjacent-month,
+.reg-workspace-layer .slds-datepicker .slds-disabled-text,
+.mbpr-scope .slds-datepicker .slds-day_adjacent-month,
+.mbpr-scope .slds-datepicker .slds-disabled-text {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+}
+
+/* Month prev/next arrows + "Today" link. */
+.mbpr-home .slds-datepicker .slds-button,
+.reg-workspace-layer .slds-datepicker .slds-button,
+.mbpr-scope .slds-datepicker .slds-button {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72));
+    --slds-c-icon-color-foreground-default: currentColor;
+    --sds-c-icon-color-foreground-default: currentColor;
+}
+
+.mbpr-home .slds-datepicker .slds-text-link,
+.mbpr-home .slds-datepicker button[name="today"],
+.reg-workspace-layer .slds-datepicker .slds-text-link,
+.reg-workspace-layer .slds-datepicker button[name="today"],
+.mbpr-scope .slds-datepicker .slds-text-link,
+.mbpr-scope .slds-datepicker button[name="today"] {
+    color: var(--mbpr-theme-accent-ink, #06504c) !important;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.4rem 0 0.1rem;
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   E. Control icons + native option lists.
+   ========================================================================== */
+
+/* Trailing icons (date calendar, combobox caret, clear) centered and dim. */
+.mbpr-home .slds-input__icon,
+.reg-workspace-layer .slds-input__icon,
+.mbpr-scope .slds-input__icon {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    fill: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    margin-top: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%);
+    --slds-c-icon-color-foreground-default: currentColor;
+    --sds-c-icon-color-foreground-default: currentColor;
+}
+
+.mbpr-home .slds-input__icon svg,
+.reg-workspace-layer .slds-input__icon svg,
+.mbpr-scope .slds-input__icon svg {
+    fill: currentColor;
+}
+
+/* Native <select> popups (sales-field selects, roster sort) must not flash
+   the UA's white list in dark theme. */
+.mbpr-home select option,
+.reg-workspace-layer select option,
+.mbpr-scope select option {
+    background-color: var(--mbpr-theme-surface-solid, #ffffff);
+    color: var(--mbpr-theme-ink, #101112);
+    font-weight: 400;
+}
+
+/* ==========================================================================
+   F. File selector - compact pill button inside the field card.
+   ========================================================================== */
+
+.mbpr-home .slds-file-selector__button,
+.reg-workspace-layer .slds-file-selector__button,
+.mbpr-scope .slds-file-selector__button {
+    background: var(--mbpr-theme-control-bg, #f7f5f1) !important;
+    border: 1px solid var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18)) !important;
+    border-radius: var(--mbpr-radius-pill, 999px);
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-size: 0.72rem;
+    font-weight: 750;
+    line-height: 1.2;
+    min-height: 1.9rem;
+    padding: 0.2rem 0.9rem;
+}
+
+.mbpr-home .slds-file-selector__button:hover,
+.reg-workspace-layer .slds-file-selector__button:hover,
+.mbpr-scope .slds-file-selector__button:hover {
+    background: var(--mbpr-theme-row-bg-hover, #f1ece4) !important;
+}
+
+.mbpr-home .slds-file-selector__dropzone,
+.reg-workspace-layer .slds-file-selector__dropzone,
+.mbpr-scope .slds-file-selector__dropzone {
+    background: transparent;
+    border: 0;
+}
+
+.mbpr-home .slds-file-selector__text,
+.reg-workspace-layer .slds-file-selector__text,
+.mbpr-scope .slds-file-selector__text {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72)) !important;
+    font-size: 0.72rem;
+}
+
+/* ==========================================================================
+   G. Checkboxes - rows, not cards.
+   ========================================================================== */
+
+.mbpr-home .slds-checkbox .slds-checkbox_faux,
+.reg-workspace-layer .slds-checkbox .slds-checkbox_faux,
+.mbpr-scope .slds-checkbox .slds-checkbox_faux {
+    background: var(--mbpr-theme-input-bg, #f7f5f1);
+    border: 1px solid var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+    border-radius: 4px;
+    height: 1rem;
+    width: 1rem;
+}
+
+.mbpr-home .slds-checkbox .slds-form-element__label,
+.reg-workspace-layer .slds-checkbox .slds-form-element__label,
+.mbpr-scope .slds-checkbox .slds-form-element__label {
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: 0;
+    text-transform: none;
+}
+
+.mbpr-home .slds-checkbox [type="checkbox"]:checked + .slds-checkbox_faux,
+.mbpr-home .slds-checkbox [type="checkbox"]:checked ~ .slds-checkbox_faux,
+.mbpr-home .slds-checkbox [type="checkbox"]:checked + .slds-checkbox__label .slds-checkbox_faux,
+.reg-workspace-layer .slds-checkbox [type="checkbox"]:checked + .slds-checkbox_faux,
+.reg-workspace-layer .slds-checkbox [type="checkbox"]:checked ~ .slds-checkbox_faux,
+.reg-workspace-layer .slds-checkbox [type="checkbox"]:checked + .slds-checkbox__label .slds-checkbox_faux,
+.mbpr-scope .slds-checkbox [type="checkbox"]:checked + .slds-checkbox_faux,
+.mbpr-scope .slds-checkbox [type="checkbox"]:checked ~ .slds-checkbox_faux,
+.mbpr-scope .slds-checkbox [type="checkbox"]:checked + .slds-checkbox__label .slds-checkbox_faux {
+    background: var(--mbpr-theme-accent, #0b7772);
+    border-color: var(--mbpr-theme-accent, #0b7772);
+}
+
+/* A checkbox is sentence content in a row - it never gets card chrome or
+   the card's focus ring. Placed after the card rules so it wins on order. */
+.mbpr-home .slds-form-element:has(.slds-checkbox),
+.reg-workspace-layer .slds-form-element:has(.slds-checkbox),
+.mbpr-scope .slds-form-element:has(.slds-checkbox) {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    opacity: 1;
+    padding: 0.15rem 0;
+}
+
+/* ==========================================================================
+   H. Validate groups - a field and its action share ONE card (input-group
+   pattern): the base component nests chrome-less, the button rides the
+   control line as a compact pill.
+   ========================================================================== */
+
+.mbpr-home .validate-group,
+.mbpr-scope .validate-group {
+    align-items: center;
+    background: var(--mbpr-theme-surface-solid, #ffffff);
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    border-radius: 8px;
+    display: flex;
+    gap: 0.45rem;
+    min-width: 0;
+    padding-right: 0.3rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.mbpr-home .validate-group:hover,
+.mbpr-scope .validate-group:hover {
+    border-color: var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18));
+}
+
+.mbpr-home .validate-group:focus-within,
+.mbpr-scope .validate-group:focus-within {
+    border-color: var(--mbpr-theme-accent, #0b7772);
+    box-shadow: 0 0 0 3px var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+}
+
+.mbpr-home .validate-group:has(.slds-input:disabled),
+.mbpr-scope .validate-group:has(.slds-input:disabled) {
+    background: var(--mbpr-theme-input-disabled-bg, #f3f0ea);
+    opacity: 0.78;
+}
+
+.mbpr-home .validate-group lightning-input,
+.mbpr-home .validate-group lightning-combobox,
+.mbpr-scope .validate-group lightning-input,
+.mbpr-scope .validate-group lightning-combobox {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* The nested field cedes its card chrome to the group. */
+.mbpr-home .validate-group .slds-form-element,
+.mbpr-home .validate-group .slds-form-element:hover,
+.mbpr-home .validate-group .slds-form-element:focus-within,
+.mbpr-home .validate-group .slds-form-element:has(.slds-input:disabled),
+.mbpr-scope .validate-group .slds-form-element,
+.mbpr-scope .validate-group .slds-form-element:hover,
+.mbpr-scope .validate-group .slds-form-element:focus-within,
+.mbpr-scope .validate-group .slds-form-element:has(.slds-input:disabled) {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    opacity: 1;
+}
+
+.mbpr-home .validate-group .roster-button--validate,
+.mbpr-home .validate-group .profile-button--validate,
+.mbpr-scope .validate-group .roster-button--validate,
+.mbpr-scope .validate-group .profile-button--validate {
+    flex: 0 0 auto;
+    height: auto !important;
+    min-height: 1.9rem;
+    padding: 0.3rem 0.8rem;
+    white-space: nowrap;
+    width: auto;
+}
+
+/* ==========================================================================
+   H2. One close per surface: while a covering layer (form overlay, pending
+   veil, confirmation, nested drawer, expanded preview, modal) is open
+   inside a drawer or workspace modal, the host's close is suppressed - the
+   top layer owns dismissal.
+   ========================================================================== */
+
+.mbpr-home .drawer:has(.overlay-layer) .drawer__close,
+.mbpr-home .drawer:has(.pending-layer) .drawer__close,
+.mbpr-home .drawer:has(.confirmation-layer) .drawer__close,
+.mbpr-home .drawer:has(.drawer-layer) .drawer__close,
+.mbpr-home .drawer:has(.modal-layer) .drawer__close,
+.mbpr-home .workspace:has(.overlay-layer) .workspace__close,
+.mbpr-home .workspace:has(.pending-layer) .workspace__close,
+.mbpr-home .workspace:has(.confirmation-layer) .workspace__close,
+.mbpr-home .workspace:has(.drawer-layer) .workspace__close,
+.mbpr-home .workspace:has(.preview-expanded) .workspace__close,
+.mbpr-home .workspace:has(.modal-layer) .workspace__close {
+    display: none;
+}
+
+/* H2a. Same surface rule for the drawer's footer strip. The footer is a
+   sibling stacking context painted above the drawer body, so its top rule
+   crosses a covering layer raised from inside the body (the Add / Edit Agent
+   form is position: fixed inside the transformed drawer) and it would even
+   catch clicks on the bottom edge of that layer's buttons. While the Agents
+   roster's form or confirmation is open, the My Agency drawer's footer steps
+   aside, exactly as the close does above (BP-036, client 9 Sep 2026). */
+
+.mbpr-home .drawer:has(c-mbpr_agents-roster .overlay-layer) .drawer__footer,
+.mbpr-home .drawer:has(c-mbpr_agents-roster .confirmation-layer) .drawer__footer {
+    display: none;
+}
+
+/* H2b. The Training panel supplies its own action bar along the bottom of the
+   drawer, so the drawer's own footer strip has nothing left to do. It cannot
+   hide itself: `.drawer__footer:empty` never matches because the <slot> element
+   is a child, so the strip would draw a second rule 30px below the panel's own.
+   Scoped to the one panel by its tag, so no other drawer is touched.
+   Aurelix IT, 10 Sep 2026. */
+
+.mbpr-home .drawer:has(c-mbpr_training-panel) .drawer__footer {
+    display: none;
+}
+
+/* And while the Training video is enlarged over the drawer, the drawer's close
+   pill steps aside the same way section H2 does for every other covering layer:
+   the enlarged player owns dismissal. */
+
+.mbpr-home .drawer:has(c-mbpr_training-panel .max-scrim) .drawer__close {
+    display: none;
+}
+
+/* Registration shell: its guest close yields to the OTP/busy layers (root
+   siblings, so the component tag anchors the :has) and to the legacy bank
+   step's own SLDS modals. */
+c-mbpr_registration-workspace:has(.modal-layer) .reg-workspace__close,
+c-mbpr_registration-workspace:has(.busy-layer) .reg-workspace__close,
+.reg-workspace-layer .reg-workspace:has(.slds-modal) .reg-workspace__close,
+.reg-workspace-layer .reg-workspace:has(.slds-fade-in-open) .reg-workspace__close {
+    display: none;
+}
+
+/* ==========================================================================
+   I. Progress indicator (registration steps in legacy children).
+   ========================================================================== */
+
+.reg-workspace-layer .slds-progress__marker.slds-is-active,
+.reg-workspace-layer .slds-progress__marker.slds-is-completed,
+.mbpr-scope .slds-progress__marker.slds-is-active,
+.mbpr-scope .slds-progress__marker.slds-is-completed {
+    background: var(--mbpr-theme-accent, #0b7772) !important;
+    border-color: var(--mbpr-theme-accent, #0b7772) !important;
+}
+
+/* ==========================================================================
+   J. Legacy registration step re-skin (.reg-workspace-layer only).
+   The five embedded mbp_* step forms are never edited; their legacy chrome
+   is neutralized here so the whole flow reads as revamp UI.
+   ========================================================================== */
+
+/* Legacy spacing utilities are the loose rhythm - compact them. */
+.reg-workspace-layer .slds-p-around_small {
+    padding: 0.3rem !important;
+}
+
+.reg-workspace-layer .slds-p-around_x-small {
+    padding: 0.25rem !important;
+}
+
+.reg-workspace-layer .slds-m-top_xx-small {
+    margin-top: 0.3rem !important;
+}
+
+/* Legacy label-offset hacks (typo classes shipped by the old forms): the
+   field card carries its own label now, so these offsets misalign. */
+.reg-workspace-layer .slds-botton-top-40 {
+    align-self: center;
+    margin-top: 0 !important;
+}
+
+/* A dangling last field in the legacy two-per-row (and three-per-row) grids
+   spans the full row - no dead cells at the tail of any step form. */
+.reg-workspace-layer .slds-grid.slds-wrap > [class*="slds-medium-size_1-of-2"]:last-child:nth-child(odd),
+.reg-workspace-layer .slds-grid.slds-wrap > [class*="slds-medium-size_1-of-3"]:last-child:nth-child(3n+1) {
+    flex-basis: 100%;
+    max-width: 100%;
+    width: 100%;
+}
+
+.reg-workspace-layer .slds-botton-top-25 {
+    align-self: center;
+    margin-top: 0 !important;
+}
+
+/* Legacy buttons -> main-modal button language. */
+.reg-workspace-layer .slds-button_brand,
+.reg-workspace-layer .custom-validate-btn,
+.reg-workspace-layer .validate-btn,
+.reg-workspace-layer .black-button,
+.reg-workspace-layer .verify-otp-button {
+    background: var(--mbpr-theme-surface, #ffffff) !important;
+    border: 1px solid var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28)) !important;
+    border-radius: 8px !important;
+    color: var(--mbpr-theme-accent-ink, #06504c) !important;
+    cursor: pointer;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 850 !important;
+    letter-spacing: 0.01em;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.9rem;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+.reg-workspace-layer .slds-button_brand:hover,
+.reg-workspace-layer .custom-validate-btn:hover,
+.reg-workspace-layer .validate-btn:hover,
+.reg-workspace-layer .black-button:hover,
+.reg-workspace-layer .verify-otp-button:hover {
+    background: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1)) !important;
+    transform: translateY(-1px);
+}
+
+.reg-workspace-layer .slds-button_brand:disabled,
+.reg-workspace-layer .custom-validate-btn:disabled,
+.reg-workspace-layer .validate-btn:disabled,
+.reg-workspace-layer .black-button:disabled,
+.reg-workspace-layer .verify-otp-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+}
+
+.reg-workspace-layer .cancel-button {
+    background: transparent !important;
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1)) !important;
+    border-radius: 8px !important;
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72)) !important;
+    cursor: pointer;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.9rem;
+}
+
+/* Hand-written SLDS modals in the legacy bank step (consent + OTP). */
+.reg-workspace-layer .slds-backdrop {
+    background: var(--mbpr-theme-overlay, rgba(0, 0, 0, 0.28)) !important;
+}
+
+.reg-workspace-layer .slds-modal__container {
+    background: transparent;
+    border-radius: 16px;
+}
+
+.reg-workspace-layer .slds-modal__header,
+.reg-workspace-layer .slds-modal__content,
+.reg-workspace-layer .slds-modal__footer {
+    background: var(--mbpr-theme-surface-solid, #ffffff) !important;
+    border-color: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1)) !important;
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.reg-workspace-layer .slds-modal__header {
+    border-radius: 16px 16px 0 0;
+    padding: 0.9rem 1rem 0.7rem;
+}
+
+.reg-workspace-layer .slds-modal__title {
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em;
+}
+
+.reg-workspace-layer .slds-modal__content {
+    padding: 0.8rem 1rem;
+}
+
+.reg-workspace-layer .slds-modal__footer {
+    border-radius: 0 0 16px 16px;
+    padding: 0.75rem 1rem 0.9rem;
+}
+
+/* Legacy OTP code inputs -> field-card look. */
+.reg-workspace-layer .otp-input-box,
+.reg-workspace-layer .otp-input-field {
+    background: var(--mbpr-theme-input-bg, #f7f5f1) !important;
+    border: 1px solid var(--mbpr-theme-ink-line-strong, rgba(16, 17, 18, 0.18)) !important;
+    border-radius: 8px !important;
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    padding: 0.5rem 0.6rem;
+    text-align: center;
+}
+
+.reg-workspace-layer .otp-input-box:focus,
+.reg-workspace-layer .otp-input-field:focus {
+    border-color: var(--mbpr-theme-accent, #0b7772) !important;
+    box-shadow: 0 0 0 3px var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1)) !important;
+    outline: none;
+}
+
+/* Legacy promo/info boxes (VAT template card in the trade step). */
+.reg-workspace-layer .slds-box {
+    background: var(--mbpr-theme-surface-soft, #f8f6f2) !important;
+    border: 1px solid var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1)) !important;
+    border-radius: 10px !important;
+}
+
+.reg-workspace-layer .slds-text-heading_small {
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+}
+
+.reg-workspace-layer .slds-text-color_weak {
+    color: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.72)) !important;
+}
+
+/* Legacy section headings -> revamp kicker language. The .step-frame
+   ancestor (revamp shell markup) raises specificity to (0,3,0) so these
+   beat the legacy bundles' own !important pins regardless of stylesheet
+   injection order. */
+.reg-workspace-layer .section-Title,
+.reg-workspace-layer .step-frame .section-Title {
+    color: var(--mbpr-theme-ink, #101112) !important;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 850 !important;
+    letter-spacing: 0.08em !important;
+    margin: 0.9rem 0 0.3rem !important;
+    text-transform: uppercase;
+}
+
+/* Legacy label pins (0.85rem/1.2rem-bold/flex/float !important) lose to the
+   kicker contract at higher specificity. */
+.reg-workspace-layer .step-frame .slds-form-element__label {
+    color: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44)) !important;
+    display: inline-block !important;
+    float: none !important;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.56rem !important;
+    font-weight: 850 !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Legacy fixed-box field hosts (210-230px wide, 70-90px tall !important)
+   flow with the grid like every other field. */
+.reg-workspace-layer .step-frame .customSelect,
+.reg-workspace-layer .step-frame .narrow-combobox,
+.reg-workspace-layer .step-frame .narrow-comboboxMobile,
+.reg-workspace-layer .step-frame .wide-combobox {
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.85rem !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+}
+
+/* Trade step's legacy .body wrapper: brand-font + viewport-height + offset
+   hacks neutralized. */
+.reg-workspace-layer .body {
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 0.85rem !important;
+    min-height: 0 !important;
+    overflow-y: visible !important;
+    position: static !important;
+}
+
+/* Legacy file cards + accordion chrome. */
+.reg-workspace-layer .slds-file,
+.reg-workspace-layer .slds-file__title {
+    color: var(--mbpr-theme-ink, #101112) !important;
+}
+
+.reg-workspace-layer .slds-accordion__summary-action {
+    color: var(--mbpr-theme-ink, #101112);
+}
+
+.reg-workspace-layer .slds-accordion__section {
+    border-color: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+}
+
+/* ==========================================================================
+   K. Document-level Windows fixes (MBPR-UI-211)
+   The guest shells (sign-in, self-registration) are fixed inset-0 dark
+   layers over the site's default white body: at fractional Windows
+   display scaling the compositor can land their bottom edge a device
+   pixel short of the viewport, and the body shows through as a thin
+   white line. Painting the canvas black behind exactly those pages
+   removes it; the :has() scope stops matching the moment the shells
+   unmount, so no other site page is affected. (The portal home fixes
+   the same artifact in-component with oversized fixed background
+   layers, because its canvas color is theme-driven.)
+   Same scope: the always-dark shells opt into dark scrollbars -
+   scrollbar-color inherits into every scrollable descendant, and
+   Windows otherwise renders native light scrollbars on them.
+   ========================================================================== */
+
+html:has(.login-shell),
+html:has(.reg-shell),
+body:has(.login-shell),
+body:has(.reg-shell) {
+    background-color: #000 !important;
+}
+
+.login-shell,
+.reg-shell {
+    scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}

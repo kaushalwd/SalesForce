@@ -1,0 +1,65 @@
+<template>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+        <template if:true={loading}>
+            <div class="loader-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                <div class="loader-text">Loading, please wait...</div>
+            </div>
+        </template>
+
+        <div class="slds-modal__container">
+            
+            <!-- Modal Header -->
+            <header class="slds-modal__header">
+                <h2 class="slds-text-heading_medium">Reassign Business Process Step</h2>
+            </header>
+            
+            <!-- Modal Body -->
+            <div class="slds-modal__content slds-p-around_medium">
+                <div class="slds-grid slds-wrap">
+                    <template if:false={assignToAdminChecked}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-8" style="margin-top:30px;">
+                            <lightning-combobox
+                                name="reAssignUser"
+                                label="Re Assign To User"
+                                options={reAssignToUserOptions}
+                                value={usrId}
+                                onchange={handleReAssignChange}>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- Show only if logged-in user is System Admin -->
+                    <template if:true={isSysAdmin}>
+                        <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                            <lightning-input 
+                                type="checkbox" 
+                                label="Assign to Myself (System Admin)" 
+                                checked={assignToAdminChecked} 
+                                onchange={handleCheckboxChange}>
+                            </lightning-input>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="slds-m-top_medium">
+                    <lightning-input
+                        type="text"
+                        label="Re Assignment Reason"
+                        value={comment}
+                        onchange={handleCommentChange}
+                        required>
+                    </lightning-input>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <footer class="slds-modal__footer">
+                <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
+            </footer>
+            
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

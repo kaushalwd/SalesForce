@@ -1,0 +1,546 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+/* a list, one unit per row */
+.unit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* the cap is gone: .body is the single scroll region */
+}
+
+/* the PoC's row: three areas, price spanning rows 2-3 hard right. minmax(0, 1fr), never a bare 1fr. */
+.unit-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "top   top"
+        "meta  price"
+        "chip  price";
+    align-items: center;
+    gap: 4px 10px;
+    width: 100%;
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text, #fafafa);
+    transition:
+        border-color 0.15s ease,
+        transform 0.05s ease;
+}
+.unit-row:hover {
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.28));
+}
+.unit-row:active {
+    transform: scale(0.997);
+}
+.unit-row:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+/* the selected state: accent border and a wash, not a green rule */
+.unit-row--on {
+    border-color: var(--gold, #a8a8a8);
+    background: var(--gold-wash, rgba(168, 168, 168, 0.1));
+}
+
+.unit-row__main {
+    grid-area: top;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+
+.unit-row__name {
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.unit-row__meta {
+    grid-area: meta;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    white-space: nowrap;
+}
+
+/* justify-self: a grid item would stretch otherwise */
+.unit-row__chip {
+    grid-area: chip;
+    justify-self: start;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.unit-row__price {
+    grid-area: price;
+    align-self: center;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    /* prices are read vertically */
+    font-variant-numeric: tabular-nums;
+}
+
+/* 1.11: GSA, plot area and phase on the selected card; wraps rather than cuts */
+.unit-row--facts {
+    grid-template-areas:
+        "top   top"
+        "meta  price"
+        "chip  price"
+        "facts facts";
+}
+.unit-row__facts {
+    grid-area: facts;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+/* the two controls above the list */
+
+.unit-tools {
+    /* the positioning context for the scrim */
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.search {
+    position: relative;
+    flex: 1 1 200px;
+    min-width: 160px;
+}
+.search__ic {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    pointer-events: none;
+}
+.search__input {
+    width: 100%;
+    border-radius: 10px;
+    /* 44px, the height .field__input and .btn use */
+    height: 44px;
+    padding: 0 34px 0 34px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text, #fff);
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.1));
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.search__input::placeholder {
+    /* --text-muted, matching .field__input */
+    color: var(--text-muted, #a3a3a3);
+    opacity: 1;
+}
+.search__input:focus {
+    border-color: var(--gold, #a8a8a8);
+}
+/* clearing a search should be one press */
+.search__clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-dim, #8a8a8a);
+    cursor: pointer;
+}
+.search__clear:hover {
+    background: var(--row-bg, rgba(255, 255, 255, 0.06));
+    color: var(--text, #fafafa);
+}
+
+/* `height: 40px` deleted: .btn's min-height wins */
+.filter-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+}
+/* lit whenever the panel is open or a filter is set */
+.filter-btn--on {
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+
+.filter-btn__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--pill-fg, #fafafa);
+    color: var(--text-inverse, #111);
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* the filter popover */
+
+/* measured, never seen: reports the containing block's offset */
+.pop-probe {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* transparent, not dimmed: it exists to catch the click that closes */
+.filter-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    background: transparent;
+}
+
+.filter-pop {
+    position: fixed;
+    z-index: 901;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-radius: 16px;
+    /* --rail-bg: this floats over the unit list */
+    background: var(--rail-bg, rgba(10, 10, 10, 0.88));
+    border: 1px solid var(--rail-border, rgba(255, 255, 255, 0.18));
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+    animation: popIn 0.16s ease both;
+}
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .filter-pop {
+        animation: none;
+    }
+}
+
+/* the pointer back to the trigger; --arrow-x is written by positionPanel */
+.filter-pop::before {
+    content: "";
+    position: absolute;
+    left: var(--arrow-x, 50%);
+    top: -6px;
+    width: 11px;
+    height: 11px;
+    margin-left: -5.5px;
+    background: inherit;
+    border-left: 1px solid var(--rail-border, rgba(255, 255, 255, 0.18));
+    border-top: 1px solid var(--rail-border, rgba(255, 255, 255, 0.18));
+    transform: rotate(45deg);
+}
+.filter-pop--up::before {
+    top: auto;
+    bottom: -6px;
+    border-left: 0;
+    border-top: 0;
+    border-right: 1px solid var(--rail-border, rgba(255, 255, 255, 0.18));
+    border-bottom: 1px solid var(--rail-border, rgba(255, 255, 255, 0.18));
+}
+
+/* compact metrics from mbpr_homeGateway's popover; the control height is overridden from
+   mscStyles' 44px, with 16px put back on phones */
+
+.filter-pop__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 13px 8px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    flex-shrink: 0;
+}
+.filter-pop__kicker {
+    margin: 0;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+.filter-pop__title {
+    margin: 1px 0 0;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--text, #fafafa);
+}
+.filter-pop__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-dim, #8a8a8a);
+    cursor: pointer;
+}
+.filter-pop__close:hover {
+    background: var(--row-bg, rgba(255, 255, 255, 0.06));
+    color: var(--text, #fafafa);
+}
+
+/* the only scroller in the panel; max-height set inline by positionPanel */
+.filter-pop__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    /* overscroll-behavior: do not hand the wheel to .body */
+    overscroll-behavior: contain;
+    padding: 11px 13px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.filter-pop__label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+.filter-pop__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+/* the compact control: height and type come down together */
+.filter-pop .field__label {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+.filter-pop .field__select {
+    height: 34px;
+    border-radius: 8px;
+    padding: 0 26px 0 9px;
+    font-size: 12px;
+    /* UI-01: the longest project name is 3px wider than the box, and a select clips
+       by default, so the value ran into the arrow. An ellipsis keeps it clear of it. */
+    text-overflow: ellipsis;
+}
+
+/* the types block is a surface of its own */
+.filter-pop__section--types {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+.type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+}
+.type-choice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+    min-height: 30px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-muted, #a3a3a3);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background 0.14s ease,
+        border-color 0.14s ease,
+        color 0.14s ease;
+}
+.type-choice:hover {
+    border-color: var(--text-dim, #8a8a8a);
+    color: var(--text, #fafafa);
+}
+.type-choice--on {
+    background: var(--gold-wash, rgba(168, 168, 168, 0.1));
+    border-color: var(--gold, #a8a8a8);
+    color: var(--text, #fafafa);
+}
+.type-choice__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.type-choice__count {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+.type-choice--on .type-choice__count {
+    color: var(--gold, #a8a8a8);
+}
+
+.filter-pop__foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    flex-shrink: 0;
+}
+/* Clear sits hard left, away from Apply */
+.filter-pop__clear {
+    margin-right: auto;
+    font-size: 12px;
+}
+
+/* applied filter chips */
+
+.applied {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.applied__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-muted, #a3a3a3);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    max-width: 100%;
+    transition:
+        border-color 0.14s ease,
+        color 0.14s ease;
+}
+.applied__chip:hover {
+    border-color: var(--chip-red, #f87171);
+    color: var(--text, #fafafa);
+}
+.applied__chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.applied__clear {
+    padding: 3px 4px;
+    border: 0;
+    background: none;
+    color: var(--text-dim, #8a8a8a);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+.applied__clear:hover {
+    color: var(--text, #fafafa);
+}
+
+.result-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.result-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text, #fff);
+}
+/* the cap is stated, not hidden */
+.result-note {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* under the list */
+.unit-basket {
+    margin-top: 12px;
+}
+
+/* 16px on phones so iOS does not zoom */
+@media (max-width: 767px) {
+    .search__input,
+    .filter-pop .field__select {
+        font-size: 16px;
+    }
+}
+
+/* below this the two-up grids are narrower than their labels */
+@media (max-width: 400px) {
+    .filter-pop__grid,
+    .type-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .filter-btn__label {
+        display: none;
+    }
+}
+
+/* the phone override and the 479 fold are gone with the cap and the one-line row */

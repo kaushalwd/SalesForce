@@ -1,0 +1,793 @@
+<template>
+    <section class="commissions-workspace" aria-label="Commissions">
+        <template lwc:if={showInitialLoading}>
+            <c-mbpr_loader label="Loading commissions"></c-mbpr_loader>
+        </template>
+
+        <template lwc:elseif={hasAccessError}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    tone="error"
+                    show-graphic
+                    kicker="Commissions"
+                    title="Unable to verify commission access"
+                    message="Please try again."
+                    primary-label="Try again"
+                    onprimary={handleRetryAccess}
+                ></c-mbpr_empty-state>
+            </div>
+        </template>
+
+        <template lwc:elseif={showNoAccess}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    tone="neutral"
+                    show-graphic
+                    kicker="Commissions"
+                    title="You don't have the necessary access to perform this action."
+                ></c-mbpr_empty-state>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <div class="commissions-console">
+                <section class="summary-grid" aria-label="Commission Overview">
+                    <template for:each={summaryCards} for:item="summary">
+                        <article class="summary-card" key={summary.key}>
+                            <p>{summary.label}</p>
+                            <strong>{summary.value}</strong>
+                        </article>
+                    </template>
+                </section>
+
+                <!-- UAT parity: no passive bank/VAT readiness readout - the
+                     screen only speaks up when acceptance is blocked (the
+                     invoice drawer footer repeats the same note beside the
+                     Accept action, exactly like the legacy modal). -->
+                <template lwc:if={bankDetailsMissing}>
+                    <p class="bank-warning" role="status">
+                        <strong>Note:</strong> Bank details are missing. Please update your bank details to proceed
+                        with commission acceptance.
+                    </p>
+                </template>
+
+                <section class="commission-toolbar" aria-label="Commission controls">
+                    <div class="toolbar-search">
+                        <label for="commission-unit-search">Search by Unit Number</label>
+                        <div class="toolbar-search__control">
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="6.5"></circle>
+                                <path d="m16 16 4 4"></path>
+                            </svg>
+                            <input
+                                id="commission-unit-search"
+                                name="unitSearchTerm"
+                                type="search"
+                                value={draftFilters.unitSearchTerm}
+                                placeholder="Enter unit number..."
+                                oninput={handleFilterInput}
+                                onkeydown={handleSearchKeydown}
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        class="toolbar-button"
+                        type="button"
+                        aria-expanded={filterOpen}
+                        aria-controls="commission-filter-panel"
+                        onclick={toggleFilterPanel}
+                    >
+                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                            <path d="M4 6h16M7 12h10M10 18h4"></path>
+                        </svg>
+                        <span>{activeFilterCountLabel}</span>
+                    </button>
+                </section>
+
+                <template lwc:if={filterOpen}>
+                    <div class="commission-filter-scrim" aria-hidden="true" onclick={closeFilterPanel}></div>
+                    <section id="commission-filter-panel" class={filterPanelClass} aria-label="Commission Filters">
+                        <header class="filter-panel__header">
+                            <div>
+                                <p>Commission Filters</p>
+                                <span>Search and narrow the commission list.</span>
+                            </div>
+                            <button type="button" onclick={closeFilterPanel} aria-label="Close Filters">×</button>
+                        </header>
+
+                        <div class="filter-grid">
+                            <label class="filter-field">
+                                <span>Status</span>
+                                <select
+                                    name="statusFilter"
+                                    value={draftFilters.statusFilter}
+                                    onchange={handleFilterInput}
+                                >
+                                    <template for:each={statusOptionsWithAll} for:item="option">
+                                        <option key={option.key} value={option.value}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+
+                            <label class="filter-field">
+                                <span>Down Payment Status</span>
+                                <select
+                                    name="downPaymentFilter"
+                                    value={draftFilters.downPaymentFilter}
+                                    onchange={handleFilterInput}
+                                >
+                                    <template for:each={downPaymentOptionsWithAll} for:item="option">
+                                        <option key={option.key} value={option.value}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+
+                            <label class="filter-field">
+                                <span>SPA Status</span>
+                                <select
+                                    name="spaFilter"
+                                    value={draftFilters.spaFilter}
+                                    onchange={handleFilterInput}
+                                >
+                                    <template for:each={spaOptionsWithAll} for:item="option">
+                                        <option key={option.key} value={option.value}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+
+                            <label class="filter-field">
+                                <span>Start Date</span>
+                                <input
+                                    name="startDate"
+                                    type="date"
+                                    value={draftFilters.startDate}
+                                    onchange={handleFilterInput}
+                                />
+                            </label>
+
+                            <label class="filter-field">
+                                <span>End Date</span>
+                                <input
+                                    name="endDate"
+                                    type="date"
+                                    value={draftFilters.endDate}
+                                    onchange={handleFilterInput}
+                                />
+                            </label>
+                        </div>
+
+                        <template lwc:if={filterError}>
+                            <p class="filter-error" role="alert">{filterError}</p>
+                        </template>
+
+                        <footer class="filter-panel__footer">
+                            <button class="filter-action filter-action--secondary" type="button" onclick={resetFilters}>
+                                Reset
+                            </button>
+                            <button class="filter-action filter-action--primary" type="button" onclick={applyFilters}>
+                                Apply Filters
+                            </button>
+                        </footer>
+                    </section>
+                </template>
+
+                <template lwc:if={hasActiveFilterChips}>
+                    <div class="filter-chips" aria-label="Applied filters">
+                        <template for:each={activeFilterChips} for:item="chip">
+                            <button
+                                class="filter-chip"
+                                key={chip.name}
+                                type="button"
+                                data-name={chip.name}
+                                onclick={handleRemoveFilter}
+                                aria-label={chip.label}
+                            >
+                                <span>{chip.label}</span>
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+
+                <template lwc:if={loadError}>
+                    <div class="error-rail" role="alert">
+                        <span>Unable to load commissions. Please try again.</span>
+                        <button type="button" onclick={handleRetryData}>Try again</button>
+                    </div>
+                </template>
+
+                <div class="commission-content">
+                    <template lwc:if={showNoCommissions}>
+                        <div class="commission-empty">
+                            <c-mbpr_empty-state
+                                compact
+                                show-graphic
+                                kicker="Commissions"
+                                title="No commissions found matching your criteria."
+                                primary-label="Reset"
+                                onprimary={resetFilters}
+                            ></c-mbpr_empty-state>
+                        </div>
+                    </template>
+
+                    <template lwc:elseif={hasCommissionRows}>
+                        <div class="commission-table-wrap">
+                            <table class="commission-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">S.No</th>
+                                        <th scope="col" aria-sort={projectSortAria}
+                                            data-tip="The Modon project this sold unit belongs to."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="ProjectName" onclick={handleSort}>
+                                                Project Name <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={unitSortAria}
+                                            data-tip="The specific unit sold in this deal."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="UnitName" onclick={handleSort}>
+                                                Unit Number <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={unitPriceSortAria}
+                                            data-tip="The total sale value of the unit, as shown on the sales order."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="unitpriceRaw" onclick={handleSort}>
+                                                Unit Price <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={invoiceDateSortAria}
+                                            data-tip="The date your commission invoice was raised for this sale."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="InvoiceDateRaw" onclick={handleSort}>
+                                                Invoice Date <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={clearanceDateSortAria}
+                                            data-tip="The date Modon released the commission payment for this sale. Blank until payment clears."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="ClearanceDateRaw" onclick={handleSort}>
+                                                Clearance Date <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={agentSortAria}
+                                            data-tip="The agent from your agency credited with this sale."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="Agent" onclick={handleSort}>
+                                                Agent <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={customerSortAria}
+                                            data-tip="The customer who bought this unit."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="CustomerName" onclick={handleSort}>
+                                                Customer Name <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={commissionAmountSortAria}
+                                            data-tip="Your full commission for this sale."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="CommissionAmountRaw" onclick={handleSort}>
+                                                Total Commission <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={paidAmountSortAria}
+                                            data-tip="The amount already approved and paid out to you."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button
+                                                type="button"
+                                                data-field="TotalCommissionPaidRaw"
+                                                onclick={handleSort}
+                                            >
+                                                Paid Amount <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={currentPayoutSortAria}
+                                            data-tip="The amount being processed for payment right now."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button
+                                                type="button"
+                                                data-field="CommissionPayoutNowRaw"
+                                                onclick={handleSort}
+                                            >
+                                                Current Payout <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={futureEligibleSortAria}
+                                            data-tip="The amount still to come, released as future milestones are met."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="RemainingPayoutRaw" onclick={handleSort}>
+                                                Eligible Amount <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th class="th-center" scope="col" aria-sort={downPaymentSortAria}
+                                            data-tip="Where the customer is with their down payment. Once it is complete, a payout is released to you."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="DownPaymentStatus" onclick={handleSort}>
+                                                Down Payment Status <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th class="th-center" scope="col" aria-sort={admSortAria}
+                                            data-tip="Where the customer is with paying the Abu Dhabi Municipality (ADM) and Dari fees."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="AdmStatus" onclick={handleSort}>
+                                                ADM Fees Status <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th class="th-center" scope="col" aria-sort={spaSortAria}
+                                            data-tip="Where the customer is with signing the Sale and Purchase Agreement (SPA). Once it is signed, a payout is released to you."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="SpaBucket" onclick={handleSort}>
+                                                SPA Status <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col" aria-sort={commissionStatusSortAria}
+                                            data-tip="Where your commission currently sits in Modon's review and payout process."
+                                            onpointerenter={handleHeadTipEnter}
+                                            onpointerleave={handleHeadTipLeave}
+                                        >
+                                            <button type="button" data-field="StatusLabel" onclick={handleSort}>
+                                                Commission Status <span aria-hidden="true">↕</span>
+                                            </button>
+                                        </th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={paginatedCommissions} for:item="commission">
+                                        <tr key={commission.Id}>
+                                            <td>{commission.serialNumber}</td>
+                                            <td>{commission.ProjectName}</td>
+                                            <td><strong>{commission.UnitName}</strong></td>
+                                            <td>AED {commission.unitprice}</td>
+                                            <td>{commission.InvoiceDate}</td>
+                                            <td>{commission.ClearanceDate}</td>
+                                            <td>{commission.Agent}</td>
+                                            <td>{commission.CustomerName}</td>
+                                            <td>AED {commission.CommissionAmount}</td>
+                                            <td>AED {commission.TotalCommissionPaid}</td>
+                                            <td>AED {commission.CommissionPayoutNow}</td>
+                                            <td>AED {commission.RemainingPayout}</td>
+                                            <td>
+                                                <c-mbpr_status-badge
+                                                    label={commission.DownPaymentStatusLabel}
+                                                    tone={commission.DownPaymentTone}
+                                                    size="small"
+                                                ></c-mbpr_status-badge>
+                                            </td>
+                                            <td>
+                                                <c-mbpr_status-badge
+                                                    label={commission.AdmStatusLabel}
+                                                    tone={commission.AdmTone}
+                                                    size="small"
+                                                ></c-mbpr_status-badge>
+                                            </td>
+                                            <td>
+                                                <c-mbpr_status-badge
+                                                    label={commission.SpaStatusLabel}
+                                                    tone={commission.SpaTone}
+                                                    size="small"
+                                                ></c-mbpr_status-badge>
+                                            </td>
+                                            <td>
+                                                <c-mbpr_status-badge
+                                                    label={commission.StatusLabel}
+                                                    tone={commission.StatusTone}
+                                                    size="small"
+                                                ></c-mbpr_status-badge>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    class={commission.invoiceActionClass}
+                                                    type="button"
+                                                    data-id={commission.Id}
+                                                    onclick={openInvoice}
+                                                >
+                                                    <template lwc:if={commission.isReadyToProcess}>
+                                                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                                                            <path d="M12 16V4"></path>
+                                                            <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+                                                            <path d="M4.5 15v3.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V15"></path>
+                                                        </svg>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                                                            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                                                            <circle cx="12" cy="12" r="2.5"></circle>
+                                                        </svg>
+                                                    </template>
+                                                    <span>{commission.invoiceActionLabel}</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="commission-cards" aria-label="Commissions">
+                            <template for:each={paginatedCommissions} for:item="commission">
+                                <article class={commission.cardClass} key={commission.Id}>
+                                    <button
+                                        class="commission-card__toggle"
+                                        type="button"
+                                        data-id={commission.Id}
+                                        onclick={toggleCommissionCard}
+                                        aria-expanded={commission.expandedValue}
+                                        aria-label={commission.expandLabel}
+                                    >
+                                        <span class="commission-card__identity">
+                                            <small>Unit Number</small>
+                                            <strong>{commission.UnitName}</strong>
+                                            <em>{commission.ProjectName}</em>
+                                        </span>
+                                        <c-mbpr_status-badge
+                                            label={commission.StatusLabel}
+                                            tone={commission.StatusTone}
+                                            size="small"
+                                        ></c-mbpr_status-badge>
+                                        <span class="commission-card__chevron" aria-hidden="true">⌄</span>
+                                    </button>
+
+                                    <template lwc:if={commission.isExpanded}>
+                                        <div class="commission-card__body">
+                                            <dl class="commission-details">
+                                                <div><dt>S.No</dt><dd>{commission.serialNumber}</dd></div>
+                                                <div><dt>Unit Price</dt><dd>AED {commission.unitprice}</dd></div>
+                                                <div><dt>Invoice Date</dt><dd>{commission.InvoiceDate}</dd></div>
+                                                <div><dt>Clearance Date</dt><dd>{commission.ClearanceDate}</dd></div>
+                                                <div><dt>Project Name</dt><dd>{commission.ProjectName}</dd></div>
+                                                <div><dt>Agent</dt><dd>{commission.Agent}</dd></div>
+                                                <div><dt>Customer Name</dt><dd>{commission.CustomerName}</dd></div>
+                                                <div><dt>Total Commission</dt><dd>AED {commission.CommissionAmount}</dd></div>
+                                                <div><dt>Paid Amount</dt><dd>AED {commission.TotalCommissionPaid}</dd></div>
+                                                <div><dt>Current Payout</dt><dd>AED {commission.CommissionPayoutNow}</dd></div>
+                                                <div><dt>Eligible Amount</dt><dd>AED {commission.RemainingPayout}</dd></div>
+                                                <div><dt>Down Payment Status</dt><dd>{commission.DownPaymentStatusLabel}</dd></div>
+                                                <div><dt>ADM Fees Status</dt><dd>{commission.AdmStatusLabel}</dd></div>
+                                                <div><dt>SPA Status</dt><dd>{commission.SpaStatusLabel}</dd></div>
+                                                <div><dt>Commission Status</dt><dd>{commission.StatusLabel}</dd></div>
+                                            </dl>
+                                            <button
+                                                class="mobile-view-invoice"
+                                                type="button"
+                                                data-id={commission.Id}
+                                                onclick={openInvoice}
+                                            >
+                                                {commission.invoiceActionLabel}
+                                            </button>
+                                        </div>
+                                    </template>
+                                </article>
+                            </template>
+                        </div>
+
+                        <nav class="pagination" aria-label="Commission pagination">
+                            <button type="button" onclick={handlePrevPage} disabled={isPrevDisabled}>← Previous</button>
+                            <span>{pageLabel}</span>
+                            <button type="button" onclick={handleNextPage} disabled={isNextDisabled}>Next ⟶</button>
+                        </nav>
+                    </template>
+
+                    <!-- Column help text (client copy). Anchored to
+.commission-content because.commission-table-wrap scrolls
+                         and would clip it. Large screens only - see the CSS gate. -->
+                    <div class={headTipClass} style={headTipStyle} role="tooltip" aria-hidden={headTipHidden}>
+                        {headTipText}
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <c-mbpr_detail-drawer
+            open={invoiceOpen}
+            title="Invoice"
+            subtitle={invoiceDrawerSubtitle}
+            close-label="Close Invoice"
+            size="wide"
+            onclose={closeInvoice}
+        >
+            <div class="invoice-shell">
+                <template lwc:if={invoiceLoading}>
+                    <div class="invoice-loading">
+                        <c-mbpr_loading-state
+                            variant="card"
+                            rows="3"
+                            label="Loading invoice"
+                        ></c-mbpr_loading-state>
+                    </div>
+                </template>
+                <template lwc:if={invoicePdfUrl}>
+                    <iframe
+                        class="invoice-frame"
+                        src={invoicePdfUrl}
+                        title={invoiceFrameTitle}
+                        onload={handleInvoiceFrameLoad}
+                    ></iframe>
+                </template>
+            </div>
+
+            <template lwc:if={showInvoiceFooter}>
+            <div slot="footer" class="invoice-footer">
+                <template lwc:if={hasStatusNotice}>
+                    <p class={statusNoticeClass} role="status">
+                        <strong class="invoice-notice__heading">{statusNoticeHeading}</strong>
+                        <span class="invoice-notice__body">{statusNoticeText}</span>
+                    </p>
+                </template>
+                <template lwc:if={fusionBlocked}>
+                    <p class="invoice-notice invoice-notice--warning" role="status">
+                        <strong class="invoice-notice__heading">Bank sync pending</strong>
+                        <span class="invoice-notice__body">{oicNotSyncedMessage}</span>
+                    </p>
+                </template>
+                <template lwc:if={showBankWarning}>
+                    <p class="invoice-warning" role="status">
+                        <strong>Note:</strong> Bank details are missing.<br />
+                        Please update your bank details to proceed with commission acceptance.
+                    </p>
+                </template>
+                <template lwc:if={selectedCommissionReady}>
+                    <div class={invoiceFormClass}>
+                        <template lwc:if={showTaxInvoiceInput}>
+                            <label class={taxInvoiceFieldClass}>
+                                <span>Tax Invoice Number</span>
+                                <input
+                                    type="text"
+                                    maxlength="255"
+                                    value={taxInvoiceDraft}
+                                    placeholder="Enter tax invoice number"
+                                    oninput={handleTaxInvoiceInput}
+                                />
+                                <template lwc:if={taxInvoiceDraftError}>
+                                    <span class="invoice-field__error" role="alert">Required</span>
+                                </template>
+                            </label>
+                        </template>
+                        <label class={commentsFieldClass}>
+                            <span>Comments</span>
+                            <textarea
+                                maxlength="450"
+                                value={commentsDraft}
+                                placeholder="Comments"
+                                oninput={handleCommentsInput}
+                            ></textarea>
+                            <template lwc:if={commentsDraftError}>
+                                <span class="invoice-field__error" role="alert">Required to reject a commission</span>
+                            </template>
+                        </label>
+                    </div>
+                    <!-- No Download button: the native PDF viewer carries
+                         its own download/print controls (user request). -->
+                    <div class="invoice-actions">
+                        <button
+                            class="invoice-action invoice-action--secondary"
+                            type="button"
+                            onclick={handleRejectRequest}
+                            disabled={isRejectDisabled}
+                        >
+                            Reject
+                        </button>
+                        <button
+                            class="invoice-action invoice-action--primary"
+                            type="button"
+                            onclick={handleAcceptRequest}
+                            disabled={isAcceptDisabled}
+                        >
+                            Accept
+                        </button>
+                    </div>
+                </template>
+            </div>
+            </template>
+        </c-mbpr_detail-drawer>
+
+        <template lwc:if={confirmationOpen}>
+            <div class="confirmation-layer" onclick={closeConfirmation}>
+                <section
+                    class="confirmation"
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="commission-confirmation-title"
+                    aria-describedby="commission-confirmation-message"
+                    onclick={stopPropagation}
+                    onkeydown={handleConfirmationKeydown}
+                >
+                    <p class="confirmation__eyebrow">Commissions</p>
+                    <h3 id="commission-confirmation-title">{confirmationTitle}</h3>
+                    <p id="commission-confirmation-message">{confirmationMessage}</p>
+                    <div class="confirmation__actions">
+                        <button class="confirmation__action" type="button" onclick={closeConfirmation}>Cancel</button>
+                        <button class={confirmationActionClass} type="button" onclick={confirmPendingAction}>
+                            {confirmationActionLabel}
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </template>
+
+        <template lwc:if={ownInvoiceOpen}>
+            <div class="confirmation-layer" onclick={closeOwnInvoice}>
+                <section
+                    class="confirmation invoice-upload"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="commission-upload-title"
+                    onclick={stopPropagation}
+                    onkeydown={handleOwnInvoiceKeydown}
+                >
+                    <p class="confirmation__eyebrow">{ownInvoiceEyebrow}</p>
+                    <h3 id="commission-upload-title">Submit your tax invoice</h3>
+                    <p>
+                        Your agency is not VAT registered, so Modon does not issue a self-billing
+                        invoice for this commission. Upload your own tax invoice to continue.
+                    </p>
+
+                    <!-- The sync gate reaches this path too: without it the broker could
+                         complete the whole upload form and only be stopped at submit. Same
+                         copy and treatment as the invoice drawer's notice. -->
+                    <template lwc:if={ownInvoiceFusionBlocked}>
+                        <p class="invoice-notice invoice-notice--warning" role="status">
+                            <strong class="invoice-notice__heading">Bank sync pending</strong>
+                            <span class="invoice-notice__body">{oicNotSyncedMessage}</span>
+                        </p>
+                    </template>
+
+                    <div class="invoice-upload__grid">
+                        <label class={ownInvoiceNumberFieldClass}>
+                            <span>Invoice Number</span>
+                            <input
+                                type="text"
+                                maxlength="255"
+                                value={ownInvoiceNumber}
+                                placeholder="Enter invoice number"
+                                oninput={handleOwnInvoiceNumber}
+                            />
+                            <template lwc:if={ownInvoiceNumberError}>
+                                <span class="invoice-field__error" role="alert">Required</span>
+                            </template>
+                        </label>
+                        <label class={ownInvoiceDateFieldClass}>
+                            <span>Invoice Date</span>
+                            <input type="date" value={ownInvoiceDate} onchange={handleOwnInvoiceDate} />
+                            <template lwc:if={ownInvoiceDateError}>
+                                <span class="invoice-field__error" role="alert">Required</span>
+                            </template>
+                        </label>
+                    </div>
+
+                    <div class={ownInvoiceDropClass}>
+                        <label class="invoice-upload__label">
+                            <span class="invoice-upload__title">Invoice document</span>
+                            <span class="invoice-upload__hint">PDF, JPG or PNG &middot; up to 2 MB</span>
+                            <input
+                                class="invoice-upload__input"
+                                type="file"
+                                accept={ownInvoiceAccept}
+                                onchange={handleOwnInvoiceFile}
+                            />
+                        </label>
+                        <template lwc:if={ownInvoiceFileName}>
+                            <div class="invoice-upload__file">
+                                <span class="invoice-upload__file-name">{ownInvoiceFileName}</span>
+                                <button
+                                    class="invoice-upload__file-clear"
+                                    type="button"
+                                    onclick={clearOwnInvoiceFile}
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        </template>
+                        <template lwc:if={ownInvoiceFileError}>
+                            <span class="invoice-field__error" role="alert">
+                                An invoice document is required
+                            </span>
+                        </template>
+                    </div>
+
+                    <div class="invoice-notice invoice-notice--warning" role="status">
+                        <strong class="invoice-notice__heading">VAT notice</strong>
+                        <span class="invoice-notice__body">
+                            If your agency's annual turnover exceeds AED 375,000 you must add your
+                            VAT certificate under My Agency before submitting an invoice.
+                        </span>
+                    </div>
+
+                    <div class="confirmation__actions">
+                        <button
+                            class="confirmation__action"
+                            type="button"
+                            onclick={closeOwnInvoice}
+                            disabled={ownInvoiceSubmitting}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            class="confirmation__action confirmation__action--primary"
+                            type="button"
+                            onclick={submitOwnInvoice}
+                            disabled={isOwnInvoiceSubmitDisabled}
+                        >
+                            {ownInvoiceSubmitLabel}
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </template>
+
+        <template lwc:if={thresholdBlockOpen}>
+            <div class="confirmation-layer" onclick={closeThresholdBlock}>
+                <section
+                    class="confirmation threshold-block"
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="commission-threshold-title"
+                    aria-describedby="commission-threshold-message"
+                    onclick={stopPropagation}
+                    onkeydown={handleThresholdKeydown}
+                >
+                    <p class="confirmation__eyebrow">{thresholdEyebrow}</p>
+                    <h3 id="commission-threshold-title" class="threshold-block__title">
+                        <span class="threshold-block__icon" aria-hidden="true">!</span>
+                        <span>VAT certificate update required</span>
+                    </h3>
+                    <p id="commission-threshold-message" class="threshold-block__body">
+                        Your agency has exceeded <strong>AED 375,000</strong> transaction value. To
+                        continue commission processing, please upload your VAT registration
+                        certificate under your agency profile.
+                    </p>
+                    <div class="confirmation__actions">
+                        <button class="confirmation__action" type="button" onclick={closeThresholdBlock}>
+                            Close
+                        </button>
+                        <button
+                            class="confirmation__action confirmation__action--primary"
+                            type="button"
+                            onclick={handleUpdateAgencyDetails}
+                        >
+                            Update agency details
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </template>
+
+        <!-- Accept and reject are multi-second writes that only disabled the
+             confirm button, so the screen read as frozen. Blocking, so a second
+             confirm cannot land on the row behind it. -->
+        <template lwc:if={isActionPending}>
+            <c-mbpr_loader label="Working"></c-mbpr_loader>
+        </template>
+    </section>
+</template>

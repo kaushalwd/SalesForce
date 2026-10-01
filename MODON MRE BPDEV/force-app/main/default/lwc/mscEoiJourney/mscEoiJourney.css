@@ -1,0 +1,414 @@
+/* Shared primitives (.glass, .btn, .banner, .field*, .chip) come from c/mscStyles.
+   First line, so anything redefined below still wins. Colours are tokens only;
+   every fallback is the DARK value from c/mscTokens, per that file's rule. */
+@import "c/mscStyles";
+
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.jn {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 14px;
+}
+
+/* ── Top strip ──────────────────────────────────────────────────────────── */
+
+.jn__top {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.jn__back {
+    justify-self: start;
+    gap: 4px;
+    padding-left: 8px;
+}
+
+.jn__ctx {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+}
+.jn__ctx-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Stepper - four dots joined by a hairline. Done = green check, active = ring in
+   the pill colour, future = the resting step tone. All tokens; survives a theme
+   toggle without a repaint of its own. */
+.stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+}
+.stp {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    min-width: 0;
+}
+.stp + .stp {
+    margin-left: 34px;
+}
+.stp + .stp::before {
+    content: "";
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    width: 26px;
+    height: 1px;
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+.stp--done + .stp::before,
+.stp--done + .stp--done::before {
+    background: var(--step-done, #16a34a);
+}
+.stp__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-dim, #8a8a8a);
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+    border: 1px solid transparent;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.stp--active .stp__dot {
+    color: var(--text, #fafafa);
+    background: transparent;
+    border-color: var(--pill-border, #fafafa);
+    box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.1));
+}
+.stp--done .stp__dot {
+    color: #fff;
+    background: var(--step-done, #16a34a);
+}
+.stp__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+}
+.stp--active .stp__label {
+    color: var(--text, #fafafa);
+}
+.stp--done .stp__label {
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* ── Feedback ───────────────────────────────────────────────────────────── */
+
+.jn__feedback:empty {
+    display: none;
+}
+.jn__banner {
+    align-items: center;
+    margin-bottom: 8px;
+}
+.jn__banner-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--text, #fafafa);
+}
+.jn__banner-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: -6px -8px -6px 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+}
+.jn__banner-x:hover {
+    color: var(--text, #fafafa);
+}
+
+/* ── Discard guard ──────────────────────────────────────────────────────── */
+
+.jn__discard {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    padding: 14px 18px;
+    border: 1px solid var(--section-active-border, rgba(255, 255, 255, 0.42));
+}
+.jn__discard-title {
+    margin: 0 0 2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+.jn__discard-text {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+.jn__discard-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ── Body / step transition ────────────────────────────────────────────── */
+
+.jn__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+.jn__step {
+    display: block;
+    animation: jn-step-in 0.18s ease-out;
+}
+@keyframes jn-step-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .jn__step {
+        animation: none;
+    }
+    .stp__dot {
+        transition: none;
+    }
+}
+
+/* ── Done ───────────────────────────────────────────────────────────────── */
+
+.jn__done {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 24px;
+}
+.jn__done-card {
+    width: min(560px, 100%);
+    padding: 32px 28px 24px;
+    text-align: center;
+}
+.jn__done-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    color: var(--step-done, #16a34a);
+    background: var(--gold-wash, rgba(168, 168, 168, 0.1));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.jn__done-title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text, #fafafa);
+}
+.jn__done-sub {
+    margin: 0 auto;
+    max-width: 44ch;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted, #a3a3a3);
+}
+.jn__refs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 18px 0 4px;
+}
+.jn__ref {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text, #fafafa);
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--pill-border, #fafafa);
+}
+.jn__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin: 20px 0 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    text-align: left;
+}
+.jn__fact dt {
+    margin: 0 0 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+.jn__fact dd {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+.jn__fact-amt {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.jn__done-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+/* ── MSC-227: the ModonPay handoff on the Done card ─────────────────────── */
+/* Terminal links, one per created EOI. An <a> in button clothing: the terminal is an
+   external app, so this is real navigation, not an action. */
+.jn__mp {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 14px 0 0;
+}
+.jn__mp-open {
+    text-decoration: none;
+}
+/* The read-back: stored statuses and receipt rows, left-aligned like the facts. */
+.jn__pay {
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    text-align: left;
+}
+.jn__pay-checked {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim, rgba(250, 250, 250, 0.55));
+}
+.jn__pay-eoi + .jn__pay-eoi {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.jn__pay-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.jn__pay-name {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text, #fafafa);
+}
+.jn__pay-receipt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text, #fafafa);
+}
+.jn__pay-rname {
+    font-variant-numeric: tabular-nums;
+}
+.jn__pay-ramt {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.jn__pay-rstatus,
+.jn__pay-rmode {
+    color: var(--text-dim, rgba(250, 250, 250, 0.55));
+}
+.jn__pay-none {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--text-dim, rgba(250, 250, 250, 0.55));
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+    .jn__top {
+        grid-template-columns: auto 1fr;
+    }
+    .jn__ctx {
+        display: none;
+    }
+    .stepper {
+        justify-content: flex-end;
+    }
+    /* Labels collapse to the active step only; the dots stay. */
+    .stp:not(.stp--active) .stp__label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+    .stp + .stp {
+        margin-left: 22px;
+    }
+    .stp + .stp::before {
+        left: -18px;
+        width: 14px;
+    }
+    .jn__done-card {
+        padding: 24px 18px 20px;
+    }
+}

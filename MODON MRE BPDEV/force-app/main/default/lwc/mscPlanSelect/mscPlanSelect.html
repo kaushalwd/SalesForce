@@ -1,0 +1,246 @@
+<template>
+    <template lwc:if={locked}>
+        <p class="t-xs t-dim locked-note">
+            Locked. The payment schedule has been written for this booking.
+        </p>
+    </template>
+
+    <!-- 1.5 - the plan list, or its shape while it is on its way. The skeleton
+         occupies the same box the chips will, so the card does not jump when they
+         land. aria-busy carries it to a screen reader, which a shimmer cannot. -->
+    <template lwc:if={showPlanSkeleton}>
+        <div class="sk-list" aria-busy="true" aria-label="Loading payment plans">
+            <template for:each={skeletonPlanRows} for:item="s">
+                <span key={s.key} class={s.cls}></span>
+            </template>
+        </div>
+    </template>
+
+    <template lwc:if={showPlans}>
+        <!-- MSC-173 - A LOOKUP, in the shape the org already uses everywhere else.
+             1.4 drew fourteen plans as wrapping pills: five rows of them, so the
+             schedule those plans produce was pushed off the card whose whole point is
+             reading the two together.
+
+             Closed, it is the selected plan on one line. Open, it is a search field
+             over a floating result panel - the same two states a Salesforce lookup
+             has, so an agent who has used this org for a day already knows it. -->
+        <div class="lk" onfocusout={handleFocusOut}>
+            <template lwc:if={showTrigger}>
+                <!-- A DIV, not a button, and that is structural rather than stylistic:
+                     the clear control is itself a button, and a button inside a button
+                     is invalid markup that browsers recover from by unnesting - the two
+                     controls then fight over one click. The container carries the
+                     border; the two children carry the two jobs. -->
+                <div class={pillClass}>
+                    <button
+                        class={pillMainClass}
+                        type="button"
+                        disabled={triggerDisabled}
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        title={triggerTitle}
+                        onclick={handleOpen}
+                    >
+                        <span class="lk__pill-ico" aria-hidden="true">
+                            <template lwc:if={hasSelection}>
+                                <c-modon-icon
+                                    name="clipboard-list"
+                                    size="15"
+                                    color="var(--gold, #a8a8a8)"
+                                ></c-modon-icon>
+                            </template>
+                            <template lwc:else>
+                                <c-modon-icon
+                                    name="search"
+                                    size="15"
+                                    color="var(--text-muted, #a3a3a3)"
+                                ></c-modon-icon>
+                            </template>
+                        </span>
+                        <span class="lk__pill-txt">
+                            <span class="lk__pill-name">{triggerText}</span>
+                            <template lwc:if={triggerMeta}>
+                                <span class="lk__pill-meta">{triggerMeta}</span>
+                            </template>
+                        </span>
+                    </button>
+
+                    <!-- Clears the FIELD, never the booking. See handlePillClear. -->
+                    <template lwc:if={pillClearable}>
+                        <button
+                            class="lk__x lk__x--pill"
+                            type="button"
+                            title={labels.PLAN_CLEAR_HINT}
+                            aria-label={labels.PLAN_CLEAR_HINT}
+                            onclick={handlePillClear}
+                        >
+                            <c-modon-icon
+                                name="x"
+                                size="13"
+                                color="var(--text-muted, #a3a3a3)"
+                            ></c-modon-icon>
+                        </button>
+                    </template>
+                </div>
+            </template>
+
+            <template lwc:if={open}>
+                <div class="lk__field">
+                    <span class="lk__ico" aria-hidden="true">
+                        <c-modon-icon
+                            name="search"
+                            size="15"
+                            color="var(--text-muted, #a3a3a3)"
+                        ></c-modon-icon>
+                    </span>
+                    <!-- type="text", not type="search": the UA paints its own clear
+                         glyph at a different size and offset in every browser and it
+                         cannot be styled, so the button below is ours. -->
+                    <input
+                        class="field__input lk__input"
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        role="combobox"
+                        aria-expanded="true"
+                        aria-autocomplete="list"
+                        placeholder={labels.PLAN_FILTER_PH}
+                        aria-label={labels.PLAN_FILTER_PH}
+                        value={query}
+                        oninput={handleFilter}
+                        onkeydown={handleFilterKey}
+                    />
+                    <button
+                        class="lk__x"
+                        type="button"
+                        title={closeTitle}
+                        aria-label={closeTitle}
+                        onclick={handleCloseButton}
+                    >
+                        <c-modon-icon
+                            name="x"
+                            size="13"
+                            color="var(--text-muted, #a3a3a3)"
+                        ></c-modon-icon>
+                    </button>
+                </div>
+
+                <!-- The panel. Floats over the schedule rather than pushing it down,
+                     which is what a lookup does and what keeps the card from jumping
+                     by 240px every time the agent opens it. -->
+                <div class="lk__panel" role="listbox" aria-label="Payment plans">
+                    <p class="lk__count">
+                        <span>{countText}</span>
+                        <template lwc:if={hiddenSelectedText}>
+                            <span class="lk__kept">{hiddenSelectedText}</span>
+                        </template>
+                    </p>
+
+                    <template lwc:if={hasVisiblePlans}>
+                        <div class="lk__opts">
+                            <template for:each={visiblePlans} for:item="p">
+                                <button
+                                    key={p.id}
+                                    class={p.cls}
+                                    type="button"
+                                    data-id={p.id}
+                                    title={p.title}
+                                    role="option"
+                                    aria-selected={p.selected}
+                                    onclick={handleSelect}
+                                >
+                                    <span class="lk__opt-ico" aria-hidden="true">
+                                        <template lwc:if={p.selected}>
+                                            <c-modon-icon
+                                                name="check-circle"
+                                                size="15"
+                                                color="var(--gold, #a8a8a8)"
+                                            ></c-modon-icon>
+                                        </template>
+                                        <template lwc:if={p.unselected}>
+                                            <c-modon-icon
+                                                name="clipboard-list"
+                                                size="15"
+                                                color="var(--text-dim, #8a8a8a)"
+                                            ></c-modon-icon>
+                                        </template>
+                                    </span>
+                                    <span class="lk__opt-txt">
+                                        <span class="lk__opt-name">{p.name}</span>
+                                        <template lwc:if={p.meta}>
+                                            <span class="lk__opt-meta">{p.meta}</span>
+                                        </template>
+                                    </span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Nothing matched. Distinct from EMPTY_PLAN, which means the unit
+                         has no plans at all - the agent has to be able to tell those
+                         two apart, and the way out of this one is a button. -->
+                    <template lwc:if={showNoMatch}>
+                        <div class="lk__none">
+                            <p class="lk__none-t">{noMatchText}</p>
+                            <button
+                                class="btn btn-ghost btn-sm"
+                                type="button"
+                                onclick={handleClear}
+                            >
+                                {labels.PLAN_FILTER_CLEAR}
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <template lwc:if={showEmpty}>
+        <p class="empty">{labels.EMPTY_PLAN}</p>
+    </template>
+
+    <!-- 1.4 - THE SCHEDULE IS BACK, UNDER THE PLAN IT BELONGS TO.
+         1.3 moved it to the rail to keep step 2 free of scrolling. That bought
+         height at the cost of sense: the installments ARE the payment plan, and
+         reading them a column away from the plan that produces them asks the agent
+         to hold two halves of one answer in their head. Scrolling here is accepted.
+
+         A SIBLING of the lookup, never inside a result - a result is a <button>,
+         and a table nested in a button is invalid and unreachable by keyboard.
+         It renders once, because `rows` describes the SELECTED plan, not each one. -->
+    <!-- 1.5 - the rows are what a plan change actually re-fetches, so they are what
+         gets replaced while the call is out. Four bars: enough to read as a table,
+         short enough that a two-row plan does not make the card shrink on arrival. -->
+    <template lwc:if={showScheduleSkeleton}>
+        <div class="sched sk-sched" aria-busy="true" aria-label="Loading the payment schedule">
+            <template for:each={skeletonRows} for:item="s">
+                <span key={s.key} class={s.cls}></span>
+            </template>
+        </div>
+    </template>
+
+    <template lwc:if={showSchedule}>
+        <div class="sched">
+            <div class="sched-head">
+                <span class="sched-th">{labels.MILESTONE}</span>
+                <span class="sched-th">Due</span>
+                <span class="sched-th sched-th--num">%</span>
+                <span class="sched-th sched-th--num">Amount</span>
+            </div>
+            <div class="sched-rows">
+                <template for:each={scheduleRows} for:item="r">
+                    <div key={r.key} class="sched-row">
+                        <span class="sched-name">{r.description}</span>
+                        <span class="sched-due">{r.due}</span>
+                        <span class="sched-pct">{r.percent}</span>
+                        <span class="sched-amount">{r.amount}</span>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+</template>

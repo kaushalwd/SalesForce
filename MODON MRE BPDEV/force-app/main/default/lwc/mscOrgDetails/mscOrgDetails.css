@@ -1,0 +1,1170 @@
+@import "c/mscStyles";
+
+/* display: contents - this element adds no box between the layer and whatever it
+   is mounted in, and it is mounted at .page, never inside a card. See the header
+   in the JS for why that placement is the whole design. */
+:host {
+    display: contents;
+}
+
+/* ── the layer ──────────────────────────────────────────────────────────────
+   Fixed, covering the booking, centring the panel. z-index 70 is the console's
+   modal layer - the same one c/mscPaymentModal and c/mscMilestoneModal sit on,
+   and the page closes any other before opening this, so they never stack. */
+.layer {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(12px, 3vh, 32px) clamp(12px, 2vw, 28px);
+}
+
+/* No backdrop-filter, deliberately: the cards behind already run blur(22px) each,
+   and stacking a live blur over them shimmers. One dim, composited once. */
+.scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(0, 0, 0, 0.82);
+    animation: od-scrim-in 240ms ease-out both;
+}
+
+/* ── the panel ──────────────────────────────────────────────────────────────
+   A FIXED FRAME, not content-sized: the rail must not move under the cursor as
+   the rep fills fields in. The head and foot are pinned; the rail switches panes
+   rather than scrolling to them, so in the ordinary case nothing scrolls at all. */
+.od {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(1000px, 100%);
+    height: min(640px, 92vh);
+    min-height: 0;
+    background: var(--page-bg, #0f0f0f);
+    border: 1px solid var(--section-active-border, rgba(255, 255, 255, 0.42));
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.95);
+    animation: od-panel-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.layer--closing .scrim {
+    animation: od-scrim-out 200ms ease-in both;
+}
+
+.layer--closing .od {
+    animation: od-panel-out 200ms ease-in both;
+}
+
+@keyframes od-scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes od-scrim-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes od-panel-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes od-panel-out {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.985); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scrim,
+    .od,
+    .layer--closing .scrim,
+    .layer--closing .od {
+        animation: none;
+    }
+}
+
+/* ── head ───────────────────────────────────────────────────────────────── */
+.od__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex: 0 0 auto;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.od__headings {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.od__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: var(--text, #fafafa);
+}
+
+.od__sub {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+.od__x {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    border-radius: 8px;
+    background: none;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+}
+
+.od__x:hover {
+    color: var(--text, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+
+.od__x:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+/* ── the two states that are not the workspace ──────────────────────────── */
+.od__state {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.od__blocked {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 46ch;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* ── body: the rail beside one pane ─────────────────────────────────────── */
+.od__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 204px minmax(0, 1fr);
+}
+
+/* ── the rail ───────────────────────────────────────────────────────────────
+   The one decorated element on the panel, and the only place green appears while
+   anything is still outstanding - which is what keeps it meaning something. */
+.od__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px 14px;
+    background: var(--rail-bg, rgba(10, 10, 10, 0.88));
+    border-right: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.od__ready {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__ready-n {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text, #fafafa);
+    font-variant-numeric: tabular-nums;
+}
+
+.od__meter {
+    height: 4px;
+    margin-top: 8px;
+    border-radius: 99px;
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+    overflow: hidden;
+}
+
+.od__meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: var(--gold, #a8a8a8);
+    transition: width 140ms ease-out;
+}
+
+.od__meter-fill--ok {
+    background: var(--chip-green, #4ade80);
+}
+
+.od__rail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* A rail row IS the pane. The one the rep is on carries a surface, so the
+   workspace never leaves them guessing which group they are reading. */
+.od__rl {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.od__rl:hover .od__rl-name {
+    color: var(--text, #fafafa);
+}
+
+.od__rl--on {
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+}
+
+.od__rl--on .od__rl-name {
+    color: var(--text, #fafafa);
+    font-weight: 600;
+}
+
+.od__rl:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+.od__rl-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.od__rl-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim, #8a8a8a);
+}
+
+.od__rl--ok .od__rl-dot {
+    background: var(--chip-green, #4ade80);
+}
+
+.od__rl-name {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.od__rl-n {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+.od__rl--ok .od__rl-n {
+    color: var(--chip-green, #4ade80);
+}
+
+.od__microbar {
+    display: block;
+    height: 2px;
+    border-radius: 99px;
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+    overflow: hidden;
+}
+
+.od__microbar > i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: var(--text-dim, #8a8a8a);
+    transition: width 140ms ease-out;
+}
+
+.od__rl--ok .od__microbar > i {
+    background: var(--chip-green, #4ade80);
+}
+
+/* ── the pane ────────────────────────────────────────────────────────────
+   overflow-y is a safety net, not the design: the rail switches panes so that
+   one group at a time fits without it. */
+.od__pane {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 20px 18px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.od__pane::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+.od__pane-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.od__pane-t {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.od__pane-n {
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Green appears once a group is complete, and nowhere else. */
+.od__pane-n--ok {
+    color: var(--chip-green, #4ade80);
+}
+
+/* ── a block: one subject with one action beside it ─────────────────────── */
+.od__block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    border-radius: 10px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+}
+
+.od__mark {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim, #8a8a8a);
+}
+
+.od__mark--ok {
+    background: var(--chip-green, #4ade80);
+}
+
+.od__block-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.od__block-t {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+
+.od__block-s {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.od__block-w {
+    margin: 3px 0 0;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__block-f {
+    margin: 4px 0 0;
+    font-size: 11.5px;
+    color: var(--text-muted, #a3a3a3);
+    overflow-wrap: anywhere;
+}
+
+.od__block-go {
+    flex: 0 0 auto;
+}
+
+/* the file input does the work; the label is what is seen */
+.od__file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.od__choose {
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+
+.od__file:focus-visible + .od__choose {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+.od__file:disabled + .od__choose {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ── the company's own people, when nobody is filed yet ─────────────────── */
+.od__people {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.od__person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.od__person:last-child {
+    border-bottom: 0;
+}
+
+.od__person-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    gap: 1px;
+}
+
+.od__person-n {
+    font-size: 12.5px;
+    color: var(--text, #fafafa);
+}
+
+.od__person-s {
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    overflow-wrap: anywhere;
+}
+
+/* ── the fields ──────────────────────────────────────────────────────────
+   Two columns, not three: the picklists here carry sentences ("Intermediaries /
+   sources through 3rd party / broker") and three columns truncated all of them. */
+.od__cells {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px 18px;
+}
+
+.od__cell {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* what the company does is a sentence, so it gets the row */
+.od__cell--wide {
+    grid-column: 1 / -1;
+}
+
+.od__fk {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__fv {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+/* A value the server owns that has not arrived reads exactly as a missing
+   document does, because the rep does the same thing about both. */
+.od__fv--none {
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__fl {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.od__opt {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__fn {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__control {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    color: var(--text, #fafafa);
+    font-family: inherit;
+    /* 16px on a phone, or iOS zooms the panel on focus - the same guard the rest
+       of the console's inputs carry. */
+    font-size: 16px;
+}
+
+/* Closed while a write is in flight, so nothing typed can be lost between the
+   request going out and the answer coming back. */
+.od__control:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.od__control:focus {
+    outline: none;
+    border-color: var(--focus-ring, #fafafa);
+    box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.1));
+}
+
+textarea.od__control {
+    height: auto;
+    padding: 7px 10px;
+    line-height: 1.45;
+    resize: vertical;
+}
+
+/* ── documents: a slim ledger. Status and date, never the file. ─────────── */
+.od__docs {
+    display: flex;
+    flex-direction: column;
+}
+
+.od__doc {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 2px;
+    font-size: 12.5px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.od__doc:last-child {
+    border-bottom: 0;
+}
+
+/* Green means the same thing here it means on the rail: this one is done. */
+.od__doc--ok .od__doc-s {
+    color: var(--chip-green, #4ade80);
+}
+
+.od__doc-n {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--text, #fafafa);
+}
+
+.od__doc-s {
+    font-size: 12px;
+    white-space: nowrap;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+.od__hold {
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__hold--warn {
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* ── foot ───────────────────────────────────────────────────────────────── */
+.od__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex: 0 0 auto;
+    padding: 12px 20px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.od__note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.od__note-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.od__note--ok {
+    color: var(--chip-green, #4ade80);
+}
+
+.od__note--bad {
+    color: var(--chip-red, #f87171);
+}
+
+.od__acts {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.od__act {
+    display: inline-flex;
+}
+
+/* Phones: the rail becomes a strip above the pane, and the frame gives up its
+   fixed height rather than scrolling the page. */
+@media (max-width: 720px) {
+    .od {
+        height: auto;
+        max-height: 92vh;
+    }
+
+    .od__body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .od__rail {
+        border-right: 0;
+        border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+        gap: 12px;
+    }
+
+    .od__rail-list {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+    }
+
+    .od__rl {
+        flex: 0 0 auto;
+        min-width: 132px;
+    }
+
+    .od__cells {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .od__block {
+        flex-wrap: wrap;
+    }
+
+    .od__foot {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MSC-181 · the Power of Attorney pane.
+   Shaped like the Salesforce lookup the reps already know: one field, a
+   floating result panel underneath it, the violet contact tile on every row,
+   "New Contact" at the foot - and, once chosen, ONE card that says who they
+   are, where things stand and the one thing to do. Styles ported from the
+   approved prototype, measured in the workspace's own tokens.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.lk {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.lk__combo {
+    position: relative;
+}
+
+.lk__field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.lk__icon {
+    position: absolute;
+    right: 12px;
+    display: grid;
+    place-items: center;
+    color: var(--text-dim, #8a8a8a);
+    pointer-events: none;
+}
+
+.lk__input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--text, #fafafa);
+    padding: 10px 36px 10px 12px;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    border-radius: 6px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lk__input::placeholder {
+    color: var(--text-muted, #a3a3a3);
+}
+
+.lk__input:focus {
+    outline: none;
+    border-color: var(--gold, #a8a8a8);
+    box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.16));
+}
+
+/* the count line under the field - always says what the box is looking at */
+.lk__meter {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.lk__meter-hint {
+    text-align: right;
+    flex: none;
+}
+
+/* the floating result panel - over the content, never pushing it */
+.lk__drop {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 10px;
+    background: var(--page-bg, #161616);
+    overflow: hidden;
+    box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.6);
+    animation: poa-drop-in 0.14s ease both;
+}
+
+@keyframes poa-drop-in {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: none; }
+}
+
+.lk__scroll {
+    max-height: 264px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-border, rgba(255, 255, 255, 0.16)) transparent;
+}
+
+.lk__scroll::-webkit-scrollbar {
+    width: 10px;
+}
+
+.lk__scroll::-webkit-scrollbar-thumb {
+    background: var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 6px;
+    border: 3px solid var(--page-bg, #161616);
+    background-clip: padding-box;
+}
+
+.lk__scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pr {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 9px 12px;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.pr--active,
+.pr:hover {
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+}
+
+/* the Salesforce contact tile: the violet square every rep recognises */
+.eicon {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    margin-top: 1px;
+    display: grid;
+    place-items: center;
+    background: #9050c8;
+}
+
+.eicon--new {
+    background: transparent;
+    border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-muted, #a3a3a3);
+}
+
+.pr__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.pr__n {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+}
+
+/* what they are, then how to reach them - two lines, never one crammed one */
+.pr__role {
+    display: block;
+    margin-top: 1px;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.pr__s {
+    display: block;
+    margin-top: 1px;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Said in words, only when something is actually missing. Silence means fine. */
+.pr__gap {
+    display: block;
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: var(--chip-amber, #fbbf24);
+}
+
+.lkm {
+    background: var(--gold-wash, rgba(168, 168, 168, 0.16));
+    color: var(--text, #fafafa);
+    border-radius: 2px;
+    padding: 0 1px;
+    font-weight: 600;
+}
+
+.lk__empty {
+    padding: 20px 14px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* the standard lookup's last row: create what the search could not find */
+.lk__add {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    color: var(--text-muted, #a3a3a3);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.lk__add:hover:not(:disabled) {
+    background: var(--step-future, rgba(255, 255, 255, 0.08));
+    color: var(--text, #fafafa);
+}
+
+.lk__add:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--gold-wash, rgba(168, 168, 168, 0.16));
+}
+
+.lk__add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lk__add-t {
+    display: block;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+    font-size: 13px;
+}
+
+.lk__add-s {
+    display: block;
+    margin-top: 1px;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.lk__hint {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+kbd {
+    font-family: inherit;
+    font-size: 10.5px;
+    padding: 1px 5px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 3px;
+    color: var(--text-muted, #a3a3a3);
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+}
+
+/* ── the signatory card: ONE frame that says everything ────────────────────
+   Who they are (header) · where things stand and the one thing to do (status
+   line) · what is on the record (details). No box repeats another's sentence. */
+
+.sg {
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 10px;
+    background: var(--input-bg, rgba(255, 255, 255, 0.04));
+    overflow: hidden;
+    animation: poa-card-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes poa-card-in {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: none; }
+}
+
+.sg__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.sg__id {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sg__n {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+
+.sg__r {
+    display: block;
+    margin-top: 1px;
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sg__x {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-dim, #8a8a8a);
+    cursor: pointer;
+}
+
+.sg__x:hover:not(:disabled) {
+    color: var(--text, #fafafa);
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.sg__x:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 1px;
+}
+
+.sg__x:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* one line: a dot, one sentence, the one button. Nothing below repeats it. */
+.sg__status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sg__status-t {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    line-height: 1.45;
+}
+
+.sg__status--warn {
+    background: rgba(251, 191, 36, 0.05);
+}
+
+.sg__status--warn .sg__status-t {
+    color: var(--chip-amber, #fbbf24);
+}
+
+.sg__status--ok {
+    background: var(--wash-green, rgba(74, 222, 128, 0.07));
+}
+
+.sg__status--ok .sg__status-t {
+    color: var(--chip-green, #4ade80);
+}
+
+.sg__status-when {
+    flex: none;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+
+.od__mark--live {
+    position: relative;
+}
+
+.od__mark--live::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1px solid var(--chip-green, #4ade80);
+    opacity: 0.45;
+    animation: poa-ping 2s ease-out infinite;
+}
+
+@keyframes poa-ping {
+    0% { transform: scale(0.6); opacity: 0.6; }
+    100% { transform: scale(1.35); opacity: 0; }
+}
+
+.sg__zone {
+    padding: 14px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sg__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px 28px;
+}
+
+.sg__fk {
+    margin: 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sg__fv {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+.sg__fv--gap {
+    color: var(--chip-amber, #fbbf24);
+    font-size: 13px;
+}
+
+.poa__acts {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}

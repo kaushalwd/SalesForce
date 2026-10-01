@@ -1,0 +1,136 @@
+<template>
+    <div class="slds-p-around_medium dd-stack">
+
+        <template lwc:if={loading}>
+            <lightning-spinner alternative-text="Working" size="small"></lightning-spinner>
+        </template>
+
+        <template lwc:if={mandate}>
+            <template lwc:if={mandate.isUaedds}>
+
+                <div class="dd-status">
+                    <p class="dd-status-name">{mandate.name}</p>
+                    <p class="dd-status-state">{mandate.status}</p>
+                    <template lwc:if={mandate.bankStatusDescription}>
+                        <p class="dd-status-bank">
+                            {mandate.bankStatusCode} - {mandate.bankStatusDescription}
+                        </p>
+                    </template>
+                </div>
+
+                <template lwc:if={message}>
+                    <div class="slds-m-bottom_medium">
+                        <lightning-formatted-text value={message}></lightning-formatted-text>
+                    </div>
+                </template>
+
+                <!-- Never reached the bank, so it can still be sent. The only way back for one the
+                     vendor refused. -->
+                <template lwc:if={mandate.canSubmit}>
+                    <div class="dd-section">
+                        <p class="dd-note">
+                            This mandate has not reached the bank. Correct anything the bank objected
+                            to on the record, then send it.
+                        </p>
+                        <div class="dd-buttons">
+                            <lightning-button variant="brand" label="Approve Mandate" data-action="submit"
+                                    onclick={handleAction} disabled={approveDisabled}></lightning-button>
+                            <!-- Rejected here rather than at the bank: nothing has been sent, so
+                                 there is nothing to withdraw. Opens the reason box rather than
+                                 rejecting outright - the reason is required, and asking for it
+                                 afterwards would mean the record was already refused. -->
+                            <template lwc:if={showRejectButton}>
+                                <lightning-button variant="destructive" label="Reject Mandate"
+                                        onclick={handleReject} disabled={loading}></lightning-button>
+                            </template>
+                        </div>
+
+                        <template lwc:if={askingReason}>
+                            <div class="dd-reason">
+                                <lightning-textarea label="Why is this mandate being rejected?"
+                                        value={rejectionReason} onchange={handleReasonChange}
+                                        max-length="32768" required disabled={loading} >
+                                </lightning-textarea>
+                                <div class="dd-buttons">
+                                    <lightning-button variant="destructive" label="Confirm Rejection"
+                                            data-action="reject" onclick={handleAction}
+                                            disabled={confirmRejectDisabled}></lightning-button>
+                                    <lightning-button label="Cancel" onclick={handleCancelReject}
+                                            disabled={loading}></lightning-button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <div class="dd-buttons">
+                    <template lwc:if={mandate.canFetchDocument}>
+                        <lightning-button label="Fetch unsigned form" data-action="unsigned"
+                                onclick={handleAction} disabled={unsignedDisabled}></lightning-button>
+                        <lightning-button label="Fetch signed form" data-action="signed"
+                                onclick={handleAction} disabled={signedDisabled}></lightning-button>
+                    </template>
+                    <template lwc:if={mandate.canRefreshStatus}>
+                        <lightning-button label="Refresh bank status" data-action="refresh"
+                                onclick={handleAction} disabled={loading}></lightning-button>
+                    </template>
+                </div>
+
+                <template lwc:if={filedNote}>
+                    <p class="dd-filed">{filedNote}</p>
+                </template>
+
+                <!-- Its own group: these are the cancellation paperwork, not the mandate's. -->
+                <template lwc:if={mandate.canFetchCancellationForm}>
+                    <div class="dd-section">
+                        <p class="dd-group">Cancellation</p>
+                        <div class="dd-buttons">
+                            <lightning-button label="Fetch cancellation form" data-action="cancelform"
+                                    onclick={handleAction} disabled={cancelUnsignedDisabled}></lightning-button>
+                            <lightning-button label="Fetch signed cancellation form" data-action="cancelformsigned"
+                                    onclick={handleAction} disabled={cancelSignedDisabled}></lightning-button>
+                        </div>
+                        <template lwc:if={cancelFiledNote}>
+                            <p class="dd-filed">{cancelFiledNote}</p>
+                        </template>
+                    </div>
+                </template>
+
+                <template lwc:if={showEnding}>
+                    <div class="dd-section">
+                        <template lwc:if={mandate.canDiscard}>
+                            <p class="dd-note">
+                                This mandate is not live at the bank, so it is discarded rather than
+                                cancelled. Nothing is left sitting with UAEDDS.
+                            </p>
+                            <lightning-button variant="destructive" label="Discard mandate"
+                                data-action="discard" onclick={handleAction} disabled={loading}>
+                            </lightning-button>
+                        </template>
+                        <template lwc:if={mandate.canCancel}>
+                            <p class="dd-note">
+                                This mandate is live at the bank. Cancelling needs a reason code on
+                                the record, and the bank has to agree before it reads as Cancelled.
+                            </p>
+                            <lightning-button variant="destructive" label="Cancel mandate"
+                                data-action="cancel" onclick={handleAction} disabled={loading}>
+                            </lightning-button>
+                        </template>
+                    </div>
+                </template>
+
+            </template>
+
+            <template lwc:if={isFab}>
+                <p>
+                    {mandate.name} is on the FAB gateway. FAB mandates keep their own route and are
+                    approved, rejected and cancelled from the buttons on the record.
+                </p>
+            </template>
+        </template>
+
+        <div class="dd-close">
+            <lightning-button label="Close" onclick={handleClose}></lightning-button>
+        </div>
+    </div>
+</template>

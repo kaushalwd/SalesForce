@@ -1,0 +1,62 @@
+<template>
+    <div class="chart-container">
+        <!-- ✅ Chart Header Always Visible -->
+        <div class="chart-header">
+            <div class="header-row">
+                <h2 class="chart-title">Outstanding Balance Overview</h2>
+                <!--<button class="expand-btn" title="Expand" onclick={openAgingModal}>
+                    ⤢
+                </button>-->
+                <div class="expand-btn" title="Expand" onclick={openAgingModal}>
+                    <lightning-icon icon-name="utility:expand_alt" size="x-small"></lightning-icon>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ✅ Chart Section -->
+        <template if:true={hasData}>
+            <div class="chart-area">
+                <canvas class="chart-canvas"></canvas>
+            </div>
+        </template>
+
+        <!-- ✅ No Data Section -->
+        <template if:false={hasData}>
+            <div class="no-data-container">
+                <p class="no-data-text">There is no outstanding balance at this time</p>
+                <!--<p class="no-data-subtext">
+                    There is no aging information available at this time. Please check back later.
+                </p>-->
+            </div>
+        </template>
+        <div data-portal-wrapper>
+            <template if:true={showAgingModal}>
+                <div class="modal-backdrop" onclick={closeAgingModal}>
+                    <div class="modal-container" onclick={stopModalClose}>
+                        <button class="modal-close" title="Close" onclick={closeAgingModal}>✕</button>
+
+                        <div class="modal-header">
+                            <div class="modal-title">Outstanding Balance Overview</div>
+                        </div>
+
+                        <div class="modal-body">
+                           <template if:true={hasData}>
+                                <div class="chart-area chart-area_modal">
+                                    <canvas class="chart-canvas modal-canvas"></canvas>
+                                </div>
+                            </template>
+
+                            <template if:false={hasData}>
+                                <div class="no-data-container">
+                                    <p class="no-data-text">There is no outstanding balance at this time</p>
+                                </div>
+                            </template>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,683 @@
+/* ------------------------------------------------------------
+   bpStatementOfAccount - same look as the NewSOA Visualforce page.
+   Desktop: document layout (max 1100px).
+   Mobile (768px and below): every table row becomes a card, each
+   cell showing its column name (data-label) next to the value.
+   ------------------------------------------------------------ */
+
+:host {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000000;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* ---------------- Loading / error ---------------- */
+
+.soa-loading {
+    position: relative;
+    min-height: 150px;
+}
+
+.soa-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #f0c4c9;
+    border-radius: 10px;
+    background: #fff7f8;
+    color: #ba0517;
+}
+
+.soa-error-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.soa-error-message {
+    margin: 3px 0 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+/* ---------------- Action bar ---------------- */
+
+.actionBar {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 0 12px 0;
+    text-align: right;
+}
+
+.downloadBtn {
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 1px solid #000000;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.refreshBtn {
+    background-color: #FFFFFF;
+    color: #000000;
+    border: 1px solid #000000;
+    padding: 10px 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.downloadBtn:disabled,
+.refreshBtn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.refreshIcon {
+    font-size: 15px;
+    font-weight: bold;
+    margin-right: 6px;
+    display: inline-block;
+}
+
+/* ---------------- Page ---------------- */
+
+.pageWrapper {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    border: 1px solid #D6D6D6;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.topHeader {
+    padding: 22px 32px 18px 32px;
+    background: #FFFFFF;
+    border-bottom: 2px solid #000000;
+}
+
+.headerTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.statementTitle {
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 0.6px;
+}
+
+.logoCell {
+    flex: 0 0 auto;
+    text-align: right;
+}
+
+.logoCell img {
+    width: 150px;
+    height: auto;
+    display: block;
+}
+
+.headerInfo {
+    display: flex;
+    margin-top: 18px;
+    font-size: 15px;
+}
+
+.headerInfoCustomer {
+    width: 62%;
+    padding-right: 16px;
+}
+
+.headerInfoDate {
+    width: 38%;
+}
+
+.headerLabel {
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #555555;
+}
+
+.jointOwners {
+    margin-top: 8px;
+    font-size: 15px;
+}
+
+.mintBlock {
+    background-color: #FFFFFF;
+    padding: 12px 32px 14px 32px;
+}
+
+.mintBlockSmall {
+    background-color: #FFFFFF;
+    padding: 10px 32px 12px 32px;
+}
+
+.whiteBlock {
+    background-color: #FFFFFF;
+    padding: 6px 32px 6px 32px;
+}
+
+.sectionTitle {
+    font-size: 15px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    padding: 9px 12px;
+    color: #FFFFFF;
+    background-color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-radius: 3px;
+}
+
+/* ---------------- Unit specification ---------------- */
+
+.unitSpecBlock {
+    padding-top: 10px;
+    padding-bottom: 12px;
+}
+
+.unitCard {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #D6D6D6;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.unitGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    font-size: 14px;
+}
+
+.unitCell {
+    min-width: 0;
+    text-align: center;
+    padding: 6px 6px;
+    overflow-wrap: anywhere;
+}
+
+.unitSubLine {
+    margin-top: 4px;
+}
+
+.unitLabel {
+    font-weight: bold;
+    font-size: 12px;
+    display: inline;
+    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #555555;
+}
+
+/* ---------------- Data tables ---------------- */
+
+.tableCard {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #D6D6D6;
+    border-radius: 6px;
+    padding: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.soa-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #FFFFFF;
+    font-size: 13px;
+    border: 1px solid #C9C9C9;
+    border-top: 2px solid #2FA9E0;
+}
+
+.soa-table th {
+    padding: 10px 6px;
+    font-size: 11.5px;
+    border: 1px solid #333333;
+    border-bottom: 1px solid #000000;
+    font-weight: bold;
+    text-align: center;
+    background-color: #000000;
+    color: #FFFFFF;
+    vertical-align: middle;
+    text-transform: uppercase;
+}
+
+.soa-table th:first-child {
+    border-left: none;
+}
+
+.soa-table th:last-child {
+    border-right: none;
+}
+
+.soa-table td {
+    border: 1px solid #D9D9D9;
+    padding: 8px 6px;
+    text-align: center;
+    vertical-align: top;
+    color: #000000;
+    background-color: #FFFFFF;
+}
+
+.soa-table td:first-child {
+    border-left: none;
+}
+
+.soa-table td:last-child {
+    border-right: none;
+}
+
+.soa-table tbody tr.rowMain td {
+    background-color: #FFFFFF;
+}
+
+.soa-table tbody tr.rowAlt td {
+    background-color: #F4F7FA;
+}
+
+.soa-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* column widths (same as NewSOA) */
+.w4  { width: 4%; }
+.w5  { width: 5%; }
+.w8  { width: 8%; }
+.w10 { width: 10%; }
+.w11 { width: 11%; }
+.w12 { width: 12%; }
+.w13 { width: 13%; }
+.w14 { width: 14%; }
+.w15 { width: 15%; }
+.w16 { width: 16%; }
+.w18 { width: 18%; }
+
+/* nested cheque / cleared-date / amount lines */
+.allocLine {
+    padding: 2px 1px;
+    font-size: 13px;
+}
+
+.total-row td {
+    font-weight: bold;
+    text-align: center;
+    background-color: #EDEDED !important;
+    color: #000000;
+    padding: 10px 6px;
+    font-size: 13.5px;
+    border-top: 1px solid #000000;
+    border-bottom: none;
+}
+
+.total-row td.totalCaption {
+    text-align: left;
+}
+
+/* ---------------- Total outstanding ---------------- */
+
+.grandTotalCard {
+    border-radius: 4px;
+    background-color: #000000;
+    color: #FFFFFF;
+    padding: 4px 0;
+}
+
+.grandTotalRow {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.grandTotalLabel {
+    text-align: right;
+}
+
+.grandTotalValue {
+    min-width: 170px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* ---------------- Escrow ---------------- */
+
+.escrowSection {
+    margin-top: 10px;
+}
+
+.bankCard {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #D6D6D6;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.bankRow {
+    display: flex;
+    border-bottom: 1px solid #E6E6E6;
+}
+
+.bankRow:last-child {
+    border-bottom: none;
+}
+
+.bankMode {
+    width: 28%;
+    padding: 10px 14px;
+    line-height: 1.6;
+}
+
+.bankDetail {
+    width: 72%;
+    padding: 10px 14px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* ---------------- Footer ---------------- */
+
+.footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 16px 32px 0 32px;
+    padding: 12px 0 16px 0;
+    border-top: 1px solid #000000;
+    background: #FFFFFF;
+}
+
+.footerLeft {
+    flex: 1 1 auto;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.footerDisclaimerTitle {
+    text-decoration: underline;
+}
+
+.footerDisclaimerLines {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.footerRight {
+    flex: 0 0 32%;
+    font-size: 11.5px;
+    line-height: 1.45;
+    text-align: right;
+}
+
+.footerWebsite {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 6px;
+}
+
+b {
+    font-weight: bold;
+}
+
+/* ---------------- Tablet ---------------- */
+@media screen and (max-width: 1024px) {
+    .soa-table {
+        font-size: 12.5px;
+    }
+
+    .soa-table th {
+        font-size: 11px;
+        padding: 9px 4px;
+    }
+
+    .soa-table td {
+        padding: 7px 4px;
+    }
+}
+
+/* ---------------- Mobile (768px and below) ---------------- */
+@media screen and (max-width: 768px) {
+
+    .actionBar {
+        display: flex;
+        gap: 8px;
+        padding: 0 0 10px 0;
+    }
+
+    .refreshBtn,
+    .downloadBtn {
+        flex: 1 1 0;
+        margin: 0;
+        padding: 12px 10px;
+        font-size: 15px;
+    }
+
+    .pageWrapper {
+        border: none;
+        box-shadow: none;
+    }
+
+    .topHeader {
+        padding: 14px 12px 12px 12px;
+    }
+
+    .statementTitle {
+        font-size: 21px;
+    }
+
+    .logoCell img {
+        width: 110px;
+    }
+
+    .headerInfo {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .headerInfoCustomer,
+    .headerInfoDate {
+        width: 100%;
+        padding-right: 0;
+    }
+
+    .mintBlock,
+    .mintBlockSmall,
+    .whiteBlock {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .sectionTitle {
+        font-size: 14px;
+    }
+
+    /* Unit specification: one field per line */
+    .unitGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .unitCell {
+        text-align: left;
+        padding: 8px 2px;
+        border-bottom: 1px solid #EEEEEE;
+    }
+
+    .unitCell:last-child {
+        border-bottom: none;
+    }
+
+    /* Data tables: each row becomes a card */
+    .tableCard {
+        border: none;
+        overflow: visible;
+    }
+
+    .soa-table {
+        border: none;
+    }
+
+    .soa-table thead {
+        display: none;
+    }
+
+    .soa-table,
+    .soa-table tbody,
+    .soa-table tr,
+    .soa-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .soa-table tbody tr {
+        margin-bottom: 12px;
+        padding: 4px 12px;
+        border: 1px solid #D6D6D6;
+        border-top: 3px solid #2FA9E0;
+        border-radius: 8px;
+        background: #FFFFFF;
+    }
+
+    .soa-table tbody tr.rowMain td,
+    .soa-table tbody tr.rowAlt td {
+        background-color: transparent;
+    }
+
+    .soa-table td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 9px 0;
+        border: none;
+        border-bottom: 1px solid #EEEEEE;
+        font-size: 15px;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .soa-table td:last-child {
+        border-bottom: none;
+    }
+
+    .soa-table td::before {
+        content: attr(data-label);
+        flex: 0 0 45%;
+        color: #555555;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .allocLines {
+        text-align: right;
+    }
+
+    .allocLine {
+        padding: 1px 0;
+        font-size: 15px;
+    }
+
+    /* Total rows: grey card, caption full width, empty cells hidden */
+    .soa-table tr.total-row {
+        border-top-color: #000000;
+        background: #EDEDED;
+    }
+
+    .total-row td {
+        font-size: 15px;
+        padding: 9px 0;
+        border-top: none;
+        border-bottom: 1px solid #D6D6D6;
+        background-color: transparent !important;
+    }
+
+    .total-row td:empty {
+        display: none;
+    }
+
+    .total-row td.totalCaption {
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .total-row td.totalCaption::before {
+        content: none;
+    }
+
+    /* Grand total: label left, amount right */
+    .grandTotalRow {
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+    }
+
+    .grandTotalLabel {
+        text-align: left;
+    }
+
+    .grandTotalValue {
+        min-width: 0;
+    }
+
+    /* Escrow details: stacked */
+    .bankRow {
+        flex-direction: column;
+    }
+
+    .bankMode,
+    .bankDetail {
+        width: 100%;
+        padding: 10px 12px;
+    }
+
+    .bankMode {
+        font-weight: bold;
+        padding-bottom: 2px;
+    }
+
+    /* Footer: stacked */
+    .footer {
+        flex-direction: column;
+        align-items: stretch;
+        margin: 12px 12px 0 12px;
+    }
+
+    .footerRight {
+        flex: 0 0 auto;
+        text-align: left;
+    }
+}

@@ -1,0 +1,535 @@
+<template>
+    <template lwc:if={isInitializing}>
+        <c-mbpr_loader label="Loading your dashboard"></c-mbpr_loader>
+    </template>
+    <template lwc:elseif={loadError}>
+        <div class="state-panel">
+            <c-mbpr_empty-state
+                compact
+                kicker="Dashboard"
+                title="Something went wrong"
+                message={loadError}
+            ></c-mbpr_empty-state>
+            <button class="dash-button dash-button--ghost" type="button" onclick={handleRetryLoad}>
+                Try again
+            </button>
+        </div>
+    </template>
+    <template lwc:if={showContent}>
+        <div class={contentClass} aria-busy={isRefreshing}>
+            <!-- ============================= Toolbar ============================= -->
+            <div class="dash-toolbar">
+                <button
+                    lwc:if={showFilterTrigger}
+                    class={filterTriggerClass}
+                    type="button"
+                    aria-expanded={filterTriggerExpanded}
+                    onclick={toggleFilterPanel}
+                >
+                    <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                    <span>Filters</span>
+                    <span class="dash-filter-chip">{activeFilterLabel}</span>
+                </button>
+
+                <template lwc:if={isFilterOpen}>
+                    <div class="dash-filter-scrim" aria-hidden="true" onclick={closeFilterPanel}></div>
+                    <div class="filter-pop" style={filterPopStyle} onkeydown={handleFilterKeydown}>
+                        <div class="filter-pop__head">
+                            <b>Filters</b>
+                            <button
+                                class="filter-pop__close"
+                                type="button"
+                                title="Close"
+                                aria-label="Close filters"
+                                onclick={closeFilterPanel}
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <label class="filter-cell">
+                            <span>Period</span>
+                            <select onchange={handleDraftFilterChange}>
+                                <template for:each={filterOptions} for:item="option">
+                                    <option key={option.value} value={option.value} selected={option.selected}>
+                                        {option.label}
+                                    </option>
+                                </template>
+                            </select>
+                        </label>
+
+                        <template lwc:if={showCustomDates}>
+                            <div class="filter-pop__dates">
+                                <label class="filter-cell">
+                                    <span>Start date</span>
+                                    <input
+                                        type="date"
+                                        value={draftStartDate}
+                                        onchange={handleDraftStartChange}
+                                    />
+                                </label>
+                                <label class="filter-cell">
+                                    <span>End date</span>
+                                    <input
+                                        type="date"
+                                        value={draftEndDate}
+                                        onchange={handleDraftEndChange}
+                                    />
+                                </label>
+                            </div>
+                            <template lwc:if={customRangeHint}>
+                                <p class="filter-pop__hint">{customRangeHint}</p>
+                            </template>
+                        </template>
+
+                        <div class="filter-pop__actions">
+                            <button class="dash-button dash-button--ghost" type="button" onclick={resetFilters}>
+                                Reset
+                            </button>
+                            <button
+                                class="dash-button"
+                                type="button"
+                                disabled={isApplyDisabled}
+                                onclick={applyFilters}
+                            >
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- ============================= Hero canvas ============================= -->
+            <section class="hero" aria-label="Sales and commission overview">
+                <div class="hero__aura hero__aura--a" aria-hidden="true"></div>
+                <div class="hero__aura hero__aura--b" aria-hidden="true"></div>
+                <div class="hero__aura hero__aura--c" aria-hidden="true"></div>
+                <div class="hero__grid">
+                    <div class="hero-sales">
+                        <p class="hero-kicker">Total Sales Amount</p>
+                        <p class="hero-sales__value">
+                            <span class="hero-sales__currency">AED</span>
+                            <span class="hero-sales__number">{heroSalesDisplay}</span>
+                        </p>
+                    </div>
+                    <div class="hero-commission">
+                        <div class="gauge" role="img" aria-label={gaugeAriaLabel}>
+                            <svg class="gauge__svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                                <circle class="gauge__track" cx="18" cy="18" r="15.9155"></circle>
+                                <circle
+                                    class="gauge__arc"
+                                    cx="18"
+                                    cy="18"
+                                    r="15.9155"
+                                    style={gaugeArcStyle}
+                                    onpointerenter={handleGaugeEnter}
+                                    onpointermove={handleTipMove}
+                                    onpointerleave={handleTipLeave}
+                                ></circle>
+                            </svg>
+                            <div class="gauge__center">
+                                <span class="gauge__pct">{gaugePctDisplay}<i>%</i></span>
+                                <span class="gauge__cap">Paid</span>
+                            </div>
+                        </div>
+                        <button
+                            class="gauge-expand"
+                            type="button"
+                            title="Enlarge"
+                            aria-label="Enlarge commission overview"
+                            data-chart="gauge"
+                            onclick={handleChartExpand}
+                        >
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="hero-commission__body">
+                            <p class="hero-kicker">Total Commission</p>
+                            <p class="hero-commission__value">AED {commissionTotalDisplay}</p>
+                            <template lwc:if={commissionFullLine}>
+                                <p class="hero-commission__full">{commissionFullLine}</p>
+                            </template>
+                            <ul class="glass-chips">
+                                <template for:each={commissionChips} for:item="chip">
+                                    <li key={chip.key} class="glass-chip">
+                                        <i class={chip.dotClass} aria-hidden="true"></i>
+                                        <span class="glass-chip__label">{chip.label}</span>
+                                        <span class="glass-chip__value">{chip.value}</span>
+                                        <template lwc:if={chip.percent}>
+                                            <b class="glass-chip__pct">{chip.percent}</b>
+                                        </template>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================= Pulse row ============================= -->
+            <section class="pulse-row" aria-label="Pipeline pulse">
+                <template for:each={pulseTiles} for:item="tile">
+                    <article key={tile.key} class={tile.tileClass}>
+                        <div class="pulse-tile__head">
+                            <span class="pulse-tile__name">{tile.title}</span>
+                            <span class="pulse-tile__tools">
+                                <span class="pulse-tile__meta">{tile.meta}</span>
+                                <button
+                                    class="pulse-tile__expand"
+                                    type="button"
+                                    title="Enlarge"
+                                    aria-label={tile.expandLabel}
+                                    data-chart={tile.expandKey}
+                                    onclick={handleChartExpand}
+                                >
+                                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                            </svg>
+                                </button>
+                            </span>
+                        </div>
+                        <p class="pulse-tile__total">{tile.totalDisplay}</p>
+                        <!-- CR-003: a tile with showBreakdown=false (Units) shows its
+                             headline count alone - no split bar, no stat chips. -->
+                        <template lwc:if={tile.showBreakdown}>
+                            <div class="pulse-bar">
+                                <template for:each={tile.segments} for:item="seg">
+                                    <span
+                                        key={seg.key}
+                                        class={seg.barClass}
+                                        style={seg.barStyle}
+                                        data-label={seg.label}
+                                        data-value={seg.display}
+                                        data-pct={seg.pct}
+                                        data-tone={seg.tone}
+                                        onpointerenter={handlePulseEnter}
+                                        onpointermove={handleTipMove}
+                                        onpointerleave={handleTipLeave}
+                                    ></span>
+                                </template>
+                            </div>
+                            <ul class="pulse-stats">
+                                <template for:each={tile.cardStats} for:item="stat">
+                                    <li key={stat.key} class="pulse-stat">
+                                        <i class={stat.dotClass} aria-hidden="true"></i>
+                                        <span class="pulse-stat__label">{stat.label}</span>
+                                        <b class="pulse-stat__value">{stat.value}</b>
+                                    </li>
+                                </template>
+                            </ul>
+                        </template>
+                    </article>
+                </template>
+            </section>
+
+            <!-- ============================= Project row ============================= -->
+            <section class="project-row" aria-label="Project breakdowns">
+                <article class="panel proj-panel">
+                    <div class="proj-panel__head">
+                        <h3 class="panel__title">Sales by Project</h3>
+                        <template lwc:if={salesHasData}>
+                            <button
+                                class="proj-panel__expand"
+                                type="button"
+                                title="Enlarge"
+                                aria-label="Enlarge Sales by Project"
+                                data-chart="sales"
+                                onclick={handleChartExpand}
+                            >
+                                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                            </svg>
+                            </button>
+                        </template>
+                    </div>
+                    <template lwc:if={salesHasData}>
+                        <c-mbpr_chart
+                            variant="donut"
+                            mode="price"
+                            currency-prefix="AED"
+                            center-caption="Total Sales"
+                            center-value={salesCenterTotal}
+                            segments={salesSegments}
+                            frameless
+                            hide-legend
+                        ></c-mbpr_chart>
+                    </template>
+                    <template lwc:else>
+                        <p class="proj-empty">No data to display for this period.</p>
+                    </template>
+                </article>
+
+                <article class="panel proj-panel">
+                    <div class="proj-panel__head">
+                        <h3 class="panel__title">SPA by Project</h3>
+                        <template lwc:if={spaHasData}>
+                            <span class="proj-panel__tools">
+                                <span class="proj-panel__meta">{spaTotalDisplay} total</span>
+                                <button
+                                    class="proj-panel__expand"
+                                    type="button"
+                                    title="Enlarge"
+                                    aria-label="Enlarge SPA by Project"
+                                    data-chart="spa"
+                                    onclick={handleChartExpand}
+                                >
+                                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                            </svg>
+                                </button>
+                            </span>
+                        </template>
+                    </div>
+                    <template lwc:if={spaHasData}>
+                        <ol class="rank-list">
+                            <template for:each={spaRanked} for:item="row">
+                                <li
+                                    key={row.key}
+                                    class="rank-row"
+                                    style={row.rowStyle}
+                                    data-label={row.label}
+                                    data-value={row.display}
+                                    data-pct={row.percent}
+                                    onpointerenter={handleRankEnter}
+                                    onpointermove={handleTipMove}
+                                    onpointerleave={handleTipLeave}
+                                >
+                                    <span class="rank-row__rank">{row.rank}</span>
+                                    <div class="rank-row__body">
+                                        <div class="rank-row__line">
+                                            <span class="rank-row__label">{row.label}</span>
+                                            <span class="rank-row__value">{row.display}<b>{row.percent}</b></span>
+                                        </div>
+                                        <div class="rank-row__track" aria-hidden="true">
+                                            <span class="rank-row__fill" style={row.fillStyle}></span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </template>
+                        </ol>
+                    </template>
+                    <template lwc:else>
+                        <p class="proj-empty">No data to display for this period.</p>
+                    </template>
+                </article>
+
+                <article class="panel proj-panel">
+                    <div class="proj-panel__head">
+                        <h3 class="panel__title">Units by Project</h3>
+                        <template lwc:if={unitsHasData}>
+                            <button
+                                class="proj-panel__expand"
+                                type="button"
+                                title="Enlarge"
+                                aria-label="Enlarge Units by Project"
+                                data-chart="units"
+                                onclick={handleChartExpand}
+                            >
+                                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
+                            </svg>
+                            </button>
+                        </template>
+                    </div>
+                    <template lwc:if={unitsHasData}>
+                        <c-mbpr_chart
+                            variant="donut"
+                            mode="count"
+                            center-caption="Total Units"
+                            center-value={unitsCenterTotal}
+                            segments={unitsSegments}
+                            frameless
+                            hide-legend
+                        ></c-mbpr_chart>
+                    </template>
+                    <template lwc:else>
+                        <p class="proj-empty">No data to display for this period.</p>
+                    </template>
+                </article>
+            </section>
+
+            <!-- Floating tooltip for the bespoke marks (gauge, pulse, SPA). -->
+            <template lwc:if={dashTipOn}>
+                <div class={tipClass} style={tipStyle} aria-hidden="true">
+                    <div class="dash-tip__row">
+                        <span class="dash-tip__swatch" style={tipRow.swatchStyle}></span>
+                        <span class="dash-tip__label">{tipRow.label}</span>
+                        <span class="dash-tip__value">{tipRow.value}</span>
+                        <template lwc:if={tipRow.pct}>
+                            <span class="dash-tip__pct">{tipRow.pct}</span>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ============================= Chart enlarge lightbox ============================= -->
+            <c-mbpr_chart-lightbox
+                open={isLightboxOpen}
+                title={lightboxTitle}
+                eyebrow="Dashboard"
+                subtitle={activeFilterLabel}
+                onclose={handleLightboxClose}
+            >
+                <template lwc:if={isSalesExpanded}>
+                    <c-mbpr_chart
+                        variant="donut"
+                        mode="price"
+                        currency-prefix="AED"
+                        center-caption="Total Sales"
+                        center-value={salesCenterTotal}
+                        segments={salesSegments}
+                        empty-message="No data to display for this period."
+                    ></c-mbpr_chart>
+                </template>
+                <template lwc:elseif={isUnitsExpanded}>
+                    <c-mbpr_chart
+                        variant="donut"
+                        mode="count"
+                        center-caption="Total Units"
+                        center-value={unitsCenterTotal}
+                        segments={unitsSegments}
+                        empty-message="No data to display for this period."
+                    ></c-mbpr_chart>
+                </template>
+                <template lwc:elseif={isSpaExpanded}>
+                    <div class="dash-xl">
+                        <ol class="rank-list rank-list--xl">
+                            <template for:each={spaRanked} for:item="row">
+                                <li
+                                    key={row.key}
+                                    class="rank-row"
+                                    style={row.rowStyle}
+                                    data-label={row.label}
+                                    data-value={row.display}
+                                    data-pct={row.percent}
+                                    onpointerenter={handleRankEnter}
+                                    onpointermove={handleTipMove}
+                                    onpointerleave={handleTipLeave}
+                                >
+                                    <span class="rank-row__rank">{row.rank}</span>
+                                    <div class="rank-row__body">
+                                        <div class="rank-row__line">
+                                            <span class="rank-row__label">{row.label}</span>
+                                            <span class="rank-row__value">{row.display}<b>{row.percent}</b></span>
+                                        </div>
+                                        <div class="rank-row__track" aria-hidden="true">
+                                            <span class="rank-row__fill" style={row.fillStyle}></span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </template>
+                        </ol>
+                        <template lwc:if={xlTipOn}>
+                            <div class={tipClass} style={tipStyle} aria-hidden="true">
+                                <div class="dash-tip__row">
+                                    <span class="dash-tip__swatch" style={tipRow.swatchStyle}></span>
+                                    <span class="dash-tip__label">{tipRow.label}</span>
+                                    <span class="dash-tip__value">{tipRow.value}</span>
+                                    <template lwc:if={tipRow.pct}>
+                                        <span class="dash-tip__pct">{tipRow.pct}</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:elseif={isGaugeExpanded}>
+                    <div class="dash-xl">
+                        <div class="gauge gauge--xl" role="img" aria-label={gaugeAriaLabel}>
+                            <svg class="gauge__svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+                                <circle class="gauge__track" cx="18" cy="18" r="15.9155"></circle>
+                                <circle
+                                    class="gauge__arc"
+                                    cx="18"
+                                    cy="18"
+                                    r="15.9155"
+                                    style={gaugeArcStyle}
+                                    onpointerenter={handleGaugeEnter}
+                                    onpointermove={handleTipMove}
+                                    onpointerleave={handleTipLeave}
+                                ></circle>
+                            </svg>
+                            <div class="gauge__center">
+                                <span class="gauge__pct">{gaugePctDisplay}<i>%</i></span>
+                                <span class="gauge__cap">Paid</span>
+                            </div>
+                        </div>
+                        <ul class="dash-xl__rows">
+                            <template for:each={gaugeDetailRows} for:item="row">
+                                <li key={row.key} class="dash-xl__row">
+                                    <i class={row.dotClass} aria-hidden="true"></i>
+                                    <span class="dash-xl__label">{row.label}</span>
+                                    <span class="dash-xl__value">{row.value}</span>
+                                    <template lwc:if={row.pct}>
+                                        <span class="dash-xl__pct">{row.pct}</span>
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                        <template lwc:if={xlTipOn}>
+                            <div class={tipClass} style={tipStyle} aria-hidden="true">
+                                <div class="dash-tip__row">
+                                    <span class="dash-tip__swatch" style={tipRow.swatchStyle}></span>
+                                    <span class="dash-tip__label">{tipRow.label}</span>
+                                    <span class="dash-tip__value">{tipRow.value}</span>
+                                    <template lwc:if={tipRow.pct}>
+                                        <span class="dash-tip__pct">{tipRow.pct}</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:elseif={isPulseExpanded}>
+                    <div class="dash-xl">
+                        <template lwc:if={expandedPulseTile}>
+                            <p class="dash-xl__total">{expandedPulseTile.totalDisplay}<span>{expandedPulseTile.meta}</span></p>
+                            <!-- CR-003: same opt-out as the card, so the enlarged
+                                 Units view is the headline count only. -->
+                            <template lwc:if={expandedPulseTile.showBreakdown}>
+                                <div class="pulse-bar pulse-bar--xl">
+                                    <template for:each={expandedPulseTile.segments} for:item="seg">
+                                        <span
+                                            key={seg.key}
+                                            class={seg.barClass}
+                                            style={seg.barStyle}
+                                            data-label={seg.label}
+                                            data-value={seg.display}
+                                            data-pct={seg.pct}
+                                            data-tone={seg.tone}
+                                            onpointerenter={handlePulseEnter}
+                                            onpointermove={handleTipMove}
+                                            onpointerleave={handleTipLeave}
+                                        ></span>
+                                    </template>
+                                </div>
+                                <ul class="dash-xl__rows">
+                                    <template for:each={expandedPulseTile.stats} for:item="stat">
+                                        <li key={stat.key} class="dash-xl__row">
+                                            <i class={stat.dotClass} aria-hidden="true"></i>
+                                            <span class="dash-xl__label">{stat.label}</span>
+                                            <span class="dash-xl__value">{stat.value}</span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                        </template>
+                        <template lwc:if={xlTipOn}>
+                            <div class={tipClass} style={tipStyle} aria-hidden="true">
+                                <div class="dash-tip__row">
+                                    <span class="dash-tip__swatch" style={tipRow.swatchStyle}></span>
+                                    <span class="dash-tip__label">{tipRow.label}</span>
+                                    <span class="dash-tip__value">{tipRow.value}</span>
+                                    <template lwc:if={tipRow.pct}>
+                                        <span class="dash-tip__pct">{tipRow.pct}</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </c-mbpr_chart-lightbox>
+        </div>
+    </template>
+</template>

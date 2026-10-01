@@ -1,0 +1,81 @@
+<template>
+    <!--- MODEL POPUP-->
+     <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open custom-modal">
+            <div class="slds-modal__container custom-container">
+
+                <!-- Header -->
+                <header class="slds-modal__header custom-header">
+                    <h2 class="slds-text-heading_medium slds-text-align_center">Memo Content</h2>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium custom-body">
+                    <lightning-input-rich-text
+                        value={richTextValue}
+                        label="Type your message below"
+                        onchange={handleInputChange}>
+                    </lightning-input-rich-text>
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer custom-footer">
+                    <div class="footer-btns">
+                        <lightning-button
+                            variant="neutral"
+                            label="Cancel"
+                            onclick={handleCancel}>
+                        </lightning-button>
+                        <lightning-button
+                            class="slds-m-left_medium"
+                            variant="brand"
+                            label="Prepare"
+                            onclick={handleSave}>
+                        </lightning-button>
+                    </div>
+                </footer>
+            </div>
+        </section>
+
+        <!-- Backdrop -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!--- MODEL END-->
+    <lightning-card>
+         <template if:true={isLoading}>
+            <div class="spinner-container">
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+        <div style="text-align: center; font-size: 25px; font-weight: bold;">{commissionMonth} Month Invoice Bundle</div>
+        <!-- Button Group (Right-Aligned) -->
+        <div style="display: flex; justify-content: flex-end; padding: 10px;">
+            <lightning-button-group>
+                <lightning-button label="Refresh" onclick={refreshTable}></lightning-button>
+                <!--lightning-button label="Hold Commission" onclick={exportTable}></lightning-button-->
+                <lightning-button label="Prepare for Approval" onclick={openModal} variant="brand" disabled={disableApprovalButton}></lightning-button>
+            </lightning-button-group>
+        </div>
+
+        <!-- Data Table Centered with Padding -->
+        <div style="display: flex; justify-content: center; padding: 15px;">
+            <div style="width: 100%;">
+                <lightning-datatable
+                    key-field="Id"
+                    data={pagedData}
+                    columns={columns}
+                    selected-rows={pageSelectedRows}
+                    onrowselection={handleRowSelection}>
+                </lightning-datatable>
+            </div>
+        </div>
+
+        <!-- Pagination Buttons -->
+        <div class="slds-m-top_medium" style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+            <lightning-button label="Previous" onclick={handlePrevious} disabled={isPreviousDisabled}></lightning-button>
+            <p>Page {pageNumber} of {totalPages}</p>
+            <lightning-button label="Next" onclick={handleNext} disabled={isNextDisabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

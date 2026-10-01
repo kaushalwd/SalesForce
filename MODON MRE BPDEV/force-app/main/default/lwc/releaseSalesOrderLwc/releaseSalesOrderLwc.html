@@ -1,0 +1,84 @@
+<template>
+
+    <template lwc:if={showLoading}>
+        <lightning-spinner variant="brand"></lightning-spinner>
+    </template>
+    <template lwc:if={initialModal}>
+        <!-- <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open"> -->
+            <div class="slds-modal__container">
+                <!-- modal header start -->
+                <header class="slds-modal__header">
+                    <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeConfirmationModal}>
+                    <lightning-icon icon-name="utility:close"
+                    alternative-text="close"
+                    variant="inverse"
+                    size="small" ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                    </button> -->
+                    <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">Confirmation</h2>
+                </header>
+            
+                <!-- modal body start -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-wrap slds-grid_vertical-align-top">
+                            
+                            <div class="slds-p-around_medium slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                <h3>Are you sure you want to cancel the Sales Order and release the unit?</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- modal footer start-->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_brand" onclick={showCancelModal}>Yes</button>
+                    <button class="slds-button slds-button_neutral" onclick={closeAction}>No</button>
+                </footer>
+            
+            </div>
+        <!-- </section> -->
+    </template>
+    <!--Added by MODON CRM TEAM ON 22-DEC-2025-->
+    <!--Start-->
+    <template lwc:if={openCancellationReasonModal}>
+        <lightning-card title="Cancel Sales Order" icon-name="utility:close">
+            <div class="slds-grid slds-wrap slds-p-horizontal_medium slds-p-vertical_small">
+                <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                    <lightning-combobox
+                    name="reason"
+                    label="Cancellation Reason"
+                    value={cancellationReason}
+                    placeholder="Select a reason"
+                    options={reasonOptions}
+                    onchange={handleCancelReasonChange}
+                    required>
+                </lightning-combobox>
+                </div>
+            </div>
+            <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                <lightning-textarea
+                    label="Cancel Reason"
+                    name="comments"
+                    value={comments}
+                    onchange={handleCancelReasonChange}
+                    required>
+                </lightning-textarea>
+            </div>
+             <div class="slds-col slds-size_1-of-1 slds-small-size_1-of-2 slds-m-top_small slds-p-left_small">
+                            <lightning-file-upload
+                            label="Upload Memo"
+                            name="memoUpload"
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            record-id={recordId}
+                            onuploadfinished={handleUploadFinished}
+                            multiple>
+                            </lightning-file-upload>
+            </div>
+            <div class="slds-p-around_medium slds-align_absolute-center">
+                <lightning-button variant="brand" label="Save" onclick={releaseSalesOrder}></lightning-button>
+            </div>
+            <!--END-->
+        </lightning-card>
+    </template>
+</template>

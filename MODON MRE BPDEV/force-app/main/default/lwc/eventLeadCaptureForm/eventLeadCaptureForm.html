@@ -1,0 +1,239 @@
+<template>
+    <template if:true={showLoader}>
+        <div class="slds-spinner_container">
+            <div class="slds-spinner slds-spinner_medium slds-spinner_brand" role="status">
+                <span class="slds-assistive-text">{loaderText}</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+    </template>
+
+    <div class="page">
+        <div class="brand-bar">
+            <img src={logoSrc} alt="Modon" class="brand-logo" />
+        </div>
+
+        <div class="hero" style={backgroundStyle}>
+            <section class="form-shell">
+                <template if:true={toastMessage}>
+                    <div class={toastClass}>
+                        {toastMessage}
+                    </div>
+                </template>
+                <header class="form-header">
+                    <h2>Register Contact Details</h2>
+                </header>
+
+                <lightning-layout multiple-rows class="form-grid">
+                    <lightning-layout-item size="12">
+                        <lightning-input
+                            label="First Name"
+                            name="firstName"
+                            value={form.firstName}
+                            required
+                            onchange={handleChange}
+                        ></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12">
+                        <lightning-input
+                            label="Last Name"
+                            name="lastName"
+                            value={form.lastName}
+                            required
+                            onchange={handleChange}
+                        ></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12">
+                        <!-- <lightning-input
+                            label="Phone number"
+                            name="phone"
+                            type="tel"
+                            value={form.phone}
+                            required
+                            onchange={handleChange}
+                        ></lightning-input> -->
+
+                        <!-- <lightning-input 
+                            class={phoneInputClass}
+                            type="tel" 
+                            name="phone" 
+                            label="Phone number" 
+                            value={form.phone} 
+                            onchange={handleChange} 
+                            onblur={validatePhone}
+                            data-id="phone"
+                            required 
+                        ></lightning-input> -->
+                        <!-- <button 
+                            onclick={validatePhone} 
+                            disabled={isValidatingPhone}> 
+                            {validatePhoneButtonLabel} 
+                        </button> -->
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">
+                                <abbr class="slds-required" title="required">*</abbr>
+                                Phone number
+                                <lightning-helptext
+                                    content="Phone number must start with + (e.g., +971501234567)">
+                                </lightning-helptext>
+                            </label>
+
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    class={phoneInputClass}
+                                    type="tel"
+                                    name="phone"
+                                    label="&nbsp;"
+                                    variant="label-hidden"
+                                    value={form.phone}
+                                    onchange={handleChange}
+                                    onblur={validatePhone}
+                                    data-id="phone"
+                                    required
+                                    pattern="^\+[0-9]{6,15}$"
+                                    message-when-pattern-mismatch="Phone number must start with + and contain digits only (e.g. +971501234567)">
+                                </lightning-input>
+                            </div>
+                        </div>
+                    </lightning-layout-item>
+                    
+                    <!-- <lightning-layout-item size="12">
+                        <lightning-input
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            value={form.email}
+                            required
+                            onchange={handleChange}
+                        ></lightning-input>
+                    </lightning-layout-item> -->
+                    <lightning-layout-item size="12">
+                        <lightning-input 
+                            class={emailInputClass}
+                            type="email" 
+                            name="email"  
+                            label="Email Address" 
+                            value={form.email}
+                            onchange={handleChange} 
+                            onblur={validateEmail}
+                            data-id="email"
+                            required 
+                        ></lightning-input>
+                        <!-- <button 
+                            onclick={validateEmail} 
+                            disabled={isValidatingEmail}>
+                            {validateButtonLabel} 
+                        </button> -->
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="12">
+                        <lightning-combobox
+                            label="Property Type"
+                            name="propertyType"
+                            value={form.propertyType}
+                            options={propertyTypeChoices}
+                            placeholder="-- Select one --"
+                            onchange={handleChange}
+                        ></lightning-combobox>
+                    </lightning-layout-item>
+
+                    <!-- Adding Project Interst 2026-12-02 -->
+                <lightning-layout-item size="12">
+                    <lightning-combobox
+                    label="Project Interest"
+                    name="projectInterest"
+                    value={form.projectInterest}
+                    options={projectInterestChoices}
+                    placeholder="-- Select one --"
+                    onchange={handleChange}
+                    ></lightning-combobox>
+                </lightning-layout-item>
+                
+                    <lightning-layout-item size="12">
+                        <lightning-combobox
+                            label="Customer Budget"
+                            name="customerBudget"
+                            value={form.customerBudget}
+                            options={customerBudgetChoices}
+                            placeholder="-- Select one --"
+                            onchange={handleChange}
+                        ></lightning-combobox>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12">
+                        <lightning-combobox
+                            label="Modon Representative"
+                            name="modonRepresentative"
+                            value={form.modonRepresentative}
+                            options={representativeChoices}
+                            placeholder="-- Select one --"
+                            required
+                            onchange={handleChange}
+                        ></lightning-combobox>
+                    </lightning-layout-item>
+                </lightning-layout>
+
+            <!-- <div class="terms-row">
+                <lightning-input
+                    type="checkbox"
+                    label="I agree to the terms and conditions"
+                    variant="label-hidden"
+                    checked={agreeTerms}
+                    onchange={handleCheckboxChange}
+                ></lightning-input>
+                <span class="terms-text">
+                    I agree to the&nbsp;
+                    <a href="https://www.modon.com/terms-and-conditions" target="_blank" rel="noopener noreferrer">
+                        terms and conditions
+                    </a>
+                </span>
+            </div> -->
+            <div class="slds-form-element slds-m-top_medium">
+
+                <div class="slds-form-element__control">
+                    <label class="slds-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={agreeTerms}
+                            onchange={handleCheckboxChange}
+                        />
+                        <span class="slds-checkbox_faux"></span>
+                        <span class="slds-form-element__label">
+                            I agree to the&nbsp;
+                            <a
+                                href="https://www.modon.com/terms-and-conditions"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                terms and conditions
+                            </a>
+                        </span>
+                    </label>
+                </div>
+
+                <template if:true={showTermsError}>
+                    <div class="slds-text-color_error slds-text-body_small slds-m-top_x-small">
+                        You must agree to the terms and conditions before submitting.
+                    </div>
+                </template>
+            </div>
+
+            <div class="actions">
+                <lightning-button
+                    variant="brand"
+                    label="Register"
+                    title="Register"
+                    onclick={handleSubmit}
+                        disabled={isSubmitting}
+                    ></lightning-button>
+                </div>
+
+                <template if:true={showThankYou}>
+                    <div class="thank-you">
+                        <p>Thank you! Your details were submitted.</p>
+                    </div>
+                </template>
+            </section>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,519 @@
+<template>
+    <lightning-card variant="Narrow">
+
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Loading"
+                variant="brand"
+                size="large">
+            </lightning-spinner>
+        </template>
+
+        <!-- ===================================================== -->
+        <!-- APPROVAL MODAL -->
+        <!-- ===================================================== -->
+        <template if:true={isApprvalModalOpen}>
+            <c-approval-modal
+                is-open={isModalOpen}
+                step={selectedStep}
+                accepted={acceptedByUser}
+                onsubmit={handleModalSubmit}
+                oncancel={closeModal}
+                onaccepted={handleStepAccepted}
+                record-id={bpRecordId}
+                business-process-name={businessProcessName}>
+            </c-approval-modal>
+        </template>
+
+        <!-- ===================================================== -->
+        <!-- SOA MODAL -->
+        <!-- ===================================================== -->
+        <template if:true={isSoaModalOpen}>
+            <section class="soa-modal-backdrop">
+
+                <div class={soaModalContainerClass}>
+
+                    <div class="soa-modal-header">
+                        <div>
+                            <p class="soa-modal-eyebrow">
+                                Financial Review
+                            </p>
+                            <h2 class="soa-modal-title">
+                                Statement of Account
+                            </h2>
+                        </div>
+
+                        <div class="soa-modal-header-actions">
+
+                            <lightning-button-icon
+                                icon-name={soaFullScreenIcon}
+                                variant="bare-inverse"
+                                alternative-text={soaFullScreenLabel}
+                                title={soaFullScreenLabel}
+                                onclick={toggleSoaFullScreen}>
+                            </lightning-button-icon>
+
+                            <lightning-button-icon
+                                icon-name="utility:close"
+                                variant="bare-inverse"
+                                alternative-text="Close"
+                                title="Close"
+                                onclick={closeSoaModal}>
+                            </lightning-button-icon>
+
+                        </div>
+                    </div>
+
+                    <div class="soa-modal-body">
+                        <c-bp-statement-of-account
+                            sales-order-id={salesOrderId}>
+                        </c-bp-statement-of-account>
+                    </div>
+
+                </div>
+
+            </section>
+        </template>
+
+        <!-- ===================================================== -->
+        <!-- EXECUTIVE PAGE -->
+        <!-- ===================================================== -->
+        <div class="executive-shell">
+
+            <!-- Top navigation -->
+            <div class="topbar">
+
+                <button
+                    type="button"
+                    class="back-button"
+                    onclick={handleBack}>
+                    <lightning-icon
+                        icon-name="utility:back"
+                        size="xx-small"
+                        alternative-text="Back">
+                    </lightning-icon>
+                    <span>Back to Approvals</span>
+                </button>
+
+                <span class="management-badge">
+                    Management Approval
+                </span>
+
+            </div>
+
+            <!-- Hero / primary decision area -->
+            <section class="hero-card">
+
+                <div class="hero-main">
+
+                    <div class="hero-icon">
+                        <lightning-icon
+                            icon-name="standard:approval"
+                            size="medium"
+                            alternative-text="Approval">
+                        </lightning-icon>
+                    </div>
+
+                    <div class="hero-copy">
+                        <p class="eyebrow">
+                            Executive Decision
+                        </p>
+
+                        <h1 class="hero-title">
+                            {businessProcessName}
+                        </h1>
+
+                        <p class="hero-subtitle">
+                            Review the key request information, supporting financial details,
+                            and prior approval trail before taking action.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="hero-actions">
+
+                    <span class="status-pill">
+                        {currentStatus}
+                    </span>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Approval Action"
+                        onclick={handleAction}
+                        disabled={recordApproved}
+                        class="primary-action">
+                    </lightning-button>
+
+                </div>
+
+            </section>
+
+            <!-- Executive at-a-glance -->
+            <section class="snapshot-grid">
+
+                <div class="snapshot-item">
+                    <span class="snapshot-label">
+                        Process Type
+                    </span>
+                    <span class="snapshot-value">
+                        {businessProcessType}
+                    </span>
+                </div>
+
+                <div class="snapshot-item">
+                    <span class="snapshot-label">
+                        Current Step
+                    </span>
+                    <span class="snapshot-value">
+                        {currentStepName}
+                    </span>
+                </div>
+
+                <div class="snapshot-item">
+                    <span class="snapshot-label">
+                        Assigned To
+                    </span>
+                    <span class="snapshot-value">
+                        {currentAssignedTo}
+                    </span>
+                </div>
+
+                <div class="snapshot-item snapshot-action">
+
+                    <span class="snapshot-label">
+                        Supporting View
+                    </span>
+
+                    <template if:true={showSoaLink}>
+                        <lightning-button
+                            variant="neutral"
+                            label="Finance Summary"
+                            icon-name="utility:preview"
+                            onclick={handleViewSoa}
+                            class="secondary-action">
+                        </lightning-button>
+                    </template>
+
+                    <template if:false={showSoaLink}>
+                        <span class="snapshot-value muted">
+                            Not Required
+                        </span>
+                    </template>
+
+                </div>
+
+            </section>
+
+            <!-- Main two-column executive workspace -->
+            <div class="executive-layout">
+
+                <!-- LEFT: Decision information -->
+                <main class="decision-column">
+
+                    <section class="content-card decision-card">
+
+                        <div class="card-header">
+
+                            <div>
+                                <p class="section-eyebrow">
+                                    Decision Context
+                                </p>
+                                <h2 class="section-title">
+                                    Approval Information
+                                </h2>
+                            </div>
+
+                            <div class="header-status">
+                                <span class="mini-label">
+                                    Current Status
+                                </span>
+                                <span class="status-pill compact">
+                                    {currentStatus}
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div class="card-divider"></div>
+
+                        <div class="dynamic-field-grid">
+
+                            <template
+                                for:each={pendingStepFields}
+                                for:item="field">
+
+                                <div
+                                    key={field.fieldName}
+                                    class="dynamic-field">
+
+                                    <span class="field-label">
+                                        {field.label}
+                                    </span>
+
+                                    <span class="field-value">
+
+                                        <template if:true={field.hasValue}>
+                                            {field.value}
+                                        </template>
+
+                                        <template if:false={field.hasValue}>
+                                            -
+                                        </template>
+
+                                    </span>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                    </section>
+
+                    <!-- ================================================= -->
+                    <!-- DOCUMENTS -->
+                    <!-- Only Business Process Documents that already have -->
+                    <!-- at least one uploaded file are shown here. -->
+                    <!-- ================================================= -->
+                    <template if:true={hasDocuments}>
+
+                        <section class="content-card decision-card supporting-card">
+
+                            <div class="card-header">
+                                <div>
+                                    <p class="section-eyebrow">
+                                        Reference Material
+                                    </p>
+                                    <h2 class="section-title">
+                                        Documents
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <div class="card-divider"></div>
+
+                            <div class="documents-list">
+
+                                <template
+                                    for:each={documentsWithFiles}
+                                    for:item="doc">
+
+                                    <div
+                                        key={doc.docId}
+                                        class="document-row">
+
+                                        <div class="document-row-header">
+                                            <span class="document-name">
+                                                {doc.docName}
+                                            </span>
+                                            <span class="document-step">
+                                                Step: {doc.stepName}
+                                            </span>
+                                        </div>
+
+                                        <template
+                                            for:each={doc.files}
+                                            for:item="file">
+
+                                            <div
+                                                key={file.contentDocumentId}
+                                                class="document-file-row">
+
+                                                <div class="document-file-info">
+                                                    <div class="document-file-name">
+                                                        {file.fileName}
+                                                    </div>
+                                                    <div class="document-file-date">
+                                                        {file.formattedDate}
+                                                    </div>
+                                                    <div class="document-file-uploader">
+                                                        Uploaded By - {file.uploadedBy}
+                                                    </div>
+                                                </div>
+
+                                                <lightning-button-icon
+                                                    icon-name="utility:preview"
+                                                    variant="bare"
+                                                    alternative-text="View File"
+                                                    title="View File"
+                                                    data-file-id={file.contentDocumentId}
+                                                    onclick={navigateToFile}>
+                                                </lightning-button-icon>
+
+                                            </div>
+
+                                        </template>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                        </section>
+
+                    </template>
+
+                    <!-- ================================================= -->
+                    <!-- PAYMENT EXTENSION SUMMARY -->
+                    <!-- Visible only for Payment Extension requests -->
+                    <!-- ================================================= -->
+                    <template if:true={isPaymentExtension}>
+
+                        <c-bp-payment-extension-summary
+                            bp-step-id={bpStepId}>
+                        </c-bp-payment-extension-summary>
+
+                    </template>
+
+                    <!-- ================================================= -->
+                    <!-- EOI REFUND SUMMARY -->
+                    <!-- Visible only for EOI Refund Approval requests -->
+                    <!-- ================================================= -->
+                    <template if:true={isEOIRefundApproval}>
+
+                        <c-bp-eoi-refund-summary
+                            bp-step-id={bpStepId}>
+                        </c-bp-eoi-refund-summary>
+
+                    </template>
+
+                </main>
+
+                <!-- RIGHT: Governance / approval trail -->
+                <aside class="governance-column">
+
+                    <section class="content-card governance-card">
+
+                        <button
+                            type="button"
+                            class="governance-header"
+                            onclick={toggleStepOpen}>
+
+                            <div class="governance-heading">
+
+                                <div class="governance-icon">
+                                    <lightning-icon
+                                        icon-name="utility:trail"
+                                        size="small"
+                                        alternative-text="Approval Trail">
+                                    </lightning-icon>
+                                </div>
+
+                                <div>
+                                    <p class="section-eyebrow">
+                                        Governance Trail
+                                    </p>
+                                    <h2 class="section-title">
+                                        Approval Hierarchy
+                                    </h2>
+                                </div>
+
+                            </div>
+
+                            <lightning-icon
+                                if:true={stepopen}
+                                icon-name="utility:chevrondown"
+                                size="x-small"
+                                alternative-text="Collapse">
+                            </lightning-icon>
+
+                            <lightning-icon
+                                if:false={stepopen}
+                                icon-name="utility:chevronright"
+                                size="x-small"
+                                alternative-text="Expand">
+                            </lightning-icon>
+
+                        </button>
+
+                        <div
+                            class="approval-timeline"
+                            if:true={stepopen}>
+
+                            <template
+                                for:each={completedStepsList}
+                                for:item="step">
+
+                                <article
+                                    key={step.id}
+                                    class={step.cardClass}>
+
+                                    <div class="timeline-marker">
+                                        <span class="timeline-number">
+                                            {step.id}
+                                        </span>
+                                    </div>
+
+                                    <div class="timeline-card">
+
+                                        <div class="timeline-card-header">
+                                            <div>
+                                                <h3 class="step-title">
+                                                    {step.name}
+                                                </h3>
+                                                <p class="step-status">
+                                                    {step.status}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="timeline-card-body">
+
+                                            <div class="trail-field">
+                                                <span class="trail-label">
+                                                    Approved / Assigned By
+                                                </span>
+                                                <span class="trail-value">
+                                                    {step.owner}
+                                                </span>
+                                            </div>
+
+                                            <div class="trail-field">
+                                                <span class="trail-label">
+                                                    Remarks / Comments
+                                                </span>
+                                                <span class="trail-value">
+                                                    {step.remarks}
+                                                </span>
+                                            </div>
+
+                                            <div class="trail-field">
+                                                <span class="trail-label">
+                                                    Step Start Time
+                                                </span>
+                                                <span class="trail-value">
+                                                    {step.stepStartTime}
+                                                </span>
+                                            </div>
+
+                                            <div class="trail-field">
+                                                <span class="trail-label">
+                                                    Step End Time
+                                                </span>
+                                                <span class="trail-value">
+                                                    {step.stepEndTime}
+                                                </span>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </article>
+
+                            </template>
+
+                        </div>
+
+                    </section>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </lightning-card>
+</template>

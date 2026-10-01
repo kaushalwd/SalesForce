@@ -1,0 +1,313 @@
+* {
+  box-sizing: border-box;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  /* min-height, not height: env() padding extends the bar into the notch */
+  min-height: 44px;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  background: var(--bar, #111);
+  border-bottom: 1px solid var(--bar-border, rgba(255, 255, 255, 0.07));
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+.logo-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 100%;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--bar-border, rgba(255, 255, 255, 0.07));
+  cursor: pointer;
+  flex-shrink: 0;
+  /* the wordmark is fill:currentColor, so a full-bright colour */
+  color: var(--text, #fafafa);
+}
+.divider {
+  color: var(--text-dim, rgba(255, 255, 255, 0.25));
+  font-size: 12px;
+}
+.brand {
+  /* full-bright + semibold to match the wordmark */
+  color: var(--text, #fafafa);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  /* capped so a long label cannot push the icons off a narrow phone */
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the rep's current location; truncates, the bar is a fixed 44px */
+.context {
+  flex: 1;
+  min-width: 0;
+  padding: 0 20px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  height: 100%;
+  border-left: 1px solid var(--bar-border, rgba(255, 255, 255, 0.07));
+}
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 0 12px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--bar-border, rgba(255, 255, 255, 0.07));
+  cursor: pointer;
+  color: var(--text-dim, rgba(255, 255, 255, 0.4));
+  transition: background 0.15s ease;
+}
+.icon-btn.no-border {
+  border-right: none;
+}
+.icon-btn:hover {
+  background: var(--row-bg, rgba(255, 255, 255, 0.05));
+}
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--input-bg, rgba(255, 255, 255, 0.12));
+  color: var(--text-muted, #d4d4d4);
+}
+.help-btn {
+  padding: 0 16px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* profile menu (Theme + Log Out): a bottom sheet on phones, a dropdown from 768 */
+.user-wrap {
+  position: relative;
+  height: 100%;
+  display: flex;
+}
+.user-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9490;
+  background: var(--overlay, rgba(0, 0, 0, 0.5));
+  animation: fadeIn 140ms ease;
+}
+.user-menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9491;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  /* opaque */
+  background: var(--page-bg, #111);
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.12));
+  border-bottom: none;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+  animation: menuUp 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes menuUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.user-menu__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.08));
+  margin-bottom: 6px;
+}
+.avatar--lg {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+.user-menu__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #fff);
+}
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 12px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text, #fff);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.user-menu__item c-modon-icon {
+  color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
+.user-menu__item:hover {
+  background: var(--row-bg, rgba(255, 255, 255, 0.06));
+}
+.user-menu__item:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: -2px;
+}
+
+.icon-btn:focus-visible,
+.logo-btn:focus-visible,
+.help-btn:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: -2px;
+}
+
+/* phones: no room for the context label */
+@media (max-width: 767px) {
+  .context {
+    display: none;
+  }
+  .icon-btn {
+    padding: 0 12px;
+  }
+  .logo-btn {
+    padding: 0 14px;
+  }
+}
+
+/* desktop/tablet: an anchored dropdown under the avatar */
+@media (min-width: 768px) {
+  .user-backdrop {
+    background: transparent;
+    animation: none;
+  }
+  .user-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+    bottom: auto;
+    width: 220px;
+    margin-top: 4px;
+    padding: 6px;
+    border-radius: 12px;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.12));
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    animation: none;
+  }
+  .user-menu__head {
+    padding: 8px 10px;
+  }
+  .user-menu__name {
+    font-size: 13px;
+  }
+  .user-menu__item {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+/* very narrow phones: drop the brand label and divider below ~360px */
+@media (max-width: 360px) {
+  .divider,
+  .brand {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-btn,
+  .icon-btn {
+    transition: none;
+  }
+  .user-menu,
+  .user-backdrop {
+    animation: none;
+  }
+}
+
+/* hide scrollbars app-wide (scroll still works) */
+:host,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+/* 1.1: the bell's count. The platform pattern (Gmail/Slack/LinkedIn): a small pill pinned
+   to the icon's top-right CORNER - overlapping its edge, never covering it. The icon is
+   centered in the button, so the pill anchors off the button's center, not its edge. */
+.bell {
+  position: relative;
+}
+.badge {
+  position: absolute;
+  top: calc(50% - 14px);
+  left: calc(50% + 3px);
+  min-width: 8px;
+  height: 13px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--text, #fafafa);
+  color: var(--bar, #111);
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+  /* a ring of the bar's own ground lifts the pill off the icon it overlaps */
+  border: 2px solid var(--bar, #111);
+  box-sizing: content-box;
+  pointer-events: none;
+}

@@ -1,0 +1,383 @@
+/* Tokens come from .mbpr-home's inline --mbpr-theme-* set, the same way
+   mbpr_helpWorkspace reads them, so both portal themes are covered with one
+   set of rules and the fallbacks keep the panel readable if it is ever
+   rendered outside the shell. */
+:host {
+    --t-ink: var(--mbpr-theme-ink, #101112);
+    --t-ink-soft: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.64));
+    --t-ink-faint: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    --t-line: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    --t-surface: var(--mbpr-theme-surface-solid, #ffffff);
+    --t-accent: var(--mbpr-theme-accent, #0b7772);
+    --t-accent-ink: var(--mbpr-theme-accent-ink, #06504c);
+    --t-accent-soft: var(--mbpr-theme-accent-soft, rgba(11, 119, 114, 0.1));
+    --t-accent-line: var(--mbpr-theme-accent-line, rgba(11, 119, 114, 0.28));
+    --t-gold: var(--mbpr-theme-gold, #b69a68);
+    --t-shadow-md: var(--mbpr-theme-shadow-md, 0 16px 32px rgba(16, 17, 18, 0.08));
+    --t-radius-pill: var(--mbpr-radius-pill, 999px);
+    --t-ease: var(--mbpr-ease, cubic-bezier(0.16, 1, 0.3, 1));
+
+    /* The well behind the video. It is only seen while the still is loading, or
+       where the host publishes none, so it is a neutral dark in both themes -
+       the way every video frame is - and never a painted decoration. */
+    --t-well: #0d0f10;
+
+    color: var(--t-ink);
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+    font: inherit;
+}
+
+.training {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* The video sits in the middle of the room it is given rather than pinned under
+   the header, so the panel reads as composed instead of half empty. */
+.training__stage {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    padding: 1.25rem;
+}
+
+.training__empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.25rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* the player                                                          */
+/* ------------------------------------------------------------------ */
+
+.player {
+    aspect-ratio: 16 / 9;
+    background: var(--t-well);
+    border: 1px solid var(--t-line);
+    border-radius: 14px;
+    box-shadow: var(--t-shadow-md);
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.player__media {
+    border: 0;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+/* Full screen: the container becomes the whole display, so the fixed ratio and
+   the card treatment come off and the media fills it. */
+.player:fullscreen {
+    aspect-ratio: auto;
+    background: #000000;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: 100%;
+    width: 100%;
+}
+
+.player:fullscreen .player__media {
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+.player:-webkit-full-screen {
+    aspect-ratio: auto;
+    background: #000000;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: 100%;
+    width: 100%;
+}
+
+.player:-webkit-full-screen .player__media {
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+/* the video's own still, shown as it comes from the host */
+
+.player__poster {
+    display: block;
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+}
+
+.poster__play {
+    align-items: center;
+    background: var(--t-gold);
+    border: 0;
+    border-radius: var(--t-radius-pill);
+    box-shadow: 0 12px 34px -10px rgba(0, 0, 0, 0.72), 0 0 0 8px rgba(255, 255, 255, 0.06);
+    color: #0b1413;
+    cursor: pointer;
+    display: inline-flex;
+    height: 4rem;
+    justify-content: center;
+    left: 50%;
+    padding: 0;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 240ms var(--t-ease), box-shadow 240ms var(--t-ease);
+    width: 4rem;
+}
+
+.poster__play::before {
+    animation: mbprTrainingPulse 3200ms var(--t-ease) 600ms infinite;
+    border: 1px solid var(--t-gold);
+    border-radius: var(--t-radius-pill);
+    content: "";
+    inset: -1px;
+    position: absolute;
+}
+
+@keyframes mbprTrainingPulse {
+    0% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    62%,
+    100% {
+        opacity: 0;
+        transform: scale(1.7);
+    }
+}
+
+.poster__play:hover,
+.poster__play:focus-visible {
+    box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.78), 0 0 0 12px rgba(255, 255, 255, 0.08);
+    outline: none;
+    transform: translate(-50%, -50%) scale(1.07);
+}
+
+.poster__play svg {
+    fill: currentColor;
+    height: 1.375rem;
+    margin-left: 3px;
+    width: 1.375rem;
+}
+
+/* Enlarge without browser fullscreen. The player element itself grows, so the
+   video is never torn down and never restarts. Above the drawer's own layer
+   (z-index 9500) and above its close pill. */
+
+.max-scrim {
+    background: rgba(0, 0, 0, 0.88);
+    inset: 0;
+    position: fixed;
+    z-index: 9600;
+}
+
+.player--max {
+    aspect-ratio: auto;
+    background: #000000;
+    border: 0;
+    border-radius: 12px;
+    bottom: 4vh;
+    box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9);
+    left: 4vw;
+    position: fixed;
+    right: 4vw;
+    top: 4vh;
+    width: auto;
+    z-index: 9601;
+}
+
+.player--max .player__media {
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+.max-close {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--t-radius-pill);
+    color: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    height: 2.25rem;
+    justify-content: center;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.75rem;
+    transition: background 160ms var(--t-ease);
+    width: 2.25rem;
+    z-index: 2;
+}
+
+.max-close:hover,
+.max-close:focus-visible {
+    background: rgba(255, 255, 255, 0.24);
+    outline: none;
+}
+
+.max-close svg {
+    fill: none;
+    height: 0.9rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 2;
+    width: 0.9rem;
+}
+
+/* the line shown when the address cannot play inside the portal */
+
+.notice {
+    align-items: center;
+    color: var(--t-ink-soft);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 650;
+    gap: 0.44rem;
+    justify-content: center;
+    margin: 0.75rem 0 0;
+    text-align: center;
+}
+
+.notice__icon {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+}
+
+.notice__icon svg {
+    fill: none;
+    height: 0.9rem;
+    stroke: var(--t-gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+    width: 0.9rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* the action bar along the bottom                                     */
+/* ------------------------------------------------------------------ */
+
+.training__actions {
+    border-top: 1px solid var(--t-line);
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    padding: 0.85rem 1.25rem 1rem;
+}
+
+/* Same shape as the buttons in Help and My Agency, so the drawer's footer reads
+   as one family across the portal. */
+.training-button {
+    align-items: center;
+    background: var(--t-surface);
+    border: 1px solid var(--t-line);
+    border-radius: var(--t-radius-pill);
+    color: var(--t-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.36rem;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.55rem 0.95rem;
+    text-decoration: none;
+    transition: background 160ms var(--t-ease), border-color 160ms var(--t-ease),
+        color 160ms var(--t-ease), transform 160ms var(--t-ease);
+}
+
+.training-button:hover,
+.training-button:focus-visible {
+    background: var(--t-accent-soft);
+    border-color: var(--t-accent-line);
+    color: var(--t-accent-ink);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.training-button--primary {
+    border-color: var(--t-accent-line);
+    color: var(--t-accent-ink);
+}
+
+.training-button svg {
+    fill: none;
+    height: 0.875rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+    width: 0.875rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* phone                                                               */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 767px) {
+    .training__stage,
+    .training__empty {
+        padding: 1rem;
+    }
+
+    .poster__play {
+        height: 3.25rem;
+        width: 3.25rem;
+    }
+
+    .poster__play svg {
+        height: 1.125rem;
+        width: 1.125rem;
+    }
+
+    .training__actions {
+        padding: 0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Two taps side by side get cramped under 360px; let them share the row
+       evenly instead of one wrapping alone. */
+    .training-button {
+        flex: 1 1 auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .poster__play,
+    .poster__play::before,
+    .training-button {
+        animation: none !important;
+        transition: none !important;
+    }
+}

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Release_Lapsed_Hold</name>
+        <label>Release lapsed hold</label>
+        <locationX>176</locationX>
+        <locationY>287</locationY>
+        <actionName>ADHA_HoldReleaseAction</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>reservationIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>ADHA_HoldReleaseAction</nameSegment>
+    </actionCalls>
+    <apiVersion>63.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <description>Frees a villa the moment its ten minute hold lapses, instead of waiting up to twenty minutes for ADHA_HoldSweeper. Every rule about whether the hold may actually be released lives in the Apex action, which re-reads the row under a lock: Flow cannot lock a row, and without that a customer who accepts the undertaking in the gap would lose a confirmed reservation. The sweeper stays as the backstop, because editing or deactivating this flow discards its pending scheduled paths.</description>
+    <environments>Default</environments>
+    <interviewLabel>ADHA Release Lapsed Hold {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>ADHA Release Lapsed Hold</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Unit_Lock_Key__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Undertaking_Accepted__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Hold_Expires_At__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>ADHA_Reservation__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <scheduledPaths>
+            <name>At_hold_expiry</name>
+            <connector>
+                <targetReference>Release_Lapsed_Hold</targetReference>
+            </connector>
+            <label>At hold expiry</label>
+            <offsetNumber>0</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>Hold_Expires_At__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

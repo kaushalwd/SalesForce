@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BasedOnSOCreationCommission__c</fullName>
+    <description>Calculate the Commission on basis of projects</description>
+    <formula>IF(
+  OR(
+    Unit__r.Category__c = &quot;MEGA MANSIONS&quot;,
+    Unit__r.Category__c = &quot;MANSIONS&quot;
+  ),
+  /* Special rule for Mansions categories */
+  CASE(ProjectName__c,
+    &quot;Nawayef West&quot;, IF(DATEVALUE(CreatedDate) &lt;= DATE(2024, 11, 30), TotalAmount__c * 0.02, TotalAmount__c * 0.03),
+    &quot;Nawayef East&quot;, IF(DATEVALUE(CreatedDate) &lt;= DATE(2024, 11, 30), TotalAmount__c * 0.02, TotalAmount__c * 0.03),
+    0
+  ),
+  /* Standard rule for other categories */
+  CASE(ProjectName__c,
+    &quot;Al Naseem&quot;, IF(DATEVALUE(CreatedDate) &lt;= DATE(2024, 11, 30), TotalAmount__c * 0.02, TotalAmount__c * 0.04),
+    &quot;Muheira&quot;, TotalAmount__c * 0.04,
+    &quot;Maysan&quot;, TotalAmount__c * 0.03,
+    &quot;Nawayef West&quot;, IF(DATEVALUE(CreatedDate) &lt;= DATE(2024, 11, 30), TotalAmount__c * 0.02, TotalAmount__c * 0.04),
+    &quot;Nawayef East&quot;, IF(DATEVALUE(CreatedDate) &lt;= DATE(2024, 11, 30), TotalAmount__c * 0.02, TotalAmount__c * 0.04),
+    &quot;Nawayef Park View&quot;, TotalAmount__c * 0.03,
+    &quot;Nawayef Village Townhouses&quot;, TotalAmount__c * 0.04,
+    0
+  )
+)</formula>
+    <label>Total Commission (Based On SO Creation)</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

@@ -1,0 +1,68 @@
+<template>
+    <!-- 2.0: this component is the drawer, mounted at .page; the button lives in mscBookingPage's Payment Plan card. See c/mscDrawer's header. -->
+    <c-msc-drawer
+        open={open}
+        drawer-title={labels.OFFER_TITLE}
+        subtitle={offerSubtitle}
+        size="wide"
+        has-footer="true"
+        onclose={handleClose}
+    >
+        <template lwc:if={sentNote}>
+            <div class="banner banner--ok offer__sent">
+                <c-modon-icon name="send" size="15" color="var(--step-done, #16a34a)"></c-modon-icon>
+                <span>{sentNote}</span>
+            </div>
+        </template>
+
+        <!-- Modon's own PDF from the site's origin (see previewBase), rendered by the browser's viewer -->
+        <template lwc:if={previewSrc}>
+            <div class="offer__preview">
+                <!-- 2.3: the loader covers the frame while the PDF paints white; over the iframe, not instead of it -->
+                <template lwc:if={showFrameLoader}>
+                    <c-msc-loader contained="true"></c-msc-loader>
+                </template>
+                <iframe
+                    src={previewSrc}
+                    title="Offer preview"
+                    class="offer__frame"
+                    onload={handleFrameLoad}
+                ></iframe>
+            </div>
+        </template>
+
+        <div slot="footer" class="offer__foot">
+            <div class="field offer__name">
+                <label class="field__label" for="offercust">{labels.OFFER_ADDRESS_TO}</label>
+                <input
+                    id="offercust"
+                    class="field__input"
+                    type="text"
+                    autocomplete="off"
+                    autocapitalize="words"
+                    spellcheck="false"
+                    placeholder={labels.OFFER_ADDRESS_HINT}
+                    value={nameDraft}
+                    oninput={handleName}
+                />
+            </div>
+            <button
+                class="btn btn-primary offer__send"
+                type="button"
+                disabled={sendDisabled}
+                onclick={handleSend}
+            >{sendLabel}</button>
+            <!-- 2.5 (MSC-225a): opens a WhatsApp chat on the customer's number in a new tab.
+                 An anchor, not a button: it navigates and sends nothing. Absent when the
+                 account holds no usable number (see waHref). Rightmost by the client's call. -->
+            <template lwc:if={waHref}>
+                <a
+                    class="btn btn-ghost offer__wa"
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >{labels.OFFER_WHATSAPP}</a>
+            </template>
+        </div>
+    </c-msc-drawer>
+</template>

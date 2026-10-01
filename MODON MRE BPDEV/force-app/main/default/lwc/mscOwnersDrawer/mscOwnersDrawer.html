@@ -1,0 +1,485 @@
+<template>
+    <c-msc-drawer
+        open={open}
+        drawer-title={title}
+        subtitle={subtitle}
+        size="wide"
+        has-footer="true"
+        onclose={handleClose}
+    >
+        <!-- ══ 1 · identity. Add only, and it cannot be skipped ══════════ -->
+        <template lwc:if={isAdd}>
+            <div class="dw__legend">{labels.JO_STEP_IDENTIFY}</div>
+
+            <!-- Residency and the document stay on screen while the create form is
+                 open: the resident status the rep picked here IS the one written to
+                 the new account, so asking for it a second time below could only
+                 ever disagree with itself. Hidden once an account is found - that
+                 account's own residency governs from then on. -->
+            <template lwc:if={showIdSearch}>
+                <div class="dw__set">
+                    <!-- 1.3 - MSC-180. Who is being added: a person or a company. The
+                         choice restarts identity, so it lives where identity starts. -->
+                    <template lwc:if={showKindToggle}>
+                        <div class="field">
+                            <span class="field__label">{labels.JO_KIND_LABEL}</span>
+                            <div class="dw__kinds" role="group" aria-label={labels.JO_KIND_LABEL}>
+                                <button
+                                    class={kindPersonClass}
+                                    type="button"
+                                    data-kind="person"
+                                    aria-pressed={isPersonPressed}
+                                    onclick={handleKind}
+                                >
+                                    {labels.JO_KIND_PERSON}
+                                </button>
+                                <button
+                                    class={kindCompanyClass}
+                                    type="button"
+                                    data-kind="company"
+                                    aria-pressed={isCompanyKind}
+                                    onclick={handleKind}
+                                >
+                                    {labels.JO_KIND_COMPANY}
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:if={showResidency}>
+                        <div class="field">
+                            <label class="field__label" for="res">{labels.JO_F_RESIDENT_STATUS}</label>
+                            <c-msc-residency-toggle
+                                value={residentStatus}
+                                disabled={saving}
+                                onchange={handleResidency}
+                            ></c-msc-residency-toggle>
+                        </div>
+                    </template>
+
+                    <div class="field">
+                        <label class="field__label" for="idno">{idLabel}</label>
+                        <input
+                            id="idno"
+                            class="field__input"
+                            type="text"
+                            value={idNumber}
+                            placeholder={idPlaceholder}
+                            maxlength={idMaxLength}
+                            inputmode={idInputMode}
+                            autocomplete="off"
+                            oninput={handleIdInput}
+                            onkeydown={handleIdKey}
+                        />
+                        <p class="field__hint">{idHint}</p>
+                    </div>
+                    <div>
+                        <button
+                            class="pill dw__go"
+                            type="button"
+                            disabled={searchDisabled}
+                            onclick={handleSearch}
+                        >
+                            <c-modon-icon name="search" size="14" color="currentColor"></c-modon-icon>
+                            <span>{searchText}</span>
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- found: reuse the account, never mint a second one -->
+            <template lwc:if={showFound}>
+                <div class="dw__found">
+                    <div class="dw__found-top">
+                        <div class="dw__found-id">
+                            <div class="dw__found-name">{person.name}</div>
+                            <div class="dw__found-facts">{personFacts}</div>
+                        </div>
+                        <span class="chip dw__chip--green">
+                            <i class="dw__dot"></i>
+                            <span>{foundChipLabel}</span>
+                        </span>
+                        <!-- 1.3 - what kind of account the search returned. Only said
+                             when it is the less common answer. -->
+                        <template lwc:if={foundIsCompany}>
+                            <span class="chip dw__chip--org">{labels.JO_KIND_COMPANY}</span>
+                        </template>
+                    </div>
+                </div>
+                <template lwc:if={person.blockedReason}>
+                    <div class="dw__note dw__note--err">
+                        <c-modon-icon name="alert-triangle" size="14" color="currentColor"></c-modon-icon>
+                        <span>{person.blockedReason}</span>
+                    </div>
+                </template>
+                <!-- 1.4 - MODON's KYC check for this person. Add stays off until it passes. -->
+                <template lwc:if={showKyc}>
+                    <div class={kycClass}>
+                        <div class="dw__kyc-line">
+                            <i class="dw__dot"></i>
+                            <span>{kycText}</span>
+                        </div>
+                        <template lwc:if={kycLinkLine}>
+                            <p class="dw__kyc-sub">{kycLinkLine}</p>
+                        </template>
+                        <template lwc:if={kycBlockedNote}>
+                            <p class="dw__kyc-sub">{kycBlockedNote}</p>
+                        </template>
+                        <template lwc:if={showKycActions}>
+                            <div class="dw__kyc-acts">
+                                <template lwc:if={showKycSend}>
+                                    <button class="pill dw__sm" type="button"
+                                            disabled={kycActionsDisabled} onclick={handleKycSend}>
+                                        {kycSendText}
+                                    </button>
+                                </template>
+                                <button class="pill dw__sm" type="button"
+                                        disabled={kycActionsDisabled} onclick={handleKycCheck}>
+                                    {kycCheckText}
+                                </button>
+                                <!-- 1.5 - the manual route, quiet, on the same row as in c/mscKycGate -->
+                                <template lwc:if={showManualToggle}>
+                                    <button class="pill dw__sm dw__quiet" type="button"
+                                            disabled={kycActionsDisabled} onclick={toggleManual}>
+                                        {manualToggleText}
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <!-- 1.5 - the buyer's manual KYC route, on this person's own Account -->
+                        <template lwc:if={showPartyKyc}>
+                            <c-msc-party-kyc
+                                account-id={partyAccountId}
+                                opportunity-id={s.opportunityId}
+                                manual-open={manualOpen}
+                                onmanualstate={handlePartyState}
+                                onchanged={handlePartyChanged}
+                                onopenkyc={handleOpenKyc}
+                            ></c-msc-party-kyc>
+                        </template>
+                    </div>
+                </template>
+                <div class="dw__again">
+                    <button class="pill dw__sm" type="button" onclick={handleSearchAgain}>
+                        {labels.JO_SEARCH_AGAIN}
+                    </button>
+                </div>
+            </template>
+
+            <!-- not found: the create form opens inline, pre-filled with the number -->
+            <template lwc:if={showCreate}>
+                <div class="dw__note">
+                    <c-modon-icon name="info" size="14" color="currentColor"></c-modon-icon>
+                    <span>{notFoundText}</span>
+                </div>
+                <div class="dw__legend">{labels.JO_STEP_DETAILS}</div>
+                <!-- 1.3 - MSC-180. A company is a name; its licence is the number the
+                     search just ran, shown in the sentence above and sent as typed. -->
+                <template lwc:if={isCompanyKind}>
+                    <div class="field-grid">
+                        <div class="field">
+                            <label class="field__label" for="cn"><span class="field__req">*</span>{labels.JO_F_COMPANY_NAME}</label>
+                            <input id="cn" class="field__input" type="text" value={companyName}
+                                   data-f="companyName" oninput={handleField} autocomplete="off" />
+                        </div>
+                    </div>
+                    <p class="field__hint dw__hint">{labels.JO_F_COMPANY_HINT}</p>
+                </template>
+                <template lwc:else>
+                    <div class="field-grid">
+                        <div class="field">
+                            <label class="field__label" for="fn">{labels.JO_F_FIRST_NAME}</label>
+                            <input id="fn" class="field__input" type="text" value={firstName}
+                                   data-f="firstName" oninput={handleField} autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="ln"><span class="field__req">*</span>{labels.JO_F_LAST_NAME}</label>
+                            <input id="ln" class="field__input" type="text" value={lastName}
+                                   data-f="lastName" oninput={handleField} autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="em">{labels.JO_F_EMAIL}</label>
+                            <input id="em" class="field__input" type="email" value={email}
+                                   data-f="email" oninput={handleField} autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="mo">{labels.JO_F_MOBILE}</label>
+                            <input id="mo" class="field__input" type="tel" value={mobile}
+                                   data-f="mobile" oninput={handleField} autocomplete="off" />
+                        </div>
+                        <!-- 1.6 - Nationality__pc is a restricted picklist: the buyer's country list, not a
+                             free box. 1.7 - the buyer's own control (c/mscCustomerInfo 3.4): a native select,
+                             so the list is the browser's or the phone's own and the drawer cannot clip it -->
+                        <div class="field">
+                            <label class="field__label" for="nat">{labels.JO_F_NATIONALITY}</label>
+                            <select id="nat" class="field__select" data-f="nationality" onchange={handleField}>
+                                <option value="">{labels.LEAD_FORM_SELECT}</option>
+                                <template for:each={nationalityChoices} for:item="n">
+                                    <option key={n.value} value={n.value} selected={n.selected}>{n.label}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="field__hint dw__hint">{labels.JO_F_RESIDENT_HINT}</p>
+                </template>
+            </template>
+
+            <!-- 1.5 - existing customers hold these details: choose one, as the buyer's chooser does.
+                 Nothing has been created. -->
+            <template lwc:if={showMatches}>
+                <div class="dw__legend">{labels.CAND_TITLE}</div>
+                <p class="dw__match-lede">{matchLede}</p>
+                <div class="dw__matches" role="radiogroup" aria-label={labels.CAND_TITLE}>
+                    <template for:each={matchRows} for:item="m">
+                        <button key={m.key} class={m.cls} type="button" role="radio"
+                                aria-checked={m.chosen} data-id={m.accountId}
+                                disabled={m.disabled} onclick={handleMatchPick}>
+                            <span class="dw__match-name">
+                                <span>{m.name}</span>
+                                <template lwc:if={m.chip}>
+                                    <span class="chip dw__chip--org">{m.chip}</span>
+                                </template>
+                            </span>
+                            <template lwc:if={m.sub}>
+                                <span class="dw__match-sub">{m.sub}</span>
+                            </template>
+                            <template lwc:if={m.meta}>
+                                <span class="dw__match-sub">{m.meta}</span>
+                            </template>
+                            <template lwc:if={m.blockedReason}>
+                                <span class="dw__match-sub dw__match-warn">{m.blockedReason}</span>
+                            </template>
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </template>
+
+        <!-- ══ 1b · contact details. Edit only, and only while something is
+                  blank. Above Ownership deliberately: this is what is standing
+                  between this person and their verification link, and the rep
+                  came here from a row that said so. ═══════════════════════ -->
+        <template lwc:if={showContact}>
+            <div class="dw__legend">{labels.JO_STEP_CONTACT}</div>
+            <div class="dw__set">
+                <p class="field__hint dw__hint">{labels.JO_V_CONTACT_HINT}</p>
+                <div class="field-grid">
+                    <template for:each={contactRows} for:item="f">
+                        <div key={f.key} class="field">
+                            <label class="field__label" for={f.id}>{f.label}</label>
+                            <input
+                                id={f.id}
+                                class="field__input"
+                                type={f.type}
+                                value={f.value}
+                                data-f={f.key}
+                                disabled={f.disabled}
+                                autocomplete="off"
+                                oninput={handleField}
+                            />
+                            <template lwc:if={f.hint}>
+                                <p class="field__hint">{f.hint}</p>
+                            </template>
+                        </div>
+                    </template>
+                    <!-- 1.6 - Nationality from the list while blank; shown as it stands once set.
+                         1.7 - the same native select as Create person and the buyer's form -->
+                    <div class="field">
+                        <template lwc:if={contactNationalityLocked}>
+                            <label class="field__label" for="cnat-ro">{labels.JO_F_NATIONALITY}</label>
+                            <input id="cnat-ro" class="field__input" type="text" value={nationality}
+                                   disabled autocomplete="off" />
+                            <p class="field__hint">{labels.JO_V_CONTACT_LOCKED}</p>
+                        </template>
+                        <template lwc:else>
+                            <label class="field__label" for="cnat">{labels.JO_F_NATIONALITY}</label>
+                            <select id="cnat" class="field__select" data-f="nationality"
+                                    disabled={saving} onchange={handleField}>
+                                <option value="">{labels.LEAD_FORM_SELECT}</option>
+                                <template for:each={nationalityChoices} for:item="n">
+                                    <option key={n.value} value={n.value} selected={n.selected}>{n.label}</option>
+                                </template>
+                            </select>
+                        </template>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field__label" for="cres">{labels.JO_F_RESIDENT_STATUS}</label>
+                    <c-msc-residency-toggle
+                        value={residentStatus}
+                        disabled={contactResidencyDisabled}
+                        onchange={handleResidency}
+                    ></c-msc-residency-toggle>
+                    <template lwc:if={contactResidencyLocked}>
+                        <p class="field__hint">{labels.JO_V_CONTACT_LOCKED}</p>
+                    </template>
+                </div>
+                <p class="field__hint dw__hint">{labels.JO_V_CONTACT_NOTE}</p>
+            </div>
+        </template>
+
+        <!-- ══ 2 · ownership and relationship ═══════════════════════════ -->
+        <template lwc:if={showOwnership}>
+            <div class="dw__legend">{labels.JO_STEP_OWNERSHIP}</div>
+            <div class="dw__set">
+                <div class="field-grid">
+                    <div class="field">
+                        <label class="field__label" for="rt">{labels.JO_F_REL_TYPE}</label>
+                        <select id="rt" class="field__select" value={relationshipType}
+                                data-f="relationshipType" onchange={handleField}>
+                            <option value="">{choosePlaceholder}</option>
+                            <template for:each={relTypeOptions} for:item="o">
+                                <option key={o.value} value={o.value} selected={o.selected}>
+                                    {o.label}
+                                </option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field__label" for="rs">{labels.JO_F_REL_SUBTYPE}</label>
+                        <select id="rs" class="field__select" value={relationshipSubType}
+                                data-f="relationshipSubType" onchange={handleField}>
+                            <option value="">{choosePlaceholder}</option>
+                            <template for:each={relSubOptions} for:item="o">
+                                <option key={o.value} value={o.value} selected={o.selected}>
+                                    {o.label}
+                                </option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="field__label" for="pc">{ownershipLabel}</label>
+                    <input id="pc" class={ownershipInputClass} type="number" min="1" max="99"
+                           step="1" inputmode="numeric" value={share}
+                           data-f="share" oninput={handleField} />
+                    <!-- the split, previewed before anything is written -->
+                    <template lwc:if={showPreview}>
+                        <div class="dw__meter" role="img" aria-label={previewLabel}>
+                            <template for:each={preview} for:item="m">
+                                <b key={m.key} class={m.cls} style={m.style}></b>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:if={ownershipError}>
+                        <p class="field__error">{ownershipError}</p>
+                    </template>
+                    <template lwc:elseif={ownershipHint}>
+                        <p class="field__hint">{ownershipHint}</p>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══ 3 · which units. Multi-unit bookings only ════════════════ -->
+        <template lwc:if={showUnits}>
+            <div class="dw__legend">{labels.JO_STEP_UNITS}</div>
+            <template lwc:if={showShortcuts}>
+                <div class="dw__shortcuts">
+                    <button class="pill dw__sm" type="button" onclick={handleSelectAll}>
+                        {labels.JO_UNITS_ALL}
+                    </button>
+                    <template lwc:if={hasUncovered}>
+                        <button class="pill dw__sm" type="button" onclick={handleSelectUncovered}>
+                            {labels.JO_UNITS_UNCOVERED}
+                        </button>
+                    </template>
+                    <button class="pill dw__sm" type="button" onclick={handleClearUnits}>
+                        {labels.JO_UNITS_CLEAR}
+                    </button>
+                </div>
+            </template>
+
+            <div class="dw__pick">
+                <template for:each={unitRows} for:item="u">
+                    <div key={u.key} class="dw__pick-row">
+                        <button
+                            class={u.boxCls}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={u.selected}
+                            aria-label={u.name}
+                            data-id={u.key}
+                            disabled={u.disabled}
+                            onclick={handleToggleUnit}
+                        >
+                            <template lwc:if={u.selected}>
+                                <c-modon-icon name="check" size="11" color="currentColor"></c-modon-icon>
+                            </template>
+                        </button>
+                        <span class="dw__pick-name">{u.name}</span>
+                        <span class={u.metaCls}>
+                            <template lwc:if={u.lockIcon}>
+                                <c-modon-icon name="lock" size="11" color="currentColor"></c-modon-icon>
+                            </template>
+                            <span>{u.meta}</span>
+                        </span>
+                    </div>
+                </template>
+            </div>
+            <p class="field__hint dw__hint">{unitsFootnote}</p>
+        </template>
+
+        <!-- The server's refusal, verbatim, next to the form that caused it -
+             never a toast that scrolls away from the field. -->
+        <template lwc:if={errorMessage}>
+            <div class="dw__note dw__note--err">
+                <c-modon-icon name="alert-triangle" size="14" color="currentColor"></c-modon-icon>
+                <span>{errorMessage}</span>
+            </div>
+        </template>
+        <!-- 1.4 - a refusal from Create person, Send KYC link or Check again -->
+        <template lwc:if={kycError}>
+            <div class="dw__note dw__note--err">
+                <c-modon-icon name="alert-triangle" size="14" color="currentColor"></c-modon-icon>
+                <span>{kycError}</span>
+            </div>
+        </template>
+
+        <div slot="footer" class="dw__foot">
+            <button class="pill dw__sm" type="button" onclick={handleClose}>
+                {labels.JO_CANCEL}
+            </button>
+            <!-- 1.5 - the chooser's own actions -->
+            <template lwc:if={showMatches}>
+                <div class="dw__foot-acts">
+                    <button class="pill dw__sm" type="button" disabled={matchBusy}
+                            onclick={handleMatchBack}>{matchBack}</button>
+                    <template lwc:if={showCreateAnyway}>
+                        <button class="pill dw__sm" type="button" disabled={matchBusy}
+                                onclick={handleCreateAnyway}>{labels.CAND_NONE}</button>
+                    </template>
+                    <button class="pill dw__go" type="button" disabled={matchContinueDisabled}
+                            onclick={handleMatchContinue}>{matchContinueText}</button>
+                </div>
+            </template>
+            <template lwc:elseif={showSubmit}>
+                <button
+                    class="pill dw__go"
+                    type="button"
+                    disabled={submitDisabled}
+                    onclick={handleSubmit}
+                >
+                    {submitText}
+                </button>
+            </template>
+            <template lwc:else>
+                <span class="dw__wait">{labels.JO_FIND_FIRST}</span>
+            </template>
+        </div>
+    </c-msc-drawer>
+
+    <!-- 1.5 - Update KYC for the person being added: MODON's form in the console's dialog, over the
+         drawer. A layer of its own because the dialog positions itself inside its host. -->
+    <template lwc:if={kycModalOpen}>
+        <div class="dw__kycm">
+            <c-msc-kyc-capture-modal
+                open={kycModalOpen}
+                subject-id={kycModalSubjectId}
+                subject-name={kycModalSubjectName}
+                onclose={handleKycModalClose}
+            ></c-msc-kyc-capture-modal>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,107 @@
+/* c/mscStyles carries the shared primitives this bundle's markup depends on -
+   .glass, .row, .chip and every .chip--* modifier. Without this import those
+   class names resolve to nothing: rows lose their card surface and every status
+   pill renders unstyled. statusChip() in c/modonSalesFormat returns
+   chip--pending / chip--alert / chip--partial / chip--paid, all of which live
+   there and none of which are defined locally.
+   First line, so anything this file redefines below still wins. */
+@import "c/mscStyles";
+
+/* ── Added for the merged pane (Aurelix IT, 09 Aug 2026) ─────────────────── */
+.totals {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.totals__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #8a8a8a);
+}
+.totals__value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text, #fafafa);
+}
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 14px 16px; cursor: pointer;
+}
+.row__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.row__ref { font-size: 14px; font-weight: 600; color: var(--text, #fafafa); }
+.row__sub { font-size: 12px; color: var(--text-muted, #a3a3a3); }
+.row__right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.row__amount { font-size: 14px; font-weight: 600; color: var(--text, #fafafa); }
+.dhead { margin-bottom: 12px; }
+.dhead__ref { font-size: 22px; font-weight: 600; margin: 6px 0 2px; color: var(--text, #fafafa); }
+.dhead__sub { font-size: 12px; color: var(--text-muted, #a3a3a3); margin: 0; }
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab {
+  padding: 7px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  background: transparent; color: var(--text-muted, #a3a3a3);
+  border: 1px solid var(--input-border, rgba(255,255,255,0.14));
+}
+.tab--active { color: var(--pill-fg, #fafafa); border-color: var(--pill-border, #fafafa); }
+.pairs { padding: 6px 16px; }
+.pair {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 11px 0; border-bottom: 1px solid var(--divider, rgba(255,255,255,0.13));
+}
+.pair:last-child { border-bottom: none; }
+.pair__label { font-size: 12px; color: var(--text-dim, #8a8a8a); }
+.pair__value { font-size: 13px; color: var(--text, #fafafa); text-align: right; }
+.sched, .docs { padding: 14px 16px; }
+.sched__head {
+  display: flex; justify-content: space-between; font-size: 12px;
+  color: var(--text-muted, #a3a3a3); margin-bottom: 10px;
+}
+.prow, .drow {
+  display: grid; align-items: center; gap: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--divider, rgba(255,255,255,0.13));
+  font-size: 13px; color: var(--text, #fafafa);
+}
+.prow { grid-template-columns: 1fr auto auto auto; }
+.drow { grid-template-columns: 1fr auto auto; }
+.prow:last-child, .drow:last-child { border-bottom: none; }
+.prow__due { font-size: 12px; color: var(--text-muted, #a3a3a3); }
+.prow__amount { font-weight: 600; }
+.drow__type { font-size: 12px; color: var(--text-muted, #a3a3a3); }
+.muted { font-size: 13px; color: var(--text-muted, #a3a3a3); }
+.err {
+  padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 10px;
+  color: var(--chip-red, #dc2626); border: 1px solid var(--chip-red, #dc2626);
+}
+.link {
+  background: none; border: none; cursor: pointer; font-size: 12px;
+  color: var(--gold, #a8a8a8); padding: 0;
+}
+.bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.fchip {
+  padding: 6px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  background: transparent; color: var(--text-muted, #a3a3a3);
+  border: 1px solid var(--input-border, rgba(255,255,255,0.14));
+}
+.fchip--active { color: var(--pill-fg, #fafafa); border-color: var(--pill-border, #fafafa); }
+.input {
+  flex: 1 1 auto; padding: 9px 12px; border-radius: 10px; font-size: 16px;
+  background: var(--input-bg, rgba(255,255,255,0.06));
+  border: 1px solid var(--input-border, rgba(255,255,255,0.16));
+  color: var(--text, #fafafa);
+}
+.row__date { font-size: 12px; color: var(--text-muted, #a3a3a3); }
+
+/* ── iOS zoom guard (Aurelix IT 09 Aug 2026) ─────────────────────────────
+   Mobile-first: 16px is the base, stepped DOWN at 768. Anything under 16px
+   makes iOS Safari zoom the viewport on focus and never fully zoom back.
+   Written here as well as in mscStyles because these rules redefine the size
+   AFTER the @import, so source order beats any media query in the shared file.
+   Sync: 768 is the system breakpoint - see the block at the end of mscStyles. */
+@media (min-width: 768px) {
+  .input { font-size: 13px; }
+}

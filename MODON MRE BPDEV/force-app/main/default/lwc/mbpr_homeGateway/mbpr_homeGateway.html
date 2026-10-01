@@ -1,0 +1,1585 @@
+<template>
+    <div class="mbpr-page-bg" style={backgroundStyle} aria-hidden="true"></div>
+    <div class="mbpr-page-bg-overlay" style={themeStyle} aria-hidden="true"></div>
+
+    <!-- Top bar: full-bleed in-flow sibling of the home surface so it spans
+         the viewport edge to edge without joining the overlay stacking
+         order (drawers/modals must still cover it). -->
+    <header class="mbpr-topbar" style={themeStyle}>
+        <div class="mbpr-topbar__lockup">
+            <c-mbpr_brand-mark height="18"></c-mbpr_brand-mark>
+            <span class="mbpr-topbar__divider" aria-hidden="true">|</span>
+            <span class="mbpr-topbar__label">Broker Portal</span>
+        </div>
+
+        <nav class="quick-access" aria-label="Other broker portal shortcuts">
+                <template for:each={quickLinks} for:item="link">
+                    <span
+                        key={link.id}
+                        class={link.itemClass}
+                        data-id={link.id}
+                        onmouseleave={handleQuickAccessTooltipReset}
+                    >
+                        <button
+                            class={link.buttonClass}
+                            type="button"
+                            data-id={link.id}
+                            data-panel={link.panel}
+                            data-action={link.action}
+                            onclick={handleQuickAccessClick}
+                            onblur={handleQuickAccessTooltipReset}
+                            onkeydown={handleQuickAccessKeydown}
+                            aria-label={link.ariaLabel}
+                            aria-describedby={link.tooltipId}
+                            aria-expanded={link.ariaExpanded}
+                            aria-haspopup={link.ariaHasPopup}
+                            aria-controls={link.menuId}
+                        >
+                            <template lwc:if={link.isAvatar}>
+                                <span class="quick-access__avatar" aria-hidden="true">{identityInitials}</span>
+                            </template>
+                            <template lwc:elseif={link.isUpdates}>
+                                <svg class="quick-access__svg" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M5 11.5v-1.2c0-3.25 2.35-5.8 5.45-6.3v-.65a1.55 1.55 0 0 1 3.1 0V4c3.1.5 5.45 3.05 5.45 6.3v1.2c0 2.05.55 3.22 1.28 4.18.38.5.02 1.22-.62 1.22H4.34c-.64 0-1-.72-.62-1.22C4.45 14.72 5 13.55 5 11.5Z"></path>
+                                    <path d="M9.75 19a2.35 2.35 0 0 0 4.5 0"></path>
+                                </svg>
+                            </template>
+                            <template lwc:elseif={link.isMyAgency}>
+                                <svg class="quick-access__svg" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M4 20.5h16"></path>
+                                    <path d="M5.5 20.5V6.2L12 3.5l6.5 2.7v14.3"></path>
+                                    <path d="M9.2 9h1.6M13.2 9h1.6M9.2 12.4h1.6M13.2 12.4h1.6"></path>
+                                    <path d="M10.4 20.5v-3.6a1.6 1.6 0 0 1 3.2 0v3.6"></path>
+                                </svg>
+                            </template>
+                            <template lwc:elseif={link.isTraining}>
+                                <svg class="quick-access__svg" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+                                    <path d="M22 10v6"></path>
+                                    <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path>
+                                </svg>
+                            </template>
+                            <template lwc:elseif={link.isHelp}>
+                                <svg class="quick-access__svg" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"></path>
+                                    <path d="M9.75 9.2a2.35 2.35 0 0 1 4.52.9c0 1.72-2.27 2.05-2.27 3.55"></path>
+                                    <path d="M12 17.1h.01"></path>
+                                </svg>
+                            </template>
+                            <template lwc:else>
+                                <lightning-icon icon-name={link.icon} size="x-small" alternative-text=""></lightning-icon>
+                            </template>
+                        </button>
+                        <span id={link.tooltipId} class="quick-access__tooltip" role="tooltip">{link.tooltip}</span>
+                        <template lwc:if={link.isAvatar}>
+                            <template lwc:if={isAccountMenuOpen}>
+                                <section id="account-menu-card" class="account-menu-card account-menu-card--desktop" role="menu" aria-label="Account menu" onclick={handleAccountMenuClick}>
+                                    <div class="account-menu-card__identity">
+                                        <span class="account-menu-card__avatar" aria-hidden="true">{identityInitials}</span>
+                                        <strong>{accountMenuTitle}</strong>
+                                    </div>
+
+                                    <div class="account-menu-card__divider" aria-hidden="true"></div>
+
+                                    <button class="account-menu-card__item" type="button" role="menuitem" data-panel="profile" onclick={handleQuickAccessClick}>
+                                        <span class="account-menu-card__icon" aria-hidden="true">
+                                            <lightning-icon icon-name="utility:user" size="x-small" alternative-text=""></lightning-icon>
+                                        </span>
+                                        <span class="account-menu-card__label">My Profile</span>
+                                    </button>
+
+                                    <button class="account-menu-card__item account-menu-card__item--active" type="button" role="menuitem" onclick={handleAccountMenuThemeToggle}>
+                                        <span class="account-menu-card__icon" aria-hidden="true">
+                                            <span class={themeButtonIconClass}>{themeButtonIconSymbol}</span>
+                                        </span>
+                                        <span>{accountMenuThemeLabel}</span>
+                                    </button>
+
+                                    <a class="account-menu-card__item account-menu-card__item--logout" href={effectiveSignOutUrl} role="menuitem">
+                                        <span class="account-menu-card__icon" aria-hidden="true">
+                                            <lightning-icon icon-name="utility:logout" size="x-small" alternative-text=""></lightning-icon>
+                                        </span>
+                                        <span class="account-menu-card__label">Log Out</span>
+                                    </a>
+                                </section>
+                            </template>
+                        </template>
+                    </span>
+                </template>
+        </nav>
+    </header>
+
+    <div class="mbpr-home" style={themeStyle}>
+        <template lwc:if={isAccountMenuOpen}>
+            <section id="account-menu-sheet" class="account-menu-sheet" role="menu" aria-label="Account menu" onclick={handleAccountMenuClick}>
+                <div class="account-menu-card__identity">
+                    <span class="account-menu-card__avatar" aria-hidden="true">{identityInitials}</span>
+                    <strong>{accountMenuTitle}</strong>
+                </div>
+
+                <div class="account-menu-card__divider" aria-hidden="true"></div>
+
+                <!-- These reuse the exact same handler and data-panel values as
+                     the top quick-access icons, so on phone the "More" tab
+                     becomes the one place to reach My Agency, My Profile,
+                     Updates, and Help - no separate icons duplicating this
+                     destination. -->
+                <template lwc:if={showTrainingEntry}>
+                <button class="account-menu-card__item" type="button" role="menuitem" data-panel="training" onclick={handleQuickAccessClick}>
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+                            <path d="M22 10v6"></path>
+                            <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path>
+                        </svg>
+                    </span>
+                    <span class="account-menu-card__label">Training</span>
+                </button>
+                </template>
+
+                <template lwc:if={showMyAgencyEntry}>
+                <button class="account-menu-card__item" type="button" role="menuitem" data-panel="myagency" onclick={handleQuickAccessClick}>
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 20.5h16"></path>
+                            <path d="M5.5 20.5V6.2L12 3.5l6.5 2.7v14.3"></path>
+                            <path d="M9.2 9h1.6M13.2 9h1.6M9.2 12.4h1.6M13.2 12.4h1.6"></path>
+                            <path d="M10.4 20.5v-3.6a1.6 1.6 0 0 1 3.2 0v3.6"></path>
+                        </svg>
+                    </span>
+                    <span class="account-menu-card__label">My Agency</span>
+                </button>
+                </template>
+
+                <button class="account-menu-card__item" type="button" role="menuitem" data-panel="profile" onclick={handleQuickAccessClick}>
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:user" size="x-small" alternative-text=""></lightning-icon>
+                    </span>
+                    <span class="account-menu-card__label">My Profile</span>
+                </button>
+
+                <template lwc:if={showUpdatesEntry}>
+                <button class="account-menu-card__item" type="button" role="menuitem" data-panel="updates" onclick={handleQuickAccessClick}>
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:announcement" size="x-small" alternative-text=""></lightning-icon>
+                    </span>
+                    <span class="account-menu-card__label">Updates</span>
+                </button>
+                </template>
+
+                <button class="account-menu-card__item" type="button" role="menuitem" data-panel="help" onclick={handleQuickAccessClick}>
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:question_mark" size="x-small" alternative-text=""></lightning-icon>
+                    </span>
+                    <span class="account-menu-card__label">Help</span>
+                </button>
+
+                <div class="account-menu-card__divider" aria-hidden="true"></div>
+
+                <button class="account-menu-card__item account-menu-card__item--active" type="button" role="menuitem" onclick={handleAccountMenuThemeToggle}>
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <span class={themeButtonIconClass}>{themeButtonIconSymbol}</span>
+                    </span>
+                    <span>{accountMenuThemeLabel}</span>
+                </button>
+
+                <a class="account-menu-card__item account-menu-card__item--logout" href={effectiveSignOutUrl} role="menuitem">
+                    <span class="account-menu-card__icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:logout" size="x-small" alternative-text=""></lightning-icon>
+                    </span>
+                    <span class="account-menu-card__label">Log Out</span>
+                </a>
+            </section>
+        </template>
+
+        <main class="mbpr-home__stage">
+        <!-- Greeting hero: eyebrow + greeting on the left, live date and
+             location on the right (one baseline row on wide screens). -->
+        <div class="home-head">
+            <div class="home-head__main">
+                <div class="home-head__eyebrow">
+                    <span class="home-head__dot" aria-hidden="true">●</span>
+                    <span class="home-head__label">
+                        <template lwc:if={isUserLoading}>
+                            <span class="skeleton skeleton--label" aria-hidden="true"></span>
+                        </template>
+                        <template lwc:else>
+                            {headLabel}
+                        </template>
+                    </span>
+                </div>
+                <h1 class="home-head__title">
+                    <template lwc:if={isUserLoading}>
+                        <span class="skeleton skeleton--name" aria-hidden="true"></span>
+                    </template>
+                    <template lwc:else>
+                        {greetingLine}
+                    </template>
+                </h1>
+            </div>
+            <div class="home-head__side">
+                <p class="home-head__date">{todayLabel}</p>
+
+                <!-- Aspire status pill (Owners and Agency Admins): tap/click opens the
+                     smart card with tier, achieved/left, progress, and the
+                     next tier. -->
+                <template lwc:if={showAspireStatus}>
+                    <div class="aspire-pill-wrap">
+                        <button
+                            class={aspirePillClassName}
+                            type="button"
+                            onclick={handleAspirePillClick}
+                            onkeydown={handleAspirePillKeydown}
+                            aria-haspopup="dialog"
+                            aria-expanded={isAspirePopoverOpen}
+                            aria-controls="aspire-popover"
+                        >
+                            <template lwc:if={isTierLoading}>
+                                <span class="aspire-pill__skeleton skeleton" aria-hidden="true"></span>
+                                <span class="sr-only">Loading your Aspire status</span>
+                            </template>
+                            <template lwc:elseif={tierError}>
+                                <span class="aspire-pill__label">Aspire status</span>
+                                <span class="aspire-pill__retry">Try again</span>
+                            </template>
+                            <template lwc:else>
+                                <span class="aspire-pill__label">Aspire</span>
+                                <span class="aspire-pill__badge" aria-hidden="true">
+                                    <template lwc:if={tierBadgeHasImage}>
+                                        <img src={tierBadgeImageUrl} alt="" loading="lazy" />
+                                    </template>
+                                    <template lwc:else>
+                                        <span class="aspire-pill__badge-fallback">{tierBadgeInitial}</span>
+                                    </template>
+                                </span>
+                                <span class="aspire-pill__tier">{currentTierLabel}</span>
+                                <svg class="aspire-pill__caret" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M6.5 9.75 12 15.25l5.5-5.5"></path>
+                                </svg>
+                            </template>
+                        </button>
+
+                        <template lwc:if={isAspirePopoverOpen}>
+                            <div class="aspire-pop-backdrop" onclick={handleAspireBackdropClick} aria-hidden="true"></div>
+                            <section
+                                id="aspire-popover"
+                                class="aspire-pop"
+                                role="dialog"
+                                aria-label="Aspire status details"
+                                onclick={handleAspirePopoverClick}
+                                onkeydown={handleAspirePopoverKeydown}
+                            >
+                                <div class="aspire-pop__head">
+                                    <span class="aspire-pop__glyph" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" focusable="false">
+                                            <path d="M12 3.5l1.85 5.15L19 10.5l-5.15 1.85L12 17.5l-1.85-5.15L5 10.5l5.15-1.85L12 3.5Z"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="aspire-pop__title">Aspire Status</span>
+                                    <button class="aspire-pop__close" type="button" onclick={handleAspireCloseClick} aria-label="Close">×</button>
+                                </div>
+
+                                <div class="aspire-pop__body">
+                                    <div class="aspire-pop__tier">
+                                        <span class="aspire-pop__badge" aria-hidden="true">
+                                            <template lwc:if={tierBadgeHasImage}>
+                                                <img src={tierBadgeImageUrl} alt="" loading="lazy" />
+                                            </template>
+                                            <template lwc:else>
+                                                <span class="aspire-pop__badge-fallback">{tierBadgeInitial}</span>
+                                            </template>
+                                        </span>
+                                        <h3 class="aspire-pop__tier-name">{currentTierLabel}</h3>
+                                    </div>
+
+                                    <div
+                                        class="aspire-pop__meter"
+                                        style={tierTrackStyle}
+                                        role="progressbar"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                        aria-valuenow={tierProgressPercentRounded}
+                                        aria-label={tierProgressAriaLabel}
+                                    >
+                                        <div class="aspire-pop__chips">
+                                            <span class="aspire-pop__chip aspire-pop__chip--achieved">
+                                                <span class="aspire-pop__chip-kicker">Achieved</span>
+                                                <span class="aspire-pop__chip-value">{tierAchievedBarLabel}</span>
+                                            </span>
+                                            <template lwc:if={showNextTierPath}>
+                                                <span class="aspire-pop__chip">
+                                                    <span class="aspire-pop__chip-kicker">To Next Level</span>
+                                                    <span class="aspire-pop__chip-value">{tierRemainingBarLabel}</span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                        <span class="aspire-pop__track" aria-hidden="true">
+                                            <span class="aspire-pop__fill"></span>
+                                        </span>
+                                        <template lwc:if={isHighestTier}>
+                                            <p class="aspire-pop__note">Highest tier reached</p>
+                                        </template>
+                                    </div>
+
+                                    <template lwc:if={showNextTierPath}>
+                                        <div class="aspire-pop__next">
+                                            <span class="aspire-pop__next-copy">
+                                                <span class="aspire-pop__next-name">{nextTierPathStop.label}</span>
+                                            </span>
+                                            <span class="aspire-pop__next-badge" aria-hidden="true">
+                                                <template lwc:if={nextTierPathStop.hasImage}>
+                                                    <img src={nextTierPathStop.imageUrl} alt="" loading="lazy" />
+                                                </template>
+                                                <template lwc:else>
+                                                    <span>{nextTierPathStop.shortLabel}</span>
+                                                </template>
+                                            </span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </section>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Limited Login guidance: the compliance-first home required by the
+             plan - renders only while the user's access is limited. -->
+        <template lwc:if={showGuidanceHero}>
+        <section class="guidance-hero" aria-label="Action needed">
+            <div class="guidance-hero__copy">
+                <p class="guidance-hero__eyebrow">Action needed</p>
+                <h2 class="guidance-hero__title">{guidanceTitle}</h2>
+                <p class="guidance-hero__line">{guidanceLine}</p>
+                <template lwc:if={guidanceComment}>
+                    <p class="guidance-hero__comment">{guidanceComment}</p>
+                </template>
+            </div>
+            <div class="guidance-hero__actions">
+                <template lwc:if={showGuidanceAgencyAction}>
+                    <button class="guidance-hero__primary" type="button" data-panel="myagency" onclick={handleQuickAccessClick}>Open My Agency</button>
+                </template>
+                <button class="guidance-hero__ghost" type="button" data-panel="help" onclick={handleQuickAccessClick}>Get help</button>
+            </div>
+        </section>
+        </template>
+
+        <template lwc:if={showCommandRow}>
+        <div class="command-row">
+        <!-- Units summary card. Fast-Track sees Leads only.
+             a limited user sees no cards at all. -->
+        <template lwc:if={showFullDashboard}>
+        <section
+            class="units-showcase command-card command-card--units stat-tile"
+            aria-labelledby="units-heading"
+            role="button"
+            tabindex="0"
+            data-workspace="units"
+            onclick={handleCommandCardOpen}
+            onkeydown={handleCommandCardKeydown}
+        >
+            <div class="stat-tile__head">
+                <h2 id="units-heading" class="stat-tile__label">Available units</h2>
+                <span class="stat-tile__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M4.5 20V9.5L12 5l7.5 4.5V20M8 20v-6.5h8V20M9 10h.01M15 10h.01"></path>
+                    </svg>
+                </span>
+            </div>
+
+            <template lwc:if={isUnitsLoading}>
+                <div class="stat-tile__skeleton" aria-hidden="true"></div>
+            </template>
+
+            <template lwc:elseif={unitsError}>
+                <p class="stat-tile__value stat-tile__value--error">-</p>
+                <button class="stat-tile__retry" type="button" onclick={handleRetryUnits}>Try again</button>
+            </template>
+
+            <template lwc:else>
+                <p class="stat-tile__value">{unitsCount}</p>
+                <p class="stat-tile__subtitle">Ready to sell</p>
+            </template>
+        </section>
+        </template>
+
+        <!-- Leads - role-aware command card. The only card Fast-Track sees,
+             and hidden entirely for a limited "needs more information" user. -->
+        <template lwc:if={showLeadsCard}>
+        <section
+            class="lead-panel command-card command-card--leads stat-tile"
+            aria-labelledby="leads-heading"
+            role="button"
+            tabindex="0"
+            data-workspace="sales"
+            onclick={handleCommandCardOpen}
+            onkeydown={handleCommandCardKeydown}
+        >
+            <div class="stat-tile__head">
+                <h2 id="leads-heading" class="stat-tile__label">{leadPanelTitle}</h2>
+                <span class="stat-tile__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.75-3.05 2.45-4.55 4.5-4.55S11.75 15.95 12.5 19M14.5 7h5M14.5 12h5M14.5 17h5"></path>
+                    </svg>
+                </span>
+            </div>
+
+            <template lwc:if={isLeadsLoading}>
+                <div class="stat-tile__skeleton" aria-hidden="true"></div>
+            </template>
+
+            <template lwc:elseif={leadsError}>
+                <p class="stat-tile__value stat-tile__value--error">-</p>
+                <button class="stat-tile__retry" type="button" onclick={handleRetryLeads}>Try again</button>
+            </template>
+
+            <template lwc:else>
+                <p class="stat-tile__value">{leadsCount}</p>
+                <!-- Bottom row shared with the inline New lead fast path:
+                     subtitle keeps the exact bottom-anchored position every
+                     other card's subtitle has; the pill sits to its right. -->
+                <div class="stat-tile__foot">
+                    <p class="stat-tile__subtitle">Open leads</p>
+                    <template lwc:if={showNewLeadCard}>
+                        <button class="stat-tile__inline-action" type="button" onclick={handleOpenNewLead}>
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M12 5.5v13M5.5 12h13"></path>
+                            </svg>
+                            <span>New lead</span>
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </section>
+        </template>
+
+        <!-- Total sales (Owner/Agency Admin only) - Agents see nothing
+             sales-related (client decision 2026-08-08). Aspire status moved
+             from a card to the greeting hero pill (business decision). -->
+        <template lwc:if={showSalesCard}>
+            <section
+                class="sales-panel stat-tile"
+                aria-labelledby="sales-heading"
+                role="button"
+                tabindex="0"
+                data-workspace="revenue"
+                onclick={handleCommandCardOpen}
+                onkeydown={handleCommandCardKeydown}
+            >
+                <div class="stat-tile__head">
+                    <h2 id="sales-heading" class="stat-tile__label">Total Sales</h2>
+                    <span class="stat-tile__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 19.5h16M6 16l3.5-4 3 2.5L18 7M18 7v4M18 7h-4"></path>
+                        </svg>
+                    </span>
+                </div>
+
+                <template lwc:if={isSalesLoading}>
+                    <div class="stat-tile__skeleton" aria-hidden="true"></div>
+                </template>
+
+                <template lwc:elseif={salesError}>
+                    <p class="stat-tile__value stat-tile__value--error">-</p>
+                    <button class="stat-tile__retry" type="button" onclick={handleRetrySales}>Try again</button>
+                </template>
+
+                <template lwc:else>
+                    <p class="stat-tile__value" aria-hidden="true">{formattedTotalSales}</p>
+                    <p class="sr-only">{formattedTotalSalesFull}</p>
+                    <p class="stat-tile__subtitle">{currentSalesPeriodLabel}</p>
+                </template>
+            </section>
+        </template>
+
+        <!-- Expression of Interest card. Opens the dedicated EOI workspace. -->
+        <template lwc:if={showEoiCard}>
+        <section
+            class="eoi-panel command-card command-card--eoi stat-tile"
+            aria-labelledby="eoi-heading"
+            role="button"
+            tabindex="0"
+            data-workspace="eoi"
+            onclick={handleCommandCardOpen}
+            onkeydown={handleCommandCardKeydown}
+        >
+            <div class="stat-tile__head">
+                <h2 id="eoi-heading" class="stat-tile__label">Expression of Interest</h2>
+                <span class="stat-tile__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M7 3.5h7l4.5 4.5v12.5h-11.5Z"></path>
+                        <path d="M14 3.5V8h4.5"></path>
+                        <path d="M9.5 13h5M9.5 16.2h5"></path>
+                    </svg>
+                </span>
+            </div>
+
+            <template lwc:if={isEoiCountLoading}>
+                <div class="stat-tile__skeleton" aria-hidden="true"></div>
+            </template>
+
+            <template lwc:elseif={eoiCountError}>
+                <p class="stat-tile__value stat-tile__value--error">-</p>
+                <button class="stat-tile__retry" type="button" onclick={handleRetryEoiCount}>Try again</button>
+            </template>
+
+            <template lwc:else>
+                <p class="stat-tile__value">{eoiRecordCount}</p>
+                <!-- Same bottom-row anatomy as the leads card: the subtitle
+                     keeps its bottom-anchored position and the New EOI pill
+                     sits to its right. Removed on business request
+                     (2026-08-19), restored on request (2026-08-31). -->
+                <div class="stat-tile__foot">
+                    <p class="stat-tile__subtitle">Submitted EOIs</p>
+                    <template lwc:if={showNewEoiCardAction}>
+                        <button class="stat-tile__inline-action" type="button" onclick={handleOpenNewEoi}>
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M12 5.5v13M5.5 12h13"></path>
+                            </svg>
+                            <span>New EOI</span>
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </section>
+        </template>
+
+        <!-- Marketing Collateral card (client email: keep as a card for all
+             roles, including Agents). Opens the marketing library in the main
+             workspace modal like every other home card.
+             hidden for Fast-Track. -->
+        <template lwc:if={showFullDashboard}>
+        <section
+            class="marketing-panel command-card command-card--marketing stat-tile"
+            aria-labelledby="marketing-heading"
+            role="button"
+            tabindex="0"
+            data-workspace="marketing"
+            onclick={handleCommandCardOpen}
+            onkeydown={handleCommandCardKeydown}
+        >
+            <div class="stat-tile__head">
+                <h2 id="marketing-heading" class="stat-tile__label">Marketing Library</h2>
+                <span class="stat-tile__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M4.5 6.5h6l2 2.5h7v9.5h-15Z"></path>
+                        <path d="M9 13.5h6"></path>
+                    </svg>
+                </span>
+            </div>
+
+            <template lwc:if={isMarketingLoading}>
+                <div class="stat-tile__skeleton" aria-hidden="true"></div>
+            </template>
+
+            <template lwc:elseif={marketingError}>
+                <p class="stat-tile__value stat-tile__value--error">-</p>
+                <button class="stat-tile__retry" type="button" onclick={handleRetryMarketingProjects}>Try again</button>
+            </template>
+
+            <template lwc:else>
+                <p class="stat-tile__value">{marketingProjectCount}</p>
+            </template>
+        </section>
+        </template>
+        </div>
+        </template>
+
+        <!-- Needs attention: truthful operational reminders composed from the
+             same compliance reads the agency workspace uses. Renders only when
+             at least one item fires. -->
+        <template lwc:if={showNeedsAttention}>
+        <section class="attn-panel" aria-label="Needs attention">
+            <div class="attn-panel__head">
+                <span class="attn-panel__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M12 9v4.4M12 16.6h.01"></path>
+                        <path d="M10.29 4.2 3.55 16a2 2 0 0 0 1.74 3h13.42a2 2 0 0 0 1.74-3L13.71 4.2a2 2 0 0 0-3.42 0Z"></path>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="attn-panel__title">Needs attention</h2>
+                    <p class="attn-panel__subtitle">Items that may affect your access or compliance.</p>
+                </div>
+            </div>
+            <ul class="attn-panel__list">
+                <template for:each={needsAttentionItems} for:item="item">
+                    <li key={item.key} class="attn-panel__row">
+                        <span class="attn-panel__label">{item.label}</span>
+                        <button class="attn-panel__action" type="button" data-panel={item.panel} onclick={handleQuickAccessClick}>{item.action}</button>
+                    </li>
+                </template>
+            </ul>
+        </section>
+        </template>
+        </main>
+
+        <!-- Global utility drawer foundation -->
+        <template lwc:if={isUtilityDrawerOpen}>
+            <c-mbpr_detail-drawer
+                class={utilityDrawerClass}
+                open={isUtilityDrawerOpen}
+                title={utilityDrawerTitle}
+                eyebrow={utilityDrawerEyebrow}
+                subtitle={utilityDrawerSubtitle}
+                size={utilityDrawerSize}
+                tone="accent"
+                onclose={handleCloseUtilityPanel}
+            >
+                <template lwc:if={isMyAgencyPanel}>
+                    <div class="utility-panel utility-panel--myagency">
+                        <c-mbpr_agency-workspace broker-type={brokerType}></c-mbpr_agency-workspace>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isProfilePanel}>
+                    <div class="utility-panel utility-panel--myprofile">
+                        <c-mbpr_profile-panel sign-out-url={effectiveSignOutUrl}></c-mbpr_profile-panel>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isUpdatesPanel}>
+                    <div class="utility-panel utility-panel--engagement">
+                        <section class="engagement-events" aria-label="Events and Activities">
+                            <div class="engagement-events__head">
+                                <p class="engagement-library__eyebrow">Events and Activities</p>
+                            </div>
+                            <c-mbpr_engagement-events variant="full"></c-mbpr_engagement-events>
+                        </section>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isHelpPanel}>
+                    <div class="utility-panel utility-panel--help">
+                        <c-mbpr_help-workspace></c-mbpr_help-workspace>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isTrainingPanel}>
+                    <div class="utility-panel utility-panel--training">
+                        <c-mbpr_training-panel></c-mbpr_training-panel>
+                    </div>
+                </template>
+
+            </c-mbpr_detail-drawer>
+        </template>
+
+        <template lwc:if={isDirectLeadFormOpen}>
+            <c-mbpr_sales-workspace
+                class="direct-lead-host"
+                fast-track={isFastTrack}
+                direct-lead-form
+                launch-intent="new-lead"
+                launch-token={directLeadFormToken}
+                onsalesdatachange={handleSalesWorkspaceDataChange}
+                onopenofferworkspace={handleOpenGuidedOfferWorkspace}
+                oncloseleadform={handleCloseDirectLeadForm}
+            ></c-mbpr_sales-workspace>
+        </template>
+
+        <!-- Standalone New EOI drawer: same chrome-less host
+             pattern as the direct lead form above. -->
+        <template lwc:if={isDirectEoiFormOpen}>
+            <c-mbpr_sales-workspace
+                class="direct-lead-host"
+                direct-eoi-form
+                launch-intent="new-eoi"
+                launch-token={directEoiFormToken}
+                onsalesdatachange={handleSalesWorkspaceDataChange}
+                oncloseeoiform={handleCloseDirectEoiForm}
+            ></c-mbpr_sales-workspace>
+        </template>
+
+        <!-- Four-card command workspace foundation -->
+        <template lwc:if={isCommandWorkspaceOpen}>
+            <c-mbpr_workspace-modal
+                open={isCommandWorkspaceOpen}
+                title={commandWorkspaceTitle}
+                eyebrow={commandWorkspaceEyebrow}
+                subtitle={commandWorkspaceSubtitle}
+                size={commandWorkspaceSize}
+                tone="accent"
+                hide-title-block={hideWorkspaceTitleBlock}
+                onclose={handleCloseCommandWorkspace}
+            >
+                <template lwc:if={isUnitsWorkspace}>
+                    <template lwc:if={isUnitsLoading}>
+                        <div class="workspace-loading workspace-state">
+                            <c-mbpr_loading-state variant="hero" label="Loading inventory"></c-mbpr_loading-state>
+                            <c-mbpr_loading-state rows="4" label="Loading units"></c-mbpr_loading-state>
+                        </div>
+                    </template>
+
+                    <template lwc:elseif={unitsError}>
+                        <div class="workspace-state">
+                            <c-mbpr_empty-state
+                                compact
+                                kicker="Inventory"
+                                title="Units unavailable"
+                                message="Please try again before reviewing your units."
+                                tone="error"
+                                primary-label="Try again"
+                                onprimary={handleRetryUnits}
+                            ></c-mbpr_empty-state>
+                        </div>
+                    </template>
+
+                    <template lwc:elseif={showUnitsEmpty}>
+                        <div class="workspace-state">
+                            <c-mbpr_empty-state
+                                compact
+                                kicker="Inventory"
+                                title="No allocated units"
+                                message="No available units are assigned to your account right now."
+                            ></c-mbpr_empty-state>
+                        </div>
+                    </template>
+
+                    <template lwc:else>
+                        <div class="properties-workspace properties-workspace--units-only">
+                                <div class="guided-workspace">
+                                    <div class="units-workspace">
+                                        <aside class="units-workspace__sidebar" aria-label="Available units">
+	                                            <div class="unit-list-head">
+	                                                <div>
+	                                                    <h3>Units</h3>
+	                                                    <p>{unitPaginationLabel}</p>
+	                                                </div>
+	                                                <div class="unit-head-actions">
+
+	                                                    <div class="unit-filter-shell" onkeydown={handleUnitFilterPanelKeydown}>
+	                                                        <button
+	                                                            class={unitFilterButtonClass}
+	                                                            type="button"
+	                                                            onclick={handleToggleUnitFilterPanel}
+	                                                            aria-expanded={unitFilterPanelOpen}
+	                                                            aria-controls="unit-filter-panel"
+	                                                        >
+	                                                            <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+	                                                            <span>Filters</span>
+	                                                            <template lwc:if={showUnitAppliedFilterCount}>
+	                                                                <strong>{unitAppliedFilterCount}</strong>
+	                                                            </template>
+	                                                        </button>
+
+	                                                        <template lwc:if={unitFilterPanelOpen}>
+	                                                            <div class="unit-filter-scrim" aria-hidden="true" onclick={handleCloseUnitFilterPanel}></div>
+	                                                            <section
+	                                                                id="unit-filter-panel"
+	                                                                class="unit-filter-popover"
+	                                                                role="dialog"
+	                                                                aria-label="Filter units"
+	                                                            >
+	                                                                <div class="unit-filter-popover__head">
+	                                                                    <div>
+	                                                                        <p>Refine list</p>
+	                                                                        <h4>Filters</h4>
+	                                                                    </div>
+	                                                                    <button
+	                                                                        class="unit-filter-popover__close"
+	                                                                        type="button"
+	                                                                        onclick={handleCloseUnitFilterPanel}
+	                                                                        aria-label="Close filters"
+	                                                                    >
+	                                                                        <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+	                                                                    </button>
+	                                                                </div>
+
+                                                                <div class="unit-filter-popover__grid unit-filter-popover__grid--primary">
+	                                                                    <label class="workspace-field">
+	                                                                        <span>Project</span>
+	                                                                        <select class="workspace-select" value={pendingUnitProjectFilter} onchange={handlePendingUnitProjectFilter}>
+	                                                                            <template for:each={pendingUnitProjectSelectOptions} for:item="option">
+	                                                                                <option key={option.key} value={option.key} selected={option.isSelected}>{option.label}</option>
+	                                                                            </template>
+	                                                                        </select>
+		                                                                    </label>
+	                                                                    <label class="workspace-field">
+	                                                                        <span>Bedrooms</span>
+	                                                                        <select class="workspace-select" value={pendingUnitBedroomFilter} onchange={handlePendingUnitBedroomFilter}>
+	                                                                            <template for:each={pendingUnitBedroomSelectOptions} for:item="option">
+	                                                                                <option key={option.key} value={option.key} selected={option.isSelected}>{option.label}</option>
+	                                                                            </template>
+	                                                                        </select>
+		                                                                    </label>
+	                                                                    <label class="workspace-field">
+	                                                                        <span>Status</span>
+	                                                                        <select class="workspace-select" value={pendingUnitStatusFilter} onchange={handlePendingUnitStatusFilter}>
+	                                                                            <template for:each={pendingUnitStatusSelectOptions} for:item="option">
+	                                                                                <option key={option.key} value={option.key} selected={option.isSelected}>{option.label}</option>
+	                                                                            </template>
+	                                                                        </select>
+		                                                                    </label>
+		                                                                    <label class="workspace-field">
+		                                                                        <span>Sort</span>
+		                                                                        <select class="workspace-select" value={pendingUnitSortMode} onchange={handlePendingUnitSortChange}>
+		                                                                            <template for:each={pendingUnitSortSelectOptions} for:item="option">
+		                                                                                <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+		                                                                            </template>
+		                                                                        </select>
+	                                                                    </label>
+                                                                </div>
+
+	                                                                <div class="unit-filter-popover__section unit-filter-popover__section--types">
+	                                                                    <div class="unit-filter-section-head">
+	                                                                        <span class="unit-filter-popover__label">Available unit types</span>
+	                                                                    </div>
+	                                                                    <div class="unit-filter-choice-grid" role="group" aria-label="Available unit type filters">
+                                                                        <template for:each={unitFilterTypeOptions} for:item="option">
+                                                                            <button
+                                                                                key={option.key}
+                                                                                class={option.className}
+                                                                                type="button"
+                                                                                data-type={option.key}
+                                                                                onclick={handlePendingUnitTypeFilter}
+                                                                                aria-pressed={option.isActive}
+                                                                            >
+                                                                                <span>{option.label}</span>
+                                                                                <strong>{option.count}</strong>
+                                                                            </button>
+                                                                        </template>
+                                                                    </div>
+                                                                </div>
+
+	                                                                <div class="unit-filter-popover__footer">
+	                                                                    <button class="unit-filter-popover__secondary" type="button" onclick={handleResetUnitFilterPanel}>
+	                                                                        Clear
+	                                                                    </button>
+	                                                                    <button class="unit-filter-popover__primary" type="button" onclick={handleApplyUnitFilters}>
+	                                                                        Apply
+	                                                                    </button>
+	                                                                </div>
+	                                                            </section>
+	                                                        </template>
+	                                                    </div>
+	                                                </div>
+	                                            </div>
+
+	                                            <div class="unit-toolbar">
+	                                                <div class="unit-search unit-search--workspace">
+                                                    <lightning-icon
+                                                        class="unit-search__icon"
+                                                        icon-name="utility:search"
+                                                        size="xx-small"
+                                                        alternative-text=""
+                                                    ></lightning-icon>
+                                                    <input
+                                                        type="search"
+                                                        class="unit-search__input"
+                                                        placeholder="Search unit"
+                                                        aria-label="Search units"
+                                                        value={searchQuery}
+                                                        oninput={handleSearchInput}
+                                                    />
+                                                    <template lwc:if={searchQuery}>
+                                                        <button
+                                                            class="unit-search__clear"
+                                                            type="button"
+                                                            aria-label="Clear search"
+                                                            onclick={handleSearchClear}
+                                                        >
+                                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+	                                                        </button>
+	                                                    </template>
+	                                                </div>
+	                                            </div>
+
+	                                            <template lwc:if={showActiveUnitFilterChips}>
+                                                <div class="workspace-applied-filters" aria-label="Applied filters">
+                                                    <template for:each={activeUnitFilterChips} for:item="chip">
+                                                        <span key={chip.key} class="workspace-applied-filter">{chip.label}</span>
+                                                    </template>
+                                                    <button class="workspace-clear-link" type="button" onclick={handleClearUnitFilters}>
+                                                        Clear
+                                                    </button>
+                                                </div>
+                                            </template>
+
+
+                                            <template lwc:if={showUnitsNoMatch}>
+                                                <c-mbpr_empty-state
+                                                    compact
+                                                    kicker="Search"
+                                                    title="No matching units"
+                                                    message="Clear search or filters to see your available units."
+                                                    secondary-label="Clear search"
+                                                    onsecondary={handleSearchClear}
+                                                ></c-mbpr_empty-state>
+                                            </template>
+
+                                            <template lwc:else>
+	                                                    <ol class="workspace-unit-grid" aria-label="Available units">
+	                                                        <template for:each={workspaceUnitCards} for:item="unit">
+	                                                            <li key={unit.key} class={unit.gridItemClassName} style={unit.cardStyle}>
+                                                                    <div class={unit.workspaceShellClassName}>
+	                                                                    <button
+	                                                                        class={unit.workspaceClassName}
+	                                                                        type="button"
+	                                                                        data-id={unit.id}
+	                                                                        onclick={handleSelectWorkspaceUnit}
+	                                                                        aria-pressed={unit.ariaPressed}
+	                                                        aria-expanded={unit.ariaExpanded}
+	                                                                        aria-label={unit.previewLabel}
+	                                                                    >
+	                                                                        <span class="unit-choice__main">
+	                                                                            <span class="unit-choice__name">{unit.name}</span>
+	                                                                            <span class="unit-choice__meta">{unit.choiceMeta}</span>
+	                                                                            <span class="unit-choice__tag">{unit.markLabel}</span>
+	                                                                        </span>
+	                                                                        <span class="unit-choice__price">{unit.priceFull}</span>
+	                                                                        <template lwc:if={unit.isSelectedForExport}>
+	                                                                            <span class="unit-choice__added-chip" aria-hidden="true">✓ Added</span>
+	                                                                        </template>
+	                                                                        <span class="unit-choice__hint" aria-hidden="true">{unit.detailsHintLabel}</span>
+                                                                            <span class={unit.detailsClassName}>
+                                                                                <span>
+                                                                                    <strong>Project</strong>
+                                                                                    <em>{unit.phaseLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>Beds</strong>
+                                                                                    <em>{unit.bedroomLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>View</strong>
+                                                                                    <em>{unit.viewLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>Status</strong>
+                                                                                    <em>{unit.statusLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>Area</strong>
+                                                                                    <em>{unit.totalAreaLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>Plot</strong>
+                                                                                    <em>{unit.plotAreaLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>GFA</strong>
+                                                                                    <em>{unit.gfaLabel}</em>
+                                                                                </span>
+                                                                                <span>
+                                                                                    <strong>Floor</strong>
+                                                                                    <em>{unit.floorLabel}</em>
+                                                                                </span>
+                                                                                <span class="unit-choice__mobile-detail--wide">
+                                                                                    <strong>Plan</strong>
+                                                                                    <em>{unit.masterplanStatusLabel}</em>
+                                                                                </span>
+                                                                            </span>
+	                                                                    </button>
+                                                                        <span class="unit-action-tooltip-wrap">
+                                                                            <button
+                                                                                class={unit.selectionActionClassName}
+                                                                                type="button"
+                                                                                data-id={unit.id}
+                                                                                onclick={handleToggleUnitSelection}
+                                                                                aria-pressed={unit.isSelectedForExport}
+                                                                                aria-label={unit.selectionLabel}
+                                                                                aria-describedby={unit.selectionTooltipId}
+                                                                            >
+                                                                                <span aria-hidden="true">{unit.selectionActionIcon}</span>
+                                                                            </button>
+                                                                            <span id={unit.selectionTooltipId} class="unit-action-tooltip" role="tooltip">{unit.selectionTooltipLabel}</span>
+                                                                        </span>
+	                                                                    </div>
+	                                                            </li>
+	                                                        </template>
+	                                                    </ol>
+
+
+                                                <div class="workspace-pagination" aria-label="Unit pagination">
+                                                    <button type="button" onclick={handlePreviousUnitPage} disabled={isFirstUnitPage}>
+                                                        Previous
+                                                    </button>
+                                                    <span>{unitPaginationLabel}</span>
+                                                    <button type="button" onclick={handleNextUnitPage} disabled={isLastUnitPage}>
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </aside>
+
+                                        <section class="unit-preview" aria-label="Selected unit interactive plan">
+                                            <template lwc:if={hasWorkspaceSelectedUnit}>
+                                                <template lwc:if={selectedWorkspaceUnit.hasTour}>
+                                                    <div class="tour-frame">
+                                                        <iframe
+                                                            class="tour-iframe"
+                                                            src={selectedWorkspaceUnit.tourUrl}
+                                                            title={selectedWorkspaceUnit.tourTitle}
+                                                            loading="lazy"
+                                                            referrerpolicy="no-referrer"
+                                                            allow="fullscreen; gyroscope; accelerometer; xr-spatial-tracking"
+                                                        ></iframe>
+                                                    </div>
+                                                </template>
+
+                                                <template lwc:else>
+                                                    <div class="tour-frame tour-frame--empty">
+                                                        <c-mbpr_empty-state
+                                                            compact
+                                                            kicker="Interactive plan"
+                                                            title="Plan not available yet"
+                                                            message="This unit does not currently have an interactive plan link."
+                                                        ></c-mbpr_empty-state>
+                                                    </div>
+                                                </template>
+
+                                                <template lwc:if={hasUnitFieldSetColumns}>
+                                                    <dl class="unit-preview__facts">
+                                                        <template for:each={selectedUnitFieldFacts} for:item="fact">
+                                                            <div key={fact.key}>
+                                                                <dt>{fact.label}</dt>
+                                                                <dd>{fact.value}</dd>
+                                                            </div>
+                                                        </template>
+                                                    </dl>
+                                                </template>
+                                                <template lwc:else>
+                                                <dl class="unit-preview__facts">
+                                                    <div>
+                                                        <dt>Price</dt>
+                                                        <dd>{selectedWorkspaceUnit.priceFull}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt>View</dt>
+                                                        <dd>{selectedWorkspaceUnit.viewLabel}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt>Area</dt>
+                                                        <dd>{selectedWorkspaceUnit.totalAreaLabel}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt>Plot area</dt>
+                                                        <dd>{selectedWorkspaceUnit.plotAreaLabel}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt>GFA</dt>
+                                                        <dd>{selectedWorkspaceUnit.gfaLabel}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt>Floor</dt>
+                                                        <dd>{selectedWorkspaceUnit.floorLabel}</dd>
+                                                    </div>
+                                                </dl>
+                                                </template>
+                                            </template>
+
+                                            <template lwc:else>
+                                                <c-mbpr_empty-state
+                                                    compact
+                                                    kicker="Inventory"
+                                                    title="No unit selected"
+                                                    message="Select a unit from the list to review its details and interactive plan."
+                                                ></c-mbpr_empty-state>
+                                            </template>
+                                        </section>
+                                    </div>
+                                </div>
+                        </div>
+                    </template>
+                </template>
+
+                <template lwc:elseif={isSalesWorkspace}>
+                    <c-mbpr_sales-workspace
+                        fast-track={isFastTrack}
+                        launch-intent={salesWorkspaceIntent}
+                        launch-token={salesWorkspaceIntentToken}
+                        onsalesdatachange={handleSalesWorkspaceDataChange}
+                        onsalestabsstate={handleSalesTabsState}
+                        onsalesperfchrome={handleSalesPerfChrome}
+                        onopenofferworkspace={handleOpenGuidedOfferWorkspace}
+                    ></c-mbpr_sales-workspace>
+                </template>
+
+                <template lwc:elseif={isEoiWorkspace}>
+                    <c-mbpr_sales-workspace
+                        eoi-only
+                        onsalesdatachange={handleSalesWorkspaceDataChange}
+                        onopenofferworkspace={handleOpenGuidedOfferWorkspace}
+                    ></c-mbpr_sales-workspace>
+                </template>
+
+                <template lwc:elseif={isMarketingWorkspace}>
+                    <div class="utility-panel utility-panel--engagement utility-panel--marketing">
+                        <section class="engagement-library" aria-label="Marketing Library">
+                            <template lwc:if={hasSelectedMarketingSections}>
+                                <div class="engagement-library__head">
+                                    <span class="engagement-library__selection">{selectedMarketingSectionCountLabel}</span>
+                                </div>
+                            </template>
+
+                            <div class="marketing-workspace marketing-workspace--drawer">
+                                <aside class="marketing-workspace__sidebar" aria-label="Marketing projects">
+                                    <div class="units-workspace__intro">
+                                        <h3>Select a project</h3>
+                                        <p>Review brochures, gallery files, and floor plans.</p>
+                                    </div>
+
+                                    <div class="unit-search marketing-search">
+                                        <lightning-icon
+                                            class="unit-search__icon"
+                                            icon-name="utility:search"
+                                            size="xx-small"
+                                            alternative-text=""
+                                        ></lightning-icon>
+                                        <input
+                                            type="search"
+                                            class="unit-search__input marketing-search__input"
+                                            placeholder="Search projects..."
+                                            aria-label="Search projects"
+                                            value={marketingSearchQuery}
+                                            oninput={handleMarketingSearchInput}
+                                        />
+                                        <template lwc:if={marketingSearchQuery}>
+                                            <button
+                                                class="unit-search__clear"
+                                                type="button"
+                                                aria-label="Clear search"
+                                                onclick={handleMarketingSearchClear}
+                                            >
+                                                <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+                                            </button>
+                                        </template>
+                                    </div>
+
+                                    <template lwc:if={isMarketingLoading}>
+                                        <c-mbpr_loading-state rows="4" label="Loading projects"></c-mbpr_loading-state>
+                                    </template>
+
+                                    <template lwc:elseif={marketingError}>
+                                        <c-mbpr_empty-state
+                                            compact
+                                            kicker="Marketing"
+                                            title="Projects unavailable"
+                                            message="Please try again before reviewing marketing materials."
+                                            tone="error"
+                                            primary-label="Try again"
+                                            onprimary={handleRetryMarketingProjects}
+                                        ></c-mbpr_empty-state>
+                                    </template>
+
+                                    <template lwc:elseif={showMarketingProjectEmpty}>
+                                        <c-mbpr_empty-state
+                                            compact
+                                            kicker="Marketing"
+                                            title="No projects found"
+                                            message="There are no marketing projects available right now."
+                                        ></c-mbpr_empty-state>
+                                    </template>
+
+                                    <template lwc:elseif={showMarketingProjectNoMatch}>
+                                        <c-mbpr_empty-state
+                                            compact
+                                            kicker="Search"
+                                            title="No matching projects"
+                                            message="Clear search to see available projects."
+                                            secondary-label="Clear search"
+                                            onsecondary={handleMarketingSearchClear}
+                                        ></c-mbpr_empty-state>
+                                    </template>
+
+                                    <template lwc:else>
+                                        <ol class="marketing-project-list" aria-label="Projects">
+                                            <template for:each={filteredMarketingProjects} for:item="project">
+                                                <li key={project.key} style={project.cardStyle}>
+                                                    <!-- Logo-only tiles: the wordmark IS the card; the
+                                                         name lives in aria-label/title and in the detail header. -->
+                                                    <button
+                                                        class={project.className}
+                                                        type="button"
+                                                        data-id={project.id}
+                                                        onclick={handleSelectMarketingProject}
+                                                        aria-pressed={project.isActive}
+                                                        aria-label={project.name}
+                                                        title={project.name}
+                                                    >
+                                                        <img src={project.logoUrl} alt="" loading="lazy" />
+                                                    </button>
+                                                </li>
+                                            </template>
+                                        </ol>
+                                    </template>
+                                </aside>
+
+                                <section class="marketing-detail" aria-label="Selected project marketing materials">
+                                    <div class="unit-preview__head">
+                                        <div>
+                                            <p class="unit-preview__eyebrow">Selected project</p>
+                                            <h3 class="unit-preview__title">{selectedMarketingProjectName}</h3>
+                                            <!-- BP-077 (13 Sep 2026): download hint removed; sections open Dropbox links instead.
+                                            <p class="unit-preview__meta">Click a file name to download it.</p>
+                                            -->
+                                        </div>
+                                        <!-- BP-069 (12 Sep 2026): bulk download is hidden for the
+                                             client's training recording. Single-file download (the
+                                             file-name link below) is the only route. HIDDEN, not
+                                             removed - uncomment this block and the checkbox below to
+                                             bring it back. The footer carrying "Download selected"
+                                             needs no change: showMarketingDrawerFooter is gated on
+                                             hasSelectedMarketingSections, so with nothing selectable
+                                             it can never render.
+                                        <label class="marketing-select-all">
+                                            <input
+                                                type="checkbox"
+                                                checked={isMarketingAllSelected}
+                                                onchange={handleMarketingSelectAll}
+                                                disabled={isMarketingSelectAllDisabled}
+                                            />
+                                            <span>Select all</span>
+                                        </label>
+                                        -->
+                                    </div>
+
+                                    <template lwc:if={isMarketingDocumentsLoading}>
+                                        <div class="marketing-section-grid">
+                                            <c-mbpr_loading-state rows="3" label="Loading marketing materials"></c-mbpr_loading-state>
+                                        </div>
+                                    </template>
+
+                                    <template lwc:elseif={marketingDocumentsError}>
+                                        <c-mbpr_empty-state
+                                            compact
+                                            kicker="Marketing"
+                                            title="Materials unavailable"
+                                            message="Please try again before downloading materials for this project."
+                                            tone="error"
+                                            primary-label="Try again"
+                                            onprimary={handleRetryMarketingDocuments}
+                                        ></c-mbpr_empty-state>
+                                    </template>
+
+                                    <template lwc:else>
+                                        <div class="marketing-section-grid">
+                                            <template for:each={marketingSections} for:item="section">
+                                                <article key={section.key} class={section.className}>
+                                                    <label class="marketing-section__check">
+                                                        <!-- BP-069: checkbox hidden; the label and its
+                                                             text stay, they are the section heading.
+                                                        <input
+                                                            type="checkbox"
+                                                            data-section={section.key}
+                                                            checked={section.isSelected}
+                                                            onchange={handleMarketingSectionToggle}
+                                                            disabled={section.isDisabled}
+                                                        />
+                                                        -->
+                                                        <span>{section.label}</span>
+                                                    </label>
+                                                    <!-- BP-077 (13 Sep 2026): file count and file list hidden; restore by uncommenting
+                                                         and setting MARKETING_FILE_LIST_ENABLED to true in the JS.
+                                                    <p>{section.summary}</p>
+
+                                                    <template lwc:if={section.hasFiles}>
+                                                        <ul class="marketing-file-list">
+                                                            <template for:each={section.files} for:item="file">
+                                                                <li key={file.key}>
+                                                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer">
+                                                                        {file.title}
+                                                                    </a>
+                                                                </li>
+                                                            </template>
+                                                        </ul>
+                                                        <template lwc:if={section.moreLabel}>
+                                                            <span class="marketing-more">{section.moreLabel}</span>
+                                                        </template>
+                                                    </template>
+                                                    -->
+
+                                                    <button
+                                                        class="marketing-section__button"
+                                                        type="button"
+                                                        data-section={section.key}
+                                                        onclick={handleOpenMarketingLink}
+                                                        disabled={section.linkDisabled}
+                                                    >
+                                                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                                            <path d="M14 4h6v6"></path>
+                                                            <path d="M20 4l-8.5 8.5"></path>
+                                                            <path d="M18 14.5V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7.5A1.5 1.5 0 0 1 5 6h4.5"></path>
+                                                        </svg>
+                                                        <span>Open in Dropbox</span>
+                                                    </button>
+                                                </article>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </section>
+                            </div>
+                        </section>
+                    </div>
+                </template>
+
+                <template lwc:elseif={isRevenueWorkspace}>
+                    <template lwc:if={canSeeCommissionLanguage}>
+                        <div class="revenue-workspace">
+                            <template lwc:if={isRevenueDashboardView}>
+                                <c-mbpr_dashboard-workspace
+                                    hide-filter-trigger
+                                    onfilterlabelchange={handleRevenueFilterLabelChange}
+                                ></c-mbpr_dashboard-workspace>
+                            </template>
+                            <template lwc:else>
+                                <c-mbpr_commissions-workspace
+                                    broker-type={brokerType}
+                                    onopenutilitypanel={handleOpenUtilityPanelRequest}
+                                ></c-mbpr_commissions-workspace>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+
+                <div lwc:if={showSalesHeaderTabs} slot="header-actions" class="sales-header-tabs" role="tablist" aria-label="Sales sections">
+                    <template for:each={salesHeaderTabs} for:item="tab">
+                        <button
+                            key={tab.key}
+                            class={tab.className}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab.active}
+                            data-tab={tab.key}
+                            onclick={handleSalesHeaderTabClick}
+                        >
+                            <span>{tab.label}</span>
+                            <template lwc:if={tab.hasCount}>
+                                <strong>{tab.count}</strong>
+                            </template>
+                        </button>
+                    </template>
+                </div>
+
+                <div lwc:elseif={showSalesDesktopHeader} slot="header-actions" class="sales-desktop-header">
+                    <!-- Desktop sales header chrome: >=1200 the header row IS
+                         the console - segmented tabs (Total Sales pattern) + per-tab actions.
+                         The child's in-body console bar hides at this width. -->
+                    <div class="sales-desktop-tabs" role="tablist" aria-label="Sales sections">
+                        <template for:each={salesDesktopTabs} for:item="tab">
+                            <button
+                                key={tab.key}
+                                class={tab.className}
+                                type="button"
+                                role="tab"
+                                aria-selected={tab.ariaSelected}
+                                data-tab={tab.key}
+                                onclick={handleSalesHeaderTabClick}
+                            >
+                                <span>{tab.label}</span>
+                                <template lwc:if={tab.hasCount}>
+                                    <strong>{tab.count}</strong>
+                                </template>
+                            </button>
+                        </template>
+                    </div>
+                    <div class="sales-desktop-actions">
+                        <template lwc:if={salesHeaderPerfActive}>
+                            <div lwc:if={showSalesHeaderAgentPicker} class="sales-perf-agent">
+                                <span class="sales-perf-agent__kicker">Agent</span>
+                                <input
+                                    class="sales-perf-agent__input"
+                                    type="text"
+                                    role="combobox"
+                                    autocomplete="off"
+                                    aria-label="Focus on one agent"
+                                    aria-autocomplete="list"
+                                    aria-expanded={salesAgentPickerExpanded}
+                                    aria-controls="sales-perf-agent-list"
+                                    placeholder="Search agent"
+                                    value={salesAgentInputValue}
+                                    onfocus={handleSalesAgentFocus}
+                                    oninput={handleSalesAgentInput}
+                                    onkeydown={handleSalesAgentKeydown}
+                                    onblur={handleSalesAgentBlur}
+                                />
+                                <span class="sales-perf-agent__caret" aria-hidden="true"></span>
+                                <template lwc:if={isSalesAgentPickerOpen}>
+                                    <div id="sales-perf-agent-list" class="sales-perf-agent-menu" role="listbox" aria-label="Agents">
+                                        <template lwc:if={hasSalesAgentOptions}>
+                                            <template for:each={filteredSalesAgentOptions} for:item="option">
+                                                <button
+                                                    key={option.key}
+                                                    class={option.className}
+                                                    type="button"
+                                                    role="option"
+                                                    aria-selected={option.selected}
+                                                    data-value={option.pickValue}
+                                                    onmousedown={handleSalesAgentOptionMouseDown}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            </template>
+                                        </template>
+                                        <template lwc:else>
+                                            <p class="sales-perf-agent-menu__empty">No agents match your search.</p>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                            <button
+                                class={salesPerfFilterChipClass}
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-label="Filters"
+                                onclick={handleSalesPerfFilterChipClick}
+                            >
+                                <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                                <span class="sales-perf-filter-chip__label">Filters</span>
+                                <span class="sales-perf-filter-chip__value">{salesPerfFilterLabel}</span>
+                            </button>
+                        </template>
+                        <button lwc:if={showSalesHeaderOffer} class="sales-desktop-offer" type="button" onclick={handleSalesHeaderGenerateOffer}>
+                            <lightning-icon icon-name="utility:email" size="x-small" alternative-text=""></lightning-icon>
+                            <span>Generate Offer</span>
+                        </button>
+                        <button
+                            lwc:if={showSalesHeaderScreenshot}
+                            class="workspace-screenshot"
+                            type="button"
+                            title="Screenshot"
+                            aria-label="Save a screenshot of the Performance dashboard"
+                            onclick={handleSalesDashboardScreenshot}
+                        >
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M4 8.4h3.2l1.6-2.2h6.4l1.6 2.2H20v10H4Z"></path>
+                                <circle cx="12" cy="13.1" r="3.1"></circle>
+                            </svg>
+                        </button>
+                        <button class="sales-desktop-refresh" type="button" onclick={handleSalesHeaderRefresh}>
+                            <lightning-icon icon-name="utility:refresh" size="x-small" alternative-text=""></lightning-icon>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div lwc:if={showRevenueHeaderActions} slot="header-actions" class="revenue-header-actions">
+                    <div class="revenue-tabs" role="tablist" aria-label="Revenue sections">
+                        <template for:each={revenueViewTabs} for:item="tab">
+                            <button
+                                key={tab.key}
+                                class={tab.className}
+                                type="button"
+                                role="tab"
+                                aria-selected={tab.ariaSelected}
+                                data-view={tab.key}
+                                onclick={handleRevenueViewChange}
+                            >
+                                {tab.label}
+                            </button>
+                        </template>
+                    </div>
+                    <button
+                        lwc:if={isRevenueDashboardView}
+                        class={revenueFilterChipClass}
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-label="Filters"
+                        onclick={handleRevenueFilterChipClick}
+                    >
+                        <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                        <span class="revenue-filter-chip__label">Filters</span>
+                        <span lwc:if={revenueFilterLabel} class="revenue-filter-chip__value">{revenueFilterLabel}</span>
+                    </button>
+                    <button
+                        lwc:if={showRevenueScreenshot}
+                        class="workspace-screenshot"
+                        type="button"
+                        title="Screenshot"
+                        aria-label="Save a screenshot of the Total Sales dashboard"
+                        onclick={handleRevenueDashboardScreenshot}
+                    >
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M4 8.4h3.2l1.6-2.2h6.4l1.6 2.2H20v10H4Z"></path>
+                            <circle cx="12" cy="13.1" r="3.1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <div lwc:if={showMarketingDrawerFooter} slot="footer" class="workspace-footer workspace-footer--actions workspace-footer--marketing">
+                    <p class="workspace-footer__summary">
+                        <span>{selectedMarketingProjectName}</span>
+                        <strong>{selectedMarketingSectionCountLabel}</strong>
+                    </p>
+                    <div class="workspace-footer__actions">
+                        <button
+                            class="workspace-footer__button"
+                            type="button"
+                            onclick={handleDownloadSelectedMarketing}
+                            disabled={marketingDownloadBusy}
+                        >
+                            {marketingDownloadLabel}
+                        </button>
+                    </div>
+                </div>
+
+	                <div lwc:if={showUnitsWorkspaceFooter} slot="footer" class="workspace-footer workspace-footer--actions workspace-footer--unit-actions">
+                    <div class="workspace-footer__actions">
+                        <button
+                            class={unitFilterFooterButtonClass}
+                            type="button"
+                            onclick={handleToggleUnitFilterPanel}
+                            onkeydown={handleUnitFilterPanelKeydown}
+                            aria-expanded={unitFilterPanelOpen}
+                            aria-controls="unit-filter-panel"
+                            aria-label="Filters"
+                        >
+                            <lightning-icon icon-name="utility:filterList" size="xx-small" alternative-text=""></lightning-icon>
+                            <span>Filters</span>
+                            <template lwc:if={showUnitAppliedFilterCount}>
+                                <strong>{unitAppliedFilterCount}</strong>
+                            </template>
+                        </button>
+                        <span
+                            class="workspace-footer-tooltip-wrap"
+                            tabindex={guidedOfferFromUnitsTooltipTabIndex}
+                        >
+                            <button
+                                class="workspace-footer__button"
+                                type="button"
+                                onclick={handleOpenGuidedOfferFromUnits}
+                                disabled={isGuidedOfferFromUnitsDisabled}
+                                aria-describedby={guidedOfferFromUnitsTooltipDescribedBy}
+                            >
+                                {generateOfferFooterLabel}
+                            </button>
+                            <template lwc:if={isGuidedOfferFromUnitsDisabled}>
+                                <span id={guidedOfferFromUnitsTooltipId} class="workspace-footer-tooltip" role="tooltip">
+                                    {guidedOfferFromUnitsTooltipLabel}
+                                </span>
+                            </template>
+                        </span>
+                        <button
+                            class="workspace-footer__button workspace-footer__button--ghost"
+                            type="button"
+                            onclick={handleExportSelectedUnits}
+                            disabled={isUnitSelectionEmpty}
+                        >
+                            Export selected
+                        </button>
+                        <button
+                            class="workspace-footer__button workspace-footer__button--ghost"
+                            type="button"
+                            onclick={handleExportAllUnits}
+                            disabled={isFilteredUnitEmpty}
+                        >
+                            Export all
+                        </button>
+                    </div>
+                </div>
+
+            </c-mbpr_workspace-modal>
+        </template>
+
+        <c-mbpr_guided-offer-workspace
+            open={isGuidedOfferOpen}
+            launch-token={guidedOfferLaunchToken}
+            preselected-lead-id={guidedOfferLeadId}
+            preselected-unit-ids={guidedOfferUnitIds}
+            onclose={handleCloseGuidedOfferWorkspace}
+            onoffercomplete={handleGuidedOfferComplete}
+        ></c-mbpr_guided-offer-workspace>
+    </div>
+
+</template>

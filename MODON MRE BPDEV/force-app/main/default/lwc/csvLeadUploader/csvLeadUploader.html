@@ -1,0 +1,152 @@
+<template>
+  <lightning-card title="Upload Leads (CSV)" icon-name="standard:lead">
+    <div class="slds-p-around_medium">
+      <a class="slds-hide" data-id="csv-download" download="LeadCSV_with_results.csv"></a>
+
+      <!-- Top row: Upload + Create + Export -->
+      <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-bottom_small">
+        <div>
+          <input type="file" accept=".csv" onchange={handleFileChange} />
+        </div>
+        <div>
+          <lightning-button
+            label="Create Leads"
+            variant="brand"
+            onclick={handleCreate}
+            disabled={isCreateDisabled}>
+          </lightning-button>
+
+          <lightning-button
+            label="Export CSV (with errors)"
+            class="slds-m-left_small"
+            onclick={exportCsv}
+            disabled={isCreateDisabled}>
+          </lightning-button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <template if:true={successMessage}>
+        <div class="slds-text-color_success slds-m-bottom_small">{successMessage}</div>
+      </template>
+      <template if:true={errorMessage}>
+        <div class="slds-text-color_error slds-m-bottom_small" style="white-space:pre-line">{errorMessage}</div>
+      </template>
+
+      <!-- Empty state -->
+      <template if:false={hasRows}>
+        <div class="slds-m-top_medium slds-text-color_weak">
+          Upload a .csv file to preview its contents.
+        </div>
+      </template>
+
+      <!-- Table -->
+      <template if:true={hasRows}>
+        <div class="slds-m-top_medium" style="overflow-x:auto;">
+          <table class="slds-table slds-table_cell-buffer slds-table_bordered" style="min-width:780px;">
+            <thead>
+              <tr class="slds-text-title_caps">
+                <th scope="col" class="slds-cell-shrink" style="width:120px;">Actions</th>
+                <template for:each={displayColumns} for:item="col">
+                  <th key={col.fieldName} scope="col">{col.label}</th>
+                </template>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={renderedRows} for:item="r">
+                <tr key={r._rowId}>
+                  <td class="slds-cell-shrink" style="white-space:nowrap;">
+                    <lightning-button-icon
+                      icon-name="utility:retweet"
+                      alternative-text="Reassign"
+                      title="Reassign"
+                      variant="border-filled"
+                      class="slds-m-right_x-small"
+                      data-rowid={r._rowId}
+                      onclick={openReassign}>
+                    </lightning-button-icon>
+
+                    <lightning-button-icon
+                      icon-name="utility:delete"
+                      alternative-text="Delete"
+                      title="Delete"
+                      variant="destructive"
+                      data-rowid={r._rowId}
+                      onclick={handleDeleteRow}>
+                    </lightning-button-icon>
+                  </td>
+
+                  <template for:each={r.cells} for:item="cell">
+                    <td key={cell.key}>{cell.value}</td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="slds-grid slds-grid_align-spread slds-m-top_small">
+          <div>
+            <lightning-button label="Previous" onclick={handlePrev} disabled={isFirstPage}></lightning-button>
+            <lightning-button label="Next" class="slds-m-left_x-small" onclick={handleNext} disabled={isLastPage}></lightning-button>
+          </div>
+          <div class="slds-text-body_small">
+            Page {page} of {totalPages} — {totalRows} rows
+          </div>
+        </div>
+      </template>
+
+      <!-- Reassign Modal -->
+      <template if:true={isReassignOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+          <div class="slds-modal__container">
+            <header class="slds-modal__header">
+              <h2 class="slds-text-heading_medium">Reassign Sales Person</h2>
+            </header>
+
+            <div class="slds-modal__content slds-p-around_medium">
+              <template if:true={activeReassign.row}>
+                <p class="slds-m-bottom_small slds-text-color_weak">
+                  Current email:
+                  <strong>{activeReassign.currentEmail}</strong>
+                  <template if:true={activeReassign.currentName}>
+                    &nbsp;(<em>{activeReassign.currentName}</em>)
+                  </template>
+                </p>
+              </template>
+
+              <lightning-record-picker
+                label="Select Sales Associate"
+                placeholder="Search users by name or email"
+                object-api-name="User"
+                value={selectedUserId}
+                onchange={handleUserPicked}>
+              </lightning-record-picker>
+
+              <div class="slds-m-top_small">
+                <lightning-input
+                  type="checkbox"
+                  label="Apply this user to all leads"
+                  checked={applyToAll}
+                  onchange={toggleApplyAll}>
+                </lightning-input>
+              </div>
+              <template if:true={pickedPreview}>
+                <div class="slds-m-top_x-small slds-text-color_weak">
+                  Selected: {pickedPreview}
+                </div>
+              </template>
+            </div>
+
+            <footer class="slds-modal__footer">
+              <lightning-button label="Cancel" onclick={closeReassign}></lightning-button>
+              <lightning-button class="slds-m-left_small" variant="brand" label="Assign" onclick={confirmReassign} disabled={isAssignDisabled}></lightning-button>
+            </footer>
+          </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+    </div>
+  </lightning-card>
+</template>

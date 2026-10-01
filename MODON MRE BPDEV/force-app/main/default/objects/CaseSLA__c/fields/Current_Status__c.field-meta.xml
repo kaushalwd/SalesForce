@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Current_Status__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    ISBLANK(CaseId__c),
+    NULL,
+
+    IF(
+        NOT(ISBLANK(CompletionDate__c)),
+
+        IF(
+            CompletionDate__c &gt; DueTime__c,
+            &quot;Breached&quot;,
+            &quot;Resolved&quot;
+        ),
+
+        IF(
+            CaseId__r.IsClosed,
+
+            IF(
+                DueTime__c &lt; CaseId__r.ClosedDate,
+                &quot;Breached&quot;,
+                &quot;Resolved&quot;
+            ),
+
+            IF(
+                DueTime__c &lt; NOW(),
+                &quot;Breached&quot;,
+                &quot;OnTrack&quot;
+            )
+        )
+    )
+)</formula>
+    <label>Current Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

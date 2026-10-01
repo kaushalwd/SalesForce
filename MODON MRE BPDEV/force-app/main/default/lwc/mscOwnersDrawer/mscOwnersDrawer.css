@@ -1,0 +1,412 @@
+/* c/mscStyles carries .field*, .chip and .pill; c/mscDrawer owns the panel, the
+   scrim, the focus trap and the motion. Everything below is this form's own. */
+@import "c/mscStyles";
+
+/* ── section legends ──────────────────────────────────────────────────── */
+.dw__legend {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    margin: 22px 0 11px;
+}
+.dw__legend::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+.dw__legend:first-child {
+    margin-top: 0;
+}
+.dw__set {
+    display: grid;
+    gap: 14px;
+}
+.dw__hint {
+    margin-top: 9px;
+}
+
+/* ── actions ──────────────────────────────────────────────────────────── */
+.dw__go {
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.dw__sm {
+    min-height: 32px;
+    padding: 4px 13px;
+    font-size: 12px;
+}
+.dw__go[disabled],
+.dw__sm[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+.dw__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.dw__wait {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+}
+.dw__again {
+    margin-top: 11px;
+}
+
+/* ── the found account ────────────────────────────────────────────────── */
+.dw__found {
+    border: 1px solid var(--edge-green, rgba(74, 222, 128, 0.34));
+    border-radius: 10px;
+    padding: 13px;
+    background: var(--wash-green, rgba(74, 222, 128, 0.07));
+}
+.dw__found-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.dw__found-id {
+    min-width: 0;
+}
+.dw__found-name {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+}
+.dw__found-facts {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    margin-top: 3px;
+}
+/* MSC-087 - no spinner on Ownership %.
+   type="number" is kept: it carries min/max/step and brings up the number pad. Its
+   stepper is what goes - a share is typed, not nudged, and the arrows sat over the
+   right-hand side of a field that is only ever two digits wide. Firefox needs the
+   textfield appearance as well as the WebKit pseudo-elements. */
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+.dw__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    display: block;
+    flex-shrink: 0;
+}
+.chip {
+    gap: 5px;
+}
+.dw__chip--green {
+    color: var(--chip-green, #4ade80);
+    border-color: var(--edge-green, rgba(74, 222, 128, 0.34));
+}
+/* 1.3 - the found card's "Company" tag: informational, not a verdict, so the
+   neutral text colour rather than a semantic one. */
+.dw__chip--org {
+    color: var(--text-muted, #a3a3a3);
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+/* ── 1.3 - the kind toggle ────────────────────────────────────────────── */
+.dw__kinds {
+    display: inline-flex;
+    gap: 8px;
+}
+.dw__kind {
+    min-width: 110px;
+    justify-content: center;
+}
+.dw__kind--on {
+    background: var(--text, #fafafa);
+    border-color: var(--text, #fafafa);
+    color: var(--text-inverse, #111);
+}
+.dw__kind--on:hover {
+    background: var(--text, #fafafa);
+}
+
+/* ── 1.4 - KYC of the found person: grey base, status in the dot and border ── */
+.dw__kyc {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 9px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+.dw__kyc--ok {
+    border-color: var(--edge-green, rgba(74, 222, 128, 0.34));
+}
+.dw__kyc--ok .dw__dot {
+    color: var(--chip-green, #4ade80);
+}
+.dw__kyc--wait {
+    border-color: var(--edge-amber, rgba(251, 191, 36, 0.34));
+}
+.dw__kyc--wait .dw__dot {
+    color: var(--chip-amber, #fbbf24);
+}
+.dw__kyc-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text, #fafafa);
+}
+.dw__kyc-sub {
+    margin: 6px 0 0 13px;
+}
+.dw__kyc-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 0 13px;
+}
+
+/* ── notes ────────────────────────────────────────────────────────────── */
+.dw__note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 9px;
+    padding: 11px 13px;
+    margin-top: 14px;
+}
+.dw__note--err {
+    color: var(--chip-red, #f87171);
+    border-color: var(--edge-red, rgba(248, 113, 113, 0.34));
+}
+
+/* ── the ownership preview ────────────────────────────────────────────── */
+.dw__meter {
+    display: flex;
+    gap: 2px;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 10px 0 2px;
+    background: var(--seg-free, rgba(250, 250, 250, 0.08));
+}
+.dw__seg {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    min-width: 2px;
+}
+.dw__seg--primary {
+    background: var(--gold, #a8a8a8);
+}
+.dw__seg--1 {
+    background: var(--seg-1, rgba(250, 250, 250, 0.46));
+}
+.dw__seg--2 {
+    background: var(--seg-2, rgba(250, 250, 250, 0.28));
+}
+.dw__seg--3 {
+    background: var(--seg-3, rgba(250, 250, 250, 0.18));
+}
+/* The one being added. Blue, because it is the only segment on this bar that
+   does not exist yet - it must not read as one of the settled shares. */
+.dw__seg--new {
+    background: var(--chip-blue, #60a5fa);
+}
+
+/* ── the unit picker ──────────────────────────────────────────────────── */
+.dw__shortcuts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.dw__pick {
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    border-radius: 10px;
+    overflow: hidden;
+}
+.dw__pick-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 13px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.dw__pick-row:first-child {
+    border-top: 0;
+}
+.dw__box {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1.5px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    color: var(--text-inverse, #111);
+}
+.dw__box--on {
+    background: var(--text, #fafafa);
+    border-color: var(--text, #fafafa);
+}
+.dw__box[disabled] {
+    cursor: default;
+    opacity: 0.75;
+}
+.dw__box:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+.dw__pick-name {
+    font-size: 13.5px;
+    color: var(--text, #fafafa);
+    flex: 1;
+    min-width: 0;
+}
+.dw__pick-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: var(--text-dim, #8a8a8a);
+    text-align: right;
+}
+.dw__pick-meta--amber {
+    color: var(--chip-amber, #fbbf24);
+}
+
+/* ── 1.5 - the manual KYC button: same family, lesser weight ───────────── */
+.dw__quiet {
+    color: var(--text-dim, #8a8a8a);
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+/* ── 1.5 - existing customers that match a new person ─────────────────── */
+.dw__match-lede {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+    color: var(--text-muted, #a3a3a3);
+}
+.dw__matches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.dw__match {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    min-width: 0;
+    padding: 11px 13px;
+    text-align: left;
+    font: inherit;
+    color: var(--text, #fafafa);
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 9px;
+    cursor: pointer;
+}
+.dw__match:hover {
+    border-color: var(--text-dim, #8a8a8a);
+}
+.dw__match--on,
+.dw__match--on:hover {
+    border-color: var(--text, #fafafa);
+}
+.dw__match--off,
+.dw__match[disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.dw__match-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+.dw__match-sub {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    overflow-wrap: anywhere;
+}
+.dw__match-warn {
+    color: var(--chip-amber, #fbbf24);
+}
+.dw__foot-acts {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ── 1.5 - the Update KYC dialog's layer, above the drawer (c/mscDrawer is 70) ── */
+.dw__kycm {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+}
+
+/* ── phone ────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    .dw__foot {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .dw__foot-acts {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .dw__match {
+        padding: 13px;
+    }
+    .dw__foot .pill {
+        width: 100%;
+        min-height: 44px;
+    }
+    .dw__wait {
+        text-align: center;
+    }
+    .dw__go {
+        min-height: 44px;
+    }
+    .dw__box {
+        width: 24px;
+        height: 24px;
+    }
+    .dw__pick-row {
+        padding: 13px;
+    }
+    .dw__shortcuts .pill {
+        min-height: 36px;
+    }
+}

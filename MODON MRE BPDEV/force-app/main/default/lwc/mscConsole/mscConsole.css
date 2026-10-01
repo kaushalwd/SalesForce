@@ -1,0 +1,669 @@
+/* the customer picker, inside section 2 of the booking journey */
+
+/* Shadow DOM does not share stylesheets, so the primitives are imported per bundle */
+@import "c/mscStyles";
+
+/* nested inside c-msc-section-card, which supplies the card and its gutters */
+.pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* the containing block for c-msc-verify-choice's overlay */
+    position: relative;
+    padding: 2px 0 6px;
+    gap: 12px;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.lede {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* a stop below the first one */
+.lede--next {
+    margin-top: 14px;
+}
+
+/* the block of person fields under a company */
+.field-legend {
+    margin: 6px 0 -2px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* search */
+
+.search {
+    position: relative;
+    flex: 0 0 auto;
+}
+.search__ic {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    pointer-events: none;
+}
+.search__input {
+    width: 100%;
+    border-radius: 12px;
+    padding: 11px 14px 11px 36px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text, #fff);
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.1));
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.search__input::placeholder {
+    color: var(--text-muted, #a3a3a3);
+    opacity: 1;
+}
+.search__input:focus {
+    border-color: var(--gold, #a8a8a8);
+}
+/* 16px on phones so iOS does not zoom */
+@media (max-width: 767px) {
+    .search__input {
+        font-size: 16px;
+    }
+}
+
+/* rows */
+
+/* capped, and scrolls inside itself */
+.rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    min-height: 0;
+    max-height: 320px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 14px 16px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text, #fff);
+    transition:
+        border-color 0.15s ease,
+        transform 0.05s ease;
+}
+.row:hover {
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.22));
+}
+.row:active {
+    transform: scale(0.995);
+}
+.row:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+.row__main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+/* a row: the text truncates, not the container */
+.row__name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+/* opportunity names run long */
+.row__name > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.row__kind {
+    flex-shrink: 0;
+}
+.row__sub {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* what the click does; wraps rather than ellipsing */
+.row__does {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    margin-top: 1px;
+}
+
+.row__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+}
+.row__amt {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text, #fff);
+    white-space: nowrap;
+}
+
+/* empty and error */
+
+.empty {
+    margin: 0;
+    padding: 28px 4px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted, #a3a3a3);
+}
+.empty--err {
+    color: var(--chip-red, #f87171);
+}
+
+/* scrollbars are suppressed app-wide */
+:host,
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* create a customer */
+
+/* search takes the slack */
+.tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tools .search {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.new-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 42px;
+    white-space: nowrap;
+}
+
+/* below ~420px the button wraps under */
+@media (max-width: 480px) {
+    .tools {
+        flex-wrap: wrap;
+    }
+    .new-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* the empty state offers the way out of itself */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 4px 8px;
+}
+.empty-state .empty {
+    padding: 0;
+}
+
+.form-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+/* .form-head .lede removed */
+
+.form-note {
+    margin: 0;
+}
+
+.form-error {
+    font-size: 12px;
+}
+
+.form-foot {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
+/* one scroller per screen: below 768 the cap is released */
+@media (max-width: 767px) {
+    .rows {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* qualify-a-lead panel: the same surface as the new-customer form */
+.form-foot {
+    gap: 10px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.qualify__name {
+    margin: 14px 0 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+/* the lead's own data, shown and not re-typed */
+.qualify__facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin: 12px 0 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+}
+@media (min-width: 640px) {
+    .qualify__facts {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 6px 20px;
+    }
+}
+
+.qualify__fact {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.qualify__fact-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.qualify__fact-value {
+    font-size: 13px;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+.qualify__note {
+    margin: 14px 0 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}
+/* MSC-224: the qualify form's note is gone and .field-grid carries no bottom margin, so the
+   gap under the fields moves here. Only that form uses the modifier - the signatory and
+   identity steps still have their own note doing the same job. */
+.field-grid--spaced {
+    margin-bottom: 14px;
+}
+
+/* identity-first entry: the document check sits above the list */
+.ident {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* MSC-152: the buyer-type pill rules went with their markup to c/mscBookingPage */
+
+/* the field takes the slack; kept for the narrow-pane basis and the hint line */
+.ident__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+}
+.ident__field {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+/* MSC-134: the search key and its field are one control; the active segment is the label */
+.ident__search {
+    border-radius: 12px;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    /* MSC-143: no fill of its own; transparent shows the card's surface in either theme */
+    background: transparent;
+    /* the underline is clipped at the radius */
+    overflow: hidden;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+/* the focus ring belongs to the whole control */
+.ident__search:focus-within {
+    border-color: var(--gold, #a8a8a8);
+    box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.16));
+}
+
+/* MSC-143: the focus glow is gone with the fill */
+
+/* three equal cells, one travelling underline; the order matches keySegments; data-on carries searchKey */
+.ident__keys {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: max-content;
+    max-width: 100%;
+    /* the underline is positioned against this */
+    position: relative;
+}
+.ident__keys::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: calc(100% / 3);
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--pill-fg, #fafafa);
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ident__keys[data-on="passport"]::after {
+    transform: translateX(100%);
+}
+.ident__keys[data-on="contact"]::after {
+    transform: translateX(200%);
+}
+
+/* a company's one key: the same head with a plain label */
+.ident__keys-label {
+    margin: 0;
+    padding: 9px 14px;
+    /* border-bottom moved to the input */
+}
+
+.ident__key {
+    flex: 0 0 auto;
+    padding: 9px 14px;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        color 0.15s ease,
+        background 0.15s ease;
+}
+.ident__key:hover {
+    color: var(--text, #fafafa);
+}
+/* the fill is gone; colour alone marks the choice */
+.ident__key--on {
+    color: var(--text, #fafafa);
+}
+.ident__key--on:hover {
+    color: var(--text, #fafafa);
+}
+
+/* the input gives up its chrome to the wrapper; sizing and color-scheme stay */
+.ident__search .field__input {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    /* shares its row with the button, so it must shrink */
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ident__search .field__input:focus {
+    border: none;
+    box-shadow: none;
+}
+
+/* MSC-144: the field and its button on one row inside the control; 5px padding keeps the
+   44px button off the edges */
+.ident__line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 5px 5px 0;
+    border-top: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+}
+
+/* the strip goes full width; labels wrap inside their cell */
+@media (max-width: 480px) {
+    .ident__keys {
+        width: 100%;
+    }
+    .ident__key {
+        white-space: normal;
+        padding: 9px 6px;
+        font-size: 11.5px;
+    }
+    /* MSC-144: on a 360px screen the button wraps under, full width less its inset */
+    .ident__line {
+        flex-wrap: wrap;
+        padding: 0 0 6px;
+    }
+    .ident__line .ident__btn {
+        flex: 1 1 calc(100% - 12px);
+        margin: 0 6px;
+    }
+}
+.ident__btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* Find customer waits as a quiet outline, lit when ready; disabled behaviour untouched */
+.ident__line .ident__btn {
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(0, 0, 0, 0.1) 100%
+    );
+    /* the outer glow is gone: the control clips its overflow */
+    transition:
+        opacity 0.15s ease,
+        color 0.2s ease,
+        filter 0.2s ease,
+        background-color 0.2s ease;
+}
+/* hover is a shade of the fill, not a dim */
+.ident__line .ident__btn:hover:not(:disabled) {
+    opacity: 1;
+    filter: brightness(0.94);
+}
+.ident__line .ident__btn:disabled {
+    opacity: 1;
+    background-image: none;
+    background-color: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border-color: var(--input-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-dim, #8a8a8a);
+    filter: none;
+}
+
+/* the .ident__hit block is gone; a hit is a .row */
+
+/* a locked company name: readonly, never disabled */
+.field__input[readonly] {
+    color: var(--text-muted, #a3a3a3);
+    cursor: default;
+}
+
+/* 2.36 (MSC-214): a seeded lead's own nationality/residency are facts, not questions - the
+   readonly look, legible in both themes, chevron dropped (it promises a choice) */
+.field__select:disabled {
+    color: var(--text-muted, #a3a3a3);
+    -webkit-text-fill-color: var(--text-muted, #a3a3a3);
+    opacity: 1;
+    cursor: default;
+    background-image: none;
+}
+
+/* centred column */
+.ident__miss {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px 0 4px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* the whole dead end in one measure */
+.ident__miss-text {
+    margin: 0;
+    max-width: 46ch;
+    line-height: 1.6;
+    text-wrap: balance;
+}
+
+/* the results heading */
+.ident__found {
+    margin-top: 4px;
+}
+
+/* the second search key and the candidates chooser */
+
+/* .ident__or is gone */
+
+/* the chosen candidate */
+.row--chosen,
+.row--chosen:hover {
+    border-color: var(--gold, #a8a8a8);
+    box-shadow: 0 0 0 1px var(--gold, #a8a8a8) inset;
+}
+
+/* how many people hold these details */
+.cand__lede {
+    margin: -6px 0 2px;
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* the amber the identity fields use for a stale record */
+.cand__warn {
+    color: var(--chip-amber, #d97706);
+}
+
+/* .cand__none is gone: the escape hatch moved into .form-foot */
+
+/* .ident__blocked is gone with the non-UAE company stop */
+
+/* the ask row is gone with the switch */
+
+/* the two gates the EOI journey already had */
+
+/* why Find customer is not live yet */
+.ident__hint {
+    margin-top: -2px;
+}
+
+/* the email and mobile checks, same affordances as c/mscEoiIdentity */
+.field__wrap {
+    position: relative;
+}
+.field__wrap .field__input {
+    padding-right: 40px;
+}
+.field__ok,
+.field__spin {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.field__ok {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: var(--chip-green, #4ade80);
+    background: rgba(22, 163, 74, 0.16);
+}
+.field__spin {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--divider, rgba(255, 255, 255, 0.13));
+    border-top-color: var(--text, #fafafa);
+    animation: cust-spin 0.8s linear infinite;
+}
+@keyframes cust-spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .field__spin {
+        animation: none;
+    }
+    /* the underline still marks the key; it just stops sliding */
+    .ident__keys::after {
+        transition: none;
+    }
+}
+
+/* SCW-127. Chrome fills Last name and E-mail from the signed-in profile and paints them with
+   its own background, which no ordinary `background` can override; on the dark theme those two
+   fields read as a lighter patch beside the ones the rep typed (seen in testing, 20 Sep). The inset
+   shadow is the standard overpaint and is already used in c/mscBookings and c/mscEoi; the
+   colour is --input-bg-solid, the flattened equivalent of a field on this card, so an
+   autofilled field is indistinguishable from its neighbours. The long transition keeps Chrome
+   from animating its colour back in on focus. `autocomplete="off"` is already on every input
+   here and Chrome ignores it for name and e-mail fields, which is why this is needed at all.
+   Applies ONLY while a field is autofilled: nothing a rep types can be affected by it. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text, #fafafa);
+    -webkit-box-shadow: 0 0 0 1000px var(--input-bg-solid, #1c1c1d) inset;
+    box-shadow: 0 0 0 1000px var(--input-bg-solid, #1c1c1d) inset;
+    caret-color: var(--text, #fafafa);
+    transition:
+        background-color 600000s 0s,
+        color 600000s 0s;
+}

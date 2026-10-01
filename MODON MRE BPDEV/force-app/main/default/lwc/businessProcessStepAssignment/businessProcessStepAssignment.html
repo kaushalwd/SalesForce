@@ -1,0 +1,209 @@
+<template>
+  <div class="responsive-wrapper" style="min-height: 500px;">
+
+    <template if:true={isLoading}>
+            <div class="loader-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                <div class="loader-text">Loading data, please wait...</div>
+            </div>
+    </template>
+    
+  <lightning-card title="Service Request Step Assignment">
+    <div class="slds-p-around_medium slds-box slds-theme_default">
+        <!--
+      <template if:true={showTable}>
+
+       
+       <c-paginator if:true={records} records={records}
+            total-records={records.length} show-search-box="true"
+            onpaginatorchange={handlePaginatorChange} lwc:ref="paginator">
+        </c-paginator>
+        </template>
+        -->
+
+      <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+        <!--<div class="slds-col slds-size_1-of-5">
+          <lightning-combobox
+            label="Business Process"
+            options={flowOptions}
+            value={selectedFlow}
+            onchange={handleFlowChange}>
+          </lightning-combobox>
+        </div>
+        <div class="slds-col slds-size_1-of-5">
+          <lightning-combobox
+            label="Step"
+            options={stepOptions}
+            value={selectedStep}
+            onchange={handleStepChange}>
+          </lightning-combobox>
+        </div>-->
+
+        <!--<div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-8">
+          <lightning-combobox
+            name="department"
+            label="Department"
+            value={selectedDepartment}
+            options={departmentOptions}
+            onchange={handleDepartmentChange}>
+          </lightning-combobox>
+        </div> -->
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">                  
+          <h2 class="sales-text">
+              Service Request
+          </h2>
+          <c-generic-lookup-lwc objname="Process_Flow__c" iconname="standard:account" onlookupselectedname={handleProcessFlowSelectionName}
+                  onlookupselected={handleProcessFlowSelection} onclearlookup={handleProcessFlowClear}>
+          </c-generic-lookup-lwc>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+            <h2 class="sales-text">
+                Service Request Step
+            </h2>
+            <c-generic-lookup-lwc objname="Process_Flow_Step__c" iconname="standard:account" filter={stepfilter} onlookupselectedname={handleFlowStepSelectionName}
+                    onlookupselected={handleFlowStepSelection} onclearlookup={handleFlowStepClear} display-field="Step_Name__c">
+            </c-generic-lookup-lwc>
+        </div>    
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+          <lightning-combobox
+            name="department"
+            label="Department"
+            value={selectedDepartment}
+            options={departmentOptions}
+            onchange={handleDepartmentChange}>
+          </lightning-combobox>
+        </div>
+    
+
+         <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+
+          <c-custom-multi-select-picklist
+              label="Status"
+              options={statusOptions}
+              onvaluechange={handleStatusChange}
+              placeholder="Select Status">
+          </c-custom-multi-select-picklist>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+            <h2 class="sales-text">
+                Project
+            </h2>
+            <c-generic-lookup-lwc objname="Project__c" iconname="standard:account" 
+                    onlookupselected={handleProjectSelection} onclearlookup={handleProjectClear}>
+            </c-generic-lookup-lwc>
+        </div>
+
+        <!--div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+            <h2 class="sales-text">
+                Tower
+            </h2>
+            <c-generic-lookup-lwc objname="Tower__c" iconname="standard:account" display-field="Name"
+                    onlookupselected={handleTowerSelection} onclearlookup={handleTowerClear}>
+            </c-generic-lookup-lwc>
+        </div-->
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+            <h2 class="sales-text">
+                User
+            </h2>
+            <c-generic-lookup-lwc objname="User" iconname="standard:account" display-field="Name"
+                    onlookupselected={handleUserSelection} onclearlookup={handleUserClear} >
+            </c-generic-lookup-lwc>
+        </div>
+      
+        <br/><br/>
+           <!--
+        
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-8 slds-m-top_large"> 
+            <lightning-input type="file" label="Select Unit CSV File" onchange={handleUnitFileChange} accept=".csv"></lightning-input>
+            <template if:true={unitFileName}>
+            <p class="slds-m-top_medium">{unitFileName}</p>
+            </template>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-8 slds-m-top_large"> 
+          <lightning-input type="file" label="Select Booking CSV File" onchange={handleBookingFileChange} accept=".csv"></lightning-input>
+          <template if:true={bookingFileName}>
+            <p class="slds-m-top_medium">{bookingFileName}</p>
+            </template>
+        </div>
+        -->
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large"> 
+          <!--<lightning-button variant="brand" label="Search" onclick={handleSearch} class="slds-size_full"></lightning-button>-->
+           <lightning-input
+                type="number"
+                label="Select First N Rows"
+                value={rowCountToSelect}
+                onchange={handleRowCountChange}
+                min="1">
+            </lightning-input>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-m-top_large">
+          <!--lightning-combobox
+              name="bpnNumber"
+              label="BPN Number"
+              value={bpnNumber}
+              options={bpnOptions}
+              onchange={handleBpnNumberChange}
+              placeholder="Select BPN Number"
+              class="slds-m-bottom_medium">
+          </lightning-combobox-->
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5 slds-m-top_large" style="margin-top: 50px !important;"> 
+          <lightning-button variant="brand" label="Search" onclick={handleSearch} class="slds-size_full"></lightning-button> &nbsp; &nbsp;
+          <lightning-button variant="brand" label="Clear" onclick={handleClear}></lightning-button> &nbsp; &nbsp;
+          <lightning-button variant="brand" label="Refresh" onclick={handleRefresh} class="slds-m-top_small"> </lightning-button> &nbsp; &nbsp;
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5 slds-m-top_large" style="margin-top: 50px !important;">
+          <template if:true={showTable}>
+            <c-generic-master-search-lwc
+              columns={columns}
+              records={records}
+              onfiltered={handleMasterSearchFilter}
+              placeholder="Search across all columns..."
+            ></c-generic-master-search-lwc>          
+          </template>
+        </div>
+
+        <template if:true={showAssignSection}>
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5" style="margin-top: 28px !important;">
+            <lightning-combobox
+            label="Assign To User"
+            options={assignToUserOptions}
+            onchange={handleAssignChange}>
+            </lightning-combobox>
+          </div>
+
+          <div class="slds-m-top_large" style="margin-top: 50px !important;">
+            <lightning-button variant="brand" label="Assign" onclick={handleAssign} class="slds-m-left_small"></lightning-button>
+          </div>
+        </template>
+
+
+      </div>
+      
+
+      <template if:true={showTable}>
+        <lightning-datatable
+          key-field="Id"
+          data={sortedData}     
+          onsort={handleSort}
+          sorted-by={sortBy}
+          sorted-direction={sortDirection}
+          columns={columns}
+          selected-rows={selectedRowIds}
+          onrowselection={handleRowSelection}>
+        </lightning-datatable>
+      </template>
+      
+    </div>
+  </lightning-card>
+  </div>
+ 
+</template>

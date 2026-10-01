@@ -1,0 +1,331 @@
+/* ═══════════════════════════════════════════════════════════════
+   LEAD SEARCH LWC  —  Modular CSS
+   Prefix: lsc-  (Lead Search Component)
+   Sections:
+     1. Custom Properties
+     2. Layout
+     3. Tab Navigation
+     4. Shared: Search Row
+     5. Shared: Result Card  +  State Variants
+     6. Shared: Field Grid
+     7. Shared: Alerts / Banners
+     8. Shared: Action Buttons
+     9. Lead Module
+    10. EOI Module
+    11. Last Accessed EOI
+    12. Empty / Initial States
+═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. CUSTOM PROPERTIES ─────────────────────────────────── */
+:host {
+    /* Brand */
+    --lsc-blue:    #0070d2;
+    --lsc-blue-dk: #005fb2;
+    --lsc-green:   #04844b;
+    --lsc-amber:   #b56600;
+    --lsc-red:     #c23934;
+
+    /* Tab */
+    --lsc-tab-h:          44px;
+    --lsc-tab-active-clr: #0070d2;
+
+    /* Card */
+    --lsc-card-radius:   10px;
+    --lsc-card-shadow:   0 2px 8px rgba(0, 0, 0, 0.10);
+    --lsc-card-border:   1px solid #e0e5ee;
+
+    /* Field */
+    --lsc-label-clr: #54698d;
+    --lsc-value-clr: #16325c;
+
+    /* Spacing */
+    --lsc-gap:  1rem;
+    --lsc-pad:  1.25rem;
+}
+
+/* ── 2. LAYOUT ────────────────────────────────────────────── */
+.lsc-container {
+    padding: 0 0 1rem;
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+}
+
+.lsc-tab-content {
+    padding: var(--lsc-pad);
+}
+
+/* ── 3. TAB NAVIGATION ────────────────────────────────────── */
+.lsc-tab-bar {
+    display: flex;
+    border-bottom: 2px solid #e0e5ee;
+    padding: 0 var(--lsc-pad);
+    background: #f3f2f2;
+}
+
+.lsc-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: var(--lsc-tab-h);
+    padding: 0 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #54698d;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    letter-spacing: 0.01em;
+}
+
+.lsc-tab-btn:hover {
+    color: var(--lsc-blue);
+    background: rgba(0, 112, 210, 0.05);
+}
+
+.lsc-tab-btn--active {
+    color: var(--lsc-blue);
+    border-bottom-color: var(--lsc-blue);
+    background: #fff;
+}
+
+.lsc-tab-icon {
+    --lwc-colorTextIconDefault: currentColor;
+}
+
+/* ── 4. SHARED: SEARCH ROW ────────────────────────────────── */
+.lsc-search-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.lsc-input-wrapper {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.lsc-btn-wrapper lightning-button button,
+.lsc-btn-wrapper .slds-button {
+    height: 38px;
+    padding: 0 1.2rem;
+}
+
+/* ── 5. SHARED: RESULT CARD  +  STATE VARIANTS ────────────── */
+.lsc-result-card {
+    background: #fff;
+    border-radius: var(--lsc-card-radius);
+    border: var(--lsc-card-border);
+    border-left: 5px solid #0070d2;
+    box-shadow: var(--lsc-card-shadow);
+    padding: var(--lsc-pad);
+    margin-top: 1rem;
+}
+
+/* Lead default */
+.lsc-card--lead    { border-left-color: var(--lsc-blue);  }
+
+/* EOI variants */
+.lsc-card--success { border-left-color: var(--lsc-green); }
+.lsc-card--warning { border-left-color: var(--lsc-amber); background: #fffbf2; }
+.lsc-card--error   { border-left-color: var(--lsc-red);   background: #fff9f9; }
+.lsc-card--info    { border-left-color: var(--lsc-blue);  }
+
+/* Card header row */
+.lsc-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.lsc-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #16325c;
+    margin: 0;
+    flex: 1;
+}
+
+/* ── 6. SHARED: FIELD GRID ────────────────────────────────── */
+.lsc-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 2rem;
+}
+
+.lsc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.lsc-field-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--lsc-label-clr);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.lsc-field-value {
+    font-size: 0.9rem;
+    color: var(--lsc-value-clr);
+    font-weight: 500;
+}
+
+.lsc-field-link  { color: var(--lsc-blue);  text-decoration: underline; }
+.lsc-field-ok    { color: var(--lsc-green); }
+.lsc-field-warn  { color: var(--lsc-amber); font-weight: 600; }
+.lsc-field-muted { color: #8a8a8a; font-style: italic; }
+
+/* ── 7. SHARED: ALERTS / BANNERS ──────────────────────────── */
+.lsc-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-top: 0.9rem;
+}
+
+.lsc-alert--warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #f5c518;
+}
+
+.lsc-alert--error {
+    background: #fde8e8;
+    color: #a11414;
+    border: 1px solid #f5a5a5;
+}
+
+.lsc-alert--success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #a8d5b5;
+}
+
+/* ── 8. SHARED: ACTION BUTTONS ────────────────────────────── */
+.lsc-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* ── 9. LEAD MODULE ───────────────────────────────────────── */
+
+/* Badge - inline status chip */
+.lsc-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.lsc-badge--info {
+    background: #d8eaf8;
+    color: #005280;
+}
+
+.lsc-badge--success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.lsc-badge--warn {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* ── 10. EOI MODULE ───────────────────────────────────────── */
+
+/* EOI custom ID chip next to name */
+.lsc-eoi-id-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e8f0fe;
+    color: #1a56db;
+    letter-spacing: 0.03em;
+}
+
+/* ── 11. LAST ACCESSED EOI ────────────────────────────────── */
+.lsc-last-accessed {
+    margin-top: 1.5rem;
+    padding: 0.85rem 1rem;
+    background: #f9f9fb;
+    border: 1px solid #e0e5ee;
+    border-radius: 8px;
+}
+
+.lsc-last-accessed-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #54698d;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.lsc-last-accessed-body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+}
+
+.lsc-last-eoi-id {
+    font-weight: 700;
+    color: var(--lsc-blue);
+}
+
+.lsc-last-sep {
+    color: #aaa;
+}
+
+.lsc-last-opp {
+    color: var(--lsc-value-clr);
+}
+
+.lsc-last-badge {
+    margin-left: auto;
+}
+
+/* ── 12. EMPTY / INITIAL STATES ───────────────────────────── */
+.lsc-empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.lsc-empty-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #16325c;
+    margin: 0.5rem 0 0.25rem;
+}
+
+.lsc-empty-sub {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+
+.lsc-icon-info  { --lwc-colorTextIconDefault: #0070d2; }
+.lsc-icon-warn  { --lwc-colorTextIconDefault: #b56600; }

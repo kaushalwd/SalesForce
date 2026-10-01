@@ -1,0 +1,49 @@
+<template>
+    <template lwc:if={errorMessage}>
+        <p class="error" role="alert">{errorMessage}</p>
+    </template>
+
+    <template lwc:if={hasTiles}>
+        <p class="m-panelcap">{collectionCap}</p>
+        <div class="m-ledger">
+            <template for:each={tileViewModels} for:item="t">
+                <!-- MEOI-11. Card, not a row: the image leads, details sit beneath it.
+                     Structure ported from eoiParTypologyJourney, which already solved this.
+                     The stepper is NOT from that component - it was single-select, and the
+                     quantity model is what the per-residence-type payment depends on. -->
+                <div key={t.rangeId} class={t.rowClass}>
+                    <div class="m-lrow__media">
+                        <template lwc:if={t.imageUrl}>
+                            <img class="m-lrow__thumb" src={t.imageUrl} alt={t.metaBr} data-range-id={t.rangeId} loading="lazy" onerror={handleImageError} />
+                        </template>
+                    </div>
+                    <div class="m-lrow__body">
+                        <!-- MEOI-TILE (10 Sep): the tile is titled by bedrooms only - no typology
+                             name, no zone, no chip on the image (MODON). -->
+                        <p class="m-lrow__name">{t.metaBr}</p>
+                        <div class="m-lrow__line">
+                            <p class="m-lrow__price"><small>AED</small>{t.formattedAmount}</p>
+                        </div>
+                        <div class="m-stepper">
+                            <button type="button" class="qty-btn" data-range-id={t.rangeId} onclick={handleRemove} disabled={t.removeDisabled} aria-label="Remove one">&minus;</button>
+                            <b>{t.quantity}</b>
+                            <button type="button" class="qty-btn" data-range-id={t.rangeId} onclick={handleAdd} aria-label="Add one">+</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="m-sum">
+            <div class="m-sum__l">
+                <span class="m-sum__count">{selectionLine}</span>
+                <span class="m-sum__amt">AED {formattedSelectionTotal}</span>
+            </div>
+            <button class="m-btn submit" type="button" onclick={handleContinue}>Continue <span class="arr" aria-hidden="true">&#10230;</span></button>
+        </div>
+    </template>
+
+    <template lwc:if={showEmpty}>
+        <p class="empty">Villa collection coming soon.</p>
+    </template>
+</template>

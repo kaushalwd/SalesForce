@@ -1,0 +1,178 @@
+<template>
+    <div class="page">
+        <!-- header: logo only (no search, no menu) -->
+        <header class="hdr">
+            <div class="wrap hdr__row">
+                <template lwc:if={hasModonLogo}>
+                    <a class="hdr__logo" href={modonLogoUrl} aria-label="Modon">
+                        <img src={modonLogoSrc} alt="Modon" loading="eager" />
+                    </a>
+                </template>
+            </div>
+        </header>
+
+        <!-- hero: image instead of the video; MEOI-HERO: the portrait render on portrait viewports -->
+        <!-- EOI-UI-19: several comma-separated hero images become a carousel, as on the agreed artifact; one image renders exactly as before.
+             EOI-UI-20: on portrait screens the mobile field decides on its own (one URL there = that single image, unchanged) -->
+        <section class={heroClass} onpointerdown={heroPointerDown} onpointerup={heroPointerUp} onpointercancel={heroPointerCancel} onfocusin={heroFocusIn} onfocusout={heroFocusOut}>
+            <template lwc:if={showHeroCarousel}>
+                <div class="hero__slides" aria-roledescription="carousel" aria-label={heroCarouselLabel} aria-live="off">
+                    <template for:each={heroSlides} for:item="slide">
+                        <div key={slide.key} class={slide.cls} role="group" aria-roledescription="slide" aria-label={slide.label} aria-hidden={slide.hidden}>
+                            <img class="hero__slide-img" src={slide.src} alt={slide.alt} loading={slide.loading} />
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template lwc:else>
+                <picture>
+                    <template lwc:if={hasHeroMobile}><source media="(orientation: portrait)" srcset={heroMobileSrc} /></template>
+                    <img class="hero__img" src={heroSrc} alt={heroAlt} loading="eager" />
+                </picture>
+            </template>
+            <div class="hero__scrim" aria-hidden="true"></div>
+            <div class="wrap hero__body">
+                <div class="hero__content">
+                    <template lwc:if={hasLogo}>
+                        <div class="hero__brand"><img class="hero__logo" src={logoSrc} alt={logoAlt} loading="eager" /></div>
+                    </template>
+                    <div class="hero__title">
+                        <template lwc:if={hasTitle}><h1>{title}</h1></template>
+                        <template lwc:if={hasTagline}><p>{tagline}</p></template>
+                    </div>
+                    <div class="hero__btns">
+                        <a class="btn btn--primary" href={registerUrl}>{registerLabel}</a>
+                    </div>
+                </div>
+            </div>
+            <!-- EOI-UI-17: scroll cue - the page continues below the full-screen hero; hides once the visitor scrolls. EOI-UI-18: the line became a bouncing arrow -->
+            <button type="button" class={scrollCueClass} onclick={scrollToContent} onanimationend={endScrollCueNudge}>
+                <span class="fold-cue__label">{scrollCueLabel}</span>
+                <span class="fold-cue__arrow" aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22"><path d="M16.4375 10.9375H0V9.0625H16.4375L8.68748 1.3125L10 0L20 10L10 20L8.68748 18.6874L16.4375 10.9375Z" fill="currentColor" transform="rotate(90 10 10)"/></svg></span>
+            </button>
+        </section>
+
+        <!-- beige information band -->
+        <section class="info">
+            <div class="wrap"><p>{introText}</p></div>
+        </section>
+
+        <!-- villas: image + text -->
+        <section class="detail">
+            <div class="wrap detail__row">
+                <template lwc:if={hasSideImage}>
+                    <div class="detail__media"><img src={sideSrc} alt={sideImageAlt} loading="lazy" /></div>
+                </template>
+                <div class="detail__text">
+                    <h2 class="highlight">{villasHeading}</h2>
+                    <p>{villasText}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- factsheet -->
+        <section class="facts">
+            <div class="wrap">
+                <div class="title-row">
+                    <h2 class="title">{factsheetHeading}</h2>
+                    <div class="rail-btns">
+                        <button type="button" class="rail-btn" data-rail="facts" data-dir="prev" onclick={scrollRail} aria-label="Previous"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3.5625 10.9375H20V9.0625H3.5625L11.3125 1.3125L10 0L0 10L10 20L11.3125 18.6874L3.5625 10.9375Z" fill="currentColor"/></svg></button>
+                        <button type="button" class="rail-btn" data-rail="facts" data-dir="next" onclick={scrollRail} aria-label="Next"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M16.4375 10.9375H0V9.0625H16.4375L8.68748 1.3125L10 0L20 10L10 20L8.68748 18.6874L16.4375 10.9375Z" fill="currentColor"/></svg></button>
+                    </div>
+                </div>
+                <div class="rail" data-rail-id="facts">
+                    <template for:each={factsheet} for:item="card">
+                        <article key={card.key} class="card" data-slide="1">
+                            <h3>{card.title}</h3>
+                            <ul>
+                                <li><img src={icon.bedroom} alt="" /><span>{card.sizeText}</span></li>
+                                <li><img src={icon.plan} alt="" /><span>{card.planText}</span></li>
+                                <li><img src={icon.handover} alt="" /><span>{card.handoverText}</span></li>
+                                <li><img src={icon.price} alt="" /><span>{card.priceText}</span></li>
+                            </ul>
+                        </article>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- amenities (template content, kept as is) -->
+        <section class="amen">
+            <div class="wrap">
+                <h2 class="title">{amenitiesHeading}</h2>
+                <div class="amen__grid">
+                    <template for:each={amenities} for:item="a">
+                        <div key={a.key} class="amen__item">
+                            <img src={a.src} alt={a.label} loading="lazy" />
+                            <span>{a.label}</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- map image (template content, kept as is) -->
+        <template lwc:if={hasMap}>
+            <section class="map"><div class="wrap"><img src={mapSrc} alt={mapAlt} loading="lazy" /></div></section> <!-- MEOI-MAP2: inside the page margin, white space around -->
+        </template>
+
+        <!-- gallery: our typology images -->
+        <section class="gallery">
+            <div class="wrap">
+                <div class="title-row">
+                    <h2 class="title">{galleryHeading}</h2>
+                    <div class="rail-btns">
+                        <button type="button" class="rail-btn" data-rail="gallery" data-dir="prev" onclick={scrollRail} aria-label="Previous"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3.5625 10.9375H20V9.0625H3.5625L11.3125 1.3125L10 0L0 10L10 20L11.3125 18.6874L3.5625 10.9375Z" fill="currentColor"/></svg></button>
+                        <button type="button" class="rail-btn" data-rail="gallery" data-dir="next" onclick={scrollRail} aria-label="Next"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M16.4375 10.9375H0V9.0625H16.4375L8.68748 1.3125L10 0L20 10L10 20L8.68748 18.6874L16.4375 10.9375Z" fill="currentColor"/></svg></button>
+                    </div>
+                </div>
+                <div class="rail rail--gallery" data-rail-id="gallery">
+                    <template for:each={gallery} for:item="g">
+                        <figure key={g.key} class="gallery__slide" data-slide="1">
+                            <img src={g.src} alt={g.alt} loading="lazy" />
+                        </figure>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ (template content, kept as is) -->
+        <section class="faq">
+            <div class="wrap">
+                <div class="section-title">{faqHeading}</div>
+                <div class="faq__list">
+                    <template for:each={faqs} for:item="f">
+                        <div key={f.key} class={f.cls}>
+                            <button type="button" class="faq__q" data-index={f.index} onclick={toggleFaq} aria-expanded={f.expanded} aria-controls={f.panelId}>
+                                <span>{f.q}</span>
+                                <span class="faq__plus" aria-hidden="true"></span>
+                            </button>
+                            <template lwc:if={f.open}>
+                                <div class="faq__a" id={f.panelId}>{f.a}</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- MEOI-CAPTCHA: Google reCAPTCHA badge, rendered by the same-origin bridge page -->
+        <template lwc:if={showRecaptchaBadge}>
+            <iframe class={badgeClass} src={recaptchaFrameSrc} title="reCAPTCHA" tabindex="-1"></iframe>
+        </template>
+
+        <!-- floating Register now: appears once the hero button has scrolled away -->
+        <a class={floatCtaClass} href={registerUrl} aria-hidden={floatCtaHidden} tabindex={floatCtaTabIndex}>{registerLabel}</a>
+
+        <!-- black terms footer (template content, kept as is) -->
+        <footer class="foot">
+            <div class="wrap foot__row">
+                <div class="foot__copy">{copyrightText}</div>
+                <div class="foot__links">
+                    <a href={termsUrl} target="_self">{termsLabel}</a>
+                    <a href={privacyUrl} target="_self">{privacyLabel}</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+</template>

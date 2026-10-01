@@ -1,0 +1,239 @@
+<template>
+    <lightning-card variant="base">
+        <div>
+            <lightning-layout multiple-rows="true" class="slds-m-around_small slds-grid_vertical-align-center"
+                horizontal-align="spread" vertical-align="start">
+                <lightning-layout-item size="9" small-device-size="9" medium-device-size="9" large-device-size="3"
+                    class="slds-p-around_small">
+                    <span class="slds-text-heading_medium" style="font-weight: 600;">Select filters for units</span>
+                </lightning-layout-item>
+
+                <template if:false={isLargeScreen}>
+                    <lightning-layout-item size="3" small-device-size="3" medium-device-size="3"
+                        class="slds-p-around_medium slds-grid slds-grid_align-end lgc-bg">
+                        <lightning-button-menu menu-alignment="right" alternative-text="Action menu">
+
+                            <template if:false={disabledDraftButton}>
+                                <lightning-menu-item value="Back to Draft" label="Back to Draft" name="Back to Draft"
+                                onclick={handleButtonAction} disabled={disabledDraftButton}></lightning-menu-item>
+                            </template>
+                            
+                            <template if:false={disabledUnReleaseButton}>
+                                <lightning-menu-item value="UnRelease" label="UnRelease" name="UnRelease"
+                                    onclick={handleButtonAction} disabled={disabledUnReleaseButton}></lightning-menu-item>
+                            </template>
+                            
+                            <template if:false={disabledReleaseButton}>
+                                <lightning-menu-item value="Release" label="Release" name="Release"
+                                    onclick={handleButtonAction} disabled={disabledReleaseButton}></lightning-menu-item>
+                            </template>
+                            
+                            <template if:false={disabledAssignButton}>
+                                <lightning-menu-item value="Assign" label="Assign" name="Assign"
+                                    onclick={handleButtonAction} disabled={disabledAssignButton}></lightning-menu-item>
+                            </template>
+                            
+                            <template if:false={disabledUnAssignButton}>
+                                <lightning-menu-item value="Un-Assign" label="Un-Assign" name="Un-Assign"
+                                    onclick={handleButtonAction} disabled={disabledUnAssignButton}></lightning-menu-item>
+                            </template>
+                            
+                            <template if:false={disabledBucketButton}>
+                                <lightning-menu-item value="Bucket Transfer" label="Bucket Transfer" name="Bucket Transfer"
+                                    onclick={handleButtonAction} disabled={disabledBucketButton}></lightning-menu-item>
+                            </template>
+                            
+                        </lightning-button-menu>
+                    </lightning-layout-item>
+                </template>
+
+                <template if:true={isLargeScreen}>
+                    <lightning-layout-item size="12" small-device-size="12" medium-device-size="12"
+                        large-device-size="9" multiple-rows="true"
+                        class="slds-p-around_small slds-grid slds-grid_align-end">
+
+                        <template if:false={disabledDraftButton}>
+                            <lightning-button class="slds-m-around_xx-small" label="Back to Draft" name="Back to Draft"
+                                variant="brand-outline" onclick={handleButtonAction}
+                                disabled={disabledDraftButton}></lightning-button>
+                        </template>
+
+                        <template if:false={disabledUnReleaseButton}>
+                            <lightning-button class="slds-m-around_xx-small" label="UnRelease" name="UnRelease"
+                                variant="brand-outline" onclick={handleButtonAction}
+                                disabled={disabledUnReleaseButton}></lightning-button>
+                        </template>
+
+                        <template if:false={disabledReleaseButton}>
+                            <lightning-button class="slds-m-around_xx-small" label="Release" name="Release"
+                                variant="brand-outline" onclick={handleButtonAction}
+                                disabled={disabledReleaseButton}></lightning-button>
+                        </template>
+
+                        <template if:false={disabledAssignButton}>
+                            <lightning-button class="slds-m-around_xx-small" label="Assign" name="Assign"
+                                variant="brand-outline" onclick={handleButtonAction}
+                                disabled={disabledAssignButton}></lightning-button>
+                        </template>
+
+                        <template if:false={disabledUnAssignButton}>
+                            <lightning-button class="slds-m-around_xx-small" label="Un-Assign" name="Un-Assign"
+                                variant="brand-outline" onclick={handleButtonAction}
+                                disabled={disabledUnAssignButton}></lightning-button>
+                        </template>
+
+                        <template if:false={disabledBucketButton}>
+                            <lightning-button class="slds-m-around_xx-small" label="Bucket Transfer" name="Bucket Transfer"
+                                variant="brand-outline" onclick={handleButtonAction}
+                                disabled={disabledBucketButton}></lightning-button>
+                        </template>
+                        
+                    </lightning-layout-item>
+                </template>
+            </lightning-layout>
+        </div>
+        <div class="slds-m-around_medium">
+            <lightning-layout multiple-rows horizontal-align="spread" vertical-align="start">
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Project" label="Project" placeholder="Select Project"
+                        options={projectValues} value={selectedProject} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Phase" label="Phase" placeholder="Select Phase" options={phaseValues}
+                        value={selectedPhase} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Zone" label="Zone" placeholder="Select Zone"
+                        options={zoneOptions} value={inputZone}
+                        onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Bucket" label="Bucket" placeholder="Select Bucket" options={bucketValues}
+                        value={selectedBucket} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Unit Classification" label="Unit Classification"
+                        placeholder="Select Unit Classification" options={unitClassificationPicklistValues}
+                        value={selectedUnitClassification} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Number of Bedrooms" label="Number of Bedrooms"
+                        placeholder="Select Number of Bedrooms" options={numberOfBedroomsPicklistValues}
+                        value={selectedNumberOfBedrooms} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Approval Status" label="Unit Approval Status"
+                        placeholder="Select Approval Status" options={approvalStatusPicklistValues}
+                        value={selectedApprovalStatus} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Status" label="Unit Status" placeholder="Select Status"
+                        options={statusPicklistValues} value={selectedStatus} onchange={handleFilterValueChange}
+                        disabled={disabledStatusFilter}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Sub Status" label="Unit Sub Status" placeholder="Select Sub Status"
+                        options={subStatusPicklistValues} value={selectedSubStatus} onchange={handleFilterValueChange}
+                        disabled={disabledSubStatusFilter}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Unit Quality" label="Unit Quality" placeholder="Select Unit Quality"
+                        options={unitQualityValues} value={selectedUnitQuality} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="GFA" label="Unit Gross Floor Area" placeholder="Select GFA range" options={gfaValues}
+                        value={selectedGFA} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Floor" label="Floor" placeholder="Select Floor" options={floorValues}
+                        value={selectedFloor} onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-combobox name="Currency" label="Currency" placeholder="Select Currency"
+                        options={currencyIsoCodeValues} value={selectedCurrencyIsoCode}
+                        onchange={handleFilterValueChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item size="6" small-device-size="6" medium-device-size="4" large-device-size="3"
+                    class="slds-p-top_small slds-p-left_small slds-p-right_small">
+                    <lightning-input type="search" name="Name" label="Unit Name" placeholder="Enter Unit Name"
+                        value={inputName} onchange={handleFilterValueChange}>
+                    </lightning-input>
+                </lightning-layout-item>
+            </lightning-layout>
+
+
+            <lightning-layout class="slds-m-top_medium slds-m-bottom_small" style="align-items: center;">
+                <lightning-layout-item size="4" small-device-size="4" medium-device-size="6" large-device-size="6"
+                    class="slds-p-around_small">
+                    <span>
+                        <i> Filtered Units <b>{filteredUnitCount}</b> of <b>{totalFilterUnitCount}</b> units</i> || <i>No. of selected Units: <b>{selectedRowIdsLength}</b> </i> || <i>Total Units in system: <b>{totalUnitCount}</b> </i>
+                    </span>
+                </lightning-layout-item>
+                <lightning-layout-item size="8" small-device-size="8" medium-device-size="6" large-device-size="6">
+                    <lightning-layout class="slds-grid_align-end">
+                        <lightning-input class="slds-p-around_small" style="flex: 1;" type="search"
+                            value={inputGlobalSearch} onchange={handleGlobalSearchChange}
+                            placeholder="Search visible units (all fields)..." variant="label-hidden">
+                        </lightning-input>
+                        <lightning-button-icon class="slds-p-around_small" icon-name="utility:refresh"
+                            alternative-text="Refresh" title="Refresh" onclick={handleRefresh}>
+                        </lightning-button-icon>
+                    </lightning-layout>
+                </lightning-layout-item>
+            </lightning-layout>
+
+            <lightning-layout class="slds-size_full">
+                <template if:true={isScreenLoading}>
+                    <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+                    </lightning-spinner>
+                </template>
+                <lightning-datatable class="slds-scrollable" style="height: 70vh;" key-field="Id"
+                    data={filteredUnitList} columns={columns} enable-infinite-loading={unitsHasNextPage}
+                    is-loading={unitsIsLoadingMore} selected-rows={selectedRowIds} onrowselection={handleRowSelection}
+                    onrowaction={handleUnitClick} onloadmore={handleLoadMoreUnits} onsort={handleSort}
+                    sorted-by={sortedBy} sorted-direction={sortedDirection}>
+                </lightning-datatable>
+            </lightning-layout>
+        </div>
+    </lightning-card>
+</template>

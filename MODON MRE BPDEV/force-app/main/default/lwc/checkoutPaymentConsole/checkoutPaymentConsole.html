@@ -1,0 +1,267 @@
+<template>
+    <div class="cko-console">
+        <div class="cko-header">
+            <span class="cko-title">Checkout Payments</span>
+            <div class="cko-search">
+                <lightning-input
+                    type="search"
+                    variant="label-hidden"
+                    placeholder="Search payments..."
+                    value={searchKey}
+                    onchange={handleSearch}>
+                </lightning-input>
+            </div>
+            <!-- <template if:true={hasFullAccess}>
+                <lightning-button
+                    variant="brand"
+                    label="Create payment link"
+                    icon-name="utility:add"
+                    class="slds-m-right_x-small"
+                    onclick={openCreate}>
+                </lightning-button>
+            </template> -->
+            <lightning-button
+                label="Refresh list"
+                icon-name="utility:refresh"
+                onclick={handleReload}>
+            </lightning-button>
+        </div>
+
+        <div class="cko-filters">
+            <template if:true={hasFullAccess}>
+                <div class="cko-filter">
+                    <lightning-combobox
+                        label="Status"
+                        value={status}
+                        options={statusOptions}
+                        onchange={handleStatusChange}>
+                    </lightning-combobox>
+                </div>
+            </template>
+            <div class="cko-filter">
+                <lightning-combobox
+                    label="EOI Status"
+                    value={eoiStatusFilter}
+                    options={eoiStatusOptions}
+                    onchange={handleEoiStatusChange}>
+                </lightning-combobox>
+            </div>
+            <div class="cko-filter">
+                <lightning-combobox
+                    label="Period"
+                    value={days}
+                    options={dayOptions}
+                    onchange={handleDaysChange}>
+                </lightning-combobox>
+            </div>
+            <div class="cko-count">Showing <b>{totalCount}</b> {transactionWord}</div>
+        </div>
+
+        <div class="cko-table-wrap">
+            <table class="cko-table">
+                <thead>
+                    <tr>
+                        <template if:true={hasFullAccess}>
+                            <th>Name</th>
+                            <th>Status</th>
+                        </template>
+                        <th>EOI Name</th>
+                        <th>EOI Status</th>
+                        <th class="cko-right">Amount</th>
+                        <th>Customer Name</th>
+                        <template if:true={hasFullAccess}>
+                            <th>Email</th>
+                            <th>Last Polled</th>
+                        </template>
+                        <th>Expires In</th>
+                        <th class="cko-actions-col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={timedRows} for:item="row">
+                        <tr key={row.Id}>
+                            <template if:true={hasFullAccess}>
+                                <td><a href={row.recordUrl} target="_blank" class="cko-name">{row.Name}</a></td>
+                                <td>
+                                    <span class={row.statusClass}>
+                                        <span class="cko-dot"></span>{row.Status__c}
+                                    </span>
+                                </td>
+                            </template>
+                            <td>
+                                <template if:true={row.eoiUrl}>
+                                    <a href={row.eoiUrl} target="_blank" class="cko-name">{row.eoiNameDisplay}</a>
+                                </template>
+                                <template if:false={row.eoiUrl}>
+                                    {row.eoiNameDisplay}
+                                </template>
+                            </td>
+                            <td>{row.eoiStatusDisplay}</td>
+                            <td class="cko-right cko-amount">{row.amountDisplay}</td>
+                            <td>{row.Customer_Name__c}</td>
+                            <template if:true={hasFullAccess}>
+                                <td class="cko-muted">{row.Customer_Email__c}</td>
+                                <td class="cko-muted">{row.lastPolledDisplay}</td>
+                            </template>
+                            <td class={row.expiryClass}>{row.expiryDisplay}</td>
+                            <td class="cko-actions-cell">
+                                <lightning-button-menu
+                                    icon-name="utility:threedots_vertical"
+                                    variant="bare"
+                                    menu-alignment="right"
+                                    data-id={row.Id}
+                                    onselect={handleMenuSelect}>
+                                    <template for:each={row.actions} for:item="a">
+                                        <lightning-menu-item
+                                            key={a.name}
+                                            value={a.name}
+                                            label={a.label}>
+                                        </lightning-menu-item>
+                                    </template>
+                                </lightning-button-menu>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+            <template if:true={loading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <template if:true={isEmpty}>
+                <p class="cko-empty">No payments found.</p>
+            </template>
+        </div>
+
+        <div class="cko-footer">
+            <span class="cko-muted">{pageLabel}</span>
+            <div class="cko-pager">
+                <lightning-button-icon
+                    icon-name="utility:chevronleft"
+                    variant="border-filled"
+                    alternative-text="Previous"
+                    disabled={disablePrev}
+                    onclick={handlePrev}>
+                </lightning-button-icon>
+                <lightning-button-icon
+                    icon-name="utility:chevronright"
+                    variant="border-filled"
+                    alternative-text="Next"
+                    disabled={disableNext}
+                    onclick={handleNext}>
+                </lightning-button-icon>
+            </div>
+        </div>
+    </div>
+
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" size="small" variant="inverse"
+                                        alternative-text="Close"></lightning-icon>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium cko-modal-body">
+                    <template if:true={isStep1}>
+                        <p class="slds-m-bottom_small cko-muted">What is this payment for?</p>
+                        <div class="cko-choice-grid">
+                            <button class="cko-choice" data-type="EOI" onclick={handleChooseType}>
+                                <lightning-icon icon-name="standard:contract" size="medium"></lightning-icon>
+                                <span>Expression of Interest</span>
+                            </button>
+                            <button class="cko-choice" data-type="SO" onclick={handleChooseType}>
+                                <lightning-icon icon-name="standard:orders" size="medium"></lightning-icon>
+                                <span>Sales Order Installment</span>
+                            </button>
+                        </div>
+                    </template>
+
+                    <template if:true={isStep2}>
+                        <lightning-input
+                            type="search"
+                            label={searchLabel}
+                            value={modalSearch}
+                            onchange={handleModalSearch}>
+                        </lightning-input>
+                        <div class="slds-is-relative cko-option-wrap">
+                            <template if:true={modalLoading}>
+                                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                            </template>
+                            <ul class="cko-option-list">
+                                <template for:each={options} for:item="opt">
+                                    <li key={opt.recordId} data-id={opt.recordId}
+                                        class="cko-option" onclick={handleSelectOption}>
+                                        <div class="cko-option-text">
+                                            <div class="cko-option-main">{opt.title}</div>
+                                            <div class="cko-option-sub">{opt.subtitle}</div>
+                                        </div>
+                                        <div class="cko-option-amt">{opt.amountDisplay}</div>
+                                    </li>
+                                </template>
+                            </ul>
+                            <template if:true={noOptions}>
+                                <p class="cko-empty">No payable records found.</p>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:true={isStep3}>
+                        <template if:false={resultUrl}>
+                            <div class="cko-review">
+                                <div class="cko-review-row"><span>For</span><b>{selected.title}</b></div>
+                                <div class="cko-review-row"><span>Customer</span><b>{selected.customerName}</b></div>
+                                <div class="cko-review-row"><span>Email</span><b>{selected.customerEmail}</b></div>
+                                <div class="cko-review-row"><span>Amount due</span><b>{selected.amountDisplay}</b></div>
+                            </div>
+                            <lightning-combobox
+                                class="slds-m-top_small"
+                                label="Payment type"
+                                value={captureMode}
+                                options={captureOptions}
+                                onchange={handleCaptureChange}>
+                            </lightning-combobox>
+                            <lightning-combobox
+                                class="slds-m-top_small"
+                                label="Link expires in"
+                                value={expirySeconds}
+                                options={expiryOptions}
+                                onchange={handleExpiryChange}>
+                            </lightning-combobox>
+                            <p class="slds-m-top_small cko-muted">A payment link will be created for the outstanding balance and linked to this record.</p>
+                        </template>
+                        <template if:true={resultUrl}>
+                            <div class="cko-result">
+                                <lightning-icon icon-name="utility:success" variant="success" size="small"></lightning-icon>
+                                <span class="slds-m-left_x-small">Payment link created.</span>
+                            </div>
+                            <lightning-input class="slds-m-top_small" label="Shareable link" read-only value={resultUrl}></lightning-input>
+                        </template>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <template if:true={isStep2}>
+                        <lightning-button label="Back" onclick={handleBack}></lightning-button>
+                    </template>
+                    <template if:true={isStep3}>
+                        <template if:false={resultUrl}>
+                            <lightning-button label="Back" class="slds-m-right_x-small" onclick={handleBack}></lightning-button>
+                            <lightning-button variant="brand" label="Generate link" disabled={creating} onclick={handleGenerate}></lightning-button>
+                        </template>
+                        <template if:true={resultUrl}>
+                            <lightning-button label="Open link" class="slds-m-right_x-small" onclick={handleOpenResult}></lightning-button>
+                            <lightning-button variant="brand" label="Done" onclick={handleDone}></lightning-button>
+                        </template>
+                    </template>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

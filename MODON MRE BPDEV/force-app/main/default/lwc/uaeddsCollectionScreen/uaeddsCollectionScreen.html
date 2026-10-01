@@ -1,0 +1,124 @@
+<template>
+    <div class="dd-panel">
+
+        <div class="dd-bar">
+            <span>Direct Debit &rsaquo; Collections</span>
+            <lightning-button label="Refresh" onclick={handleReload} disabled={loading}>
+            </lightning-button>
+        </div>
+
+        <div class="dd-body">
+
+            <div>
+                <div class="dd-heading">Build and send a collection</div>
+                <div class="dd-sub">
+                    Everything due in the chosen window, including what cannot be collected and why.
+                </div>
+            </div>
+
+            <template lwc:if={loading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <div class="dd-controls">
+                <div class="dd-date">
+                    <lightning-input type="date" label="Installment start date" value={startDate}
+                        onchange={handleStartDateChange} disabled={loading}></lightning-input>
+                </div>
+                <div class="dd-date">
+                    <lightning-input type="date" label="Installment end date" value={endDate}
+                        onchange={handleEndDateChange} disabled={loading}></lightning-input>
+                </div>
+                <!-- Every filter narrows the selection server side rather than hiding rows, so the
+                     count on the send button is always what the file would carry. -->
+                <div class="dd-project">
+                    <lightning-combobox label="Project name" value={projectName}
+                        options={projectOptions} placeholder="Choose a project"
+                        onchange={handleProjectChange} disabled={loading} required>
+                    </lightning-combobox>
+                </div>
+                <div class="dd-project">
+                    <lightning-combobox label="Phase name" value={phaseName}
+                        options={phaseOptions} placeholder="All phases"
+                        onchange={handlePhaseChange} disabled={loading}>
+                    </lightning-combobox>
+                </div>
+                <!-- Cancelled sales orders are left out of this list server side: picking one
+                     could only ever produce an empty table. -->
+                <div class="dd-project">
+                    <lightning-combobox label="Sales order name" value={salesOrderName}
+                        options={salesOrderOptions} placeholder="All sales orders"
+                        onchange={handleSalesOrderChange} disabled={loading}>
+                    </lightning-combobox>
+                </div>
+            </div>
+
+            <template lwc:if={needsProject}>
+                <div class="dd-note">
+                    Choose a project to see what is due. A payment file is named for one originator
+                    code, so a collection is built one project at a time.
+                </div>
+            </template>
+
+            <template lwc:if={noAccess}>
+                <div class="dd-note dd-note_warn">
+                    You can see what is due but not send it. Sending a collection file debits
+                    customers and needs the Direct Debit Operations permission set.
+                </div>
+            </template>
+
+            <template lwc:if={hasRows}>
+                <div class="dd-tablehead">
+                    <div class="dd-sub">{summary}</div>
+                    <!-- Exports what is ticked, or everything on screen when nothing is. -->
+                    <!-- No disabled binding here on purpose. On a native button LWC writes
+                         disabled as an attribute, and in HTML any value disables it - disabled
+                         ="false" included - so binding it left the button permanently dead and the
+                         click never reached the handler. The handler guards instead. -->
+                    <button class="dd-export" onclick={handleExport}
+                        title="Download these rows as a spreadsheet">
+                        <lightning-icon icon-name="doctype:excel" size="x-small"></lightning-icon>
+                        <span>{exportLabel}</span>
+                    </button>
+                </div>
+                <!-- Fixed widths rather than auto: every column carries its own width in COLUMNS,
+                     and auto sizing would divide the table's width between fourteen of them and
+                     truncate the lot. Long values wrap and the table scrolls sideways instead. -->
+                <div class="dd-table">
+                    <lightning-datatable key-field="installmentId" data={rows} columns={columns}
+                        column-widths-mode="fixed" selected-rows={selectedIds}
+                        onrowselection={handleSelection} max-row-selection={collectableCount}>
+                    </lightning-datatable>
+                </div>
+
+                <div class="dd-actions">
+                    <lightning-button variant="brand" label={sendLabel} onclick={handleSend}
+                        disabled={cannotSend}></lightning-button>
+                </div>
+            </template>
+
+            <template lwc:if={nothingDue}>
+                <div class="dd-empty">{emptyMessage}</div>
+            </template>
+
+            <template lwc:if={hasFiles}>
+                <div class="dd-section">
+                    <div class="dd-heading">Recent files</div>
+                    <template lwc:if={hasStuckFile}>
+                        <div class="dd-note dd-note_warn">
+                            A file is still on Submitting. That marker exists so nobody resubmits a
+                            file the bank may already hold. Check the day-end report for its due
+                            date before doing anything else with it.
+                        </div>
+                    </template>
+                    <div class="dd-table">
+                        <lightning-datatable key-field="id" data={files} columns={fileColumns}
+                            onrowaction={handleFileAction} hide-checkbox-column>
+                        </lightning-datatable>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>

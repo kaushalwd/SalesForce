@@ -1,0 +1,53 @@
+<template>
+    <!--
+      1.1 - a STACKED block, not a three-column strip.
+
+      It was icon | text | actions in one row, sized for the full-width step-2
+      card. Inside the verification dialog that container is 430px, so the text
+      column collapsed to about 130px and the sentence broke into eight lines
+      beside two buttons that kept their width. The breakpoint that would have
+      caught it was a media query, which measures the VIEWPORT - a desktop screen
+      with a narrow card is exactly the case it cannot see.
+
+      So: stacked by default, and a container query - not a media query - restores
+      the side-by-side arrangement when this component's OWN box is wide enough
+      for it. Both places get the layout that suits the space they actually have.
+    -->
+    <section class={rootClass} aria-live="polite">
+        <div class="gate__copy">
+            <!-- The state, as a word rather than a glyph. A live dot says "this is
+                 still moving" in a way a clock face cannot, and it frees the row
+                 the icon column used to cost. -->
+            <p class="gate__status">
+                <span class="gate__dot"></span>
+                <span>{statusWord}</span>
+            </p>
+
+            <p class="gate__title">{title}</p>
+            <p class="gate__body">{body}</p>
+
+            <template lwc:if={showExpiresIn}>
+                <p class="gate__expiry">{expiresIn}</p>
+            </template>
+        </div>
+
+        <div class="gate__actions">
+            <button
+                class="btn btn-primary gate__btn gate__btn--primary"
+                type="button"
+                disabled={actionsDisabled}
+                onclick={handlePrimary}
+            >{refreshLabel}</button>
+            <!--
+              THE EXIT. Always visible while the gate holds - an expired link
+              with no way past it leaves a live booking unrecoverable.
+            -->
+            <button
+                class="btn btn-ghost gate__btn gate__btn--exit"
+                type="button"
+                disabled={actionsDisabled}
+                onclick={handleInBranch}
+            >{labels.VERIFY_IN_BRANCH_CTA}</button>
+        </div>
+    </section>
+</template>

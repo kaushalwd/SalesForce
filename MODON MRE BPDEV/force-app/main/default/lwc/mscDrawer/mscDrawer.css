@@ -1,0 +1,324 @@
+@import "c/mscStyles";
+
+/* display: contents, so this element adds no box of its own between the layer and
+   whatever it is mounted in - and it is mounted at .page, never inside a card.
+   See the header in the JS for why that placement is the whole design. */
+:host {
+    display: contents;
+}
+
+/* ── the layer ──────────────────────────────────────────────────────────────
+   Plain inset: 0, and no JavaScript. Mounted at .page the nearest containing
+   block is modonSheet's own panel, so this covers the entire booking - which is
+   as far as anything can reach, because that panel sets overflow: hidden.
+
+   Version 1.0 measured a probe to correct for the containing block, which was
+   solving the wrong problem: the drawer was mounted inside a card whose
+   scrolling body CLIPPED it, and no amount of offset fixes a clip.
+
+   IT ANIMATES NOTHING ITSELF, and carries no overflow. Animating this element
+   animated the drawer inside it too; and an `overflow` here would clip anything
+   position: fixed that a future drawer's content opens, which is the one mistake
+   this component has already made once. The scrim and the panel each animate
+   their own single property instead. */
+.layer {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch;
+    /* Inset on all four sides, so the panel is a rounded card floating over the
+       journey rather than a slab welded to its edge - the Broker Portal's invoice
+       drawer, which is the reference for this. */
+    padding: clamp(12px, 1.6vw, 20px);
+}
+
+/* ── the scrim ──────────────────────────────────────────────────────────────
+   Its own element, behind the panel, fading on its own clock.
+
+   NO backdrop-filter, deliberately, and this is the whole of "the background must
+   not be affected while the drawer comes in". A backdrop blur is recomputed from
+   the pixels behind it on EVERY frame, and the pixels behind it here are the
+   journey's cards - each of which is already running backdrop-filter: blur(22px)
+   of its own. Stacking a second live blur on top of those and then animating a
+   panel across them made the background visibly shift and shimmer for the whole
+   travel. Without it the browser composites one opaque-ish layer once and the
+   journey behind simply dims: nothing back there moves, reflows or re-renders
+   while the panel slides.
+
+   Slightly deeper than the blurred version was, so the loss of the blur does not
+   make the layer read as weaker than the verification dialog's. */
+.scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(0, 0, 0, 0.66);
+    animation: msc-scrim-in 460ms ease-out both;
+}
+
+/* ── the panel ──────────────────────────────────────────────────────────────
+   Full height, docked right, entering from off-screen.
+
+   600ms on cubic-bezier(0.16, 1, 0.3, 1) - a long, hard deceleration: it leaves
+   the right edge quickly and settles slowly, which is what reads as weight rather
+   than as lag. It is deliberately far slower than modonSheet's own 240ms drawer,
+   and the reason is size: the sheet's drawer is a side panel within a screen, this
+   one covers the entire booking, and the same duration over three times the travel
+   reads as a snap rather than a movement.
+
+   ONE property animates, transform, so the whole travel is a compositor job. No
+   `will-change`: it would make this element a containing block for the lifetime of
+   the drawer, which is precisely the trap the header warns about - the animation
+   promotes the layer on its own for exactly as long as it needs to. */
+.drawer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+    background: #141414;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    box-shadow:
+        -30px 0 70px rgba(0, 0, 0, 0.66),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    animation: msc-drawer-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── leaving ────────────────────────────────────────────────────────────────
+   Closing is animated too, and faster than opening - 320ms on an accelerating
+   curve. A panel that slides in over 600ms and then vanishes on the frame the
+   close is pressed reads as a bug; a panel that leaves the way it arrived, but
+   without the settle, reads as dismissed. The JS keeps it mounted for exactly
+   this long - see EXIT_MS, which must stay in step with these durations.
+
+   pointer-events: none so a second click during the exit lands on the journey
+   underneath rather than on a drawer that is already gone in every sense but
+   the DOM's. */
+.layer--closing {
+    pointer-events: none;
+}
+.layer--closing .scrim {
+    animation: msc-scrim-out 320ms ease-in both;
+}
+.layer--closing .drawer {
+    animation: msc-drawer-out 320ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* A form's worth of width. */
+.drawer--standard {
+    width: min(460px, 94%);
+}
+
+/* A document's, and sized against the reference rather than guessed: the Broker
+   Portal's invoice drawer takes a little under two thirds of the frame it opens
+   over. An A4 page narrower than this is a thumbnail of a document rather than a
+   document, and the whole point of the preview is that it can be read from. */
+.drawer--wide {
+    width: min(960px, 94%);
+}
+
+/* ── head ───────────────────────────────────────────────────────────────── */
+
+.drawer__head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+.drawer__headings {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.drawer__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text, #fafafa);
+    overflow-wrap: anywhere;
+}
+
+.drawer__subtitle {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text-muted, #a3a3a3);
+    overflow-wrap: anywhere;
+}
+
+/* Round, 34px, quiet until hovered - the same treatment the invoice drawer gives
+   it. Not 44: it sits beside a heading rather than in a row of actions, and a
+   full touch target here would outweigh the title it is next to. */
+.drawer__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.drawer__close:hover {
+    color: var(--text, #fafafa);
+    border-color: var(--text-dim, #8a8a8a);
+    background: rgba(255, 255, 255, 0.09);
+}
+.drawer__close:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+
+/* ── body ───────────────────────────────────────────────────────────────── */
+
+/* The only scrolling region, and its scrollbar is hidden like every other one in
+   this console. min-height: 0 is what lets it actually shrink inside the flex
+   column instead of pushing the footer off the panel.
+
+   A flex column, so a single tall child - a document preview - can be told to
+   take the remaining height with `flex: 1 1 auto` instead of guessing a pixel
+   count. Stacked block children behave as they would in normal flow; the one
+   difference is that adjacent margins no longer collapse. */
+.drawer__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 16px 20px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.drawer__body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* ── foot ───────────────────────────────────────────────────────────────── */
+
+.drawer__foot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+
+@keyframes msc-scrim-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes msc-scrim-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes msc-drawer-in {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        /* `none`, never an identity transform. With fill-mode `both` a retained
+           transform makes this element a containing block and traps any
+           position:fixed thing opened from the slotted content inside it - the
+           same trap the sheet's own centring transform sets for us. */
+        transform: none;
+    }
+}
+
+/* The exit may end on a retained transform: it is unmounted on the next tick, so
+   there is nothing left inside for a containing block to trap. */
+@keyframes msc-drawer-out {
+    from {
+        transform: none;
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* Below the tablet break a side panel is the whole screen anyway, so it comes up
+   from the bottom instead - the same fallback modonSheet's drawer variant makes,
+   so the journey has one gesture rather than two.
+
+   AFTER .layer--closing, and only the name is overridden: the exit rule above is
+   two classes and would otherwise outrank a single-class one here, leaving the
+   phone sliding down on the way in and sideways on the way out. */
+@media (max-width: 767px) {
+    .layer {
+        justify-content: stretch;
+        align-items: flex-end;
+        padding: 0;
+    }
+    .drawer,
+    .drawer--standard,
+    .drawer--wide {
+        width: 100%;
+        height: auto;
+        max-height: 92%;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.6);
+        animation-name: msc-drawer-up;
+    }
+    .layer--closing .drawer {
+        animation-name: msc-drawer-down;
+    }
+}
+
+@keyframes msc-drawer-up {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: none;
+    }
+}
+
+@keyframes msc-drawer-down {
+    from {
+        transform: none;
+    }
+    to {
+        transform: translateY(100%);
+    }
+}
+
+/* No travel and no fade. The exit still runs on a timer in the JS, so the closing
+   layer has to be taken off the screen outright - without this it would sit there,
+   fully opaque and un-animated, until that timer fired. */
+@media (prefers-reduced-motion: reduce) {
+    .scrim,
+    .drawer,
+    .layer--closing .scrim,
+    .layer--closing .drawer {
+        animation: none;
+    }
+    .layer--closing {
+        display: none;
+    }
+}

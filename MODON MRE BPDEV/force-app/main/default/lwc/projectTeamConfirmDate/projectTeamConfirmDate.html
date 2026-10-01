@@ -1,0 +1,164 @@
+<template>
+
+    <!-- 🔹 MILESTONE PHASE UNIT SUMMARY -->
+    <template if:true={hasSummary}>
+        <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium pi-summary">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box slds-text-align_center pi-stat-tile pi-stat-tile_count">
+                    <lightning-icon icon-name="utility:list" size="small" class="slds-m-bottom_x-small"></lightning-icon>
+                    <p class="slds-text-title_caps slds-text-color_weak">Number of Units</p>
+                    <p class="slds-text-heading_large">{unitCount}</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 🔹 RADIO SELECTION -->
+    <lightning-radio-group
+        name="decision"
+        label="Select Action"
+        options={radioOptions}
+        value={selectedOption}
+        onchange={handleRadioChange}>
+    </lightning-radio-group>
+
+    <!-- 🔹 CONFIRMATION SECTION -->
+    <template if:true={isConfirmation}>
+
+        <div class="slds-box slds-m-top_small">
+
+            <b>Milestone Certificate</b>
+
+            <!-- Confirmation Date -->
+            <lightning-input
+                type="date"
+                label="Confirmation Date"
+                value={confirmationDate}
+                disabled>
+            </lightning-input>
+
+        </div>
+
+    </template>
+
+    <!-- 🔹 EXTENSION SECTION -->
+    <template if:true={isExtension}>
+
+        <div class="slds-box slds-m-top_small">
+
+            <b>Extension Memo</b>
+
+            <!-- Extension Date -->
+            <lightning-input
+                type="date"
+                label="Milestone Extension Date"
+                value={extensionDate}
+                min={minExtensionDate}
+                message-when-range-underflow="Extension Date must be after the Milestone Date."
+                required
+                onchange={handleExtensionDate}>
+            </lightning-input>
+
+            <template if:true={hasExtensionDaysDiff}>
+                <p class="slds-text-body_small slds-m-top_x-small">
+                    <b>No. of Days:</b>
+                    <span class="slds-m-left_xx-small">{extensionDaysDiff} day(s) beyond Milestone Date</span>
+                </p>
+            </template>
+
+        </div>
+
+    </template>
+
+    <!-- 🔹 DOCUMENT SECTION -->
+    <template for:each={documents} for:item="doc">
+
+        <!-- EXTENSION DOC -->
+        <template if:true={doc.isExtension}>
+            <template if:false={isConfirmation}>
+
+                <div key={doc.Id} class="slds-m-top_small slds-box">
+
+                    <b>Extension Memo Document</b>
+
+                    <lightning-file-upload
+                    label ="Extension Memo Document"
+                        record-id={doc.Id}
+                        onuploadfinished={handleUpload}>
+                    </lightning-file-upload>
+
+                    <template if:true={doc.hasFiles}>
+                        <template for:each={doc.files} for:item="file">
+                            <div key={file.Id} class="slds-grid slds-grid_align-spread slds-m-top_x-small">
+
+                                <span>{file.Title}</span>
+
+                                <div>
+                                    <lightning-button-icon
+                                        icon-name="utility:preview"
+                                        data-id={file.Id}
+                                        onclick={handlePreview}>
+                                    </lightning-button-icon>
+
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        data-id={file.Id}
+                                        onclick={handleDelete}>
+                                    </lightning-button-icon>
+                                </div>
+
+                            </div>
+                        </template>
+                    </template>
+
+                </div>
+
+            </template>
+        </template>
+
+        <!-- CERTIFICATE DOC -->
+        <template if:true={doc.isCertificate}>
+            <template if:true={isConfirmation}>
+
+                <div key={doc.Id} class="slds-m-top_small slds-box">
+
+                    <b>Milestone Certificate Document</b>
+
+                    <lightning-file-upload
+                        label ="Milestone Certificate Document"
+                        record-id={doc.Id}
+                        onuploadfinished={handleUpload}>
+                    </lightning-file-upload>
+
+                    <template if:true={doc.hasFiles}>
+                        <template for:each={doc.files} for:item="file">
+                            <div key={file.Id} class="slds-grid slds-grid_align-spread slds-m-top_x-small">
+
+                                <span>{file.Title}</span>
+
+                                <div>
+                                    <lightning-button-icon
+                                        icon-name="utility:preview"
+                                        data-id={file.Id}
+                                        onclick={handlePreview}>
+                                    </lightning-button-icon>
+
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        data-id={file.Id}
+                                        onclick={handleDelete}>
+                                    </lightning-button-icon>
+                                </div>
+
+                            </div>
+                        </template>
+                    </template>
+
+                </div>
+
+            </template>
+        </template>
+
+    </template>
+
+</template>

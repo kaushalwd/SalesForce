@@ -1,0 +1,561 @@
+<template>
+    <div class="ubj">
+        <template if:true={loading}>
+            <div class="ubj-loading">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Guard: a Sales Order already exists, or a cancelled booking still holds collected fees -->
+        <template if:true={blockedExisting}>
+            <div class="ubj-empty">
+                <lightning-icon icon-name="utility:info_alt" size="small" class="ubj-empty__icon"></lightning-icon>
+                <p class="ubj-empty__title">{blockedMessage}</p>
+                <lightning-button label="Close" onclick={handleClose}></lightning-button>
+            </div>
+        </template>
+
+        <template if:false={blockedExisting}>
+            <!-- Header + progress -->
+            <header class="ubj-header">
+                <div class="ubj-header__titles">
+                    <span class="ubj-eyebrow">Book Units</span>
+                    <h1 class="ubj-title">{stepTitle}</h1>
+                </div>
+                <lightning-progress-indicator current-step={currentStep} type="base" variant="base" class="ubj-progress">
+                    <lightning-progress-step label="Address" value="address"></lightning-progress-step>
+                    <lightning-progress-step label="Unit Selection" value="search"></lightning-progress-step>
+                    <lightning-progress-step label="Payment / Offer" value="plan"></lightning-progress-step>
+                    <lightning-progress-step label="Confirm" value="payment"></lightning-progress-step>
+                </lightning-progress-indicator>
+            </header>
+
+            <div class="ubj-body">
+                <!-- ── ADDRESS (gating pre-step) ─────────────────────────── -->
+                <template if:true={needsAddress}>
+                    <div class="ubj-card">
+                        <div class="ubj-unit__head">
+                            <div>
+                                <span class="ubj-eyebrow">Customer</span>
+                                <p class="ubj-unit__name">Address details</p>
+                            </div>
+                        </div>
+                        <p class="ubj-muted">{addressSubtitle}</p>
+
+                        <!-- Person account -->
+                        <template if:true={isPersonAccount}>
+                            <div class="ubj-addr-grid">
+                                <lightning-combobox label="Nationality" required value={nationality} options={nationalityOptions} onchange={handleNationalityChange}></lightning-combobox>
+                                <lightning-combobox label="UAE resident" required value={uaeResident} options={uaeResidentOptions} onchange={handleUaeResidentChange}></lightning-combobox>
+                            </div>
+
+                            <p class="ubj-section-label">Mailing address</p>
+                            <div class="ubj-geo-wrap">
+                                <lightning-input label="Search location" placeholder="Type an address, area, or landmark" value={mailingSearchText} onchange={handleMailingSearchChange}></lightning-input>
+                                <template if:true={isMailingSearching}>
+                                    <lightning-spinner alternative-text="Searching" size="x-small" class="ubj-geo-spinner"></lightning-spinner>
+                                </template>
+                                <template if:true={showMailingSearchResults}>
+                                    <ul class="ubj-geo-results">
+                                        <template for:each={mailingSearchResults} for:item="loc">
+                                            <li key={loc.placeId} data-lat={loc.lat} data-lon={loc.lon} data-label={loc.label} onclick={handleMailingLocationSelect}>{loc.label}</li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </div>
+
+                            <div class="ubj-addr-grid">
+                                <lightning-input label="Villa / building number" required value={villaNumber} onchange={handleVillaNumberChange}></lightning-input>
+                                <lightning-input label="Street" required value={mailingStreetDisplayValue} onchange={handleMailingStreetChange}></lightning-input>
+                                <lightning-input label="City" required value={mailingCity} onchange={handleMailingCityChange}></lightning-input>
+                                <lightning-input label="State / province" required value={mailingState} onchange={handleMailingStateChange}></lightning-input>
+                                <lightning-input label="Country" required value={mailingCountry} onchange={handleMailingCountryChange}></lightning-input>
+                                <lightning-input label="Postal code" required value={mailingPostalCode} onchange={handleMailingPostalChange}></lightning-input>
+                            </div>
+
+                            <label class="ubj-addr-check">
+                                <input type="checkbox" checked={billingSameAsMailing} onchange={handleBillingSameToggle} />
+                                Billing address is same as mailing address
+                            </label>
+
+                            <p class="ubj-section-label">Billing address</p>
+                            <div class={billingGridClass}>
+                                <lightning-input label="Street" required value={billingStreet} disabled={billingReadOnly} onchange={handleBillingStreetChange}></lightning-input>
+                                <lightning-input label="City" required value={billingCity} disabled={billingReadOnly} onchange={handleBillingCityChange}></lightning-input>
+                                <lightning-input label="State / province" required value={billingState} disabled={billingReadOnly} onchange={handleBillingStateChange}></lightning-input>
+                                <lightning-input label="Country" required value={billingCountry} disabled={billingReadOnly} onchange={handleBillingCountryChange}></lightning-input>
+                                <lightning-input label="Postal code" required value={billingPostalCode} disabled={billingReadOnly} onchange={handleBillingPostalChange}></lightning-input>
+                            </div>
+                        </template>
+
+                        <!-- Organization account -->
+                        <template if:true={isOrgAccount}>
+                            <div class="ubj-addr-grid">
+                                <lightning-input label="Unified number" required value={unifiedNumber} onchange={handleUnifiedNumberChange}></lightning-input>
+                                <lightning-combobox label="Nationality" required value={nationality} options={nationalityOptions} onchange={handleNationalityChange}></lightning-combobox>
+                                <lightning-combobox label="UAE resident" required value={uaeResident} options={uaeResidentOptions} onchange={handleUaeResidentChange}></lightning-combobox>
+                            </div>
+
+                            <p class="ubj-section-label">Billing address</p>
+                            <div class="ubj-geo-wrap">
+                                <lightning-input label="Search location" placeholder="Type an address, area, or landmark" value={billingSearchText} onchange={handleBillingSearchChange}></lightning-input>
+                                <template if:true={isBillingSearching}>
+                                    <lightning-spinner alternative-text="Searching" size="x-small" class="ubj-geo-spinner"></lightning-spinner>
+                                </template>
+                                <template if:true={showBillingSearchResults}>
+                                    <ul class="ubj-geo-results">
+                                        <template for:each={billingSearchResults} for:item="loc">
+                                            <li key={loc.placeId} data-lat={loc.lat} data-lon={loc.lon} data-label={loc.label} onclick={handleBillingLocationSelect}>{loc.label}</li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </div>
+
+                            <div class="ubj-addr-grid">
+                                <lightning-input label="Street" required value={billingStreet} onchange={handleBillingStreetChange}></lightning-input>
+                                <lightning-input label="City" required value={billingCity} onchange={handleBillingCityChange}></lightning-input>
+                                <lightning-input label="State / province" required value={billingState} onchange={handleBillingStateChange}></lightning-input>
+                                <lightning-input label="Country" required value={billingCountry} onchange={handleBillingCountryChange}></lightning-input>
+                                <lightning-input label="Postal code" required value={billingPostalCode} onchange={handleBillingPostalChange}></lightning-input>
+                            </div>
+                        </template>
+                    </div>
+
+                    <footer class="ubj-footer">
+                        <lightning-button label="Cancel" onclick={handleCancelAddress}></lightning-button>
+                        <div class="ubj-footer__spacer"></div>
+                        <lightning-button variant="brand" label="Save and continue" icon-name="utility:forward" icon-position="right" disabled={addressSaving} onclick={handleSaveAddress}></lightning-button>
+                    </footer>
+                </template>
+
+                <!-- ── ONGOING PAYMENT (resume failed) ──────────────────── -->
+                <template if:true={showResumeFailed}>
+                    <div class="ubj-empty ubj-empty_soft">
+                        <lightning-icon icon-name="utility:clock" size="small" class="ubj-empty__icon"></lightning-icon>
+                        <p class="ubj-empty__title">A payment is in progress for this opportunity.</p>
+                        <p class="ubj-muted">Resume it to continue, or cancel to release the unit. A new booking cannot be started while a payment is in progress.</p>
+                        <div class="ubj-footer">
+                            <lightning-button label="Cancel" onclick={handleCancelResume}></lightning-button>
+                            <div class="ubj-footer__spacer"></div>
+                            <lightning-button variant="brand" label="Resume payment" icon-name="utility:forward" icon-position="right" onclick={handleResumeRetry}></lightning-button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ── SEARCH ───────────────────────────────────────────── -->
+                <template if:true={showSearch}>
+                    <div class="ubj-card ubj-filters">
+                        <lightning-combobox
+                            class="ubj-filter"
+                            label="Project"
+                            value={selectedProject}
+                            options={projectOptions}
+                            onchange={handleProjectChange}
+                            placeholder="Select a project">
+                        </lightning-combobox>
+                        <lightning-combobox
+                            class="ubj-filter"
+                            label="Phase"
+                            value={selectedPhase}
+                            options={phaseOptions}
+                            onchange={handlePhaseChange}
+                            placeholder="Select a phase">
+                        </lightning-combobox>
+                    </div>
+
+                    <template if:true={units.length}>
+                        <div class="ubj-subhead">
+                            <span class="ubj-subhead__label">Available units</span>
+                            <span class="ubj-pill">{selectedCount} selected</span>
+                        </div>
+                        <div class="ubj-card ubj-tablewrap ubj-scroll">
+                            <table class="ubj-table">
+                                <thead>
+                                    <tr>
+                                        <th class="ubj-check"></th>
+                                        <th>Unit</th>
+                                        <th class="ubj-num">Plot Area</th>
+                                        <th class="ubj-num">Beds</th>
+                                        <th>Typology</th>
+                                        <th class="ubj-num">Total Price</th>
+                                        <th>Block Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={units} for:item="u">
+                                        <tr key={u.id} class={u.rowClass}>
+                                            <td class="ubj-check">
+                                                <lightning-input
+                                                    type="checkbox"
+                                                    variant="label-hidden"
+                                                    data-id={u.id}
+                                                    checked={u.selected}
+                                                    onchange={handleUnitToggle}>
+                                                </lightning-input>
+                                            </td>
+                                            <td class="ubj-cell-strong">{u.name}</td>
+                                            <td class="ubj-num"><lightning-formatted-number value={u.totalArea} maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                            <td class="ubj-num">{u.bedrooms}</td>
+                                            <td>{u.typology}</td>
+                                            <td class="ubj-num ubj-price"><lightning-formatted-number value={u.price} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                            <td class="ubj-muted">{u.blockComment}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                    <template if:false={units.length}>
+                        <div class="ubj-empty ubj-empty_soft">
+                            <lightning-icon icon-name="utility:search" size="small" class="ubj-empty__icon"></lightning-icon>
+                            <p>Pick a project and phase to see available units.</p>
+                        </div>
+                    </template>
+
+                    <footer class="ubj-footer">
+                        <lightning-button label="Close" onclick={handleClose}></lightning-button>
+                        <div class="ubj-footer__spacer"></div>
+                        <lightning-button
+                            label="Generate Offer"
+                            icon-name="utility:pdf_ext"
+                            disabled={noSelection}
+                            onclick={handleGenerateOfferClick}>
+                        </lightning-button>
+                        <lightning-button
+                            variant="brand"
+                            label="Proceed to Book"
+                            icon-name="utility:forward"
+                            icon-position="right"
+                            disabled={noSelection}
+                            onclick={handleProceedBookClick}>
+                        </lightning-button>
+                    </footer>
+                </template>
+
+                <!-- ── PLAN / OFFER ─────────────────────────────────────── -->
+                <template if:true={isPlan}>
+                    <lightning-tabset variant="scoped" class="ubj-tabs">
+                        <template for:each={planUnits} for:item="pu">
+                            <lightning-tab key={pu.unitId} label={pu.name}>
+                                <div class="ubj-tab-body">
+                                    <div class="ubj-unit__head">
+                                        <div>
+                                            <span class="ubj-eyebrow">Unit</span>
+                                            <p class="ubj-unit__name">{pu.name}</p>
+                                        </div>
+                                        <div class="ubj-unit__price">
+                                            <span class="ubj-eyebrow">Total Price</span>
+                                            <p class="ubj-price"><lightning-formatted-number value={pu.price} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></p>
+                                        </div>
+                                    </div>
+                                    <lightning-combobox
+                                        label="Payment Plan"
+                                        data-id={pu.unitId}
+                                        value={pu.selectedPlan}
+                                        options={pu.planOptions}
+                                        onchange={handlePlanChange}
+                                        placeholder="Select a payment plan">
+                                    </lightning-combobox>
+
+                                    <template if:true={pu.feesTotal}>
+                                        <div class="ubj-fees">
+                                            <p class="ubj-section-label">Payable before booking</p>
+                                            <div class="ubj-fees__row"><span>ADM &amp; Dari Fee</span><lightning-formatted-number value={pu.admFee} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                                            <div class="ubj-fees__row"><span>Down Payment</span><lightning-formatted-number value={pu.downPayment} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                                            <div class="ubj-fees__row ubj-fees__total"><span>Total to pay now</span><lightning-formatted-number value={pu.feesTotal} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={pu.installments.length}>
+                                        <p class="ubj-section-label">Installment schedule</p>
+                                        <div class="ubj-scroll">
+                                            <table class="ubj-table ubj-table_compact ubj-table_grid">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="ubj-num">Installment #</th>
+                                                        <th>Milestone</th>
+                                                        <th class="ubj-num">Installment Percentage</th>
+                                                        <th class="ubj-num">Installment amount</th>
+                                                        <th>Installment Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={pu.installments} for:item="inst">
+                                                        <tr key={inst.key}>
+                                                            <td class="ubj-num">{inst.number}</td>
+                                                            <td>{inst.description}</td>
+                                                            <td class="ubj-num"><lightning-formatted-number value={inst.percent} maximum-fraction-digits="2"></lightning-formatted-number>&nbsp;%</td>
+                                                            <td class="ubj-num"><lightning-formatted-number value={inst.amount} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                                            <td class="ubj-muted">
+                                                                <template if:true={inst.date}>
+                                                                    <lightning-formatted-date-time value={inst.date} year="numeric" month="short" day="2-digit"></lightning-formatted-date-time>
+                                                                </template>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-tab>
+                        </template>
+                    </lightning-tabset>
+
+                    <footer class="ubj-footer">
+                        <lightning-button label="Back" icon-name="utility:back" onclick={handleBackToSearch}></lightning-button>
+                        <div class="ubj-footer__spacer"></div>
+                        <template if:true={isOffer}>
+                            <lightning-button variant="brand" label="Preview Offer" icon-name="utility:preview" onclick={handlePreviewOffer}></lightning-button>
+                        </template>
+                        <template if:false={isOffer}>
+                            <lightning-button variant="brand" label="Review" icon-name="utility:forward" icon-position="right" onclick={handleGoReview}></lightning-button>
+                        </template>
+                    </footer>
+                </template>
+
+                <!-- ── REVIEW & CONFIRM ─────────────────────────────────── -->
+                <template if:true={isReview}>
+                    <div class="ubj-card ubj-review-head">
+                        <div>
+                            <span class="ubj-eyebrow">Project</span>
+                            <p class="ubj-review-head__val">{selectedProjectName}</p>
+                        </div>
+                        <div>
+                            <span class="ubj-eyebrow">Phase</span>
+                            <p class="ubj-review-head__val">{selectedPhaseName}</p>
+                        </div>
+                    </div>
+
+                    <template for:each={planUnits} for:item="pu">
+                        <div key={pu.unitId} class="ubj-card">
+                            <div class="ubj-unit__head">
+                                <div>
+                                    <span class="ubj-eyebrow">Unit</span>
+                                    <p class="ubj-unit__name">{pu.name}</p>
+                                </div>
+                                <div class="ubj-unit__price">
+                                    <span class="ubj-eyebrow">Total Price</span>
+                                    <p class="ubj-price"><lightning-formatted-number value={pu.price} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></p>
+                                </div>
+                            </div>
+                            <div class="ubj-review-line">
+                                <span class="ubj-muted">Payment Plan</span>
+                                <span class="ubj-cell-strong">{pu.planLabel}</span>
+                            </div>
+                            <template if:true={pu.installments.length}>
+                                <p class="ubj-section-label">Installment schedule</p>
+                                <div class="ubj-scroll">
+                                    <table class="ubj-table ubj-table_compact ubj-table_grid">
+                                        <thead>
+                                            <tr>
+                                                <th class="ubj-num">Installment #</th>
+                                                <th>Milestone</th>
+                                                <th class="ubj-num">Installment Percentage</th>
+                                                <th class="ubj-num">Installment amount</th>
+                                                <th>Installment Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={pu.installments} for:item="inst">
+                                                <tr key={inst.key}>
+                                                    <td class="ubj-num">{inst.number}</td>
+                                                    <td>{inst.description}</td>
+                                                    <td class="ubj-num"><lightning-formatted-number value={inst.percent} maximum-fraction-digits="2"></lightning-formatted-number>&nbsp;%</td>
+                                                    <td class="ubj-num"><lightning-formatted-number value={inst.amount} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                                    <td class="ubj-muted">
+                                                        <template if:true={inst.date}>
+                                                            <lightning-formatted-date-time value={inst.date} year="numeric" month="short" day="2-digit"></lightning-formatted-date-time>
+                                                        </template>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+
+                            <template if:true={pu.feesTotal}>
+                                <div class="ubj-fees">
+                                    <p class="ubj-section-label">Payable before booking</p>
+                                    <div class="ubj-fees__row"><span>ADM &amp; Dari Fee</span><lightning-formatted-number value={pu.admFee} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                                    <div class="ubj-fees__row"><span>Down Payment</span><lightning-formatted-number value={pu.downPayment} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                                    <div class="ubj-fees__row ubj-fees__total"><span>Total to pay now</span><lightning-formatted-number value={pu.feesTotal} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Only meaningful across several units; for one unit the card above already shows it. -->
+                    <template if:false={isSingleUnit}>
+                        <div class="ubj-card ubj-review-totals">
+                            <div class="ubj-fees__row ubj-fees__total"><span>Total price</span><lightning-formatted-number value={totalPrice} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></div>
+                        </div>
+                    </template>
+
+                    <footer class="ubj-footer">
+                        <lightning-button label="Back" icon-name="utility:back" onclick={handleBackToPlan}></lightning-button>
+                        <div class="ubj-footer__spacer"></div>
+                        <template if:true={isSingleUnit}>
+                            <lightning-button variant="brand" label="Confirm and Pay" icon-name="utility:forward" icon-position="right" onclick={handleConfirmBook}></lightning-button>
+                        </template>
+                        <template if:false={isSingleUnit}>
+                            <lightning-button variant="brand" label="Confirm and Book" icon-name="utility:entitlement" onclick={handleConfirmBook}></lightning-button>
+                        </template>
+                    </footer>
+                </template>
+
+                <!-- ── OFFER PREVIEW ────────────────────────────────────── -->
+                <template if:true={isOfferPreview}>
+                    <div class="ubj-card">
+                        <lightning-input
+                            label="Customer Name"
+                            value={customerName}
+                            onchange={handleCustomerNameChange}
+                            placeholder="Name to show on the offer">
+                        </lightning-input>
+                    </div>
+                    <lightning-tabset variant="scoped" class="ubj-tabs">
+                        <template for:each={offerPreviews} for:item="op">
+                            <lightning-tab key={op.unitId} label={op.name}>
+                                <div class="ubj-offer">
+                                    <iframe src={op.src} title={op.name} class="ubj-iframe"></iframe>
+                                </div>
+                            </lightning-tab>
+                        </template>
+                    </lightning-tabset>
+
+                    <footer class="ubj-footer">
+                        <lightning-button label="Back" icon-name="utility:back" onclick={handleBackToPlan}></lightning-button>
+                        <div class="ubj-footer__spacer"></div>
+                        <lightning-button variant="brand" label="Email Offer" icon-name="utility:email" onclick={handleSendOffer}></lightning-button>
+                    </footer>
+                </template>
+
+                <!-- ── PAYMENT (single unit) ────────────────────────────── -->
+                <template if:true={isPayment}>
+                    <div class="ubj-card ubj-payhead">
+                        <div>
+                            <span class="ubj-eyebrow">Unit</span>
+                            <p class="ubj-unit__name">{payUnitName}</p>
+                        </div>
+                        <div class="ubj-timer-wrap">
+                            <template if:true={isFullyPaid}>
+                                <span class="ubj-eyebrow">Status</span>
+                                <p><span class="ubj-badge ubj-badge_success">Payment received</span></p>
+                            </template>
+                            <template if:false={isFullyPaid}>
+                                <span class="ubj-eyebrow">Time left to pay</span>
+                                <p class={countdownClass}>{countdownLabel}</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <template if:true={showExpiredAlert}>
+                        <div class="ubj-alert" role="alert">
+                            <lightning-icon icon-name="utility:warning" size="x-small" variant="inverse"></lightning-icon>
+                            <span>The hold has expired. Close this window and start a new booking.</span>
+                        </div>
+                    </template>
+
+                    <template if:true={showPartialExpired}>
+                        <div class="ubj-alert ubj-alert_info" role="status">
+                            <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                            <span>The hold time has ended, but the payment already collected is retained and the unit stays reserved. Complete the remaining payment to book this unit.</span>
+                        </div>
+                    </template>
+
+                    <!-- start Partial booking approval -->
+                    <template if:true={showPartialApprovedNote}>
+                        <div class="ubj-alert ubj-alert_info" role="status">
+                            <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                            <span>Partial booking approved by management. You can book this unit with the payment collected so far.</span>
+                        </div>
+                    </template>
+                    <!-- end Partial booking approval -->
+
+                    <div class="ubj-card">
+                        <span class="ubj-eyebrow">Payment Plan</span>
+                        <p class="ubj-unit__name">{paySelectedPlanLabel}</p>
+
+                        <template if:true={payInstallments.length}>
+                            <p class="ubj-section-label">Installment schedule</p>
+                            <div class="ubj-scroll">
+                                <table class="ubj-table ubj-table_compact ubj-table_grid">
+                                    <thead>
+                                        <tr>
+                                            <th class="ubj-num">Installment #</th>
+                                            <th>Milestone</th>
+                                            <th class="ubj-num">Installment Percentage</th>
+                                            <th class="ubj-num">Installment amount</th>
+                                            <th>Installment Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={payInstallments} for:item="inst">
+                                            <tr key={inst.key}>
+                                                <td class="ubj-num">{inst.number}</td>
+                                                <td>{inst.description}</td>
+                                                <td class="ubj-num"><lightning-formatted-number value={inst.percent} maximum-fraction-digits="2"></lightning-formatted-number>&nbsp;%</td>
+                                                <td class="ubj-num"><lightning-formatted-number value={inst.amount} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                                <td class="ubj-muted">
+                                                    <template if:true={inst.date}>
+                                                        <lightning-formatted-date-time value={inst.date} year="numeric" month="short" day="2-digit"></lightning-formatted-date-time>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="ubj-card">
+                        <p class="ubj-section-label">Booking fees</p>
+                        <div class="ubj-scroll">
+                            <table class="ubj-table ubj-table_compact">
+                                <thead>
+                                    <tr>
+                                        <th>Fee</th>
+                                        <th class="ubj-num">Total</th>
+                                        <th class="ubj-num">Paid</th>
+                                        <th class="ubj-num">Balance</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={feeLines} for:item="l">
+                                        <tr key={l.id}>
+                                            <td class="ubj-cell-strong">{l.type}</td>
+                                            <td class="ubj-num"><lightning-formatted-number value={l.totalAmount} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                            <td class="ubj-num"><lightning-formatted-number value={l.paidAmount} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                            <td class="ubj-num"><lightning-formatted-number value={l.balance} format-style="currency" currency-code="AED" currency-display-as="code" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                            <td><span class={l.statusClass}>{l.statusLabel}</span></td>
+                                        </tr>
+                                    </template>
+                                    <template if:false={feeLines.length}>
+                                        <tr>
+                                            <td colspan="5" class="ubj-muted ubj-center">No fee lines found.</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <footer class="ubj-footer">
+                        <template if:true={showCancelHold}>
+                            <lightning-button label="Cancel booking" icon-name="utility:close" onclick={handleCancelHold}></lightning-button>
+                        </template>
+                        <div class="ubj-footer__spacer"></div>
+                        <lightning-button label="Open Modon Pay" icon-name="utility:money" onclick={handleOpenModonPay}></lightning-button>
+                        <lightning-button label="Refresh status" icon-name="utility:refresh" onclick={handleRefreshStatus}></lightning-button>
+                        <lightning-button variant="brand" label="Book" icon-name="utility:entitlement" disabled={bookDisabled} onclick={handleBook}></lightning-button>
+                    </footer>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

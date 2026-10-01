@@ -1,0 +1,105 @@
+<template>
+    <section class="dd">
+        <header class="dd__hd">
+            <h4 class="dd__t">{title}</h4>
+            <p class="dd__hint">{labels.DD_HINT}</p>
+        </header>
+
+        <div class="dd__grid">
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_HOLDER}</span>
+                <input autocomplete="off" class={fields.accountName.cls} type="text" data-field="accountName"
+                    value={form.accountName} oninput={handleField} onblur={handleBlur} disabled={busy} />
+                <template lwc:if={fields.accountName.error}><span class="dd__err">{fields.accountName.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_BANK}</span>
+                <select class={fields.bankName.cls} data-field="bankName" onchange={handleField} onblur={handleBlur} disabled={busy}>
+                    <option value="">{labels.DD_CHOOSE}</option>
+                    <template for:each={bankChoices} for:item="o">
+                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                    </template>
+                </select>
+                <template lwc:if={fields.bankName.error}><span class="dd__err">{fields.bankName.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_TYPE}</span>
+                <select class={fields.accountType.cls} data-field="accountType" onchange={handleField} onblur={handleBlur} disabled={busy}>
+                    <option value="">{labels.DD_CHOOSE}</option>
+                    <template for:each={typeChoices} for:item="o">
+                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                    </template>
+                </select>
+                <template lwc:if={fields.accountType.error}><span class="dd__err">{fields.accountType.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_IBAN}</span>
+                <input autocomplete="off" class={fields.iban.cls} type="text" data-field="iban"
+                    value={form.iban} oninput={handleField} onblur={handleBlur} disabled={busy}
+                    placeholder="AE07 0331 2345 6789 0123 456" />
+                <template lwc:if={fields.iban.error}><span class="dd__err">{fields.iban.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_ID_TYPE}</span>
+                <select class={fields.idType.cls} data-field="idType" onchange={handleField} onblur={handleBlur} disabled={busy}>
+                    <template for:each={idTypeChoices} for:item="o">
+                        <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                    </template>
+                </select>
+                <template lwc:if={fields.idType.error}><span class="dd__err">{fields.idType.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{idNumberLabel}</span>
+                <input autocomplete="off" class={fields.idNumber.cls} type="text" data-field="idNumber"
+                    value={form.idNumber} oninput={handleField} onblur={handleBlur} disabled={busy} />
+                <template lwc:if={fields.idNumber.error}><span class="dd__err">{fields.idNumber.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_MOBILE}</span>
+                <input autocomplete="off" class={fields.mobile.cls} type="tel" data-field="mobile"
+                    value={form.mobile} oninput={handleField} onblur={handleBlur} disabled={busy}
+                    placeholder="05XXXXXXXX" />
+                <template lwc:if={fields.mobile.error}><span class="dd__err">{fields.mobile.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_EMAIL}</span>
+                <input autocomplete="off" class={fields.email.cls} type="email" data-field="email"
+                    value={form.email} oninput={handleField} onblur={handleBlur} disabled={busy} />
+                <template lwc:if={fields.email.error}><span class="dd__err">{fields.email.error}</span></template>
+            </label>
+            <label class="dd__fld">
+                <span class="dd__lbl"><span class="field__req">*</span>{labels.DD_FIELD_CITY}</span>
+                <input autocomplete="off" class={fields.city.cls} type="text" data-field="city"
+                    value={form.city} oninput={handleField} onblur={handleBlur} disabled={busy} />
+                <template lwc:if={fields.city.error}><span class="dd__err">{fields.city.error}</span></template>
+            </label>
+        </div>
+
+        <template lwc:if={computedLine}>
+            <p class="dd__line">{computedLine}</p>
+        </template>
+
+        <template lwc:if={rulesLine}>
+            <p class={rulesLineClass}>{rulesLine}</p>
+            <template lwc:if={otherRuleErrors.length}>
+                <ul class="dd__rules-l">
+                    <template for:each={otherRuleErrors} for:item="r">
+                        <li key={r.key}>{r.text}</li>
+                    </template>
+                </ul>
+            </template>
+        </template>
+
+        <footer class="dd__ft">
+            <span class="dd__foot">{labels.DD_FOOT}</span>
+            <span class="dd__acts">
+                <button class="btn btn-ghost btn-sm" type="button" onclick={handleCancel} disabled={busy}>
+                    {labels.CTA_CANCEL}
+                </button>
+                <button class="btn btn-primary btn-sm" type="button" onclick={handleSubmit} disabled={submitDisabled}>
+                    {submitLabel}
+                </button>
+            </span>
+        </footer>
+    </section>
+</template>

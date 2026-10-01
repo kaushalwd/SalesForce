@@ -1,0 +1,1865 @@
+/* Journey shell for stages 2-4, same palette as masterplanUnitSelector. If Arabic legal text
+   ever reads thin at UAT, adjust the [dir='rtl'] .declaration pre bump below, not the palette. */
+/* Noto Kufi pins Arabic to ADHA's own face; NotoNaskhArabicFont is NOT retired - jsPDF
+   Visualforce pages still load it. The resource must stay cacheControl:Public for the guest user. */
+@font-face {
+    font-family: 'Noto Kufi Arabic';
+    src: url('/sfsites/c/resource/NotoKufiArabicFont/NotoKufiArabic-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Kufi Arabic';
+    src: url('/sfsites/c/resource/NotoKufiArabicFont/NotoKufiArabic-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Kufi Arabic';
+    src: url('/sfsites/c/resource/NotoKufiArabicFont/NotoKufiArabic-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+/* Suisse Int'l is Modon's corporate face. The resource must stay cacheControl:Public so the
+   Experience Cloud guest user can fetch it. */
+@font-face {
+    font-family: 'SuisseIntl';
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SuisseIntl';
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff') format('woff');
+    font-weight: 500 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+:host {
+    /* Dark, matching masterplanUnitSelector and MODON's own product. Sampled from world.modon.com:
+       a near-black ground, one lighter step for raised surfaces, paper for text. */
+    --bg: #f4f2ed;
+    --panel: rgba(255, 255, 255, 0.95);
+    /* The opaque form of --panel. It was referenced by .idle-card and never defined, which made
+       that whole rule fall back and put ink text on a near-black ground. Defined now. */
+    --panel-solid: #ffffff;
+    --text: #16181d;
+    --muted: rgba(22, 24, 29, 0.64);
+    --border: rgba(22, 24, 29, 0.13);
+    /* ADHA's Olive Green, a FILL only - never a text colour here. Distinct from --good,
+       which still means "eligible". */
+    --accent: #78806e;
+    --accent-ink: #ffffff;
+    /* One shade down, for fills whose label is too small to be large text: white on this is
+       4.92:1 and passes AA at any size, unlike --accent. */
+    --accent-deep: #6c7363;
+    --accent-dim: rgba(22, 24, 29, 0.07);
+    /* On a pale ground the card separates by lift rather than by contrast. */
+    --shadow: 0 20px 48px -28px rgba(22, 24, 29, 0.45), 0 1px 2px rgba(22, 24, 29, 0.06);
+    /* The only three meanings that carry colour. Measured on #f4f2ed: 4.95:1, 4.99:1, 5.86:1. */
+    --good: #2c7649;
+    --urgent: #a64e36;
+    --bad: #a33a2d;
+
+    display: block;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    /* Latin face first - Kufi carries Latin too, and Suisse carries enough Arabic that order
+       alone cannot split the scripts. Direction picks the face; see the [dir='rtl'] rule below. */
+    font-family: 'SuisseIntl', 'Noto Kufi Arabic', Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Direction picks the stack: Arabic in ADHA's Kufi, Latin in Suisse. The nested rule puts
+   Suisse back for LTR islands like the Emirates ID field. */
+.journey[dir='rtl'] {
+    font-family: 'Noto Kufi Arabic', 'SuisseIntl', Inter, system-ui, -apple-system, sans-serif;
+}
+
+.journey[dir='rtl'] [dir='ltr'] {
+    font-family: 'SuisseIntl', 'Noto Kufi Arabic', Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Flat floor behind the page: as Safari's URL bar animates, 100dvh runs shorter than the layout
+   viewport and white would flash underneath. Fixed is safe - no transformed ancestor. */
+.page-floor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--bg, #f4f2ed);
+    pointer-events: none;
+}
+
+/* Opaque hold while a stored session resolves, on the .page-floor ground so the resume reads
+   as one continuous page. */
+.booting {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    background: var(--bg, #f4f2ed);
+}
+
+/* Delayed on purpose: a fast resume shows nothing rather than a spinner that flickers in
+   and out. */
+.booting-spinner {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid rgba(22, 24, 29, 0.14);
+    border-top-color: var(--muted, rgba(22, 24, 29, 0.64));
+    opacity: 0;
+    animation: booting-fade 240ms ease-out 400ms forwards, booting-spin 820ms linear 400ms infinite;
+}
+
+@keyframes booting-fade {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes booting-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Still announce the wait, just without the motion. */
+@media (prefers-reduced-motion: reduce) {
+    .booting-spinner {
+        animation: booting-fade 240ms ease-out 400ms forwards;
+    }
+}
+
+/* Signing-wait ring, reusing .booting-spinner's delay and reduced-motion handling.
+   currentColor, not a literal: it sits both inside .cta and beside body text. */
+.cta-spinner {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    /* .cta is inline-block, not flex, so the ring is placed inline rather than by a gap. Setting
+       display on the button instead would have restyled every CTA in the component to fix one. */
+    display: inline-block;
+    vertical-align: middle;
+    margin-inline-end: 9px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.32);
+    border-top-color: currentColor;
+    opacity: 0;
+    animation: booting-fade 240ms ease-out 400ms forwards, booting-spin 820ms linear 400ms infinite;
+}
+
+/* On the card rather than in the button, so the ring is drawn against paper. */
+.sign-wait .cta-spinner {
+    border-color: rgba(22, 24, 29, 0.14);
+    border-top-color: var(--muted, rgba(22, 24, 29, 0.64));
+    /* The row is a flex container with its own gap; the inline margin would double it. */
+    margin-inline-end: 0;
+}
+
+/* The silent route's own line: the accept-and-sign press lands on a card that looked finished
+   while three callouts ran behind it. */
+.sign-wait {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 10px;
+    color: var(--muted, rgba(22, 24, 29, 0.64));
+    font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cta-spinner {
+        animation: booting-fade 240ms ease-out 400ms forwards;
+    }
+}
+
+.journey {
+    position: relative;
+    height: 100%;
+    /* Kills Safari's double-tap-to-zoom (which it remembers across reloads) while leaving
+       scroll and pinch alone; the map's own touch-action:none is stricter and unaffected. */
+    touch-action: manipulation;
+}
+
+/* A column, because the pinned strip lives in here too: the map takes what the strip leaves,
+   at any strip height. With no strip the lone flex child fills the host exactly as before. */
+.map-host {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The map's :host is 100dvh so it works standalone; inside the journey it must be resized
+   here or it hangs below the fold whenever anything sits above it. */
+.map-host c-masterplan-unit-selector {
+    display: block;
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+/* Leading-edge panel over the map with a one-sided scrim. Compounded with .pane: a bare
+   .pane-over loses justify-content and padding to the later .pane rule at equal specificity. */
+.pane.pane-over {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    justify-content: flex-start;
+    padding: 20px;
+    pointer-events: none;
+    background: linear-gradient(
+        to var(--scrim-dir, right),
+        rgba(248, 247, 243, 0.94) 0%,
+        rgba(248, 247, 243, 0.70) 34%,
+        rgba(248, 247, 243, 0) 62%
+    );
+}
+
+[dir='rtl'] .pane.pane-over {
+    --scrim-dir: left;
+}
+
+/* The confirmation is centred, so the scrim must go even too - the one-sided gradient left a
+   centred card half on the plan and half off it. */
+.pane.pane-over.pane-centre {
+    justify-content: center;
+    background: radial-gradient(
+        ellipse 70% 100% at center,
+        rgba(248, 247, 243, 0.94) 0%,
+        rgba(248, 247, 243, 0.82) 45%,
+        rgba(248, 247, 243, 0.42) 100%
+    );
+}
+
+/* The scrim ignores clicks so the map can still be panned around the panel; the card takes them. */
+.pane-over > * {
+    pointer-events: auto;
+}
+
+.pane-over .card {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+    /* Too narrow for the map to be worth seeing beside the card, so the scrim goes full strength
+       and the panel takes the width. */
+    .pane.pane-over {
+        justify-content: center;
+        background: rgba(248, 247, 243, 0.92);
+    }
+
+    /* Restated, not inherited: .pane-centre is a class more specific than the rule above, so
+       without this the confirmation would keep its desktop gradient on a phone. */
+    .pane.pane-over.pane-centre {
+        background: rgba(248, 247, 243, 0.92);
+    }
+}
+
+/* inset-inline-end so the switch mirrors in Arabic with the rest of the map. Placement is per
+   breakpoint because the map's own controls claim every corner at some width. */
+/* ---------- exploration mode banner ---------- */
+
+/* The notice pushes the map down by one measured padding (set from JS - the wording wraps).
+   box-sizing is not optional: .journey is content-box and would overrun the viewport. */
+.journey.exploring {
+    box-sizing: border-box;
+    padding-top: var(--exploration-banner-h);
+}
+
+/* Absolutely positioned overlays are laid out against the padding box, so inset:0 would put
+   them back under the notice. */
+.journey.exploring .pane.pane-over {
+    top: var(--exploration-banner-h);
+    /* height:auto lets top and bottom govern; .pane's height:100% would overshoot the foot by
+       the notice height. */
+    height: auto;
+}
+
+/* Above the map and the language switch (300), below the idle-warning modal (500). */
+/* Masterplan only. Tinted rather than white-on-white, which read as browser chrome, and the text
+   is capped at a readable measure instead of running the full viewport. */
+.exploration-banner {
+    position: fixed;
+    top: 0;
+    inset-inline: 0;
+    z-index: 320;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    min-height: 34px;
+    padding: 8px 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+    color: var(--ink, #16181d);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    text-align: center;
+    /* Accepts pointer events now that it carries a real control; a map drag begun on the bar
+       is lost, a fair trade. */
+}
+
+/* The measure. Without this the sentence runs the width of a 1440 screen, which is roughly 180
+   characters a line where readable is nearer 70. */
+.exploration-banner__text {
+    max-width: 76ch;
+}
+
+.exploration-banner__rest {
+    color: var(--muted);
+}
+
+/* LWC strips the whitespace text node between the spans, so the sentences ran together; a
+   content space flows and wraps where a margin would indent. */
+.exploration-banner__rest::before {
+    content: ' ';
+    white-space: pre;
+}
+
+.exploration-banner__toggle {
+    flex: none;
+    padding: 2px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink, #16181d);
+    font: inherit;
+    font-size: 0.74rem;
+    cursor: pointer;
+}
+
+.exploration-banner__toggle:hover {
+    background: var(--panel);
+}
+
+.exploration-banner b {
+    color: var(--ink, #16181d);
+    font-weight: 600;
+    margin-inline-end: 6px;
+}
+
+/* Green strip from 641px up; below that it stays white and the notice opens as a sheet.
+   --accent-deep, not --accent: white on --accent misses AA at this size. */
+@media (min-width: 641px) {
+    .exploration-banner {
+        background: var(--accent-deep);
+        color: var(--accent-ink);
+        border-bottom-color: transparent;
+    }
+
+    /* Full white, not the muted grey it uses on the light strip: even white at 85% falls to
+       4.07:1 over this green. The bold title carries the hierarchy instead. */
+    .exploration-banner b,
+    .exploration-banner__rest {
+        color: var(--accent-ink);
+    }
+
+    .exploration-banner__toggle {
+        border-color: rgba(255, 255, 255, 0.65);
+        color: var(--accent-ink);
+    }
+
+    .exploration-banner__toggle:hover {
+        background: rgba(255, 255, 255, 0.16);
+    }
+}
+
+/* Left-aligned on a phone: centred text that wraps to four lines is harder to read than ranged
+   text, and the toggle drops to its own line rather than being squeezed beside the sentence. */
+/* The expanded state below 640px, where the strip stays collapsed. Same modal shape as
+   .idle-warning further down. */
+.notice-sheet {
+    display: none;
+}
+
+.notice-sheet__card {
+    width: min(420px, 100%);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--panel-solid, #fff);
+    box-shadow: var(--shadow);
+}
+
+.notice-sheet__title {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.notice-sheet__body {
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+    .exploration-banner {
+        justify-content: flex-start;
+        text-align: start;
+        padding: 8px 12px;
+    }
+
+    /* Beside the text, not pushed to its own line. margin-inline-start:auto is what put it there,
+       and with flex-wrap on it took a whole line to itself. */
+    .exploration-banner__toggle {
+        margin-inline-start: 0;
+    }
+
+    /* The strip never grows on a phone. Expanding opens the sheet instead, so the height published
+       to the map is the same open or closed and the villa card is never squeezed. */
+    .exploration-banner__rest {
+        display: none;
+    }
+
+    .notice-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+}
+
+/* The full notice, on the first screen only. Sits in the content column with the rest of the
+   sign-in panel rather than over it, because it is three paragraphs and has to be read. */
+.notice--exploration {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-inline-start: 3px solid var(--accent);
+    padding-inline-start: 10px;
+}
+
+.notice--exploration .notice__title {
+    color: var(--ink, #16181d);
+    font-weight: 600;
+}
+
+.notice--exploration p {
+    margin: 0;
+}
+
+.lang-switch {
+    position: fixed;
+    bottom: 16px;
+    inset-inline-end: 16px;
+    z-index: 300;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+@media (max-width: 1100px) {
+    .lang-switch {
+        top: 168px;
+        bottom: auto;
+    }
+}
+
+@media (max-width: 820px) {
+    /* The only band where the switch sits at the top edge, so the only one that clears the
+       exploration strip; the property is zero when there is no banner. */
+    .lang-switch {
+        top: calc(12px + var(--exploration-banner-h, 0px));
+        inset-inline-end: 12px;
+    }
+}
+
+.lang-btn {
+    min-width: 30px;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease;
+}
+
+.lang-btn:hover {
+    color: var(--text);
+}
+
+.lang-btn.active {
+    background: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+.pane {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 520px;
+    padding: 32px;
+    /* Clears the stage rail below. */
+    padding-inline-start: 44px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+/* Stage rail: four segments for the four real steps - verify, agree, choose, confirm.
+   Logical inset so it swaps sides in Arabic. */
+.rail {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 4px;
+    display: flex;
+    flex-direction: column;
+}
+
+.rail i {
+    flex: 1;
+    background: var(--accent-dim);
+}
+
+.rail i.on {
+    background: rgba(22, 24, 29, 0.45);
+}
+
+.rail i.done {
+    background: var(--accent-dim);
+}
+
+/* The 7-day window gets a persistent instrument from sign-in onward, where the clock is
+   actually running. */
+.sla {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.sla-n {
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.sla-bar {
+    flex: 1 1 auto;
+    height: 2px;
+    background: var(--accent-dim);
+    overflow: hidden;
+}
+
+.sla-bar i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+
+/* The hold clock, in the slot the SLA bar takes elsewhere. One row, two facts, urgency first. */
+.holdbar {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border-inline-start: 2px solid var(--good);
+    background: rgba(92, 186, 128, 0.14);
+    font-size: 12.5px;
+}
+
+.hold-n {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+
+.hold-days {
+    color: var(--muted);
+}
+
+/* Two minutes left, matching the SLA bar turning urgent under two days. */
+.holdbar.urgent {
+    border-inline-start-color: var(--urgent);
+    background: rgba(224, 138, 109, 0.14);
+}
+
+.holdbar.urgent .hold-n {
+    color: var(--urgent);
+}
+
+/* Lapsed is not failure: the villa is usually still free, and the CTA stays live. */
+.holdbar.lapsed {
+    border-inline-start-color: var(--border);
+    background: var(--accent-dim);
+}
+
+.holdbar.lapsed .hold-n {
+    font-weight: 500;
+    color: var(--muted);
+}
+
+/* Carries the two announcements. Visually redundant with .hold-n, so it is for screen readers. */
+.hold-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* Under two days the remaining time is the message, so it stops being neutral. */
+.sla.urgent .sla-n {
+    color: var(--urgent);
+}
+
+.sla.urgent .sla-bar i {
+    background: var(--urgent);
+}
+
+/* Smaller than the eyebrow and quieter than the lede: it says the site knows who you are, and
+   step 4 already carries a hold clock and a seven-day count above the title. */
+/* A grid, not inline flow: as a paragraph the button dropped to its own line whenever the
+   name was long, and the fix must not be to shorten somebody's name. */
+.who {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    column-gap: 10px;
+    margin: 0 0 14px;
+    font-size: 11.5px;
+    color: var(--muted);
+}
+
+.who__name {
+    /* Wraps freely. No ellipsis and no clipping: this is the beneficiary's own name. */
+    min-width: 0;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.who__app {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+}
+
+/* ---------- the arrival plane ---------- */
+/* Two planes before the map: renders on one, form on the other. From the map onward none of
+   this renders - .pane-over above owns the card there. */
+
+.journey.arrival {
+    display: flex;
+    /* Wide: renders leading, form trailing. Narrow: renders on top, form under,
+       which is where --band takes over. Both mirror in Arabic for free. */
+    flex-direction: row;
+}
+
+.arrival > .pane {
+    flex: 1 1 0;
+    min-width: 0;
+    /* The plane is the surface; .card-plane below takes the panel chrome off the card. */
+    background: #faf8f4;
+    border-inline-start: 1px solid var(--border);
+}
+
+/* ---------- the renders ---------- */
+
+.arrival-media {
+    position: relative;
+    overflow: hidden;
+    flex: 0 0 57%;
+    /* 43% of 1153px is the 496px the form measure needs. Below that the planes
+       stack instead - see the breakpoint at the foot of this section. */
+    background: #0e0e0e;
+}
+
+.shots {
+    position: absolute;
+    inset: 0;
+}
+
+/* No z-index: DOM order puts it over the renders and under the scrim and lockup. A z-index
+   would lift it over both and put the wordmark on ungraded footage. */
+.hero-video {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* While autoplay is refused (Low Power Mode), the poster shows clean rather than glyphed. */
+.hero-video::-webkit-media-controls-start-playback-button {
+    display: none;
+}
+
+.shot {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    /* Held slightly over-scale so the active slide has somewhere to travel. */
+    transform: scale(1.075);
+    transition: opacity 1.1s ease;
+}
+
+.shot.on {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 1.1s ease, transform 9s linear;
+}
+
+/* The load-bearing wash is the leading-edge column, where all the text sits; the middle and
+   trailing edge stay unveiled. */
+.arrival-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(96deg, rgba(8, 8, 8, 0.76) 0%, rgba(8, 8, 8, 0.40) 26%, rgba(8, 8, 8, 0.06) 52%, rgba(8, 8, 8, 0) 66%),
+        linear-gradient(180deg, rgba(8, 8, 8, 0.48) 0%, rgba(8, 8, 8, 0.08) 22%, rgba(8, 8, 8, 0) 38%),
+        linear-gradient(0deg, rgba(8, 8, 8, 0.70) 0%, rgba(8, 8, 8, 0.22) 24%, rgba(8, 8, 8, 0) 46%);
+}
+
+/* Mirrored, so the wash follows the text rather than the layout. */
+[dir='rtl'] .arrival-scrim {
+    background:
+        linear-gradient(264deg, rgba(8, 8, 8, 0.76) 0%, rgba(8, 8, 8, 0.40) 26%, rgba(8, 8, 8, 0.06) 52%, rgba(8, 8, 8, 0) 66%),
+        linear-gradient(180deg, rgba(8, 8, 8, 0.48) 0%, rgba(8, 8, 8, 0.08) 22%, rgba(8, 8, 8, 0) 38%),
+        linear-gradient(0deg, rgba(8, 8, 8, 0.70) 0%, rgba(8, 8, 8, 0.22) 24%, rgba(8, 8, 8, 0) 46%);
+}
+
+/* Everything inside the picture plane sits on a photograph and its dark scrim, so it stays paper
+   whatever the page does. Pinned explicitly now that the page ground is light and --text is ink. */
+.arrival-media,
+.arrival-media .lockup,
+.arrival-media .cap {
+    color: #f1efea;
+}
+
+/* Back control that is always in view - the labelled copy at the card's foot can sit below
+   the fold. Styled to match .who-signout. */
+/* Its own row above the who line. It was inline beside the name, and on a phone the name wrapped
+   around it and pushed Sign out onto a third line. */
+.card-nav {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.who-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.who-back svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* A back arrow that keeps pointing left in Arabic points forwards. */
+[dir='rtl'] .who-back svg {
+    transform: scaleX(-1);
+}
+
+.who-back:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+/* The card's copy of the sign-out, inline after the name it acts on. Quiet: an exit is not the
+   thing anyone came to do. The map's copy is .top-signout and matches. */
+.who-signout {
+    /* Its own grid cell now, so it holds the first row whatever the name does. */
+    align-self: start;
+    padding: 3px 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.who-signout:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: var(--accent-ink);
+}
+
+/* ---------- lockup ---------- */
+
+.lockup {
+    position: absolute;
+    inset-block-start: 34px;
+    /* A fixed column holds plate and name in line by construction.
+       194px = 156px logo + 19px safe zone either side. */
+    inset-inline-start: 38px;
+    inset-inline-end: auto;
+    width: 194px;
+}
+
+/* White plate: the artwork is charcoal, the brand book forbids recolouring, and white is an
+   approved ground. The padding is the book's safe zone, 12% of the logo width. */
+/* One size on every screen. It used to step down past the welcome stage, mirroring the wordmark,
+   but a headline standing down reads as hierarchy where a logo changing size just reads as a bug. */
+.adha-logo {
+    display: inline-block;
+    box-sizing: content-box;
+    /* The LOGO is 156px, not the plate: 156 + 19 either side fills the 194px column. The padding is
+       the brand book's safe zone and stays at 12% of the logo width rather than a fixed border. */
+    width: 156px;
+    padding: 19px;
+    background: #ffffff;
+    border-radius: 10px;
+}
+
+.adha-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* A column, so the name and the dots cannot land on each other whether or not the dots
+   render. */
+.plane-foot {
+    position: absolute;
+    inset-block-end: 34px;
+    inset-inline: 38px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.wordmark {
+    margin: 0;
+    /* 32px is a measured, known-safe size. Anything larger must be measured against the real
+       width - estimating produced a one-pixel overflow and a 261px Arabic line in a 194px column. */
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 1.04;
+    text-wrap: balance;
+}
+
+/* Measured, not scaled: weight 600 resolves to Noto Kufi Bold, and the shaped Arabic name
+   takes 24.9px at most in the 194px column. */
+[dir='rtl'] .wordmark {
+    letter-spacing: 0;
+    font-size: 24px;
+}
+
+/* ---------- caption ---------- */
+
+/* No positioning: .plane-foot owns the corner. Left absolute, .cap escaped the column and
+   re-pinned itself to the plane. */
+.cap {
+    display: block;
+}
+
+/* .cap survives purely as the dots' anchor; the room caption it used to hold came out. */
+.dots {
+    display: flex;
+    gap: 5px;
+    margin-top: 0;
+}
+
+.dot {
+    flex: 0 0 34px;
+    display: flex;
+    align-items: center;
+    height: 20px;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.dot::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(241, 239, 234, 0.3);
+    transition: background 0.2s ease;
+}
+
+.dot.seen::before {
+    background: rgba(241, 239, 234, 0.62);
+}
+
+.dot[aria-current='true']::before {
+    background: rgba(241, 239, 234, 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shot,
+    .shot.on,
+    .arrival-media {
+        transition: none;
+    }
+    .shot.on {
+        transform: none;
+    }
+}
+
+/* ---------- the form plane ---------- */
+
+.arrival > .pane {
+    /* Containing block for the rail below, which now belongs to the plane rather
+       than the card. */
+    position: relative;
+    min-height: 0;
+    /* The padding is the plane's, so max-width below is a real 384px of text. */
+    padding: 40px 56px;
+}
+
+/* Strips the panel chrome and nothing else; the phone rules further down depend on the
+   card's own padding. */
+.card-plane {
+    max-width: 384px;
+    /* Zero, deliberately: the plane above owns the padding now, and the card's
+       own 44px inline-start existed only to clear a rail that has moved. */
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* The four segments on the seam between the planes; only the anchor differs from the card's
+   copy. */
+.rail-plane {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 3px;
+}
+
+/* The card's copy is ink on paper; this one is on the seam of the photograph, so it inverts. */
+.rail-plane i,
+.rail-plane i.done {
+    background: rgba(241, 239, 234, 0.16);
+}
+
+.rail-plane i.on {
+    background: rgba(241, 239, 234, 0.62);
+}
+
+/* ---------- stacked: renders on top, form under ---------- */
+/* The split holds to 1150px, measured: 43% of 1153px is the 384px measure plus its padding. */
+
+@media (max-width: 1150px) {
+    .journey.arrival {
+        flex-direction: column;
+    }
+
+    /* --band is set per stage on the shell: 43% on the landing screen down to 14% at the
+       declaration. */
+    .arrival-media {
+        flex: 0 0 calc(var(--band, 0.24) * 100%);
+        transition: flex-basis 0.5s cubic-bezier(0.66, 0, 0.18, 1);
+    }
+
+    .arrival > .pane {
+        border-inline-start: 0;
+        border-top: 1px solid var(--border);
+        padding: 28px 28px 32px;
+        /* Not centred: a centred flex item taller than its scroll container has its top
+           pushed out of reach. */
+        align-items: flex-start;
+    }
+
+    /* Horizontal on the seam, which is now the top edge of the form plane. */
+    .rail-plane {
+        inset-block: 0 auto;
+        inset-inline: 0;
+        width: auto;
+        height: 3px;
+        display: flex;
+        flex-direction: row;
+    }
+
+    .lockup {
+        inset-block-start: 18px;
+        /* Start only. The shorthand sets both edges, which over-constrains the fixed 156px width
+           and leaves the browser to decide which edge to drop. */
+        inset-inline-start: 20px;
+        inset-inline-end: auto;
+    }
+
+    /* Logo, plate, column and both wordmark sizes step together here, so the halves cannot
+       fall out of sync. */
+    .lockup {
+        width: 156px;
+    }
+
+    .adha-logo {
+        width: 126px;
+        padding: 15px;
+    }
+
+    /* 156px column: Latin takes 26.40px at most, Arabic 20.02px. Arabic floors to 19 rather than 20
+       because 20 leaves 0.16px of slack, which is inside the error of any real text measurement. */
+    .wordmark {
+        font-size: 26px;
+    }
+
+    [dir='rtl'] .wordmark {
+        font-size: 19px;
+    }
+
+    .plane-foot {
+        inset-block-end: 15px;
+        inset-inline: 20px;
+        gap: 11px;
+    }
+
+    .dot {
+        flex-basis: 24px;
+    }
+
+    /* At the declaration the band is a 98px ribbon, so the logo comes out. */
+    .at-declaration .lockup {
+        inset-block-start: 14px;
+    }
+
+    .at-declaration .lockup .adha-logo {
+        display: none;
+    }
+
+    .at-declaration .cap {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .arrival-media {
+        transition: none;
+    }
+}
+
+.eyebrow {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* manageFocus() lands here on every screen change; tabindex is -1, so the ring is never
+   keyboard-reachable and suppressing it costs no accessibility. */
+.card .title:focus {
+    outline: none;
+}
+
+.title {
+    margin: 10px 0 12px;
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.lede {
+    margin: 0 0 22px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--muted);
+}
+
+.target {
+    margin: -14px 0 20px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* The villa and its figures on the signing screen. Quiet by design - it is a reminder of
+   decisions already taken, not a place to take them. */
+.recap {
+    margin: -12px 0 18px;
+    padding: 10px 13px;
+    border-radius: 10px;
+    background: var(--accent-dim);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+/* Home's "what you will need". A native <details> so keyboard and screen-reader behaviour comes
+   for free; it holds the three steps that used to sit in front of the button. */
+.disclose {
+    margin-top: 18px;
+}
+
+.disclose summary {
+    cursor: pointer;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    list-style-position: inside;
+}
+
+.disclose summary:hover {
+    color: var(--text);
+}
+
+.disclose-body {
+    margin: 6px 0 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--muted);
+}
+
+.steps {
+    list-style: none;
+    margin: 0 0 22px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.steps li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+.steps span {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+/* The 7-day SLA is the single most consequential fact on this screen. */
+/* .note is the confirmed screen's DocuSign line. It had no rule at all and rendered as bare body
+   text where the same treatment elsewhere gets a callout. */
+.notice,
+.note {
+    margin-bottom: 24px;
+    padding: 13px 15px;
+    border-radius: 11px;
+    border: 0;
+    border-inline-start: 2px solid var(--accent);
+    background: var(--accent-dim);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.warn {
+    margin-bottom: 14px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1px solid rgba(224, 138, 109, 0.42);
+    background: rgba(224, 138, 109, 0.14);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--urgent);
+}
+
+.field {
+    display: block;
+    margin-bottom: 20px;
+}
+
+.field span {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.field input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 48px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--text);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    outline: none;
+}
+
+.field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(22, 24, 29, 0.13);
+}
+
+/* The field fails with its message. A border alone is a 1px signal; the ring is what carries it
+   at a glance, and on ink it has to be heavier than the 0.12 that worked on paper. */
+.field.has-error input {
+    border-color: var(--bad);
+}
+
+.field.has-error input:focus {
+    border-color: var(--bad);
+    box-shadow: 0 0 0 3px rgba(224, 122, 104, 0.26);
+}
+
+/* Against the field, not at the foot of the card. Tighter than .error because it sits inside the
+   form rather than after it, and it carries the ring on the input above it. */
+.field-error {
+    margin: -6px 0 16px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--bad);
+}
+
+.field-error::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin-inline-end: 7px;
+    border-radius: 50%;
+    background: var(--bad);
+    vertical-align: 2px;
+}
+
+/* 16px on touch, or iOS Safari force-zooms the page the moment the field is focused. */
+@media (pointer: coarse) {
+    .field input {
+        font-size: 16px;
+    }
+}
+
+.field input::placeholder {
+    /* 0.54, not the 0.38 a direct inversion gives: over the field's own ground that measured
+       3.57:1. Placeholder text is text. */
+    color: rgba(22, 24, 29, 0.34);
+}
+
+.otp {
+    letter-spacing: 0.5em;
+    text-align: center;
+    font-size: 22px !important;
+    font-weight: 600;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+/* White on --accent misses AA for normal text, so the label is 19px/700 - large text, where
+   4.11:1 clears the 3:1 bar. Smaller chips on --accent keep black ink instead. */
+.cta {
+    width: 100%;
+    height: 50px;
+    /* Never squashed: in .card-declaration's flex column, default flex-shrink quietly
+       overrode the 50px height. */
+    flex: 0 0 auto;
+    font-size: 19px;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+}
+
+.cta:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ghost {
+    width: 100%;
+    height: 44px;
+    flex: 0 0 auto;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    /* 44px on purpose: shorter than .cta is what marks it secondary. Only the radius was adrift. */
+    border-radius: 12px;
+}
+
+.ghost:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Fixed height with its own scroll - the scroll position unlocks acceptance. overscroll
+   contain stops an end-of-text swipe chaining into the page underneath. */
+.declaration {
+    max-height: 320px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fbfaf7;
+}
+
+.declaration pre {
+    margin: 0;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.6;
+    /* Not full paper. 3,500 words at 15.89:1 shimmers, and this is the screen with the most. */
+    color: rgba(22, 24, 29, 0.86);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* A half point and a little weight put long-document Arabic level with Latin. If it reads
+   heavy at UAT, drop the weight here first. */
+[dir='rtl'] .declaration pre {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.75;
+}
+
+/* How far down the legal text they are. Sits directly under the box it measures, above the hint
+   that explains the gate, so the two read as one instrument. */
+.progress {
+    height: 2px;
+    margin: 0 0 10px;
+    border-radius: 2px;
+    background: var(--accent-dim);
+    overflow: hidden;
+}
+
+.progress i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.12s linear;
+}
+
+.read-hint {
+    margin: 0 0 18px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.read-hint.read {
+    color: var(--good);
+}
+
+.error {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 11px;
+    border: 1px solid rgba(224, 122, 104, 0.42);
+    background: rgba(224, 122, 104, 0.14);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--bad);
+}
+
+@media (max-width: 600px) {
+    .pane {
+        padding: 14px;
+    }
+
+    /* Higher specificity than the .card rules below on purpose: their padding-inline-start
+       clears a rail the plane does not have. */
+    .arrival > .pane {
+        padding: 22px 20px 24px;
+    }
+
+    .arrival .card-plane {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .arrival .card-plane.card-declaration {
+        min-height: 0;
+        padding: 0;
+    }
+
+    /* The one exception to flex-start above: the declaration card is height:100%, and its
+       scroll-gated box needs the pane to stretch it. */
+    .arrival > .pane.pane-full {
+        align-items: stretch;
+    }
+
+    /* The card floats so the render behind it stays visible on a phone. */
+    .card {
+        max-width: 100%;
+        padding: 26px 20px 30px;
+        padding-inline-start: 38px;
+    }
+
+    /* The declaration and the undertaking keep the full-bleed treatment, for the reason below.
+       .pane-full is set in paneClass, so this does not depend on :has() support. */
+    .pane-full {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .card-declaration {
+        min-height: 100%;
+        border: 0;
+        border-radius: 0;
+        padding: 28px 20px 36px;
+    }
+
+    /* One scroll instead of two: the declaration flexes into the leftover height, keeping
+       Accept on screen with the text as the only thing that scrolls. */
+    .card-declaration {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .card-declaration .declaration {
+        flex: 1 1 auto;
+        /* Both required: without min-height a flex item will not shrink below its content, and
+           max-height:none releases the 320px desktop cap. */
+        min-height: 0;
+        max-height: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+
+/* ---------- reservation ---------- */
+
+/* Hairline rows rather than a table: the figures are the content, so they get tabular numerals
+   and the labels stay quiet. */
+.money {
+    margin: 0 0 22px;
+}
+
+.money-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 0;
+    border-top: 1px solid var(--border);
+    font-size: 13.5px;
+}
+
+.money-row:last-child {
+    border-bottom: 1px solid var(--border);
+}
+
+/* Two concurrent deadlines side by side - stacked rows read as a sequence. One column below
+   360px, where two are too narrow for a date. */
+.money.clocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.money.clocks .money-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--accent-dim);
+    font-size: 12.5px;
+}
+
+.money.clocks .money-row span {
+    color: var(--muted);
+}
+
+.money.clocks .money-row .num {
+    font-size: 14px;
+}
+
+/* Confirmed. --good is reserved for available and confirmed, and this is the only screen in the
+   journey that has earned it. */
+/* flex-start, not centre: the title wraps in Arabic, and centring floated the mark against
+   the middle of the block. */
+.done-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    /* The 12px the title used to carry below itself, moved up to the row so the lede keeps its gap. */
+    margin-bottom: 12px;
+}
+
+.done-mark {
+    /* flex-shrink: 0 or the circle is squashed into an oval by a long heading. */
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    /* Nudged down so the tick optically centres on the first line of the title rather than its box. */
+    margin-top: 2px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(92, 186, 128, 0.16);
+    color: var(--good);
+}
+
+/* Awaiting the signature: muted, and the glyph becomes a clock - a grey tick is still a
+   tick. */
+.done-mark.pending {
+    background: rgba(22, 24, 29, 0.07);
+    color: var(--muted, rgba(22, 24, 29, 0.64));
+}
+
+.done-mark svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* The title's own 10/12 margins would push it off the tick's line and double the gap below. */
+.done-head .title {
+    margin: 0;
+}
+
+.money-row span {
+    color: var(--muted);
+}
+
+.money-row b {
+    font-weight: 500;
+    text-align: end;
+}
+
+.money-row.muted b {
+    color: var(--muted);
+}
+
+/* The additional amount is the number the whole screen exists for. */
+.money-row.total {
+    padding: 15px 0;
+}
+
+.money-row.total span {
+    color: var(--text);
+}
+
+.money-row.total b {
+    font-size: 20px;
+}
+
+/* Latin digits and tabular figures inside Arabic prose: these are money and dates that have to
+   line up and reconcile, and UAE government sites set them this way. */
+.num {
+    font-variant-numeric: tabular-nums;
+    font-family: 'SuisseIntl', Inter, system-ui, sans-serif;
+}
+
+.opts-label {
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.opts {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 22px;
+}
+
+/* Buttons rather than radio inputs: the whole row is the target, which matters most on a phone. */
+.opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 2px;
+    border: 0;
+    border-top: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    text-align: start;
+    cursor: pointer;
+}
+
+.opt:last-child {
+    border-bottom: 1px solid var(--border);
+}
+
+.opt .dot {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1px solid var(--muted);
+}
+
+.opt.selected {
+    color: var(--text);
+}
+
+.opt.selected .dot {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 3.5px var(--accent);
+}
+
+/* Pulled up under the options as a condition of the choice. Spacing, not bullets: bullets
+   need inline padding that has to flip for Arabic. */
+.pay-notes {
+    margin: -6px 0 22px;
+    padding: 13px 15px;
+    border-radius: 11px;
+    border-inline-start: 2px solid var(--accent);
+    background: var(--accent-dim);
+    list-style: none;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+.pay-notes li + li {
+    margin-top: 9px;
+}
+
+/* Green is the product's "confirmed" colour, carried from the map where it means eligible. */
+.reference {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 16px;
+    margin-bottom: 22px;
+    border-radius: var(--r-s, 10px);
+    border: 1px solid var(--border);
+    background: var(--accent-dim);
+}
+
+.reference span {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.reference b {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text);
+}
+
+/* ---------- idle warning ---------- */
+
+/* Above the map, which is itself full-viewport, so the countdown is never missed. */
+.idle-warning {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Opaque via --panel-solid, which must stay defined in the token block - referencing it
+   undefined dropped this rule and left the card unreadable. */
+.idle-card {
+    width: 100%;
+    max-width: 380px;
+    padding: 26px;
+    border-radius: 16px;
+    background: var(--panel-solid);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.idle-title {
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.idle-text {
+    margin: 0 0 20px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--muted);
+}
+
+/* ---------- signing ---------- */
+
+/* Sits inside the confirmation card, so it borrows the card's padding and only needs separating. */
+.sign-block,
+.signed {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.sign-block b,
+.signed b {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.sign-block span,
+.signed span {
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+.sign-block .cta {
+    margin-top: 8px;
+}
+
+.signed b {
+    color: var(--good, #2c7649);
+}
+
+/* Sits under the signing block, same separated-row treatment. */
+/* One row. Measured before shortening the labels: the card gives each button 216px on desktop and
+   195px on a 430px phone, against 159px of label text, so the explicit wording fits at both. */
+.downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+/* .ghost is a full-width stacked button everywhere else; inside the row it has to share. */
+.downloads .ghost {
+    width: auto;
+    flex: 1 1 11rem;
+    margin-top: 0;
+}
+
+/* Three facts of the same kind, in one strip rather than a box and a stacked pair. */
+.facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: 10px 14px;
+    margin-bottom: 18px;
+    padding: 12px 15px;
+    border-radius: var(--r-s, 10px);
+    border: 1px solid var(--border);
+    background: var(--accent-dim);
+}
+
+.facts > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.facts b {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    /* The reference is the one value that must never break: at 15px it needs a shade more than the
+       113px a third of a phone card gives it, and wrapping it took the strip from 66px to 88px. */
+    white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+    .facts b {
+        font-size: 13px;
+    }
+}
+
+.facts span {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+/* The strip a pinned customer sees above the map. Same family as the exploration
+   notice - green ground, white ink - so the chrome keeps one voice. */
+.pinned-banner {
+    background: var(--accent-deep);
+    color: #fff;
+    padding: 10px 16px;
+    font-size: 14px;
+    text-align: center;
+}

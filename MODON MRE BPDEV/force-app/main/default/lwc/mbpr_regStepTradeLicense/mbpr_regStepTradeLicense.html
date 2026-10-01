@@ -1,0 +1,317 @@
+<template>
+    <div class="regf">
+        <section class="regf__section">
+            <h3 class="regf__section-title">Trade License Information</h3>
+            <p class="regf__section-hint">Enter the details exactly as they appear on the trade license.</p>
+            <div class="regf__grid">
+                <label class={licensingAuthorityClass}>
+                    <span class="regf-field__label">Licensing Authority</span>
+                    <input
+                        type="text"
+                        name="Licensing_Authority__c"
+                        class="regf-field__control"
+                        value={licensingAuthorityValue}
+                        oninput={handleFieldChange}
+                        disabled={isDisabled}
+                    />
+                    <template lwc:if={licensingAuthorityError}>
+                        <p class="regf-field__error" role="alert">{licensingAuthorityError}</p>
+                    </template>
+                </label>
+
+                <label class={issuanceDateClass}>
+                    <span class="regf-field__label">Issuance Date</span>
+                    <input
+                        type="date"
+                        name="Issuance_Date__c"
+                        class="regf-field__control"
+                        value={issuanceDateValue}
+                        onchange={handleFieldChange}
+                        disabled={isDisabled}
+                    />
+                    <template lwc:if={issuanceDateError}>
+                        <p class="regf-field__error" role="alert">{issuanceDateError}</p>
+                    </template>
+                </label>
+
+                <label class={companyNameClass}>
+                    <span class="regf-field__label">Company Name as per Trade License</span>
+                    <input
+                        type="text"
+                        name="Company_Name_as_per_Trade_License__c"
+                        class="regf-field__control"
+                        maxlength="255"
+                        value={companyNameValue}
+                        oninput={handleFieldChange}
+                        disabled={isDisabled}
+                    />
+                    <template lwc:if={companyNameError}>
+                        <p class="regf-field__error" role="alert">{companyNameError}</p>
+                    </template>
+                </label>
+
+                <label class={expiryDateClass}>
+                    <span class="regf-field__label">Expiry Date</span>
+                    <input
+                        type="date"
+                        name="Expiry_Date__c"
+                        class="regf-field__control"
+                        value={expiryDateValue}
+                        onchange={handleFieldChange}
+                        disabled={isDisabled}
+                    />
+                    <template lwc:if={expiryDateError}>
+                        <p class="regf-field__error" role="alert">{expiryDateError}</p>
+                    </template>
+                </label>
+
+                <label class={tradeLicenseNumberClass}>
+                    <span class="regf-field__label">Trade License Number</span>
+                    <input
+                        type="text"
+                        name="Trade_License_Number__c"
+                        class="regf-field__control"
+                        value={tradeLicenseNumberValue}
+                        readonly
+                        disabled
+                    />
+                    <template lwc:if={tradeLicenseNumberError}>
+                        <p class="regf-field__error" role="alert">{tradeLicenseNumberError}</p>
+                    </template>
+                    <template lwc:else>
+                        <p class="regf-field__help">Entered in Step 1, Company Information.</p>
+                    </template>
+                </label>
+
+                <label class={selectFieldClass}>
+                    <span class="regf-field__label">Legal Structure</span>
+                    <select
+                        name="LegalStructure__c"
+                        class="regf-field__control"
+                        onchange={handleFieldChange}
+                        disabled={isDisabled}
+                    >
+                        <template for:each={legalStructureSelectOptions} for:item="opt">
+                            <option key={opt.key} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                </label>
+
+                <label class={selectFieldClass}>
+                    <span class="regf-field__label">VAT Certificate Type</span>
+                    <select
+                        name="VAT_Certificate_Type__c"
+                        class="regf-field__control"
+                        onchange={handleVatCertificateTypeChange}
+                        disabled={isDisabled}
+                    >
+                        <template for:each={vatTypeSelectOptions} for:item="opt">
+                            <option key={opt.key} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                </label>
+
+                <template lwc:if={showVatRegNumber}>
+                    <label class={vatNumberClass}>
+                        <span class="regf-field__label">UAE VAT Registration Number</span>
+                        <input
+                            type="text"
+                            name="UAE_VAT_Registration_Number__c"
+                            class="regf-field__control"
+                            value={vatNumberValue}
+                            oninput={handleVatNumberChange}
+                            disabled={isDisabled}
+                        />
+                        <template lwc:if={vatNumberError}>
+                            <p class="regf-field__error" role="alert">{vatNumberError}</p>
+                        </template>
+                    </label>
+                </template>
+
+                <template lwc:if={showDummyVatLink}>
+                    <div class="regf-note regf__span" role="note">
+                        <strong>VAT Undertaking Certificate.</strong>
+                        Please download the VAT Undertaking certificate, sign it, and upload it under the
+                        VAT Undertaking Certificate section.
+                        <button type="button" class="regf-button regf-button--ghost" onclick={downloadVAT}>
+                            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.3 2h1.4v6.3l2.4-2.4 1 1L8 11 3.9 6.9l1-1 2.4 2.4V2zM3 12.7h10V14H3v-1.3z"/></svg>
+                            Download Template (PDF)
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <section class="regf__section">
+            <h3 class="regf__section-title">Documents</h3>
+            <p class="regf__section-hint">PDF or JPG files, up to 2MB each.</p>
+            <div class="regf__grid">
+                <template lwc:if={isTradeLicenseUploaded}>
+                    <div class="regf-chip">
+                        <span class="regf-chip__label">Trade License Document</span>
+                        <button type="button" class="regf-chip__name" onclick={openTradeLicensePreviewPopup}>{tradeLicenseFileName}</button>
+                        <button
+                            type="button"
+                            class="regf-chip__action"
+                            title="Preview"
+                            aria-label="Preview file"
+                            onclick={openTradeLicensePreviewPopup}
+                        >
+                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                        </button>
+                        <template lwc:if={showDeleteIcon}>
+                            <button
+                                type="button"
+                                class="regf-chip__action regf-chip__action--danger"
+                                title="Remove"
+                                aria-label="Remove file"
+                                onclick={handleRemoveTradeLicense}
+                            >
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:else>
+                    <label class={uploadCellClass}>
+                        <span class="regf-upload__title">Trade License Document</span>
+                        <span class="regf-upload__hint">PDF or JPG, max 2MB</span>
+                        <input
+                            type="file"
+                            class="regf-upload__input"
+                            accept=".pdf,.jpg"
+                            onchange={handleTradeLicenseChange}
+                            disabled={isDisabled}
+                        />
+                    </label>
+                </template>
+
+                <template lwc:if={isMoaUploaded}>
+                    <div class="regf-chip">
+                        <span class="regf-chip__label">MOA / Local Service Agent Appointment</span>
+                        <button type="button" class="regf-chip__name" onclick={openMoaPreviewPopup}>{moaFileName}</button>
+                        <button
+                            type="button"
+                            class="regf-chip__action"
+                            title="Preview"
+                            aria-label="Preview file"
+                            onclick={openMoaPreviewPopup}
+                        >
+                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                        </button>
+                        <template lwc:if={showDeleteIcon}>
+                            <button
+                                type="button"
+                                class="regf-chip__action regf-chip__action--danger"
+                                title="Remove"
+                                aria-label="Remove file"
+                                onclick={handleRemoveMoa}
+                            >
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:else>
+                    <label class={uploadCellClass}>
+                        <span class="regf-upload__title">MOA / Local Service Agent Appointment</span>
+                        <span class="regf-upload__hint">PDF or JPG, max 2MB</span>
+                        <input
+                            type="file"
+                            class="regf-upload__input"
+                            accept=".pdf,.jpg"
+                            onchange={handleMoaChange}
+                            disabled={isDisabled}
+                        />
+                    </label>
+                </template>
+
+                <template lwc:if={isShowAdmReraUpload}>
+                    <template lwc:if={isAdmReraUploaded}>
+                        <div class="regf-chip">
+                            <span class="regf-chip__label">{admReraLabel}</span>
+                            <button type="button" class="regf-chip__name" onclick={openAdmReraPreviewPopup}>{admReraFileName}</button>
+                            <button
+                                type="button"
+                                class="regf-chip__action"
+                                title="Preview"
+                                aria-label="Preview file"
+                                onclick={openAdmReraPreviewPopup}
+                            >
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                            </button>
+                            <template lwc:if={showDeleteIcon}>
+                                <button
+                                    type="button"
+                                    class="regf-chip__action regf-chip__action--danger"
+                                    title="Remove"
+                                    aria-label="Remove file"
+                                    onclick={handleRemoveAdmRera}
+                                >
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <label class={uploadCellClass}>
+                            <span class="regf-upload__title">{admReraLabel}</span>
+                            <span class="regf-upload__hint">PDF or JPG, max 2MB</span>
+                            <input
+                                type="file"
+                                class="regf-upload__input"
+                                accept=".pdf,.jpg"
+                                onchange={handleAdmReraUpload}
+                                disabled={isDisabled}
+                            />
+                        </label>
+                    </template>
+                </template>
+
+                <template lwc:if={showVatFileUpload}>
+                    <div class="regf-chip">
+                        <span class="regf-chip__label">{vatUploadLabel}</span>
+                        <button type="button" class="regf-chip__name" onclick={openVatPreviewPopup}>{vatFileName}</button>
+                        <button
+                            type="button"
+                            class="regf-chip__action"
+                            title="Preview"
+                            aria-label="Preview file"
+                            onclick={openVatPreviewPopup}
+                        >
+                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                        </button>
+                        <template lwc:if={showDeleteIcon}>
+                            <button
+                                type="button"
+                                class="regf-chip__action regf-chip__action--danger"
+                                title="Remove"
+                                aria-label="Remove file"
+                                onclick={handleRemoveVat}
+                            >
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:else>
+                    <label class={uploadCellClass}>
+                        <span class="regf-upload__title">{vatUploadLabel}</span>
+                        <span class="regf-upload__hint">PDF or JPG, max 2MB</span>
+                        <input
+                            type="file"
+                            class="regf-upload__input"
+                            accept=".pdf,.jpg"
+                            onchange={handleVatUploadChange}
+                            disabled={isDisabled}
+                        />
+                    </label>
+                </template>
+            </div>
+        </section>
+
+        <template lwc:if={isBusy}>
+            <c-mbpr_loader veil></c-mbpr_loader>
+        </template>
+    </div>
+</template>

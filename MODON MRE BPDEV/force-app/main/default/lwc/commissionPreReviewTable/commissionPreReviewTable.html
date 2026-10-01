@@ -1,0 +1,136 @@
+<template>
+    <lightning-card title="Commission Pre-Review">
+        <div class="slds-p-around_small">
+
+            <!-- Filters + Actions -->
+            <div class="filter-panel slds-m-bottom_small">
+                <div class="slds-grid slds-wrap slds-gutters">
+
+                    <!-- Date filter type -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                        <lightning-combobox label="Date Filter Type" value={dateFilterType}
+                            options={dateFilterTypeOptions} placeholder="Select" onchange={handleDateFilterTypeChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Month -->
+                    <template if:true={showMonthFilter}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-combobox label="Month" value={selectedMonth} options={monthOptions}
+                                onchange={handleMonthChange}>
+                            </lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-combobox label="Year" value={selectedYear} options={yearOptions}
+                                onchange={handleYearChange}>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- Quarter -->
+                    <!--<template if:true={showQuarterFilter}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-combobox label="Quarter" value={selectedQuarter} options={quarterOptions}
+                                onchange={handleQuarterChange}>
+                            </lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-combobox label="Year" value={selectedYear} options={yearOptions}
+                                onchange={handleYearChange}>
+                            </lightning-combobox>
+                        </div>
+                    </template>-->
+
+                    <!-- Year -->
+                    <template if:true={showYearFilter}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-combobox label="Year" value={selectedYear} options={yearOptions}
+                                onchange={handleYearChange}>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- Custom -->
+                    <template if:true={showCustomFilter}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-input type="date" label="From Date" value={fromDate}
+                                onchange={handleFromDateChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                            <lightning-input type="date" label="To Date" value={toDate} onchange={handleToDateChange}>
+                            </lightning-input>
+                        </div>
+                    </template>
+
+                    <!-- Project -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                        <lightning-combobox label="Project" value={selectedProject} options={projectOptions}
+                            onchange={handleProjectChange}>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Unit -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                        <lightning-input type="text" label="Unit" value={unitFilter} onchange={handleUnitChange}>
+                        </lightning-input>
+                    </div>
+                    <!--Reset button-->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12 reset-col">
+                        <div class="reset-wrapper">
+                            <label class="slds-form-element__label reset-spacer" aria-hidden="true">&nbsp;</label>
+                            <lightning-button label="Reset" onclick={handleResetFilters} class="reset-btn">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page size + pagination -->
+            <div class="pagination-panel slds-m-bottom_small">
+                <div class="pagination-left">
+                    <div class="page-size-box">
+                        <lightning-combobox label="Page Size" value={pageSize} options={pageSizeOptions}
+                            onchange={handlePageSizeChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+
+                <div class="pagination-center">
+                    <template if:true={hasPendingChanges}>
+                        <span class="unsaved-badge">Unsaved changes</span>
+                    </template>
+
+                    <lightning-button label="Cancel" onclick={handleTopCancel} disabled={isActionDisabled}
+                        class="toolbar-btn">
+                    </lightning-button>
+
+                    <lightning-button variant="brand" label="Save" onclick={handleTopSave} disabled={isActionDisabled}
+                        class="toolbar-btn save-btn">
+                    </lightning-button>
+                </div>
+
+                <div class="pagination-right">
+                    <lightning-button label="Previous" onclick={handlePrev} disabled={isPrevDisabled} class="nav-btn">
+                    </lightning-button>
+
+                    <div class="pagination-summary">
+                        <span class="summary-pill">Page {pageNumber} of {totalPages}</span>
+                        <span class="summary-pill">Total {totalCount}</span>
+                    </div>
+
+                    <lightning-button label="Next" onclick={handleNext} disabled={isNextDisabled} class="nav-btn">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <c-commission-datatable key-field="recordId" data={rows} columns={columns} draft-values={draftValues}
+                oncellchange={handleCellChange} hide-checkbox-column suppress-bottom-bar>
+            </c-commission-datatable>
+        </div>
+    </lightning-card>
+</template>

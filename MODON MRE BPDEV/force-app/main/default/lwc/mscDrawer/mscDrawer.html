@@ -1,0 +1,51 @@
+<template>
+    <!-- `mounted`, not `open`: it stays true for the length of the exit so the
+         panel can animate out. See the accessor in the JS. -->
+    <template lwc:if={mounted}>
+        <!-- The layer is the click target; the panel stops the event so a click
+             inside it does not close the drawer. The scrim is a sibling of the
+             panel rather than the layer's own background, so the dim and the
+             travel animate independently of each other. -->
+        <div class={layerClass} onclick={handleScrim}>
+            <div class="scrim"></div>
+            <aside
+                class={drawerClass}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="msc-drawer-title"
+                onclick={stop}
+                onkeydown={handleKeydown}
+            >
+                <header class="drawer__head">
+                    <div class="drawer__headings">
+                        <h2 id="msc-drawer-title" class="drawer__title">{drawerTitle}</h2>
+                        <template lwc:if={showSubtitle}>
+                            <p class="drawer__subtitle">{subtitle}</p>
+                        </template>
+                    </div>
+                    <button
+                        class="drawer__close"
+                        type="button"
+                        onclick={handleClose}
+                        aria-label="Close"
+                        title="Close"
+                    >
+                        <c-modon-icon name="x" size="16" color="currentColor"></c-modon-icon>
+                    </button>
+                </header>
+
+                <!-- The one region that scrolls. Head and foot stay put, so the
+                     action never scrolls away from the thing it acts on. -->
+                <div class="drawer__body">
+                    <slot></slot>
+                </div>
+
+                <template lwc:if={hasFooter}>
+                    <div class="drawer__foot">
+                        <slot name="footer"></slot>
+                    </div>
+                </template>
+            </aside>
+        </div>
+    </template>
+</template>

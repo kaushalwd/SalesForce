@@ -1,0 +1,132 @@
+<template>
+    <lightning-card title="Associated Payment Installments" icon-name="utility:currency">
+
+        <lightning-button-icon
+            slot="actions"
+            icon-name={fullScreenIcon}
+            alternative-text={fullScreenLabel}
+            title={fullScreenLabel}
+            onclick={handleToggleFullScreen}>
+        </lightning-button-icon>
+
+        <div class="slds-p-around_medium pi-body">
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon icon-name="utility:error" variant="inverse" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    {errorMessage}
+                </div>
+            </template>
+
+            <template if:false={hasError}>
+
+                <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium pi-summary">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                        <div class="slds-box slds-text-align_center pi-stat-tile pi-stat-tile_count">
+                            <lightning-icon icon-name="utility:list" size="small" class="slds-m-bottom_x-small"></lightning-icon>
+                            <p class="slds-text-title_caps slds-text-color_weak">Total Installments</p>
+                            <p class="slds-text-heading_large">{totalCount}</p>
+                        </div>
+                    </div>
+                    <template for:each={totals} for:item="t">
+                        <div key={t.currencyCode} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                            <div class="slds-box slds-text-align_center pi-stat-tile pi-stat-tile_amount">
+                                <lightning-icon icon-name="utility:currency" size="small" class="slds-m-bottom_x-small"></lightning-icon>
+                                <p class="slds-text-title_caps slds-text-color_weak">Total Amount ({t.currencyCode})</p>
+                                <p class="slds-text-heading_large">
+                                    <lightning-formatted-number
+                                        value={t.totalAmount}
+                                        format-style="currency"
+                                        currency-code={t.currencyCode}>
+                                    </lightning-formatted-number>
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="slds-grid slds-grid_align-end slds-m-bottom_small">
+                    <lightning-button
+                        label="Download All (Excel)"
+                        icon-name="utility:download"
+                        disabled={isDownloadDisabled}
+                        onclick={handleDownload}>
+                    </lightning-button>
+                </div>
+
+                <template if:true={hasNoRows}>
+                    <div class="slds-illustration slds-illustration_small slds-p-around_medium slds-text-align_center">
+                        <lightning-icon icon-name="utility:info" size="medium" class="slds-m-bottom_small"></lightning-icon>
+                        <p>No active installments are associated with this Milestone.</p>
+                    </div>
+                </template>
+
+                <template if:false={hasNoRows}>
+                    <div class="pi-table-wrapper slds-scrollable_y">
+                        <table class="slds-table slds-table_bordered slds-table_striped slds-table_fixed-layout slds-table_header-fixed">
+                            <colgroup>
+                                <col style="width: 3rem;" />
+                                <col style="width: 13%;" />
+                                <col style="width: 13%;" />
+                                <col style="width: 15%;" />
+                                <col style="width: 12%;" />
+                                <col style="width: 11%;" />
+                                <col style="width: 12%;" />
+                                <col style="width: 12%;" />
+                                <col style="width: 12%;" />
+                            </colgroup>
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col">#</th>
+                                    <th scope="col">Sales Order</th>
+                                    <th scope="col">Unit</th>
+                                    <th scope="col">Project</th>
+                                    <th scope="col">Phase</th>
+                                    <th scope="col">Milestone Date</th>
+                                    <th scope="col">Payment Status</th>
+                                    <th scope="col">Sales Order Status</th>
+                                    <th scope="col">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={displayRows} for:item="row">
+                                    <tr key={row.id}>
+                                        <td class="slds-text-color_weak">{row.serialNumber}</td>
+                                        <td title={row.salesOrderName}>{row.salesOrderName}</td>
+                                        <td title={row.unitName}>{row.unitName}</td>
+                                        <td title={row.projectName}>{row.projectName}</td>
+                                        <td title={row.phaseName}>{row.phaseName}</td>
+                                        <td>{row.milestoneDate}</td>
+                                        <td>
+                                            <span class={row.paymentStatusClass}>{row.paymentStatus}</span>
+                                        </td>
+                                        <td title={row.salesOrderStatus}>{row.salesOrderStatus}</td>
+                                        <td>
+                                            <lightning-formatted-number
+                                                value={row.installmentAmount}
+                                                format-style="currency"
+                                                currency-code={row.currencyCode}>
+                                            </lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+            </template>
+
+        </div>
+
+        <div slot="footer">
+            <lightning-button label="Close" icon-name="utility:close" onclick={handleClose}></lightning-button>
+        </div>
+
+    </lightning-card>
+</template>

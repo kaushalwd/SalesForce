@@ -1,0 +1,113 @@
+<template>
+    <div class="carddetails">
+        <lightning-card title="Available Offers and Discount Details" icon-name="utility:promotion">
+            <!--p class="slds-p-around_medium">Available Offers</p><br/-->
+            <!-- Header Actions -->
+        <div slot="actions" class="header-actions">
+            <!--lightning-button 
+            label="Save Offers" 
+            variant="brand"
+            disabled={isOfferDetailsExist}
+            onclick={handleSelectedOffers}
+            style="margin-right:5px"> 
+        </lightning-button--> 
+            <lightning-button 
+            label="Select Offers" 
+            variant="brand"
+            disabled={isOfferDetailsExist}
+            onclick={handleOffers}>
+        </lightning-button>
+        </div>
+            <div class="custom-table">
+                <template if:false={isOfferExist}>
+                     <center> No Offers available at the moment!</center>
+                 </template>
+             <template if:true={isOfferExist}>
+                <!--lightning-layout multiple-rows>
+                    <lightning-layout-item size="2" padding="around-small"></lightning-layout-item>
+                    <lightning-layout-item size="4" padding="around-small">
+                      <b> Available Offers </b>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" padding="around-small">
+                       <lightning-combobox
+                       name="available_offers"
+                       variant="label-hidden"
+                       label="Select Option"
+                       value={selectedValue}
+                       placeholder="Choose Offers"
+                       options={options}
+                       onchange={handleChange}>
+                   </lightning-combobox>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="2" padding="around-small"></lightning-layout-item>
+                 </lightning-layout>
+                 <br/-->
+                <lightning-datatable 
+                key-field="Id" 
+                data={tableData} 
+                columns={columns} 
+                class="centered-table"
+                onrowaction={handleRowAction}
+                hide-checkbox-column="true"
+               >
+            </lightning-datatable>
+           <!-- selected-rows={selectedOffersRowsIds} -->
+           <!--  onrowselection ={handleSelectedOffers} -->
+            </template>
+                </div>
+        </lightning-card>
+
+        
+  <!-- add offers modal start -->      
+  <template if:true={isShowModal}>
+
+    <!--
+        I Used SLDS for this code
+        Here is link https://www.lightningdesignsystem.com/components/modals/
+    --> 
+
+<section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+<div class="slds-modal__container">
+<!-- modal header start -->
+  <header class="slds-modal__header">
+     <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
+        <lightning-icon icon-name="utility:close"
+           alternative-text="close"
+           variant="inverse"
+           size="small" ></lightning-icon>
+        <span class="slds-assistive-text">Close</span>
+     </button>
+     <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Offers and Promos</h2>
+  </header>
+
+  <!-- modal body start -->
+  <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+        <lightning-card>
+     
+           <div class="custom-table">
+            <lightning-datatable 
+            key-field="Id" 
+            data={addOfferstableData} 
+            class="centered-table"
+            columns={addOffrcolumns}
+            onrowselection ={handleRowActionAddOffers}
+            >
+              </lightning-datatable>
+           </div>
+           
+       </lightning-card>
+     <!--/template -->
+  </div>
+
+  <!-- modal footer start-->
+  <footer class="slds-modal__footer">
+     <lightning-button label="Cancel" variant="outline" onclick={hideModalBox}></lightning-button>  
+     <lightning-button label="Save" variant="brand" onclick={hideModalBox} class="slds-m-left_medium" disabled={applyOffer}></lightning-button>         </footer>
+
+</div>
+</section>
+<div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+<!-- modal end -->
+    </div>
+</template>

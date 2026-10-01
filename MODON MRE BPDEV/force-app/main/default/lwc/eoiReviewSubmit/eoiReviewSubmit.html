@@ -1,0 +1,100 @@
+<template>
+    <p class="m-sub">Each villa is paid for separately &mdash; in any order. After every payment you return to this page.</p>
+
+    <template lwc:if={errorMessage}>
+        <p class="error" role="alert">{errorMessage}</p>
+    </template>
+
+    <div class="m-prog">
+        <div class="m-prog__row">
+            <span class="m-prog__count">{progressLabel}</span>
+            <span class="m-prog__amt">{amountLabel}</span>
+        </div>
+    </div>
+
+    <!-- MEOI-TC2 (11 Sep). The acceptance checkbox sits on the page; the link only opens the
+         text to read. Payment stays gated on the checkbox. -->
+    <div class="m-terms m-terms--inline">
+        <label class="m-accept m-accept--inline">
+            <input type="checkbox" checked={termsAccepted} onchange={handleTermsToggle} disabled={isBusy} />
+            <span>I have read and accept the</span>
+        </label>
+        <button class="m-terms__link" type="button" onclick={openTerms}>Terms &amp; Conditions</button>
+    </div>
+
+    <div class="m-cards">
+        <template for:each={viewLines} for:item="v">
+            <div key={v.lineKey} class={v.lineClass}>
+                <!-- MEOI-PAY4. A two-row grid so every edge is shared: the close control
+                     leads the first row at the top-left, the name and its meta run beside
+                     it with the status chip opposite; the amount sits under the name with
+                     the action opposite it, so the button's right edge falls under the
+                     chip and its centre lines up with the price. Paid lines drop the close
+                     column and show the EOI number where the button was. -->
+                <div class={v.headClass}>
+                    <template lwc:if={v.notPaid}>
+                        <button type="button" class="m-close" data-line-key={v.lineKey} onclick={askRemove} disabled={isBusy} aria-label="Remove this residence">
+                            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                        </button>
+                    </template>
+                    <p class="m-card__name">{v.name}<template lwc:if={v.meta}><span class="m-card__meta"> &middot; {v.meta}</span></template></p>
+                    <p class="m-amount"><small>AED</small>{v.formattedAmount}</p>
+                    <template lwc:if={v.notPaid}>
+                        <span class={v.chipClass}>{v.chipLabel}</span>
+                        <button class="m-cardbtn paybtn" type="button" data-line-key={v.lineKey} onclick={payLine} disabled={payDisabled}>
+                            Pay &amp; register <span class="arr" aria-hidden="true">&#10230;</span>
+                        </button>
+                    </template>
+                    <template lwc:if={v.paid}>
+                        <span class={v.chipClass}>
+                            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6.2 5 9l5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            {v.chipLabel}
+                        </span>
+                        <template lwc:if={v.eoiLabel}>
+                            <span class="m-eoinum">{v.eoiLabel}</span>
+                        </template>
+                        <template lwc:else>
+                            <span class="m-eoinum m-eoinum--wait">EOI number to follow</span>
+                        </template>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- MEOI-PAY2. Double confirmation before a residence is taken off the registration.
+         A scrim click or Cancel keeps it; only Proceed removes. -->
+    <template lwc:if={confirmLine}>
+        <div class="m-scrim" onclick={cancelRemove}></div>
+        <div class="m-modal" role="dialog" aria-modal="true" aria-labelledby="rm-title">
+            <p id="rm-title" class="m-modal__t">Remove {confirmLine.name}?</p>
+            <p class="m-modal__p">It will be taken off this registration. You can add it again from the EOI Selection step.</p>
+            <div class="m-modal__row">
+                <button class="m-cardbtn m-cardbtn--ghost" type="button" onclick={cancelRemove}>Cancel</button>
+                <button class="m-cardbtn" type="button" onclick={proceedRemove}>Proceed</button>
+            </div>
+        </div>
+    </template>
+
+    <template lwc:if={termsOpen}>
+        <div class="m-scrim" onclick={closeTerms}></div>
+        <div class="m-modal m-modal--terms" role="dialog" aria-modal="true" aria-labelledby="tc-title">
+            <p id="tc-title" class="m-modal__t">Terms &amp; Conditions</p>
+            <div class="m-modal__body">
+                <template lwc:if={termsLoading}>
+                    <p class="m-modal__p">Loading&hellip;</p>
+                </template>
+                <template for:each={termsParas} for:item="para">
+                    <p key={para.key} class="m-modal__p">{para.text}</p>
+                </template>
+            </div>
+            <div class="m-modal__row">
+                <button class="m-cardbtn" type="button" onclick={closeTerms}>Close</button>
+            </div>
+        </div>
+    </template>
+
+    <div class="backrow">
+        <button class="back" type="button" onclick={goBack}>&larr; Back to selection</button>
+    </div>
+</template>

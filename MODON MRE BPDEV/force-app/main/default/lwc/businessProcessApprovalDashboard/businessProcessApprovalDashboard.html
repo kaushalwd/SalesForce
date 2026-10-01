@@ -1,0 +1,78 @@
+<template>
+    <div class="dashboard-root">
+        <div class="slds-page-header slds-page-header_bleed page-header">
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                <div class="slds-media slds-media_center">
+                    <div class="slds-media__figure">
+                        <lightning-icon icon-name="standard:approval" size="medium"></lightning-icon>
+                    </div>
+                    <div class="slds-media__body">
+                        <h1 class="slds-page-header__title slds-truncate">Business Process Approvals</h1>
+                        <template if:false={isLoading}>
+                            <p class="slds-text-body_small slds-text-color_weak">{pendingCountLabel}</p>
+                        </template>
+                    </div>
+                </div>
+                <lightning-button
+                    label="Refresh"
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}
+                    disabled={isRefreshDisabled}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_xx-large">
+                <lightning-spinner alternative-text="Loading your approvals" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:true={error}>
+            <div class="slds-p-around_medium">
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{error}</h2>
+                </div>
+            </div>
+        </template>
+
+        <template if:true={isEmpty}>
+            <div class="slds-p-around_xx-large slds-text-align_center empty-state">
+                <lightning-icon icon-name="utility:check" size="large" variant="success" class="slds-m-bottom_medium"></lightning-icon>
+                <h2 class="slds-text-heading_medium">No pending approvals</h2>
+                <p class="slds-text-body_regular slds-text-color_weak">
+                    You currently have no Business Process approvals assigned to you.
+                </p>
+            </div>
+        </template>
+
+        <template if:true={hasSteps}>
+            <div class={bodyClass}>
+                <div class="card-list-col">
+                    <div class="card-grid">
+                        <template for:each={decoratedSteps} for:item="step">
+                            <c-business-process-approval-card
+                                key={step.stepId}
+                                step={step}
+                                is-selected={step.isSelected}
+                                onselect={handleSelect}>
+                            </c-business-process-approval-card>
+                        </template>
+                    </div>
+                </div>
+
+                <template if:true={hasSelection}>
+                    <div class="detail-col">
+                        <c-business-process-approval-detail
+                            step-id={selectedStepId}
+                            onclosedetail={handleCloseDetail}
+                            onactioncomplete={handleActionComplete}
+                            onactionerror={handleActionError}>
+                        </c-business-process-approval-detail>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

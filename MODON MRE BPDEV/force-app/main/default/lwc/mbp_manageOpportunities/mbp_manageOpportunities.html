@@ -1,0 +1,330 @@
+<template>
+    <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+<c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+    <template if:false={isLoading}>
+        <template if:false={showOverview}>
+		
+		<!-- Mobile View -->
+            <div class="mobile-view" if:true={isMobile}>
+                <!-- Mobile Filter Icon Only (No Button) -->
+                <div class="mobile-header">
+                    <div class="mobile-filter-icon-container" onclick={toggleFilterBox}>
+                        <img src={filterIcon} alt="Filter" class="filter-icon-mobile" />
+                    </div>
+                </div>
+
+                <!-- Mobile Filter Box -->
+                <div class={mobileFilterBoxClass}>
+                    <div class="filter-header">
+                        <h3>Opportunity Filters</h3>
+                        <button class="close-filter" onclick={toggleFilterBox}>✕</button>
+                    </div>
+
+                    <div class="mobile-filter-content">
+
+                        <lightning-input label="Search Opportunity" value={filters.searchKey}
+                            onchange={handleFilterChange} data-id="searchKey" class="mobile-input"
+                            placeholder="Name, Mobile, Email">
+                        </lightning-input>
+
+                        <lightning-combobox label="Resident Status" value={filters.residentStatus}
+                            options={residentStatusOptions} onchange={handleFilterChange} data-id="residentStatus"
+                            class="mobile-input">
+                        </lightning-combobox>
+
+                        <lightning-combobox label="Stage" value={filters.stage} options={stageOptions}
+                            onchange={handleFilterChange} data-id="stage" class="mobile-input">
+                        </lightning-combobox>
+
+                        <lightning-input type="date" label="Start Date" value={filters.startDate}
+                            onchange={handleFilterChange} data-id="startDate" class="mobile-input">
+                        </lightning-input>
+
+                        <lightning-input type="date" label="End Date" value={filters.endDate}
+                            onchange={handleFilterChange} data-id="endDate" class="mobile-input">
+                        </lightning-input>
+
+                        <div class="mobile-filter-buttons">
+                            <button class="reset-btn mobile-btn" onclick={resetFilters}>Reset</button>
+                            <button class="apply-btn mobile-btn" onclick={applyFilters}>Apply Filters</button>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Mobile Opportunity Cards -->
+                <div class="mobile-cards-container">
+                    <template for:each={paginatedOpportunities} for:item="opp" for:index="index">
+                        <div key={opp.Id} class="mobile-opportunity-card" onclick={handleMobileCardClick}
+                            data-id={opp.Id}>
+                            <div class="card-header">
+                                <span class="card-name">{opp.Name}</span>
+                                <button class="mobile-eye-btn" onclick={handleMobileViewDetails} data-id={opp.Id}
+                                    aria-label="View Details">
+
+                                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                                        class="eye-icon">
+
+                                        <!-- Eye outline -->
+                                        <path d="M12 5C6.5 5 2 12 2 12s4.5 7 10 7
+               10-7 10-7-4.5-7-10-7Z" fill="black" />
+
+                                        <!-- Pupil -->
+                                        <circle cx="12" cy="12" r="3" fill="white" />
+                                    </svg>
+                                </button>
+
+
+                            </div>
+
+                            <div class="card-content">
+                                <div class="field-group status-group">
+                                    <label>Status:</label>
+                                    <span class="status-value">{opp.StageName}</span>
+                                </div>
+
+
+                                <!--      <div class="field-group">
+                                    <label>Name:</label>
+                                    <span>{opp.Name}</span>
+                                </div>-->
+                                <div class="field-group">
+                                    <label>Email:</label>
+                                    <span>{opp.Email__c}</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Mobile:</label>
+                                    <span>{opp.Mobile__c}</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Resident Status:</label>
+                                    <span>{opp.UAE_Resident_Status__c}</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Project:</label>
+                                    <span>{opp.projectName}</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Modon Rep:</label>
+                                    <span>{opp.salesManagerName}</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Broker Name:</label>
+                                    <span>{opp.brokerAgentName}</span>
+                                </div>
+                            </div>
+                            <!--    <div class="card-actions">
+                                <button class="view-details-btn" onclick={handleMobileViewDetails} data-id={opp.Id}>
+                                    👁
+                                </button>
+                            </div>-->
+                        </div>
+                    </template>
+                </div>
+
+
+
+                <!-- Mobile Pagination -->
+                <template if:true={showPagination}>
+                    <div class="mobile-pagination">
+                        <button class="nav-btn mobile-nav-btn" onclick={handlePrevPage} disabled={disablePrev}>⬅
+                            Previous</button>
+                        <span class="page-info mobile-page-info">Page {currentPage} of {totalPages}</span>
+                        <button class="nav-btn mobile-nav-btn" onclick={handleNextPage} disabled={disableNext}>Next
+                            ➡</button>
+                    </div>
+                </template>
+
+                <div class="mobile-export-wrapper">
+                    <div class="mobile-export-inner">
+                        <button class="mobile-export-btn" onclick={handleExport}>Export Opportunities</button>
+                    </div>
+                </div>
+
+            </div>
+			 <!-- Desktop View -->
+			<div class="desktop-view" if:false={isMobile}>
+			
+            <div class="overview-wrapper">
+                <div class="tree-grid-wrapper">
+                    <div class="filter-bar"></div>
+
+                    <div class="filter-wrapper">
+                        <!-- Filter Icon -->
+                        <img src={filterIcon} alt="Filter" class="filter-icon" onclick={toggleFilterBox} />
+
+                        <!-- Floating Filter Box -->
+                        <div class={filterBoxClass}>
+                            <b>Opportunity Filters</b>
+
+                            <!-- Fuzzy Search -->
+                            <lightning-input
+                                label="Search Opportunity"
+                                value={filters.searchKey}
+                                onchange={handleFilterChange}
+                                data-id="searchKey"
+                                class="placeholder"
+                                placeholder="Name, Mobile, Email">
+                            </lightning-input>
+
+                            <!-- UAE Resident Status -->
+                            <lightning-combobox
+                                label="Resident Status"
+                                value={filters.residentStatus}
+                                options={residentStatusOptions}
+                                onchange={handleFilterChange}
+                                data-id="residentStatus"
+                                class="placeholder mt-2">
+                            </lightning-combobox>
+
+                            <!-- Stage -->
+                            <lightning-combobox
+                                label="Stage"
+                                value={filters.stage}
+                                options={stageOptions}
+                                onchange={handleFilterChange}
+                                data-id="stage"
+                                class="placeholder mt-2">
+                            </lightning-combobox>
+
+                            <!-- Start Date -->
+                            <lightning-input
+                                type="date"
+                                label="Start Date"
+                                value={filters.startDate}
+                                onchange={handleFilterChange}
+                                data-id="startDate"
+                                class="placeholder mt-2">
+                            </lightning-input>
+
+                            <!-- End Date -->
+                            <lightning-input
+                                type="date"
+                                label="End Date"
+                                value={filters.endDate}
+                                onchange={handleFilterChange}
+                                data-id="endDate"
+                                class="placeholder mt-2">
+                            </lightning-input>
+
+                            <!-- Buttons -->
+                            <div class="button-row filter-buttons mt-2">
+                                <button class="reset-btn" onclick={resetFilters}>Reset</button>
+                                <button class="apply-btn" onclick={applyFilters}>Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export button on its own row, right-aligned above the table -->
+                    <div class="table-actions-row">
+                    <button
+                        type="button"
+                        class="slds-button slds-button_brand export-opportunities-btn"
+                        title="Export Opportunities"
+                        onclick={handleExport}>
+                        Export Opportunities
+                    </button>
+                    </div>
+
+                    <div class="slds-text-body_medium">
+                        <c-mbp_adaptivedata-table
+                            title="Broker Agency Opportunities"
+                            records={opportunities}
+                            columns={computedColumns}
+                            sorted-direction={sortDirection}
+                            sorted-by={sortBy}
+                            onsort={handleSort}
+                            onrowaction={handleRowAction}>
+                        </c-mbp_adaptivedata-table>
+                    </div>
+
+                  <!--  <template if:true={showPagination}>
+                        <div class="custom-pagination">
+                            <button class="nav-btn" onclick={handlePrevPage} disabled={disablePrev}>
+                                ⬅ Previous
+                            </button>
+                            <span class="page-info">Page {currentPage} of {totalPages}</span>
+                            <button class="nav-btn" onclick={handleNextPage} disabled={disableNext}>
+                                Next ➡
+                            </button>
+                        </div>
+                    </template>-->
+                </div>
+            </div>
+			</div>
+        </template>
+		
+		
+
+        <template if:true={showOverview}>
+            <div class="overview-wrapper">
+                <a class="back-link" onclick={handleBack}>← Back to Manage Opportunities</a>
+
+                <!-- Overview Section -->
+                <div class="overview-card">
+                    <h2 class="section-title">Overview</h2>
+                    <div class="overview-grid">
+                        <div><strong>Opportunity Name:</strong> <span>{selectedOpportunity.Name}</span></div>
+                        <div><strong>Agency Name:</strong> <span>{brokerAgencyName}</span></div>
+                        <div><strong>Project Name:</strong> <span>{projectName}</span></div>
+                        <div><strong>Broker Name:</strong> <span>{brokerAgentName}</span></div>
+                        <div><strong>Sales Manager Name:</strong> <span>{salesManagerName}</span></div>
+                        <div><strong>UAE Resident Status:</strong> <span>{selectedOpportunity.UAE_Resident_Status__c}</span></div>
+                    </div>
+                </div>
+
+                <!-- Sales Orders Section -->
+                  <!-- Sales Orders Section - Mobile Cards View -->
+                <div class="overview-card">
+                    <h2 class="section-title">Sales Orders</h2>
+
+                    <!-- Mobile Sales Orders Cards -->
+                    <div if:true={isMobile} class="mobile-salesorders-container">
+                        <template for:each={salesOrders} for:item="order" for:index="index">
+                            <div key={order.Id} class="mobile-salesorder-card">
+                                <div class="salesorder-card-header">
+                                    <span class="salesorder-sno">{order.displayIndex}</span>
+
+                                    <span class="status-pill-mobile">{order.Status__c}</span>
+                                </div>
+                                <div class="salesorder-card-content">
+                                    <div class="field-group">
+                                        <label>Project:</label>
+                                        <span>{order.ProjectInterest__c}</span>
+                                    </div>
+                                    <div class="field-group">
+                                        <label>Unit:</label>
+                                        <span>{order.Unit_Name__c}</span>
+                                    </div>
+                                    <div class="field-group">
+                                        <label>No Of Rooms:</label>
+                                        <span>{order.Number_of_bedrooms__c}</span>
+                                    </div>
+                                    <div class="field-group">
+                                        <label>Amount:</label>
+                                        <span>{order.formattedAmount}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Use getter for empty sales orders check -->
+                        <template if:true={hasNoSalesOrders}>
+                            <div class="no-salesorders">
+                                No Sales Orders found
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Desktop Sales Orders Table -->
+                    <div if:false={isMobile}>
+                        <c-mbp_adaptivedata-table title="Sales Orders" records={salesOrders}
+                            columns={salesOrderColumns}>
+                        </c-mbp_adaptivedata-table>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </template>
+</template>

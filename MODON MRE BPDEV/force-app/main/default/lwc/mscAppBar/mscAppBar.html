@@ -1,0 +1,96 @@
+<template>
+  <div class="bar">
+    <button
+      class="logo-btn"
+      data-screen="home"
+      onclick={handleNav}
+      title="Modon Sales Console"
+    >
+      <c-msc-logo height="18"></c-msc-logo>
+      <span class="divider">|</span>
+      <span class="brand">{brandLabel}</span>
+    </button>
+
+    <template lwc:if={hasContext}>
+      <span class="context">{contextLabel}</span>
+    </template>
+
+    <div class="right">
+      <template lwc:if={showNav}>
+        <button
+          class="icon-btn"
+          data-screen="learning"
+          onclick={handleNav}
+          title="Learning"
+          aria-label="Learning"
+        >
+          <c-modon-icon
+            name="graduation-cap"
+            size="14"
+            color="currentColor"
+          ></c-modon-icon>
+        </button>
+        <button class="icon-btn bell" data-screen="alerts" onclick={handleNav} title="Alerts" aria-label="Alerts">
+          <c-modon-icon
+            name="bell"
+            size="14"
+            color="currentColor"
+          ></c-modon-icon>
+          <!-- 1.1: pending approvals + overdue calls; absent at zero -->
+          <template lwc:if={showBadge}>
+            <span class="badge" aria-hidden="true">{badgeText}</span>
+          </template>
+        </button>
+        <div class="user-wrap">
+          <button
+            class="icon-btn no-border user-trigger"
+            onclick={toggleMenu}
+            aria-haspopup="true"
+            aria-expanded={menuOpen}
+            title={userName}
+            aria-label={userName}
+          >
+            <span class="avatar">{avatarInitial}</span>
+          </button>
+          <template lwc:if={menuOpen}>
+            <div class="user-backdrop" onclick={closeMenu}></div>
+            <div class="user-menu" role="menu" onkeydown={handleMenuKey}>
+              <div class="user-menu__head">
+                <span class="avatar avatar--lg">{avatarInitial}</span>
+                <span class="user-menu__name">{userName}</span>
+              </div>
+              <button
+                class="user-menu__item"
+                role="menuitem"
+                onclick={handleThemeToggle}
+              >
+                <c-modon-icon
+                  name={themeIcon}
+                  size="14"
+                  color="currentColor"
+                ></c-modon-icon>
+                <span>{themeTitle}</span>
+              </button>
+              <button
+                class="user-menu__item"
+                role="menuitem"
+                data-screen="login"
+                onclick={handleLogout}
+              >
+                <c-modon-icon
+                  name="log-out"
+                  size="14"
+                  color="currentColor"
+                ></c-modon-icon>
+                <span>Log Out</span>
+              </button>
+            </div>
+          </template>
+        </div>
+      </template>
+      <template lwc:else>
+        <button class="help-btn">Help</button>
+      </template>
+    </div>
+  </div>
+</template>

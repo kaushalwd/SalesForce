@@ -1,0 +1,131 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+/* The alert keeps its own space above the checklist, because it is about a
+   different thing: someone has ASKED for more, as against work simply not being
+   finished yet. */
+.chk-alert {
+    margin-bottom: 14px;
+}
+
+.chk {
+    margin-top: 2px;
+}
+
+/* ── the head ───────────────────────────────────────────────────────────────
+   A label and a count, on one line, with a rule under it. The same shape the
+   obligation ledger's group heads use, so the two lists in this card read as
+   siblings rather than as two different designs. */
+/* 1.2 - a button now, not a div: the group collapses, and the whole heading is
+   the hit area. align-items moves from baseline to center because a chevron has
+   no baseline to sit on. */
+.chk-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 2px 0 8px;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+}
+
+.chk-head:hover .chk-title {
+    color: var(--text, #fafafa);
+}
+
+.chk-head:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* 1.3 - THE RULE BELONGS TO THE LIST, NOT THE HEADING.
+   Collapsed, the heading's own border-bottom drew a hairline with nothing under it -
+   and the parent card already draws a <hr class="divider"> immediately after this
+   component, so a shut checklist produced TWO rules about 20px apart with a band of
+   dead space between them. The border now appears only when there is a list for it
+   to introduce. */
+.chk-head--open {
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    margin-bottom: 2px;
+}
+
+.chk-title {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+}
+
+/* Counts UP - "3 of 9 complete", not "6 outstanding". Progress is the thing a
+   person wants at the top of a list they are working through, and the same
+   figure phrased as a deficit reads as a reprimand. */
+.chk-progress {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.chk-progress--done {
+    color: var(--step-done, #16a34a);
+}
+
+/* ── the rows ───────────────────────────────────────────────────────────────
+   .chk-row / .chk-ic / .chk-name / .chk-state come from c/mscStyles and are
+   shared with the rest of the console; only what is specific to this list is
+   set here. */
+.chk-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Outstanding is the normal state early in a booking, so it is the plain one.
+   A finished row steps back rather than lighting up - the eye should be able to
+   run down the list and land on what is LEFT. */
+.chk-name {
+    color: var(--text-muted, #a3a3a3);
+    line-height: 1.45;
+}
+
+.chk-name--done {
+    color: var(--text-dim, #8a8a8a);
+}
+
+.chk-state {
+    color: var(--step-done, #16a34a);
+}
+
+/* Why a document came back. The one thing in this list that is genuinely
+   actionable detail, so it keeps its own line and its own colour. */
+.chk-reason {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--chip-amber, #d97706);
+}
+
+/* ── after the handoff ──────────────────────────────────────────────────────
+   A sentence, not a list. Twenty-five rows the rep cannot act on were the bulk
+   of what made this panel unreadable; one line keeps the fact and drops the
+   wall. Set quietly, because it is context rather than work. */
+.chk-later {
+    margin: 12px 0 0;
+    padding-top: 11px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-dim, #8a8a8a);
+}

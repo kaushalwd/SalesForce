@@ -1,0 +1,1 @@
+// placeholder file kept so the LWC bundle is not empty

@@ -1,0 +1,236 @@
+<template>
+    <!-- Loading Overlay -->
+    <template if:true={isLoading}>
+        <div class="slds-backdrop slds-backdrop_open">
+            <div class="slds-modal slds-modal__container" style="display: flex; align-items: center; justify-content: center;">
+                <lightning-spinner alternative-text="Processing..." size="large" variant="brand"></lightning-spinner>
+                <div class="slds-text-heading_medium slds-align_absolute-center slds-m-top_medium">Processing your request...</div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal Container -->
+    <div class="slds-modal slds-fade-in-open slds-modal_large" role="dialog" tabindex="-1" if:false={isLoading}>
+        <div class="slds-modal__container" style="max-width: 90%; width: 600px;">
+            <!-- Modal Header -->
+            <header class="slds-modal__header slds-theme_shade">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCancel}>
+                    <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <h2 class="slds-modal__title slds-hyphenate slds-text-heading_medium">Approval - {stepName}</h2>
+
+                <div class="slds-text-heading_small slds-m-top_x-small" if:true={totalDldAmount}>
+                        Total DLD Amount: <lightning-formatted-number value={totalDldAmount} style="font-weight: bold;" class="amount-highlight"></lightning-formatted-number>
+                    </div>
+            </header>
+
+            <!-- Modal Content -->
+            <div class="slds-modal__content slds-p-around_medium">
+                <div class="slds-grid slds-wrap slds-gutters">
+                    <div class="slds-col slds-size_1-of-1">
+                        <!-- Approval Options -->
+                        <lightning-radio-group
+                            name="radioGroup"
+                            label="Select Action"
+                            options={radioOptions}
+                            value={radioValue}
+                            onchange={handleRadioChange}
+                            type="radio"
+                            variant="label-stacked"
+                            class="slds-m-bottom_medium">
+                        </lightning-radio-group>
+
+                        <lightning-input
+                            type="text"
+                            label="Comment"
+                            value={comment}
+                            onchange={handleCommentChange}
+                            required
+                            variant="label-stacked"
+                            class="slds-m-bottom_medium">
+                        </lightning-input>
+
+                        <template if:true={showProceedConfirmation}>
+                            <lightning-combobox
+                name="CM Decision"
+                label="CM Approval Decision"
+                placeholder="Select Decision"
+                options={decisionOptions}
+                value={selectedDecision}
+                required
+                onchange={handleCMDecisionChange}>
+            </lightning-combobox>
+
+                        </template>
+
+                        <template if:true={showBPNNumberField}>
+                            <lightning-input
+                                type="text"
+                                label="BPN Number"
+                                value={bpnNumber}
+                                onchange={handleBPNNumberChange}
+                                required
+                                variant="label-stacked"
+                                class="slds-m-bottom_medium">
+                            </lightning-input>
+                        </template>
+
+                        <template if:true={showTransactionRefField}>
+                            <lightning-input
+                                type="text"
+                                label="Transaction Reference Number"
+                                value={transactionRefNumber}
+                                onchange={handleTransactionRefChange}
+                                required
+                                variant="label-stacked"
+                                class="slds-m-bottom_medium">
+                            </lightning-input>
+                        </template>
+
+
+                        
+
+                        <!-- Show existing payment proof documents for Treasury step -->
+                        <template if:true={showPaymentProofDocuments}>
+                            <div class="slds-m-bottom_medium">
+                                <!--<h3 class="slds-text-heading_small slds-m-bottom_x-small">Existing Payment Proof Documents:</h3>-->
+                                <ul class="slds-list_dotted">
+                                    <template for:each={paymentProofDocuments} for:item="doc">                                        
+                                        
+                                        <template if:true={doc.ContentDocumentLinks.length}>
+                                            <li key={doc.Id} class="slds-list__item slds-m-bottom_x-small"> <h3 class="slds-text-heading_small slds-m-bottom_x-small">doc-  {doc.name}:</h3>
+                                            <template for:each={doc.ContentDocumentLinks} for:item="file">
+                                                <div key={file.documentId}>
+                                                    <lightning-button
+                                                        key={link.ContentDocumentId}
+                                                        label="View"
+                                                        variant="base"
+                                                        onclick={navigateToFile}
+                                                        data-url={file.ContentDocumentId}
+                                                        class="slds-m-right_small">
+                                                    </lightning-button>
+
+
+                                                    <lightning-button
+                                                        key={link.ContentDocumentId}
+                                                        label="Download"
+                                                        variant="base"
+                                                        onclick={handleDownloadPaymentProofFile}
+                                                        data-url={file.ContentDocumentId}
+                                                        class="slds-m-right_small">
+                                                    </lightning-button>
+
+                                                </div>
+                                            </template>
+                                            </li>
+                                        </template>
+                                        
+
+                                    </template>
+                                </ul>
+                            </div>
+                        </template> 
+
+
+                        <template if:true={showTransactionRefField}>
+                            <lightning-file-upload
+                                label="Upload Treasury Reference Document"
+                                name="fileUploader"
+                                required
+                                accept={acceptedFormats}
+                                record-id={firstStepId}
+                                onuploadfinished={handleUploadFinished}
+                                variant="label-stacked"
+                                class="slds-m-bottom_medium">
+                            </lightning-file-upload>
+
+
+
+                            
+                            <!-- Uploaded Files List -->
+                            <template if:true={hasUploadedFiles}>
+                                <div class="slds-m-bottom_medium">
+                                    <h3 class="slds-text-heading_small slds-m-bottom_x-small">Uploaded Files:</h3>
+                                    <ul class="slds-list_dotted">
+                                        <template for:each={uploadedFiles} for:item="file">
+                                            <li key={file.documentId} class="slds-list__item slds-m-bottom_x-small">
+                                                <div class="slds-grid slds-grid_align-spread">
+                                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                                        <lightning-icon icon-name={file.iconName} size="small" class="slds-m-right_x-small"></lightning-icon>
+                                                        <span class="slds-truncate" title={file.name}>{file.name}</span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </template>
+
+                        <template if:true={showFileUpload}>
+                            <lightning-file-upload
+                                label="Upload Supporting Document"
+                                name="SupportfileUploader"
+                                accept={acceptedFormats}
+                                record-id={firstStepId}
+                                onuploadfinished={handleSupportUploadFinished}
+                                variant="label-stacked"
+                                class="slds-m-bottom_medium">
+                            </lightning-file-upload>
+                            
+                            <!-- Uploaded Support Files List -->
+                            <template if:true={hasUploadedSupportFiles}>
+                                <div class="slds-m-bottom_medium">
+                                    <h3 class="slds-text-heading_small slds-m-bottom_x-small">Uploaded Support Files:</h3>
+                                    <ul class="slds-list_dotted">
+                                        <template for:each={uploadedSupportFiles} for:item="file">
+                                            <li key={file.documentId} class="slds-list__item slds-m-bottom_x-small">
+                                                <div class="slds-grid slds-grid_align-spread">
+                                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                                        <lightning-icon icon-name={file.iconName} size="small" class="slds-m-right_x-small"></lightning-icon>
+                                                        <span class="slds-truncate" title={file.name}>{file.name}</span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </template>
+
+                        <template if:true={showStepSelection}>
+                            <lightning-combobox
+                                name="progress"
+                                label="Reject To"
+                                value={selectedStepId}
+                                placeholder="Select Step"
+                                options={stepOptions}
+                                onchange={handleStepChange}
+                                variant="label-stacked"
+                                class="slds-m-bottom_medium">
+                            </lightning-combobox>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <footer class="slds-modal__footer slds-theme_default">
+                <lightning-button 
+                    variant="neutral" 
+                    label="Cancel" 
+                    onclick={handleCancel} 
+                    class="slds-m-right_small">
+                </lightning-button>
+                <lightning-button 
+                    variant="brand" 
+                    label="Submit" 
+                    onclick={handleSubmit}
+                    disabled={isSubmitDisabled}>
+                </lightning-button>
+            </footer>
+        </div>
+    </div>
+    <div class="slds-backdrop slds-backdrop_open" if:false={isLoading}></div>
+</template>

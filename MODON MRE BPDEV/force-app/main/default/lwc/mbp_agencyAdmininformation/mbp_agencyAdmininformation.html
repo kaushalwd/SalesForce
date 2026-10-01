@@ -1,0 +1,205 @@
+<template>
+  <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+  <!-- Spinner with overlay -->
+  <template if:true={isLoading}>
+    <div class="spinner-overlay">
+      <div class="spinner-container">
+        <lightning-spinner alternative-text="Loading form..." size="medium"></lightning-spinner>
+      </div>
+    </div>
+  </template>
+  <template for:each={staffMembers} for:item="staffMember" for:index="index">
+    <div key={staffMember.id} class="slds-m-bottom_medium slds-medium">
+      <h1 for="Company Information" class="section-Title mt-2">Agency Admin Information</h1>
+      <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+        <!--<lightning-accordion-section name="Agency Admin/POA Details" label={staffMember.label}>-->
+          <div class="slds-content-align_center">
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="text" name="firstname" label="First Name" value={staffMember.firstname} onchange={handleFieldChange} data-id={staffMember.id} disabled={isDisabled} required></lightning-input>
+          <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="text" name="lastname" label="Last Name" value={staffMember.lastname} onchange={handleFieldChange} data-id={staffMember.id} required disabled={isDisabled}></lightning-input>
+        </div>      
+         
+         
+    <lightning-combobox class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder customSelect"
+        type="text" name="nationality" label="Nationality"
+        value={staffMember.nationality} options={countryOptionsList} data-id={staffMember.id}
+        disabled={isDisabled} onchange={handleFieldChange} required>
+    </lightning-combobox>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small " >
+            <lightning-combobox name="mobileNum" class="slds-p-around_x-small placeholder customSelect" label="Country Code" placeholder="Select" value={staffMember.mobileNum} options={mobCountryOptions} onchange={handleFieldChange} data-id={staffMember.id} disabled={isDisabled}></lightning-combobox>          
+            <lightning-input class="slds-p-around_x-small placeholder customSelect" type="text" name="mobile" label="Mobile Number" value={staffMember.mobile} required disabled={isDisabled} onchange={handleFieldChange} pattern="\+?[1-9][0-9]{7,14}" inputmode="numeric" data-id={staffMember.id} onblur={handleNumericInput} message-when-pattern-mismatch="Please enter only numbers" field-level-help="Enter a valid mobile number (e.g., +12025550123 or 9876543210, 8-15 digits)"></lightning-input>                       
+            <button class="slds-button slds-button_brand slds-botton-top-40" data-id={staffMember.id} onclick={handleValidatePhoneClick}> {staffMember.validatePhone} </button>
+              </div>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <lightning-input class="slds-p-around_x-small placeholder customSelect" type="email" name="email" label="Email" value={staffMember.email} data-id={staffMember.id} required disabled={isDisabled} onchange={handleFieldChange}></lightning-input>   
+         <button class="slds-button slds-button_brand slds-botton-top-40" data-id={staffMember.id} onclick={handleValidateEmailClick}> {staffMember.validateEmail} </button>
+         </div>
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="text" name="passportNumber" label="Passport Number" value={staffMember.passportNumber} data-id={staffMember.id} required disabled={isDisabled} onchange={handleFieldChange}></lightning-input>
+           <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder customSelect"
+        type="date" name="passportIssueDate" label="Passport Issue Date"
+        value={staffMember.passportIssueDate} data-id={staffMember.id}
+        disabled={isDisabled} onchange={handleFieldChange} required>
+    </lightning-input>
+          <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="date" name="passportExpiryDate" label="Passport Expiry Date" value={staffMember.passportExpiryDate} data-id={staffMember.id} required disabled={isDisabled} onchange={handleFieldChange}></lightning-input>
+       
+        </div>
+        <template if:true={showEIDFields}>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="text" name="eidNumber" label="Emirates ID Number" value={staffMember.eidNumber} data-id={staffMember.id} required disabled={isDisabled} onchange={handleFieldChange1}></lightning-input>
+                <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder customSelect"
+        type="date" name="eidIssueDate" label="EID Issue Date"
+        value={staffMember.eidIssueDate} data-id={staffMember.id}
+        disabled={isDisabled} onchange={handleFieldChange} required>
+    </lightning-input>
+            <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="date" name="eidExpiryDate" label="EID Expiry Date" data-id={staffMember.id} value={staffMember.eidExpiryDate} required disabled={isDisabled} onchange={handleFieldChange}></lightning-input>
+          </div>
+        </template>
+        <!--</lightning-accordion-section>-->
+        <!--<lightning-accordion-section name="Power of Attorney" label="Power of Attorney">-->
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="text" name="POA" label="POA Name" data-id={staffMember.id} value={staffMember.POA} disabled={isDisabled} onchange={handleFieldChange}></lightning-input>
+          <lightning-input class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder customSelect" type="email" name="POAemail" label="POA Email" data-id={staffMember.id} value={staffMember.POAemail} disabled={isDisabled} onchange={handleFieldChange}></lightning-input>
+        </div>
+        <lightning-input 
+    type="checkbox"
+    name="isPrimaryagencyadmin"
+    label="Is Primary Agency Admin"
+    checked={staffMember.isPrimaryagencyadmin}
+    data-id={staffMember.id}
+    disabled={isDisabled}
+    onchange={handleFieldChange1} required>
+</lightning-input>
+      
+        <!--<div class="slds-grid slds-wrap slds-m-top_xx-small"><template if:false={staffMember.isPoaDocumentUploaded}><lightning-input
+                        class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small placeholder"
+                        type="file"
+                        label="POA Document"
+                        accept=".pdf,.jpg"
+                        
+                        data-id={staffMember.id}
+                        data-label="POA_Document"
+                        disabled={isDisabled}
+                        onchange={handleFileChange}
+                    ></lightning-input></template><template if:true={staffMember.isPoaDocumentUploaded}><div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small"><p><strong>Uploaded File:</strong> &nbsp;
+                            <a href={staffMember.poaPreviewUrl}  data-id={staffMember.id} data-label="POA_Document" onclick={handlePreview}>{staffMember.poafileName}</a><lightning-icon
+                                icon-name="action:preview"
+                                size="xx-small"
+                                alternative-text="Preview POA Document"
+                                onclick={handlePreview}
+                                data-label="POA_Document"
+                                data-id={staffMember.id}
+                                class="slds-m-left_small"
+                            ></lightning-icon><lightning-icon
+                                icon-name="action:delete"
+                                size="xx-small"
+                                alternative-text="Remove POA Document"
+                                onclick={handleRemoveFile}
+                                data-id={staffMember.id}
+                                data-label="POA_Document"
+                                class="slds-m-left_small"
+                            ></lightning-icon></p></div></template></div>-->
+        <!--</lightning-accordion-section>-->
+        <!--<lightning-accordion-section name="Document Uploads" label="Document Uploads">-->
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <template if:false={staffMember.isPassportFirstPageUploaded}>
+            <lightning-input class="slds-p-around_x-small slds-form-element placeholder" type="file" label="Passport First Page" accept=".pdf,.jpg" required data-id={staffMember.id} data-label="Passport_First_Page" disabled={isDisabled} onchange={handleFileChange}></lightning-input>
+          </template>
+          <template if:true={staffMember.isPassportFirstPageUploaded}>
+            <div class="slds-p-around_x-small ">
+              <p>
+                <strong>Uploaded File:</strong> &nbsp; <a href={staffMember.passportPreviewUrl} data-id={staffMember.id} data-label="Passport_First_Page" onclick={handlePreview}>{staffMember.passportFrontfileName}</a>
+                <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview Passport First Page" onclick={handlePreview} data-label="Passport_First_Page" data-id={staffMember.id} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                 <template if:true={showDeleteIcon}>
+                <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove Passport First Page" onclick={handleRemoveFile} data-id={staffMember.id} data-label="Passport_First_Page" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+              </template>
+              </p>
+            </div>
+          </template></div>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <template if:false={staffMember.isPassportSignaturePageUploaded}>
+            <lightning-input class="slds-p-around_x-small placeholder slds-form-element " type="file" label="Passport Signature Page" accept=".pdf,.jpg" required data-id={staffMember.id} data-label="Passport_Signature_Page" disabled={isDisabled} onchange={handleFileChange}></lightning-input>
+          </template>
+          <template if:true={staffMember.isPassportSignaturePageUploaded}>
+            <div class="slds-p-around_x-small ">
+              <p>
+                <strong>Uploaded File:</strong> &nbsp; <a href={staffMember.passportFinalPreviewUrl} data-id={staffMember.id} data-label="Passport_Signature_Page" onclick={handlePreview}>{staffMember.passportFinalfileName}</a>
+                <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview Passport Signature Page" onclick={handlePreview} data-id={staffMember.id} data-label="Passport_Signature_Page" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                 <template if:true={showDeleteIcon}>
+                <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove Passport Signature Page" onclick={handleRemoveFile} data-id={staffMember.id} data-label="Passport_Signature_Page" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+              </template>
+              </p>
+            </div>
+          </template>
+        </div>
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+        <template if:true={showEIDFields}>
+          <div if:false={isInternational}  >
+            <template if:false={staffMember.isEmiratesIdFrontUploaded}>
+              <lightning-input class="slds-p-around_x-small " type="file" label="Emirates ID Front" data-label="Emirates_ID_Front" accept=".pdf,.jpg" required data-id={staffMember.id} onchange={handleFileChange} disabled={isDisabled}></lightning-input>
+            </template>
+            <template if:true={staffMember.isEmiratesIdFrontUploaded}>
+             <div class="slds-p-around_x-small">
+                <p>
+                  <strong>Uploaded File:</strong> &nbsp; <a href={staffMember.eidFrontPreviewUrl} data-id={staffMember.id} data-label="Emirates_ID_Front" onclick={handlePreview}>{staffMember.eidFrontfileName}</a>
+                  <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview Emirates ID Front" data-id={staffMember.id} data-label="Emirates_ID_Front" onclick={handlePreview} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                   <template if:true={showDeleteIcon}>
+                  <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove Emirates ID Front" onclick={handleRemoveFile} data-id={staffMember.id} data-label="Emirates_ID_Front" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                </template>
+                </p>
+              </div>
+            </template></div>
+            <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <template if:false={staffMember.isEmiratesIdBackUploaded}>
+              <lightning-input class="slds-p-around_x-small " type="file" label="Emirates ID Back" data-label="Emirates_ID_Back" accept=".pdf,.jpg" required data-id={staffMember.id} onchange={handleFileChange} disabled={isDisabled}></lightning-input>
+            </template>
+            <template if:true={staffMember.isEmiratesIdBackUploaded}>
+              <div class="slds-p-around_x-small">
+                <p>
+                  <strong>Uploaded File:</strong> &nbsp; <a href={staffMember.eidBackPreviewUrl} ata-id={staffMember.id} data-label="Emirates_ID_Back" onclick={handlePreview}>{staffMember.eidBackfileName}</a>
+                  <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview Emirates ID Back" onclick={handlePreview} data-id={staffMember.id} data-label="Emirates_ID_Back" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                   <template if:true={showDeleteIcon}>
+                  <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove Emirates ID Back" onclick={handleRemoveFile} data-id={staffMember.id} data-label="Emirates_ID_Back" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                </template>
+                </p>
+              </div>
+            </template>
+          </div>
+          <div class="slds-grid slds-wrap slds-m-top_xx-small">
+            <template if:false={staffMember.isVisaPageUploaded}>
+              <lightning-input class="slds-p-around_x-small slds-form-element placeholder" type="file" label="Visa Page" data-label="Visa_Page" accept=".pdf,.jpg" data-id={staffMember.id} onchange={handleFileChange} required disabled={isDisabled}></lightning-input>
+            </template>
+            <template if:true={staffMember.isVisaPageUploaded}>
+              <div class="slds-p-around_x-small">
+                <p>
+                  <strong>Uploaded File:</strong> &nbsp; <a href={staffMember.visaPreviewUrl} data-id={staffMember.id} data-label="Visa_Page" onclick={handlePreview}>{staffMember.visabasefileName}</a>
+                  <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview Visa Page" onclick={handlePreview} data-id={staffMember.id} data-label="Visa_Page" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                   <template if:true={showDeleteIcon}>
+                  <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove Visa Page" onclick={handleRemoveFile} data-id={staffMember.id} data-label="Visa_Page" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                </template>
+                </p>
+              </div>
+            </template>
+          </div>
+        </template></div>
+        <div class="slds-grid slds-wrap slds-m-top_xx-small">
+          <template if:false={staffMember.isPoaDocumentUploaded}>
+            <lightning-input class="slds-p-around_x-small slds-form-element placeholder" type="file" label="POA Document" accept=".pdf,.jpg" data-id={staffMember.id} data-label="POA_Document" disabled={isDisabled} onchange={handleFileChange}></lightning-input>
+          </template>
+          <template if:true={staffMember.isPoaDocumentUploaded}>
+            <div class="slds-p-around_x-small">
+              <p>
+                <strong>Uploaded File:</strong> &nbsp; <a href={staffMember.poaPreviewUrl} data-id={staffMember.id} data-label="POA_Document" onclick={handlePreview}>{staffMember.poafileName}</a>
+                <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview POA Document" onclick={handlePreview} data-label="POA_Document" data-id={staffMember.id} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+                 <template if:true={showDeleteIcon}>
+                <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove POA Document" onclick={handleRemoveFile} data-id={staffMember.id} data-label="POA_Document" class="slds-m-left_small lwc-icon-small"></lightning-icon>
+              </template>
+              </p>
+            </div>
+          </template>
+        </div>
+        <!--</lightning-accordion-section>-->
+      </div></lightning-accordion>
+    </div>
+  </template>
+</template>

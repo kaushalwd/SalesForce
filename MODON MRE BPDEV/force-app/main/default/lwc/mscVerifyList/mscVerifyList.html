@@ -1,0 +1,264 @@
+<template>
+    <template lwc:if={showPanel}>
+        <div class={panelClass}>
+            <!-- head: what this is, how far it has got, and a way to re-read it -->
+            <div class="vl__head">
+                <span class="eyebrow">
+                    <span class="eyebrow__dot"></span>
+                    <span class="eyebrow__label">{labels.VL_EYEBROW}</span>
+                </span>
+                <!-- MSC-094: no tallies here; the list underneath states each person's stage -->
+                <div class="vl__head-right">
+                    <template lwc:if={checkedLabel}>
+                        <span class="vl__checked">{checkedLabel}</span>
+                    </template>
+                    <button
+                        class={refreshClass}
+                        type="button"
+                        title={refreshTitle}
+                        aria-label={refreshTitle}
+                        disabled={refreshDisabled}
+                        onclick={handleRefresh}
+                    >
+                        <c-modon-icon name="refresh-cw" size="14" color="currentColor"></c-modon-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- the server's own sentence -->
+            <template lwc:if={showBlockedNote}>
+                <div class="vl__note">
+                    <c-modon-icon name="info" size="14" color="currentColor"></c-modon-icon>
+                    <span>{blockedReason}</span>
+                </div>
+            </template>
+
+            <!-- 1.2: a company's two subjects, two tracks. 1.3: drawn as rows by the same block the people use. -->
+            <!-- MSC-151: the one thing to do now; draws nothing without a server answer -->
+            <template lwc:if={orgMode}>
+                <!-- 1.17: nextStepForBar, not nextStep. The POA's KYC send moved to Details
+                     in Phase 3, so that ONE action loses its button here; the bar keeps its
+                     sentence, and every other step it offers (company details, compliance
+                     submit, signatory check) is post-booking work and is untouched. -->
+                <c-msc-verify-next
+                    step={nextStepForBar}
+                    busy={nextBusy}
+                    onnextaction={handleNextAction}
+                ></c-msc-verify-next>
+            </template>
+
+            <template lwc:if={showEmpty}>
+                <p class="vl__none">{labels.VL_EMPTY}</p>
+            </template>
+
+            <!-- MSC-182: two groups, the buyer then the joint owners; a company buyer is one card with two framed sections -->
+            <template lwc:if={showBuyerGroup}>
+                <div class="vl__grp">
+                    <div class="vl__grp-h"><i class="vl__grp-cover" aria-hidden="true"></i><span>{labels.VL_GROUP_BUYER}</span></div>
+                    <template lwc:if={showCompanyCard}>
+                        <div class="vl__co">
+                            <template for:each={buyerRows} for:item="p">
+                                <section key={p.key} class={p.sectionClass}>
+                                    <div class="vl__person-head">
+                                        <div class="vl__who">
+                                            <span class="vl__name">{p.name}</span>
+                                            <span class="vl__meta">{p.meta}</span>
+                                        </div>
+                                    <template lwc:if={p.needsYou}>
+                                        <span class="vl__flag"><i></i><span>{labels.VL_NEEDS_YOU}</span></span>
+                                    </template>
+                                    </div>
+                                    <ol class={p.trackClass}>
+                                        <template for:each={p.stages} for:item="s">
+                                            <li key={s.key} class={s.cls}>
+                                                <span class="vl__st-label">
+                                                    <b class={s.markClass}>
+                                                        <template lwc:if={s.showTick}>
+                                                            <c-modon-icon name="check" size="9" color="currentColor"></c-modon-icon>
+                                                        </template>
+                                                    </b>
+                                                    <span>{s.label}</span>
+                                                </span>
+                                                <span class={s.barClass}></span>
+                                                <template lwc:if={s.fact}>
+                                                    <span class="vl__st-fact">{s.fact}</span>
+                                                </template>
+                                            </li>
+                                        </template>
+                                    </ol>
+                                    <template lwc:if={p.next}>
+                                        <div class="vl__next">
+                                            <span class="vl__next-text">{p.next}</span>
+                                        </div>
+                                    </template>
+                                </section>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                    <template for:each={buyerRows} for:item="p">
+                            <section key={p.key} class={p.cardClass}>
+                                <div class="vl__person-head">
+                                    <div class="vl__who">
+                                        <span class="vl__name">{p.name}</span>
+                                        <span class="vl__meta">{p.meta}</span>
+                                    </div>
+                                    <template lwc:if={p.needsYou}>
+                                        <span class="vl__flag"><i></i><span>{labels.VL_NEEDS_YOU}</span></span>
+                                    </template>
+                                </div>
+                                <!-- this person's four stages; a company party has none -->
+                                <template lwc:if={p.showRail}>
+                                    <ol class={p.trackClass}>
+                                        <template for:each={p.stages} for:item="s">
+                                            <li key={s.key} class={s.cls}>
+                                                <span class="vl__st-label">
+                                                    <b class={s.markClass}>
+                                                        <template lwc:if={s.showTick}>
+                                                            <c-modon-icon name="check" size="9" color="currentColor"></c-modon-icon>
+                                                        </template>
+                                                    </b>
+                                                    <span>{s.label}</span>
+                                                </span>
+                                                <span class={s.barClass}></span>
+                                                <template lwc:if={s.fact}>
+                                                    <span class="vl__st-fact">{s.fact}</span>
+                                                </template>
+                                            </li>
+                                        </template>
+                                    </ol>
+                                </template>
+                                <!-- where they stand, and the one thing that moves them on -->
+                                <template lwc:if={p.next}>
+                                    <div class="vl__next">
+                                        <span class="vl__next-text">{p.next}</span>
+                                        <template lwc:if={p.showAnyAction}>
+                                            <span class="vl__acts">
+                                                <template lwc:if={p.action}>
+                                                    <button
+                                                        class={p.action.cls}
+                                                        type="button"
+                                                        data-kind={p.action.kind}
+                                                        data-account={p.accountId}
+                                                        disabled={p.action.disabled}
+                                                        onclick={handleAction}
+                                                    >{p.action.text}</button>
+                                                </template>
+                                                <template lwc:if={p.showCopy}>
+                                                    <button class="pill vl__act" type="button" onclick={handleCopy}>{p.copyLabel}</button>
+                                                </template>
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </section>
+                        </template>
+                    </template>
+                </div>
+            </template>
+
+            <template lwc:if={showOwnerGroup}>
+                <div class="vl__grp">
+                    <div class="vl__grp-h">
+                        <i class="vl__grp-cover" aria-hidden="true"></i>
+                        <span>{labels.VL_GROUP_OWNERS}</span>
+                        <span class="vl__grp-n">{ownerCount}</span>
+                    </div>
+                    <template for:each={ownerRows} for:item="p">
+                        <section key={p.key} class={p.cardClass}>
+                            <div class="vl__person-head">
+                                <div class="vl__who">
+                                    <span class="vl__name">{p.name}</span>
+                                    <span class="vl__meta">{p.meta}</span>
+                                </div>
+                                    <template lwc:if={p.needsYou}>
+                                        <span class="vl__flag"><i></i><span>{labels.VL_NEEDS_YOU}</span></span>
+                                    </template>
+                            </div>
+                            <!-- this person's four stages; a company party has none -->
+                            <template lwc:if={p.showRail}>
+                                <ol class={p.trackClass}>
+                                    <template for:each={p.stages} for:item="s">
+                                        <li key={s.key} class={s.cls}>
+                                            <span class="vl__st-label">
+                                                <b class={s.markClass}>
+                                                    <template lwc:if={s.showTick}>
+                                                        <c-modon-icon name="check" size="9" color="currentColor"></c-modon-icon>
+                                                    </template>
+                                                </b>
+                                                <span>{s.label}</span>
+                                            </span>
+                                            <span class={s.barClass}></span>
+                                            <template lwc:if={s.fact}>
+                                                <span class="vl__st-fact">{s.fact}</span>
+                                            </template>
+                                        </li>
+                                    </template>
+                                </ol>
+                            </template>
+                            <!-- B5: this owner's required documents, with Upload; gates nothing -->
+                            <template lwc:if={p.showDocuments}>
+                                <c-msc-kyc-documents
+                                    compact
+                                    opportunity-id={opportunityId}
+                                    party-account-id={p.accountId}
+                                    onchanged={handleDocumentsChanged}
+                                ></c-msc-kyc-documents>
+                            </template>
+                            <!-- where they stand, and the one thing that moves them on -->
+                            <template lwc:if={p.next}>
+                                <div class="vl__next">
+                                    <span class="vl__next-text">{p.next}</span>
+                                    <template lwc:if={p.showAnyAction}>
+                                        <span class="vl__acts">
+                                            <template lwc:if={p.action}>
+                                                <button
+                                                    class={p.action.cls}
+                                                    type="button"
+                                                    data-kind={p.action.kind}
+                                                    data-account={p.accountId}
+                                                    disabled={p.action.disabled}
+                                                    onclick={handleAction}
+                                                >{p.action.text}</button>
+                                            </template>
+                                            <template lwc:if={p.showCopy}>
+                                                <button class="pill vl__act" type="button" onclick={handleCopy}>{p.copyLabel}</button>
+                                            </template>
+                                        </span>
+                                    </template>
+                                </div>
+                            </template>
+                        </section>
+                    </template>
+                </div>
+            </template>
+
+            <template lwc:if={showNoSignatory}>
+                <p class="vl__none">{labels.VL_ORG_NO_SIGNATORY}</p>
+            </template>
+
+            <!-- ownership, as context, with its Add -->
+            <template lwc:if={showStrip}>
+                <div class="vl__strip">
+                    <span class="vl__strip-l">
+                        <b>{labels.VL_OWNERSHIP}</b>
+                        <template lwc:if={ownershipLine}>
+                            <span>{ownershipLine}</span>
+                        </template>
+                    </span>
+                    <template lwc:if={canAdd}>
+                        <button
+                            class="pill vl__add"
+                            type="button"
+                            disabled={busy}
+                            onclick={handleAdd}
+                        >
+                            <c-modon-icon name="plus" size="14" color="currentColor"></c-modon-icon>
+                            <span>{labels.JO_ADD}</span>
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

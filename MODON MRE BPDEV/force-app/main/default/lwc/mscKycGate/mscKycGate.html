@@ -1,0 +1,139 @@
+<template>
+    <!--
+      Phase 3: the ACTIVE pre-booking KYC workspace. The controls below call the
+      methods the Verification step already used - nothing here is a second
+      implementation, and nothing here blocks the booking.
+
+      The whole panel is absent rather than empty when there is no verdict - an
+      unresolved Opportunity, or a call that failed. Step 2 is a dense screen and
+      a placeholder saying nothing is a row of noise on it.
+    -->
+    <template lwc:if={show}>
+        <section class={rootClass} aria-live="polite">
+            <template lwc:if={statusWord}>
+                <p class="kycg__status">{statusWord}</p>
+            </template>
+
+            <!-- Whose verification this is. For a company that is the authorised POA,
+                 because the POA is the person Signzy actually verifies. Name and role
+                 only - no identity numbers on a status panel. -->
+            <template lwc:if={subjectLine}>
+                <p class="kycg__subject">{subjectLine}</p>
+            </template>
+
+            <p class="kycg__body">{body}</p>
+
+            <template lwc:if={sentLine}>
+                <p class="kycg__sent">{sentLine}</p>
+            </template>
+
+            <!-- Names come from the server verbatim; the panel keeps no list. -->
+            <template lwc:if={isDocuments}>
+                <ul class="kycg__docs">
+                    <template for:each={documents} for:item="doc">
+                        <li key={doc} class="kycg__doc">{doc}</li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- 3.0 - B5: the rows the gate tests, with a tick per file and Upload on each.
+                 The list gates nothing; its `changed` re-runs the verdict above.
+                 3.12 - and its `liststate` says whether it really drew any names, which is what
+                 documents-listed below is built from. Being mounted is not the same as listing. -->
+            <template lwc:if={showDocuments}>
+                <c-msc-kyc-documents
+                    opportunity-id={opportunityId}
+                    needed-for={docsNeededFor}
+                    onchanged={handleDocumentsChanged}
+                    onliststate={handleDocumentsList}
+                ></c-msc-kyc-documents>
+            </template>
+
+            <!-- MODON's own refusal, re-worded only where it says "Opportunity": a company
+                 with no Power of Attorney is told to add one rather than handed a button
+                 that would fail. -->
+            <template lwc:if={cannotSendReason}>
+                <p class="kycg__blocked">{cannotSendReason}</p>
+            </template>
+
+            <!-- 3.7: one row for everything the rep can do here, the manual route included.
+                 It keeps its own weight (no border, muted) but not its own type size. -->
+            <template lwc:if={hasActionRow}>
+                <div class="kycg__actions">
+                    <template lwc:if={mainSend}>
+                        <button type="button" class="kycg__btn kycg__btn--go"
+                                onclick={handleSend} disabled={busy}>{sendLabel}</button>
+                    </template>
+                    <template lwc:if={mainResend}>
+                        <button type="button" class="kycg__btn"
+                                onclick={handleSend} disabled={busy}>{resendLabel}</button>
+                    </template>
+                    <template lwc:if={canRefresh}>
+                        <button type="button" class="kycg__btn"
+                                onclick={handleRefresh} disabled={busy}>{labels.KYCG_A_REFRESH}</button>
+                    </template>
+                    <template lwc:if={canOfferManual}>
+                        <button type="button" class="kycg__btn kycg__btn--quiet"
+                                onclick={toggleManual} disabled={busy}>{manualToggleLabel}</button>
+                    </template>
+                </div>
+            </template>
+
+            <!-- 3.9: in the manual states the digital link is a row of its own, named as such -->
+            <template lwc:if={showLinkRow}>
+                <div class="kycg__link">
+                    <span class="kycg__linklabel">{labels.KYCG_LINK_LABEL}</span>
+                    <template lwc:if={linkStateWord}>
+                        <span class="kycg__linkstate">{linkStateWord}</span>
+                    </template>
+                    <button type="button" class="kycg__btn kycg__linkbtn"
+                            onclick={handleSend} disabled={busy}>{linkButtonLabel}</button>
+                </div>
+            </template>
+
+            <template lwc:if={notice}>
+                <p class="kycg__notice">{notice}</p>
+            </template>
+            <template lwc:if={problem}>
+                <p class="kycg__problem">{problem}</p>
+            </template>
+
+            <!-- The manual route, under the digital one and closed until asked for.
+                 c/mscManualKyc is handed the verdict this panel already loaded, so the
+                 two can never disagree about the same customer. -->
+            <template lwc:if={showManualForm}>
+                <div class="kycg__manual">
+                    <c-msc-manual-kyc
+                        opportunity-id={opportunityId}
+                        onsubmitted={handleManualSubmitted}
+                    ></c-msc-manual-kyc>
+                </div>
+            </template>
+
+            <!-- Phase 3B: what happens after Sales Operations approves. Renders itself only
+                 once a manual route exists, so an ordinary digital booking never sees it. -->
+            <template lwc:if={showCapture}>
+                <div class="kycg__manual">
+                    <c-msc-kyc-capture
+                        opportunity-id={opportunityId}
+                        documents-listed={documentsListed}
+                        approved-shown={approvedShown}
+                        onchanged={handleManualChanged}
+                    ></c-msc-kyc-capture>
+                </div>
+            </template>
+
+            <!-- Says plainly that this is not holding the booking up. Drops out
+                 of its own accord in Phase 4, when enforcementActive turns true. -->
+            <!-- Phase 4: the one line that explains the disabled Continue. A phrase, grey,
+                 no banner. The server refuses independently of anything shown here. -->
+            <template lwc:if={blockNote}>
+                <p class="kycg__blocked">{blockNote}</p>
+            </template>
+
+            <template lwc:if={advisory}>
+                <p class="kycg__advisory">{advisory}</p>
+            </template>
+        </section>
+    </template>
+</template>

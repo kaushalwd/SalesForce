@@ -1,0 +1,196 @@
+<template>
+    <div class="profile">
+        <template lwc:if={isInitializing}>
+            <c-mbpr_loader label="Loading your profile"></c-mbpr_loader>
+        </template>
+
+        <template lwc:elseif={loadError}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    compact
+                    kicker="My Profile"
+                    title="Something went wrong"
+                    message={loadError}
+                ></c-mbpr_empty-state>
+                <button class="profile-button profile-button--ghost" type="button" onclick={handleRetryLoad}>
+                    Try again
+                </button>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <header class="profile-head">
+                <span class="profile-head__photo">
+                    <img src={profilePhoto} alt="Profile Photo" />
+                </span>
+                <div class="profile-head__identity">
+                    <h2>My Profile</h2>
+                    <p>{firstName} {lastName}</p>
+                </div>
+            </header>
+
+            <div class="profile-actions">
+                <button class="profile-button" type="button" onclick={showProfileImagePopup}>Upload Profile Image</button>
+                <button class="profile-button profile-button--ghost" type="button" onclick={openPasswordModal}>Reset Password</button>
+                <a class="profile-button profile-button--ghost" href={effectiveSignOutUrl}>Logout</a>
+            </div>
+
+            <section class="info-card" aria-label="User Information">
+                <h3>User Information</h3>
+                <dl class="info-grid">
+                    <div><dt>First Name</dt><dd>{firstName}</dd></div>
+                    <div><dt>Last Name</dt><dd>{lastName}</dd></div>
+                    <div><dt>User Name</dt><dd>{username}</dd></div>
+                    <div><dt>Email</dt><dd>{emailAddress}</dd></div>
+                    <div><dt>Mobile</dt><dd>{mobilePhone}</dd></div>
+                    <div><dt>Customer Type</dt><dd>{brokerType}</dd></div>
+                    <div><dt>Country</dt><dd>{country}</dd></div>
+                    <div><dt>Nationality</dt><dd>{nationality}</dd></div>
+                    <div><dt>UAE Resident Status</dt><dd>{residentStatus}</dd></div>
+                </dl>
+                <button class="profile-button" type="button" onclick={openEditProfileModal}>Update Profile</button>
+            </section>
+        </template>
+    </div>
+
+    <!-- ================= Upload Profile Image ================= -->
+    <template lwc:if={showImageModal}>
+        <div class="overlay-layer" onkeydown={handleImageModalKeydown}>
+            <section class="overlay overlay--compact" role="dialog" aria-modal="true" aria-label="Upload Profile Image">
+                <header class="overlay__header">
+                    <h2>Upload Profile Image</h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={hideProfileImagePopup}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="overlay__body">
+                    <template lwc:if={previewPhoto}>
+                        <img class="image-preview" src={previewPhoto} alt="Preview" />
+                    </template>
+                    <lightning-input
+                        label="Choose an image"
+                        type="file"
+                        accept={acceptedPhotoFormats}
+                        onchange={handleImagePreview}
+                    ></lightning-input>
+                </div>
+                <footer class="overlay__footer">
+                    <button class="profile-button profile-button--ghost" type="button" onclick={hideProfileImagePopup}>Cancel</button>
+                    <button class="profile-button" type="button" disabled={isActionPending} onclick={submitProfileImage}>Submit</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <!-- ================= Update Profile ================= -->
+    <template lwc:if={showEditModal}>
+        <div class="overlay-layer" onkeydown={handleEditModalKeydown}>
+            <section class="overlay" role="dialog" aria-modal="true" aria-label="Update Profile">
+                <header class="overlay__header">
+                    <h2>Update Profile</h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={closeEditProfileModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="overlay__body">
+                    <div class="form-grid">
+                        <lightning-input label="First Name" value={firstName} disabled></lightning-input>
+                        <lightning-input label="Last Name" value={lastName} disabled></lightning-input>
+                        <lightning-input label="Email" value={emailAddress} disabled></lightning-input>
+                        <lightning-input label="Username" value={username} disabled></lightning-input>
+                        <lightning-input label="Customer Type" value={brokerType} disabled></lightning-input>
+                        <lightning-input label="Country" value={country} disabled></lightning-input>
+                    </div>
+
+                    <div class="form-grid form-grid--phone">
+                        <lightning-combobox
+                            label="Country Code"
+                            options={countryCodeOptions}
+                            value={editableMobileCountryCode}
+                            onchange={handleMobileCountryCodeChange}
+                        ></lightning-combobox>
+                        <div class="validate-group">
+                            <lightning-input
+                                label="Mobile Number"
+                                value={editableMobileNumber}
+                                onchange={handleMobileNumberChange}
+                            ></lightning-input>
+                            <button
+                                class="profile-button profile-button--validate"
+                                type="button"
+                                disabled={mobileValidateDisabled}
+                                onclick={handleMobileValidation}
+                            >
+                                {mobileButtonLabel}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <lightning-combobox
+                            label="UAE Resident Status"
+                            options={uaeStatusOptions}
+                            value={editableUaeStatus}
+                            onchange={handleUaeStatusChange}
+                        ></lightning-combobox>
+                        <lightning-combobox
+                            label="Nationality"
+                            options={nationalityOptions}
+                            value={editableNationality}
+                            onchange={handleNationalityChange}
+                        ></lightning-combobox>
+                    </div>
+                </div>
+                <footer class="overlay__footer">
+                    <button class="profile-button profile-button--ghost" type="button" onclick={closeEditProfileModal}>Cancel</button>
+                    <button class="profile-button" type="button" disabled={isActionPending} onclick={submitProfileUpdate}>Update</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <!-- ================= Reset Password ================= -->
+    <template lwc:if={showPasswordModal}>
+        <div class="overlay-layer" onkeydown={handlePasswordModalKeydown}>
+            <section class="overlay overlay--compact" role="dialog" aria-modal="true" aria-label="Reset Password">
+                <header class="overlay__header">
+                    <h2>Reset Password</h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={closePasswordModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="overlay__body">
+                    <lightning-input
+                        label="Old Password"
+                        type="password"
+                        data-id="oldPassword"
+                        value={oldPassword}
+                        onchange={handleOldPasswordChange}
+                    ></lightning-input>
+                    <lightning-input
+                        label="New Password"
+                        type="password"
+                        data-id="newPassword"
+                        value={newPassword}
+                        onchange={handleNewPasswordChange}
+                    ></lightning-input>
+                    <lightning-input
+                        label="Confirm Password"
+                        type="password"
+                        data-id="confirmPassword"
+                        value={confirmPassword}
+                        onchange={handleConfirmPasswordChange}
+                    ></lightning-input>
+                </div>
+                <footer class="overlay__footer">
+                    <button class="profile-button profile-button--ghost" type="button" onclick={closePasswordModal}>Cancel</button>
+                    <button class="profile-button" type="button" disabled={isActionPending} onclick={submitPasswordReset}>Submit</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <template lwc:if={isActionPending}>
+        <c-mbpr_loader label="Working"></c-mbpr_loader>
+    </template>
+</template>

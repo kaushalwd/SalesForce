@@ -1,0 +1,67 @@
+<template>
+
+    <template if:true={contact}>
+
+        <div class="card">
+
+            <!-- Header: status + role chips -->
+            <div class="header-row">
+                <span class="eyebrow">Agent Status</span>
+                <span class={badgeClass}>{contact.Agent_Status__c}</span>
+            </div>
+
+          
+
+           
+
+            <!-- Recent history: labeled-chip timeline -->
+            <div class="history-section">
+
+                <div class="history-header">Recent Activity</div>
+
+                <template if:true={hasHistory}>
+                    <ul class="timeline">
+                        <template for:each={history} for:item="item">
+                            <li key={item.key} class="timeline-item">
+
+                                <div class="timeline-marker">
+                                    <span class={item.chipClass}>{item.chipLabel}</span>
+                                    <span class="timeline-line"></span>
+                                </div>
+
+                                <div class="timeline-body">
+
+                                    <div class="timeline-top">
+                                        <span class="timeline-transition">{item.fromLabel} → {item.toLabel}</span>
+                                        <span class="timeline-date">{item.changedDate}</span>
+                                    </div>
+
+                                    <div class="timeline-reason">{item.reason}</div>
+
+                                    <template if:true={item.hasSuspension}>
+                                        <div class="suspension-block">
+                                            <span class="suspension-range">{item.suspensionRange}</span>
+                                            <span class="suspension-note">{item.suspensionNote}</span>
+                                        </div>
+                                    </template>
+
+                                    <div class="timeline-by">by {item.changedBy}</div>
+
+                                </div>
+
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+
+                <template if:false={hasHistory}>
+                    <div class="no-history">No status changes recorded yet.</div>
+                </template>
+
+            </div>
+
+        </div>
+
+    </template>
+
+</template>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Contact_Centre_Only_Call_Channel</fullName>
+    <active>true</active>
+    <description>Contact Centre team can create case only when Channel is &apos;800 Modon&apos;.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+    OR(
+        $Profile.Name = &quot;Call Center TL&quot;,
+        $Profile.Name = &quot;Call Center TL No Reports&quot;,
+        $Profile.Name = &quot;Call Center Mgmt - Maqsam&quot;,
+        $Profile.Name = &quot;Call Center Super Manager&quot;
+    ),
+    ISPICKVAL(Channel__c, &quot;800 Modon&quot;) = FALSE
+)
+)</errorConditionFormula>
+    <errorDisplayField>Channel__c</errorDisplayField>
+    <errorMessage>Contact Centre team can create case only when Channel is &apos;800 Modon&apos;.</errorMessage>
+</ValidationRule>

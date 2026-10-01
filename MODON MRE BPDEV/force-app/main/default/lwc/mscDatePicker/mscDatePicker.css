@@ -1,0 +1,226 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.dp {
+    position: relative;
+}
+.dp__input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.dp__icon {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+}
+.dp__icon:hover {
+    color: var(--text, #fafafa);
+    background: var(--row-bg-hover, rgba(128, 128, 128, 0.14));
+}
+
+/* the dense forms' own sizes */
+.dp__compact,
+.dp__small {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    color: var(--text, #fafafa);
+    background: var(--input-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    outline: none;
+    color-scheme: var(--control-scheme, dark);
+}
+.dp__compact {
+    height: 30px;
+    padding: 0 30px 0 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+}
+.dp__small {
+    height: 36px;
+    padding: 0 34px 0 10px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+.dp__compact:focus,
+.dp__small:focus {
+    border-color: var(--gold, #a8a8a8);
+}
+.dp__bad {
+    border-color: var(--chip-red, #f87171);
+}
+.dp__compact ~ .dp__icon {
+    width: 24px;
+    height: 24px;
+    right: 3px;
+}
+.dp__small ~ .dp__icon {
+    width: 28px;
+    height: 28px;
+    right: 4px;
+}
+
+/* a locked date reads like the forms' other locked fields; mscIdentityFields' own
+   .field__input[readonly] rule cannot reach into this component */
+.dp__input[readonly] {
+    color: var(--text-muted, #a3a3a3);
+    cursor: default;
+}
+
+/* placed by c/mscFloat: fixed, against the window, visible once placed */
+.dp__panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    visibility: hidden;
+    box-sizing: border-box;
+    width: 296px;
+    padding: 10px;
+    overflow-y: auto;
+    background: var(--panel-bg, #141414);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    outline: none;
+    color: var(--text, #fafafa);
+    font-size: 13px;
+    /* c/mscFloat 1.2 opens this as a popover; the browser's [popover] rules would stretch it
+       to the window's edges (inset: 0) and centre it (margin: auto) */
+    right: auto;
+    bottom: auto;
+    margin: 0;
+}
+
+.dp__head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.dp__nav,
+.dp__title {
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text, #fafafa);
+    font: inherit;
+    cursor: pointer;
+}
+.dp__nav {
+    width: 32px;
+    font-size: 18px;
+    line-height: 1;
+}
+.dp__title {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+.dp__nav:hover,
+.dp__title:hover {
+    background: var(--row-bg-hover, rgba(128, 128, 128, 0.14));
+}
+
+.dp__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+/* the day view's height - a 22px weekday row and six 34px weeks - so switching to months or
+   years never resizes the panel; opening upward, a shorter panel moved its title out from under
+   the pointer */
+.dp__grid--three {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    height: 236px;
+    align-content: space-evenly;
+}
+.dp__wd {
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.dp__day,
+.dp__cell {
+    height: 34px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text, #fafafa);
+    font: inherit;
+    cursor: pointer;
+}
+.dp__cell {
+    height: 40px;
+}
+.dp__day:hover:not(:disabled),
+.dp__cell:hover:not(:disabled) {
+    background: var(--row-bg-hover, rgba(128, 128, 128, 0.14));
+}
+.dp__day--out {
+    color: var(--text-dim, #8a8a8a);
+}
+.dp__day--today {
+    border-color: var(--input-border, rgba(255, 255, 255, 0.16));
+}
+.dp__day--focus,
+.dp__cell--focus {
+    border-color: var(--text-muted, #a3a3a3);
+}
+.dp__day--sel,
+.dp__cell--sel {
+    background: var(--gold-wash, rgba(168, 168, 168, 0.16));
+    border-color: var(--gold, #a8a8a8);
+    font-weight: 600;
+}
+.dp__day:disabled,
+.dp__cell:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.dp__foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+.dp__link {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    font: inherit;
+    font-size: 12.5px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.dp__link:hover:not(:disabled) {
+    color: var(--text, #fafafa);
+}
+.dp__link:disabled {
+    opacity: 0.35;
+    cursor: default;
+}

@@ -1,0 +1,245 @@
+:host {
+    --lightbox-ink: var(--mbpr-theme-ink, #101112);
+    --lightbox-ink-soft: var(--mbpr-theme-ink-soft, rgba(16, 17, 18, 0.64));
+    --lightbox-ink-faint: var(--mbpr-theme-ink-faint, rgba(16, 17, 18, 0.44));
+    --lightbox-line: var(--mbpr-theme-ink-line, rgba(16, 17, 18, 0.1));
+    --lightbox-surface: var(--mbpr-theme-paper, #f0ede9);
+    --lightbox-surface-soft: var(--mbpr-theme-surface-soft, #f8f6f2);
+    --lightbox-shadow: var(--mbpr-theme-shadow-lg, 0 28px 64px rgba(16, 17, 18, 0.22));
+    --lightbox-ease: var(--mbpr-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    font-family: "Salesforce Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Fixed scrim. Relies on the workspace modal's keyframe ending at
+   transform:none, or this resolves against the modal instead of the viewport. */
+.lightbox-layer {
+    align-items: center;
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    /* Darker than overlay-strong: the dashboard behind was still too visible. */
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    position: fixed;
+    z-index: 9600;
+}
+
+.lightbox {
+    animation: mbprLightboxIn 420ms var(--lightbox-ease) both;
+    background: var(--lightbox-surface);
+    border: 1px solid var(--lightbox-line);
+    border-radius: 20px;
+    box-shadow: var(--lightbox-shadow);
+    color: var(--lightbox-ink);
+    display: flex;
+    flex-direction: column;
+    max-height: min(46rem, 92dvh);
+    overflow: hidden;
+    width: min(64rem, 94vw);
+}
+
+@keyframes mbprLightboxIn {
+    from {
+        opacity: 0;
+        transform: translateY(1rem) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        /* Ends at none so the panel never becomes a containing block for its
+           own fixed descendants. */
+        transform: none;
+    }
+}
+
+.lightbox__head {
+    align-items: flex-start;
+    border-bottom: 1px solid var(--lightbox-line);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.8rem;
+    justify-content: space-between;
+    padding: 1rem 1.15rem 0.8rem 1.35rem;
+}
+
+.lightbox__titles {
+    min-width: 0;
+}
+
+.lightbox__eyebrow {
+    color: var(--lightbox-ink-faint);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    margin: 0 0 0.2rem;
+    text-transform: uppercase;
+}
+
+.lightbox__title {
+    color: var(--lightbox-ink);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.lightbox__subtitle {
+    color: var(--lightbox-ink-soft);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin: 0.22rem 0 0;
+}
+
+.lightbox__actions {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+}
+
+.lightbox__close,
+.lightbox__screenshot {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--lightbox-line);
+    border-radius: 999px;
+    color: var(--lightbox-ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 2.2rem;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+    width: 2.2rem;
+}
+
+.lightbox__close svg,
+.lightbox__screenshot svg {
+    fill: none;
+    height: 1rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 1rem;
+}
+
+.lightbox__close:hover,
+.lightbox__screenshot:hover,
+.lightbox__close:focus-visible,
+.lightbox__screenshot:focus-visible {
+    background: var(--lightbox-surface-soft);
+    color: var(--lightbox-ink);
+}
+
+.lightbox__close:focus-visible,
+.lightbox__screenshot:focus-visible {
+    outline: 2px solid var(--lightbox-ink-soft);
+    outline-offset: 2px;
+}
+
+/* Desktop only. Width-gated, so a 1024px mouse window still hides it. */
+@media (max-width: 1199px) {
+    .lightbox__screenshot {
+        display: none;
+    }
+}
+
+/* The body is both the scroller and the size preset. These inherit
+   through the slot into c-mbpr_chart, so hosts share one geometry. */
+.lightbox__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 1.1rem 1.35rem 1.35rem;
+    -webkit-overflow-scrolling: touch;
+    --chart-donut-size: min(19rem, 56vh);
+    --chart-center-scale: 1.5;
+    --chart-columns-height: min(17rem, 48vh);
+    --chart-legend-font: 0.9rem;
+    --chart-legend-row-pad: 0.4rem 0.5rem;
+    --chart-legend-max-height: 56vh;
+    --chart-bar-track: 0.8rem;
+}
+
+@media (max-width: 767px), (min-width: 768px) and (max-width: 1199px) and (pointer: coarse), (min-width: 768px) and (max-width: 1199px) and (hover: none) {
+    .lightbox-layer {
+        background: rgba(16, 17, 18, 0.82);
+    }
+
+    .lightbox {
+        max-height: calc(100dvh - 1.5rem);
+        width: min(58rem, calc(100vw - 1.5rem));
+    }
+
+    .lightbox__close {
+        height: 44px;
+        min-width: 44px;
+        width: 44px;
+    }
+
+    .lightbox__screenshot {
+        display: none;
+    }
+
+    .lightbox__body {
+        --chart-legend-row-pad: 0.55rem 0.5rem;
+    }
+}
+
+/* Phone: full-screen sheet, body is the only scroller. */
+@media (max-width: 767px) {
+    .lightbox-layer {
+        padding: 0;
+    }
+
+    .lightbox {
+        animation-name: mbprLightboxUp;
+        border: 0;
+        border-radius: 0;
+        height: 100dvh;
+        max-height: 100dvh;
+        width: 100%;
+    }
+
+    .lightbox__head {
+        padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
+    }
+
+    .lightbox__body {
+        padding: 1rem 1rem calc(1.35rem + env(safe-area-inset-bottom, 0px));
+        --chart-donut-size: min(15rem, 76vw);
+        --chart-columns-height: min(14rem, 38vh);
+        --chart-legend-max-height: none;
+        --chart-legend-font: 0.92rem;
+    }
+}
+
+@keyframes mbprLightboxUp {
+    from {
+        opacity: 0;
+        transform: translateY(2.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lightbox {
+        animation: none;
+    }
+
+    .lightbox__close {
+        transition: none;
+    }
+}

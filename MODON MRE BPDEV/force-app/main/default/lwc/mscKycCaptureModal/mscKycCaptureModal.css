@@ -1,0 +1,213 @@
+@import "c/mscStyles";
+
+/*
+  The console's dialog around MODON's own form. 2.0: the form is dressed in the console's
+  palette rather than left as a white card on a dark site - see .kycm__body below and the
+  injected sheet in the .js. MODON's component and stylesheet are not modified.
+*/
+:host { display: block; }
+
+.kycm__backdrop {
+    /* absolute, not fixed: the host (.page in c/mscBookingPage) is position:relative and sits
+       inside a transformed sheet, where fixed would be trapped anyway (1.1) */
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 12px;
+    background: rgba(0, 0, 0, 0.55);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kycm {
+    /* 2.4 - the containing block for the saving overlay the injected sheet draws on this
+       element's pseudo-elements; without it they would resolve against .kycm__backdrop. */
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    max-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    /* 2.1 - --panel-bg, not --surface: --surface is translucent (rgba(15,15,15,0.68)) and until
+       2.0 it was hidden behind MODON's opaque white card. With the card painted transparent the
+       booking page showed straight through the dialog. --panel-bg is the token for
+       exactly this - "an opaque panel floating over a scrim" - and is what the drawer and the
+       verification dialog already use. */
+    background: var(--panel-bg, #141414);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+.kycm__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+}
+
+.kycm__title {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kycm__close {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: var(--text, #fafafa);
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+.kycm__close:hover { background: rgba(255, 255, 255, 0.05); }
+.kycm__close:focus-visible { outline: 1px solid var(--text-muted, #a3a3a3); outline-offset: 2px; }
+
+/* 2.7 - R2-06: the question before an unsaved form closes. Grey, a hairline at the left, the same
+   shape as the Regenerate and Replace questions elsewhere in the console. Wraps on a phone. */
+.kycm__confirm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin: 10px 16px 0;
+    padding: 6px 0 6px 10px;
+    border-left: 2px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    flex: 0 0 auto;
+}
+.kycm__confirm-q {
+    font-size: 12px;
+    color: var(--text-muted, #a3a3a3);
+}
+.kycm__btn {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    background: transparent;
+    color: var(--text, #fafafa);
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.kycm__btn:hover { background: rgba(255, 255, 255, 0.05); }
+.kycm__btn:focus-visible { outline: 1px solid var(--text-muted, #a3a3a3); outline-offset: 2px; }
+
+/* 2.0 - MODON's form, wearing the console's clothes.
+   Their component and stylesheet are untouched: everything here is either a CSS custom
+   property their base components already read, or a document-level rule this dialog injects
+   under its own tag (see the .js). Nothing reaches their app.
+   Two layers do the work. This block sets the design tokens the LWC base components
+   (lightning-input, -combobox, -textarea) and the LWR site resolve their colours from; the
+   injected sheet repaints the surfaces their own stylesheet paints by class. 1.2 set this
+   same list to light values, which was the quickest way to make the form READABLE on the dark
+   site; the business asked for it to match the site instead (20 Sep), so the values are inverted and
+   the card's own chrome is covered too. */
+.kycm__body {
+    padding: 12px;
+    overflow-y: auto;
+    background: transparent;
+    border-radius: 0 0 12px 12px;
+    color: var(--text, #fafafa);
+    color-scheme: var(--control-scheme, dark);
+    /* the base components' own labels read the LWC design tokens */
+    --lwc-colorTextDefault: #fafafa;
+    --lwc-colorTextLabel: #a3a3a3;
+    --lwc-colorTextWeak: #8a8a8a;
+    --lwc-colorTextPlaceholder: #8a8a8a;
+    --lwc-colorTextInputIcon: #a3a3a3;
+    --lwc-colorBackgroundInput: #1c1c1d;
+    --lwc-colorBorderInput: rgba(255, 255, 255, 0.16);
+    --lwc-colorTextIconDefault: #a3a3a3;
+    --lwc-colorTextLink: #60a5fa;
+    /* the LWR site's base components read the DXP hooks */
+    --dxp-g-root: #08090b;
+    --dxp-g-root-contrast: #fafafa;
+    --dxp-g-neutral-1: #141414;
+    --dxp-g-neutral-2: #1c1c1d;
+    --dxp-g-neutral-3: rgba(255, 255, 255, 0.16);
+    --dxp-g-neutral-contrast-1: #fafafa;
+    --dxp-g-neutral-contrast-2: #a3a3a3;
+    --dxp-g-neutral-contrast-3: #8a8a8a;
+    --dxp-s-form-element-label-text-color: #a3a3a3;
+    --dxp-s-form-element-text-color: #fafafa;
+    --dxp-s-form-element-color-background: #1c1c1d;
+    --dxp-s-form-element-color-border: rgba(255, 255, 255, 0.16);
+    --dxp-s-form-element-placeholder-text-color: #8a8a8a;
+    --dxp-s-form-element-caption-text-color: #8a8a8a;
+    /* the combobox/input labels resolve to the body text hook, seen in the browser */
+    --dxp-s-body-text-color: #fafafa;
+    --dxp-s-body-small-text-color: #a3a3a3;
+    --dxp-s-body-large-text-color: #fafafa;
+    --dxp-s-link-text-color: #60a5fa;
+    --slds-c-input-color-background: #1c1c1d;
+    --slds-c-input-text-color: #fafafa;
+    --slds-c-input-color-border: rgba(255, 255, 255, 0.16);
+    --slds-c-input-color-border-focus: #a8a8a8;
+    --slds-c-textarea-color-background: #1c1c1d;
+    --slds-c-textarea-text-color: #fafafa;
+    --slds-c-textarea-color-border: rgba(255, 255, 255, 0.16);
+    --slds-c-combobox-color-background: #1c1c1d;
+    --slds-c-combobox-text-color: #fafafa;
+    --slds-c-combobox-color-border: rgba(255, 255, 255, 0.16);
+    --slds-c-select-color-background: #1c1c1d;
+    --slds-c-select-text-color: #fafafa;
+    --slds-c-select-color-border: rgba(255, 255, 255, 0.16);
+    --slds-c-button-text-color: #fafafa;
+    --sds-c-input-color-background: #1c1c1d;
+    --sds-c-input-text-color: #fafafa;
+    --sds-c-input-color-border: rgba(255, 255, 255, 0.16);
+    --sds-c-textarea-color-background: #1c1c1d;
+    --sds-c-textarea-text-color: #fafafa;
+    --sds-c-combobox-color-background: #1c1c1d;
+    --sds-c-combobox-text-color: #fafafa;
+    --sds-c-select-color-background: #1c1c1d;
+    --sds-c-select-text-color: #fafafa;
+    /* 2.6 - the picklist dropdown's OWN hooks, set by name.
+       This block already sets --dxp-g-root, and that is not enough to reach the dropdown.
+       The site's branding set declares, on :root,
+         --dxp-s-dropdown-color-background: var(--dxp-g-root)
+       and a custom property whose value contains var() is substituted where it is DECLARED,
+       not where it is read, so it is already a flat colour by the time it inherits down here.
+       Measured in a copy of the site's real cascade: the panel inherits --dxp-g-root #08090b
+       from this block and --dxp-s-dropdown-color-background #000000 from :root at the same
+       time. dxp-slds-extensions reads the second one, so it has to be named.
+       This is the belt to the injected sheet's braces: a custom property cannot be
+       out-specified, so the panel and its rows stay right even where one of the site's own
+       rules wins the selector fight. Scoped to .kycm__body, so it reaches nothing else. */
+    --dxp-s-dropdown-color-background: #141414;
+    --dxp-s-dropdown-text-color: #fafafa;
+    --dxp-s-dropdown-color-border: rgba(255, 255, 255, 0.16);
+    --dxp-s-dropdown-color-background-hover: rgba(255, 255, 255, 0.06);
+    --dxp-s-dropdown-text-color-hover: #fafafa;
+    /* SLDS's own listbox hooks, which its global sheet reads with no fallback at all */
+    --slds-c-dropdown-color: #fafafa;
+    --slds-c-listbox-option-color: #fafafa;
+    --slds-c-listbox-option-color-background: transparent;
+    --slds-c-listbox-option-color-hover: #fafafa;
+    --slds-c-listbox-option-color-background-hover: rgba(255, 255, 255, 0.06);
+    --slds-c-listbox-option-color-focus: #fafafa;
+    --slds-c-listbox-option-color-background-focus: rgba(255, 255, 255, 0.06);
+    --slds-c-listbox-option-meta-color: #8a8a8a;
+    /* their header icon is Salesforce blue; the console's palette is muted */
+    --sds-c-icon-color-foreground-default: #a3a3a3;
+}
+
+@media (max-width: 640px) {
+    .kycm__backdrop { padding: 8px 0; align-items: stretch; }
+    .kycm { max-height: calc(100vh - 16px); border-radius: 10px; }
+    .kycm__body { padding: 8px; }
+}

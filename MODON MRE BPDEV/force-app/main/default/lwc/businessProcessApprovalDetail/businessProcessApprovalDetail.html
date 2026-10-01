@@ -1,0 +1,230 @@
+<template>
+    <div class="detail-panel">
+        <template if:true={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner alternative-text="Loading details" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:true={loadError}>
+            <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                <h2>{loadError}</h2>
+            </div>
+        </template>
+
+        <template if:true={detail}>
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-start detail-header">
+                <div class="slds-media slds-media_center">
+                    <div class="slds-media__figure">
+                        <lightning-icon icon-name="standard:approval" size="small"></lightning-icon>
+                    </div>
+                    <div class="slds-media__body">
+                        <p class="slds-text-title_caps slds-text-color_weak">{card.processTypeName}</p>
+                        <h2 class="slds-text-heading_small">{card.stepName}</h2>
+                    </div>
+                </div>
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    title="Close"
+                    variant="bare"
+                    onclick={handleClose}>
+                </lightning-button-icon>
+            </div>
+
+            <!-- Business Process -->
+            <section class="detail-section">
+                <h3 class="detail-section-title">Business Process</h3>
+                <div class="slds-grid slds-wrap detail-grid">
+                    <div class="slds-col slds-size_1-of-2 field">
+                        <p class="field-label">BP Number</p>
+                        <p class="field-value">
+                            <a href="javascript:void(0);" data-id={card.businessProcessId} onclick={handleNavigate}>{card.businessProcessName}</a>
+                        </p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 field">
+                        <p class="field-label">Status</p>
+                        <p class="field-value">{detail.businessProcessStatus}</p>
+                    </div>
+
+                    <template if:true={hasAccount}>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Account</p>
+                            <p class="field-value">
+                                <a href="javascript:void(0);" data-id={detail.accountId} onclick={handleNavigate}>{card.accountName}</a>
+                            </p>
+                        </div>
+                    </template>
+
+                    <template if:true={hasSalesOrder}>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Sales Order</p>
+                            <p class="field-value">
+                                <a href="javascript:void(0);" data-id={detail.salesOrderId} onclick={handleNavigate}>{detail.salesOrderName}</a>
+                                <template if:true={detail.salesOrderStatus}>
+                                    <span class="slds-text-body_small slds-text-color_weak"> &middot; {detail.salesOrderStatus}</span>
+                                </template>
+                            </p>
+                        </div>
+                    </template>
+
+                    <template if:true={hasUnit}>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Unit</p>
+                            <p class="field-value">
+                                <a href="javascript:void(0);" data-id={detail.unitId} onclick={handleNavigate}>{detail.unitName}</a>
+                            </p>
+                        </div>
+                    </template>
+
+                    <template if:true={hasProject}>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Project</p>
+                            <p class="field-value">
+                                <a href="javascript:void(0);" data-id={detail.projectId} onclick={handleNavigate}>{detail.projectName}</a>
+                            </p>
+                        </div>
+                    </template>
+
+                    <template if:true={hasInstallment}>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Installment</p>
+                            <p class="field-value">
+                                {detail.installmentName}
+                                <template if:true={detail.installmentPaymentStatus}>
+                                    <span class="slds-text-body_small slds-text-color_weak"> &middot; {detail.installmentPaymentStatus}</span>
+                                </template>
+                            </p>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Sales Order financial summary -->
+            <template if:true={hasSalesOrder}>
+                <section class="detail-section">
+                    <h3 class="detail-section-title">Sales Order</h3>
+                    <div class="slds-grid slds-wrap detail-grid">
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Total Amount</p>
+                            <p class="field-value">
+                                <lightning-formatted-number value={detail.totalAmount} format-style="currency" currency-code={currencyCode}></lightning-formatted-number>
+                            </p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Outstanding</p>
+                            <p class="field-value">
+                                <lightning-formatted-number value={detail.totalOutstanding} format-style="currency" currency-code={currencyCode}></lightning-formatted-number>
+                            </p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Paid to Date</p>
+                            <p class="field-value">
+                                <lightning-formatted-number value={detail.totalPaidAmount} format-style="currency" currency-code={currencyCode}></lightning-formatted-number>
+                            </p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Booking Date</p>
+                            <p class="field-value">
+                                <lightning-formatted-date-time value={detail.bookingDate} year="numeric" month="short" day="2-digit"></lightning-formatted-date-time>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </template>
+
+            <!-- Approval Step -->
+            <section class="detail-section">
+                <h3 class="detail-section-title">Approval Step</h3>
+                <div class="slds-grid slds-wrap detail-grid">
+                    <div class="slds-col slds-size_1-of-2 field">
+                        <p class="field-label">Step Status</p>
+                        <p class="field-value">{card.status}</p>
+                    </div>
+                    <template if:true={detail.department}>
+                        <div class="slds-col slds-size_1-of-2 field">
+                            <p class="field-label">Department</p>
+                            <p class="field-value">{detail.department}</p>
+                        </div>
+                    </template>
+                    <template if:true={detail.remarksComments}>
+                        <div class="slds-col slds-size_1-of-1 field">
+                            <p class="field-label">Previous Comments</p>
+                            <p class="field-value">{detail.remarksComments}</p>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Documents -->
+            <section class="detail-section">
+                <h3 class="detail-section-title">Documents</h3>
+                <c-business-process-approval-documents documents={detail.documents}></c-business-process-approval-documents>
+            </section>
+
+            <!-- Action -->
+            <section class="detail-section action-section">
+                <h3 class="detail-section-title">Action</h3>
+
+                <template if:true={hasActionOptions}>
+                    <lightning-radio-group
+                        name="approvalAction"
+                        label="Choose an action"
+                        options={actionOptions}
+                        value={selectedAction}
+                        onchange={handleActionChange}
+                        type="radio">
+                    </lightning-radio-group>
+
+                    <template if:true={showReopenField}>
+                        <lightning-combobox
+                            class="slds-m-top_small"
+                            label="Which earlier step should provide the missing information?"
+                            placeholder="Select a step"
+                            options={reopenOptions}
+                            value={reopenStepId}
+                            onchange={handleReopenStepChange}
+                            required>
+                        </lightning-combobox>
+                    </template>
+
+                    <template if:true={showNextOwnerField}>
+                        <lightning-combobox
+                            class="slds-m-top_small"
+                            label="Assign the next step to"
+                            placeholder="Select a user"
+                            options={nextOwnerOptions}
+                            value={nextOwnerId}
+                            onchange={handleNextOwnerChange}>
+                        </lightning-combobox>
+                    </template>
+
+                    <lightning-textarea
+                        class="slds-m-top_small"
+                        label="Comments"
+                        value={comments}
+                        required={commentsRequired}
+                        onchange={handleCommentsChange}>
+                    </lightning-textarea>
+
+                    <template if:true={validationMessage}>
+                        <p class="slds-text-color_error slds-m-top_x-small" role="alert">{validationMessage}</p>
+                    </template>
+
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button
+                            variant="brand"
+                            label="Submit"
+                            onclick={handleSubmit}
+                            disabled={submitDisabled}>
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <template if:false={hasActionOptions}>
+                    <p class="slds-text-color_weak">No actions are available for this step.</p>
+                </template>
+            </section>
+        </template>
+    </div>
+</template>

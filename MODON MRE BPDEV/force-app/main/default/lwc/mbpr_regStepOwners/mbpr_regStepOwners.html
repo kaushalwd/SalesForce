@@ -1,0 +1,466 @@
+<template>
+    <div class="regf">
+        <h3 class="regf__section-title">Owner Information</h3>
+
+        <template for:each={ownerCards} for:item="staffMember">
+            <article key={staffMember.id} class="regf-member">
+                <div class="regf-member__head">
+                    <h4 class="regf-member__title">{staffMember.label}</h4>
+                    <template lwc:if={staffMember.removable}>
+                        <button type="button" class="regf-chip__action regf-chip__action--danger" title="Remove Owner"
+                            aria-label="Remove owner" data-id={staffMember.id} disabled={isDisabled} onclick={handleRemoveAgent}>
+                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                        </button>
+                    </template>
+                </div>
+
+                <div class="regf__grid">
+                    <label class={staffMember.c_firstname}>
+                        <span class="regf-field__label">First Name</span>
+                        <input class="regf-field__control" type="text" name="firstname" value={staffMember.firstname}
+                            data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_firstname}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_firstname}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_lastname}>
+                        <span class="regf-field__label">Last Name</span>
+                        <input class="regf-field__control" type="text" name="lastname" value={staffMember.lastname}
+                            data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_lastname}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_lastname}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_nationality}>
+                        <span class="regf-field__label">Nationality</span>
+                        <select class="regf-field__control" name="nationality" data-id={staffMember.id}
+                            disabled={isDisabled} onchange={handleFieldChange}>
+                            <option value="" disabled>Select an Option</option>
+                            <template for:each={countryOptionsList} for:item="country">
+                                <option key={country.value} value={country.value}>{country.label}</option>
+                            </template>
+                        </select>
+                        <template lwc:if={staffMember.e_nationality}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_nationality}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_residentStatus}>
+                        <span class="regf-field__label">Resident Status</span>
+                        <select class="regf-field__control" name="residentStatus" data-id={staffMember.id}
+                            disabled={isDisabled} onchange={handleResidentStatusChange}>
+                            <option value="" disabled>Select an Option</option>
+                            <template for:each={residentStatusOptions} for:item="statusOption">
+                                <option key={statusOption.value} value={statusOption.value}>{statusOption.label}</option>
+                            </template>
+                        </select>
+                        <template lwc:if={staffMember.e_residentStatus}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_residentStatus}</p>
+                        </template>
+                    </label>
+                </div>
+
+                <div class="regf-validate-row">
+                    <label class={staffMember.c_mobileNum}>
+                        <span class="regf-field__label">Country Code</span>
+                        <select class="regf-field__control" name="mobileNum" data-id={staffMember.id}
+                            disabled={isDisabled} onchange={handleFieldChange}>
+                            <option value="" disabled>Select</option>
+                            <template for:each={mobCountryOptions} for:item="codeOption">
+                                <option key={codeOption.value} value={codeOption.value}>{codeOption.label}</option>
+                            </template>
+                        </select>
+                        <template lwc:if={staffMember.e_mobileNum}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_mobileNum}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_mobile}>
+                        <span class="regf-field__label">Mobile Number</span>
+                        <input class="regf-field__control" type="text" name="mobile" value={staffMember.mobile}
+                            inputmode="numeric" data-id={staffMember.id} disabled={isDisabled}
+                            onchange={handleFieldChange} onblur={handleNumericInput} />
+                        <template lwc:if={staffMember.e_mobile}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_mobile}</p>
+                        </template>
+                        <p class="regf-field__help">Enter a valid mobile number (e.g., +12025550123 or 9876543210, 8-15 digits)</p>
+                    </label>
+                    <button type="button" class="regf-button" data-id={staffMember.id} disabled={isDisabled} onclick={handleValidatePhoneClick}>{staffMember.validatePhone}</button>
+                </div>
+
+                <div class="regf-validate-row">
+                    <label class={staffMember.c_email}>
+                        <span class="regf-field__label">Email</span>
+                        <input class="regf-field__control" type="email" name="email" value={staffMember.email}
+                            data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_email}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_email}</p>
+                        </template>
+                    </label>
+                    <button type="button" class="regf-button" data-id={staffMember.id} disabled={isDisabled} onclick={handleValidateEmailClick}>{staffMember.validateEmail}</button>
+                </div>
+
+                <div class="regf__grid">
+                    <label class={staffMember.c_passportNumber}>
+                        <span class="regf-field__label">Passport Number</span>
+                        <input class="regf-field__control" type="text" name="passportNumber" value={staffMember.passportNumber}
+                            data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_passportNumber}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_passportNumber}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_passportIssueDate}>
+                        <span class="regf-field__label">Passport Issue Date</span>
+                        <input class="regf-field__control" type="date" name="passportIssueDate" value={staffMember.passportIssueDate}
+                            data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_passportIssueDate}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_passportIssueDate}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_passportExpiryDate}>
+                        <span class="regf-field__label">Passport Expiry Date</span>
+                        <input class="regf-field__control" type="date" name="passportExpiryDate" value={staffMember.passportExpiryDate}
+                            data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_passportExpiryDate}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_passportExpiryDate}</p>
+                        </template>
+                    </label>
+                </div>
+
+                <template lwc:if={staffMember.isResident}>
+                    <div class="regf__grid">
+                        <label class={staffMember.c_eidNumber}>
+                            <span class="regf-field__label">Emirates ID Number</span>
+                            <input class="regf-field__control" type="text" name="eidNumber" value={staffMember.eidNumber}
+                                data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_eidNumber}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_eidNumber}</p>
+                            </template>
+                        </label>
+                        <label class={staffMember.c_eidIssueDate}>
+                            <span class="regf-field__label">EID Issue Date</span>
+                            <input class="regf-field__control" type="date" name="eidIssueDate" value={staffMember.eidIssueDate}
+                                data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_eidIssueDate}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_eidIssueDate}</p>
+                            </template>
+                        </label>
+                        <label class={staffMember.c_eidExpiryDate}>
+                            <span class="regf-field__label">EID Expiry Date</span>
+                            <input class="regf-field__control" type="date" name="eidExpiryDate" value={staffMember.eidExpiryDate}
+                                data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_eidExpiryDate}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_eidExpiryDate}</p>
+                            </template>
+                        </label>
+                    </div>
+                </template>
+
+                <label class="regf-check">
+                    <input type="checkbox" name="isBroker" checked={staffMember.isBroker} data-id={staffMember.id}
+                        disabled={isDisabled} onchange={handleFieldChange} />
+                    <span>is Broker</span>
+                </label>
+
+                <template lwc:if={staffMember.isBroker}>
+                    <div class="regf__grid">
+                        <label class={staffMember.c_brokerCertificateNumber}>
+                            <span class="regf-field__label">Broker Card License Number</span>
+                            <input class="regf-field__control" type="text" name="brokerCertificateNumber"
+                                value={staffMember.brokerCertificateNumber} data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_brokerCertificateNumber}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_brokerCertificateNumber}</p>
+                            </template>
+                        </label>
+                        <label class={staffMember.c_issuingAuthority}>
+                            <span class="regf-field__label">Issuing Authority</span>
+                            <input class="regf-field__control" type="text" name="issuingAuthority"
+                                value={staffMember.issuingAuthority} data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_issuingAuthority}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_issuingAuthority}</p>
+                            </template>
+                        </label>
+                        <label class={staffMember.c_brokerCertificateIssueDate}>
+                            <span class="regf-field__label">Broker Card Issue Date</span>
+                            <input class="regf-field__control" type="date" name="brokerCertificateIssueDate"
+                                value={staffMember.brokerCertificateIssueDate} data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_brokerCertificateIssueDate}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_brokerCertificateIssueDate}</p>
+                            </template>
+                        </label>
+                        <label class={staffMember.c_brokerCertificateExpiryDate}>
+                            <span class="regf-field__label">Broker Card Expiry Date</span>
+                            <input class="regf-field__control" type="date" name="brokerCertificateExpiryDate"
+                                value={staffMember.brokerCertificateExpiryDate} data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <template lwc:if={staffMember.e_brokerCertificateExpiryDate}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_brokerCertificateExpiryDate}</p>
+                            </template>
+                        </label>
+                    </div>
+                </template>
+
+                <div class="regf__grid">
+                    <label class={staffMember.c_shareholdingPercentage}>
+                        <span class="regf-field__label">Share holding percentage</span>
+                        <input class="regf-field__control" type="number" name="shareholdingPercentage" max="100"
+                            inputmode="numeric" value={staffMember.shareholdingPercentage} data-id={staffMember.id}
+                            disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_shareholdingPercentage}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_shareholdingPercentage}</p>
+                        </template>
+                    </label>
+                    <div>
+                        <label class="regf-check">
+                            <input type="checkbox" name="isPrimaryOwner" checked={staffMember.isPrimaryOwner}
+                                data-id={staffMember.id} disabled={isDisabled} onchange={handleFieldChange} />
+                            <span>Primary Owner</span>
+                        </label>
+                        <template lwc:if={staffMember.e_isPrimaryOwner}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_isPrimaryOwner}</p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Power of Attorney moved here from the Agency
+                     Admin step so it is captured against the Owner. Optional,
+                     as it was there. -->
+                <div class="regf__grid">
+                    <label class={staffMember.c_POA}>
+                        <span class="regf-field__label">POA Name</span>
+                        <input class="regf-field__control" type="text" name="POA"
+                            value={staffMember.POA} data-id={staffMember.id}
+                            disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_POA}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_POA}</p>
+                        </template>
+                    </label>
+                    <label class={staffMember.c_POAemail}>
+                        <span class="regf-field__label">POA Email</span>
+                        <input class="regf-field__control" type="email" name="POAemail"
+                            value={staffMember.POAemail} data-id={staffMember.id}
+                            disabled={isDisabled} onchange={handleFieldChange} />
+                        <template lwc:if={staffMember.e_POAemail}>
+                            <p class="regf-field__error" role="alert">{staffMember.e_POAemail}</p>
+                        </template>
+                    </label>
+                </div>
+
+                <h5 class="regf__section-title">Documents</h5>
+
+                <div class="regf__grid">
+                    <template lwc:if={staffMember.isPassportFirstPageUploaded}>
+                        <div class="regf-chip">
+                            <span class="regf-chip__label">Passport First Page</span>
+                            <button type="button" class="regf-chip__name" data-id={staffMember.id}
+                                data-label="Passport_First_Page" onclick={handlePreview}
+                                title="Preview Passport First Page">{staffMember.passportFrontfileName}</button>
+                            <button type="button" class="regf-chip__action" title="Preview Passport First Page"
+                                aria-label="Preview Passport First Page" data-id={staffMember.id}
+                                data-label="Passport_First_Page" onclick={handlePreview}>
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                            </button>
+                            <template lwc:if={showDeleteIcon}>
+                                <button type="button" class="regf-chip__action regf-chip__action--danger"
+                                    title="Remove Passport First Page" aria-label="Remove Passport First Page"
+                                    data-id={staffMember.id} data-label="Passport_First_Page" onclick={handleRemoveFile}>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <label class={staffMember.c_passportFirstUpload}>
+                            <span class="regf-upload__title">Passport First Page</span>
+                            <span class="regf-upload__hint">PDF or JPG, max 2 MB</span>
+                            <input type="file" class="regf-upload__input" accept=".pdf,.jpg" data-id={staffMember.id}
+                                data-label="Passport_First_Page" disabled={isDisabled} onchange={handleFileChange} />
+                            <template lwc:if={staffMember.e_passportFirstUpload}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_passportFirstUpload}</p>
+                            </template>
+                        </label>
+                    </template>
+
+                    <template lwc:if={staffMember.isPassportSignaturePageUploaded}>
+                        <div class="regf-chip">
+                            <span class="regf-chip__label">Passport Signature Page</span>
+                            <button type="button" class="regf-chip__name" data-id={staffMember.id}
+                                data-label="Passport_Signature_Page" onclick={handlePreview}
+                                title="Preview Passport Signature Page">{staffMember.passportFinalfileName}</button>
+                            <button type="button" class="regf-chip__action" title="Preview Passport Signature Page"
+                                aria-label="Preview Passport Signature Page" data-id={staffMember.id}
+                                data-label="Passport_Signature_Page" onclick={handlePreview}>
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                            </button>
+                            <template lwc:if={showDeleteIcon}>
+                                <button type="button" class="regf-chip__action regf-chip__action--danger"
+                                    title="Remove Passport Signature Page" aria-label="Remove Passport Signature Page"
+                                    data-id={staffMember.id} data-label="Passport_Signature_Page" onclick={handleRemoveFile}>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <label class={staffMember.c_passportSignatureUpload}>
+                            <span class="regf-upload__title">Passport Signature Page</span>
+                            <span class="regf-upload__hint">PDF or JPG, max 2 MB</span>
+                            <input type="file" class="regf-upload__input" accept=".pdf,.jpg" data-id={staffMember.id}
+                                data-label="Passport_Signature_Page" disabled={isDisabled} onchange={handleFileChange} />
+                            <template lwc:if={staffMember.e_passportSignatureUpload}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_passportSignatureUpload}</p>
+                            </template>
+                        </label>
+                    </template>
+                </div>
+
+                <template lwc:if={staffMember.isResident}>
+                    <div class="regf__grid">
+                        <template lwc:if={staffMember.isEmiratesIdFrontUploaded}>
+                            <div class="regf-chip">
+                                <span class="regf-chip__label">Emirates ID Front</span>
+                                <button type="button" class="regf-chip__name" data-id={staffMember.id}
+                                    data-label="Emirates_ID_Front" onclick={handlePreview}
+                                    title="Preview Emirates ID Front">{staffMember.eidFrontfileName}</button>
+                                <button type="button" class="regf-chip__action" title="Preview Emirates ID Front"
+                                    aria-label="Preview Emirates ID Front" data-id={staffMember.id}
+                                    data-label="Emirates_ID_Front" onclick={handlePreview}>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                                </button>
+                                <template lwc:if={showDeleteIcon}>
+                                    <button type="button" class="regf-chip__action regf-chip__action--danger"
+                                        title="Remove Emirates ID Front" aria-label="Remove Emirates ID Front"
+                                        data-id={staffMember.id} data-label="Emirates_ID_Front" onclick={handleRemoveFile}>
+                                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <label class={staffMember.c_eidFrontUpload}>
+                                <span class="regf-upload__title">Emirates ID Front</span>
+                                <span class="regf-upload__hint">PDF or JPG, max 2 MB</span>
+                                <input type="file" class="regf-upload__input" accept=".pdf,.jpg" data-id={staffMember.id}
+                                    data-label="Emirates_ID_Front" disabled={isDisabled} onchange={handleFileChange} />
+                                <template lwc:if={staffMember.e_eidFrontUpload}>
+                                    <p class="regf-field__error" role="alert">{staffMember.e_eidFrontUpload}</p>
+                                </template>
+                            </label>
+                        </template>
+
+                        <template lwc:if={staffMember.isEmiratesIdBackUploaded}>
+                            <div class="regf-chip">
+                                <span class="regf-chip__label">Emirates ID Back</span>
+                                <button type="button" class="regf-chip__name" data-id={staffMember.id}
+                                    data-label="Emirates_ID_Back" onclick={handlePreview}
+                                    title="Preview Emirates ID Back">{staffMember.eidBackfileName}</button>
+                                <button type="button" class="regf-chip__action" title="Preview Emirates ID Back"
+                                    aria-label="Preview Emirates ID Back" data-id={staffMember.id}
+                                    data-label="Emirates_ID_Back" onclick={handlePreview}>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                                </button>
+                                <template lwc:if={showDeleteIcon}>
+                                    <button type="button" class="regf-chip__action regf-chip__action--danger"
+                                        title="Remove Emirates ID Back" aria-label="Remove Emirates ID Back"
+                                        data-id={staffMember.id} data-label="Emirates_ID_Back" onclick={handleRemoveFile}>
+                                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <label class={staffMember.c_eidBackUpload}>
+                                <span class="regf-upload__title">Emirates ID Back</span>
+                                <span class="regf-upload__hint">PDF or JPG, max 2 MB</span>
+                                <input type="file" class="regf-upload__input" accept=".pdf,.jpg" data-id={staffMember.id}
+                                    data-label="Emirates_ID_Back" disabled={isDisabled} onchange={handleFileChange} />
+                                <template lwc:if={staffMember.e_eidBackUpload}>
+                                    <p class="regf-field__error" role="alert">{staffMember.e_eidBackUpload}</p>
+                                </template>
+                            </label>
+                        </template>
+
+                        <template lwc:if={staffMember.isVisaPageUploaded}>
+                            <div class="regf-chip">
+                                <span class="regf-chip__label">Visa Page</span>
+                                <button type="button" class="regf-chip__name" data-id={staffMember.id}
+                                    data-label="Visa_Page" onclick={handlePreview}
+                                    title="Preview Visa Page">{staffMember.visabasefileName}</button>
+                                <button type="button" class="regf-chip__action" title="Preview Visa Page"
+                                    aria-label="Preview Visa Page" data-id={staffMember.id}
+                                    data-label="Visa_Page" onclick={handlePreview}>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                                </button>
+                                <template lwc:if={showDeleteIcon}>
+                                    <button type="button" class="regf-chip__action regf-chip__action--danger"
+                                        title="Remove Visa Page" aria-label="Remove Visa Page"
+                                        data-id={staffMember.id} data-label="Visa_Page" onclick={handleRemoveFile}>
+                                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <label class={staffMember.c_visaUpload}>
+                                <span class="regf-upload__title">Visa Page</span>
+                                <span class="regf-upload__hint">PDF or JPG, max 2 MB</span>
+                                <input type="file" class="regf-upload__input" accept=".pdf,.jpg" data-id={staffMember.id}
+                                    data-label="Visa_Page" disabled={isDisabled} onchange={handleFileChange} />
+                                <template lwc:if={staffMember.e_visaUpload}>
+                                    <p class="regf-field__error" role="alert">{staffMember.e_visaUpload}</p>
+                                </template>
+                            </label>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- POA Document, moved from the Agency Admin step.
+                     Outside the resident-only block above because a POA can
+                     accompany any owner, and optional as it was there. -->
+                <div class="regf__grid">
+                    <template lwc:if={staffMember.isPoaUploaded}>
+                        <div class="regf-chip">
+                            <span class="regf-chip__label">POA Document</span>
+                            <button type="button" class="regf-chip__name" data-id={staffMember.id}
+                                data-label="POA_Document" onclick={handlePreview}
+                                title="Preview POA Document">{staffMember.poafileName}</button>
+                            <button type="button" class="regf-chip__action" title="Preview POA Document"
+                                aria-label="Preview POA Document" data-id={staffMember.id}
+                                data-label="POA_Document" onclick={handlePreview}>
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                            </button>
+                            <template lwc:if={showDeleteIcon}>
+                                <button type="button" class="regf-chip__action regf-chip__action--danger"
+                                    title="Remove POA Document" aria-label="Remove POA Document"
+                                    data-id={staffMember.id} data-label="POA_Document" onclick={handleRemoveFile}>
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <label class={staffMember.c_poaUpload}>
+                            <span class="regf-upload__title">POA Document</span>
+                            <span class="regf-upload__hint">PDF or JPG, max 2 MB</span>
+                            <input type="file" class="regf-upload__input" accept=".pdf,.jpg" data-id={staffMember.id}
+                                data-label="POA_Document" disabled={isDisabled} onchange={handleFileChange} />
+                            <template lwc:if={staffMember.e_poaUpload}>
+                                <p class="regf-field__error" role="alert">{staffMember.e_poaUpload}</p>
+                            </template>
+                        </label>
+                    </template>
+                </div>
+            </article>
+        </template>
+
+        <template lwc:if={showAddRow}>
+            <div class="regf-add-row">
+                <button type="button" class="regf-button regf-button--ghost" title="Add Owner" onclick={handleAddAgent}>
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.3 2.5h1.4v4.8h4.8v1.4H8.7v4.8H7.3V8.7H2.5V7.3h4.8z"/></svg>
+                    Add Owner
+                </button>
+            </div>
+        </template>
+
+        <template lwc:if={isLoading}>
+            <c-mbpr_loader veil></c-mbpr_loader>
+        </template>
+    </div>
+</template>

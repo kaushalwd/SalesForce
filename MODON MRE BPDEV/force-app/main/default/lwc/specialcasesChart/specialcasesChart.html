@@ -1,0 +1,105 @@
+<template> 
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="header-row">
+                <h2 class="chart-title">Service Summary</h2>
+                <div class="header-actions">
+                    <template if:true={rerenderTabs}>
+                        <div class="range-tabs">
+                            <span class={todayClass} data-range="TODAY" onclick={handleRangeClick}>Today</span>
+                            <span class="sep">|</span>
+                            <span class={yesterdayClass} data-range="YESTERDAY" onclick={handleRangeClick}>Yesterday</span>
+                            <span class="sep">|</span>
+                            <span class={mtdClass} data-range="MTD" onclick={handleRangeClick}>MTD</span>
+                            <span class="sep">|</span>
+                            <span class={ytdClass} data-range="YTD" onclick={handleRangeClick}>YTD</span>
+                            <span class="sep">|</span>
+                            <span class={lastYearClass} data-range="LAST_YEAR" onclick={handleRangeClick}>Last 1 Year</span>
+                        </div>
+                    </template>
+
+                    
+                    <button class="expand-btn" title="Expand" onclick={openSpecialCasesModal}>
+                        <lightning-icon icon-name="utility:expand_alt" size="x-small"></lightning-icon>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Show chart if data is available -->
+        <template if:true={hasData}>
+            <div class="canvas-wrap">
+              <canvas class="chart-canvas"></canvas>
+            </div>
+
+            <!-- 👇 Legend Section -->
+            <div class="chart-legend">
+                <template if:true={legendItems}>
+                    <template for:each={legendItems} for:item="item">
+                        <div key={item.label} class="legend-item">
+                            <span class="legend-color" style={item.colorStyle}></span>
+                            <span class="legend-label">{item.label}: {item.value}</span>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </template>
+
+        <!-- ✅ Show message when no data -->
+        <template if:false={hasData}>
+            <div class="no-data-container">
+                <p class="no-data-text">No data available</p>
+                <p class="no-data-subtext">
+                    There is no service request summary available at this time. Please check back later.
+                </p>
+            </div>
+        </template>
+    </div>
+    
+    <template if:true={showSpecialCasesModal}>
+  <div data-portal-wrapper>
+    <div class="modal-backdrop" onclick={closeSpecialCasesModal}>
+      <div class="modal-container" onclick={stopModalClose}>
+        <button class="modal-close" title="Close" onclick={closeSpecialCasesModal}>✕</button>
+
+        <div class="modal-header">
+          <div class="modal-title">Service summary</div>
+        </div>
+
+        <div class="modal-body">
+          <template if:true={hasData}>
+            <!-- ✅ modal canvas -->
+            <div class="canvas-wrap canvas-wrap_modal">
+              <canvas class="chart-canvas modal-canvas"></canvas>
+            </div>
+
+
+            <div class="chart-legend modal-legend">
+              <template if:true={legendItems}>
+                <template for:each={legendItems} for:item="item">
+                  <div key={item.label} class="legend-item">
+                    <span class="legend-color" style={item.colorStyle}></span>
+                    <span class="legend-label">{item.label}: {item.value}</span>
+                  </div>
+                </template>
+              </template>
+            </div>
+          </template>
+
+          <template if:false={hasData}>
+            <div class="no-data-container">
+              <p class="no-data-text">No Data Available</p>
+              <p class="no-data-subtext">
+                There is no service request summary available at this time. Please check back later.
+              </p>
+            </div>
+          </template>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</template>
+
+</template>

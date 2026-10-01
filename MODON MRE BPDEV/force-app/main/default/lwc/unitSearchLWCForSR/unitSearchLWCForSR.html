@@ -1,0 +1,566 @@
+<template>
+    <div class="spinner">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+            </lightning-spinner>
+        </template>
+    </div>
+    <template lwc:if={salesOrderExist}>
+            <article class="slds-card slds-p-around_x-small">
+                <div class="slds-card__header slds-grid">
+                    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                        <div class="slds-media__figure">
+                            <lightning-icon icon-name="standard:groups" size="medium" alternative-text="Unit Search">
+                            </lightning-icon>
+                        </div>
+                        <div class="slds-media__body">
+                            <h2 class="slds-card__header-title">
+                                <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="Unit Search">
+                                    <span>Unit Search</span>
+                                </a>
+                            </h2>
+                        </div>
+                    </header>
+        
+                    <template if:false={disablePath}>
+                        <lightning-button name="BACK" label="Back" icon-name="utility:back" slot="actions"
+                            disabled={disableBack} onclick={handleMenuAction}></lightning-button>
+                            &nbsp;
+                            <template if:false={isOfferSelected}>
+                          <lightning-button name="FORWARD" label="Proceed" icon-name="utility:forward"
+                            slot="actions" icon-position="right" disabled={disableProceed}
+                            onclick={handleMenuAction}></lightning-button>
+                            </template>
+                            <template if:true={isOfferSelected}>
+                                &nbsp;
+                                <lightning-button variant="neutral" label="Save" name="SAVEUNITS" onclick={handleMenuAction}></lightning-button>
+                            </template>
+        
+                    </template>
+                    <template if:true={disablePath}>
+                        <template if:true={showBtnGroup}>
+                            <div class="slds-no-flex">
+                                <div class="slds-button-group" role="group">
+                                    <lightning-button name="OFFER" label={offerLabel} icon-name="utility:pdf_ext"
+                                        slot="actions" onclick={handleMenuAction} disabled={disableOffer}></lightning-button>
+                                    <!-- &nbsp;
+                                    <lightning-button name="MEMO" label="Generate Memo" icon-name="utility:edit_form"
+                                        slot="actions" onclick={handleMenuAction} disabled={disableOffer}></lightning-button> -->
+                                   <!-- &nbsp;
+                                    <lightning-button name="BOOKING" label="Book Unit/s" icon-name="utility:entitlement"
+                                        slot="actions" onclick={handleMenuAction} disabled={disableOffer}></lightning-button>
+                                        &nbsp;
+                                    <lightning-button name="BLOCKREQUEST" label="Request a Block" icon-name="utility:entitlement"
+                                        slot="actions" onclick={handleMenuAction} disabled={disableOffer}></lightning-button> -->
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+                <template if:false={disablePath}>
+                    <br />
+                    <lightning-progress-indicator current-step={pageNumber} type="path" variant="base">
+        
+                        <template for:each={steps} for:item="step">
+                            <lightning-progress-step label={step.label} value={step.value} key={step.label}>
+                            </lightning-progress-step>
+                        </template>
+        
+                    </lightning-progress-indicator>
+                    <br />
+                </template>
+                <template if:true={showPage1}>
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-container--fluid slds-gutters slds-grid_vertical-align-end">
+                            <!-- <div class="filter-col slds-col slds-size_5-of-12">
+                                <lightning-input aria-label="hidden" type="text" name="Search Unit" label="Search Unit" value={searchText} onchange={handleUnitChange}></lightning-input>
+                            </div> -->
+                            <div class="filter-col slds-col slds-size_3-of-12">
+                                <lightning-combobox dropdown-alignment="auto" name="Projects" label="Projects" value={selectedProject}
+                                    options={projectList} onchange={handleProjectChange}>
+                                </lightning-combobox>
+                            </div>
+                            <div class="filter-col slds-col slds-size_3-of-12">
+                                <lightning-combobox dropdown-alignment="auto" name="Phase" label="Phase" value={selectedBuilding}
+                                    options={buildingList} onchange={handleBuildingChange}>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                        <template if:true={unitLst}>
+                            <div class="slds-p-around_x-small slds-table_edit_container slds-scrollable" style="padding-left: 0">
+                                <div class="slds-table_edit_container slds-is-relative">
+                                    <table aria-multiselectable="true" class="slds-table slds-no-row-hover slds-table_bordered slds-table_col-bordered slds-table_edit " role="grid">
+                                        <thead>
+                                            <tr class="slds-line-height_reset">
+                                                <th class="" scope="col"
+                                                    style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                </th>
+                                                <th scope="col" style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                    Unit Name
+                                                </th>
+                                                <th scope="col" style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                    Plot Area
+                                                </th>                                                
+                                                <th scope="col" style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                    Total Price
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={unitLst} for:item="item" for:index="indexVar">
+                                                <tr key={item.Id} aria-selected="false" class="slds-hint-parent">
+                                                    <td class="slds-cell-edit" role="gridcell" tabindex="0">
+                                                        <lightning-input class="rowSelector" type="checkbox"
+                                                            data-id={item.Id}
+                                                            data-unit-name={item.Name}
+                                                            onchange={handleRowSelect} checked={item.isSelected}
+                                                            value={item.isSelected}></lightning-input>
+                                                    </td>
+                                                    <td class="slds-cell-edit" role="gridcell" tabindex="0">
+                                                        <span class="slds-grid slds-grid_align-spread">
+                                                            {item.Name}
+                                                        </span>
+                                                    </td>
+                                                    <td class="slds-cell-edit" role="gridcell" tabindex="0">
+                                                        <span class="slds-grid slds-grid_align-spread">
+                                                            {item.PlotAreasqm__c}
+                                                        </span>
+                                                    </td>
+                                                        <td class="slds-cell-edit" role="gridcell" tabindex="0">
+                                                            <span class="slds-grid slds-grid_align-spread">
+                                                                <lightning-formatted-number format-style="currency" class="table-input" value={item.TotalPrice__c} minimum-fraction-digits="2" maximum-fraction-digits="2" ></lightning-formatted-number>
+                                                            </span>
+                                                        </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template if:true={showPage2}>
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-container--fluid slds-gutters slds-grid_vertical-align-top">
+                            <div class="filter-col slds-col slds-size_12-of-12">
+                                <lightning-tabset variant="scoped">
+                                    <template for:each={selectedUnitList} for:item="item">
+                                        <lightning-tab key={item.unitId} label={item.unitName} value={item.unitId} onactive={handlePaymentUnitSelect}>
+                                            <div class="slds-grid slds-wrap slds-p-around_small" style="padding-left: unset;">
+                                                <div class="filter-col slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                                    <template if:true={item.paymentDetails}>
+                                                        <div class="slds-grid slds-wrap custom-margin"  style="padding-left: unset;">
+                                                            <!-- <div class="filter-col slds-col slds-size_2-of-12" style="padding-left: unset;">
+                                                                <span><b>Payment Details</b></span>
+                                                            </div> -->
+                                                            <!-- <div class="filter-col slds-col slds-size_1-of-12" style="padding-left: unset;">
+                                                                &nbsp;
+                                                            </div> -->
+                                                            <div class="filter-col slds-col slds-size_3-of-12" style="padding-left: unset;">
+                                                                <template if:true={item.paymentDetails}>
+                                                                    <template if:true={item.paymentDetails.availablePaymentPlans}>
+                                                                        <lightning-combobox dropdown-alignment="auto" name={item.unitId} 
+                                                                        placeholder="Select Payment Plan" value={item.paymentDetails.selectedPayment}
+                                                                        options={item.paymentDetails.availablePaymentPlans} label="Payment Details"
+                                                                        onchange={selectPaymentPlan} data-record-id={item.unitId} class="selectedPaymentPlan"></lightning-combobox>                                                                             
+                                                                    </template>
+                                                                </template>
+                                                            </div>
+                                                            <template if:true={item.unitOptionDetails}>
+                                                                <!-- <div class="filter-col slds-col slds-size_1-of-12" style="padding-left: unset;">&nbsp;</div> -->
+                                                                
+                                                               <!-- <div class="filter-col slds-col slds-size_3-of-12" style="padding-left: unset;">
+                                                                    <template if:true={item.unitOptionDetails}>
+                                                                        <template if:true={item.unitOptionDetails.availableUnitOptions}>
+                                                                                <lightning-combobox dropdown-alignment="auto" name={item.unitId} 
+                                                                                        placeholder="Select Unit Option" value={item.unitOptionDetails.selectedUnitOption}
+                                                                                        options={item.unitOptionDetails.availableUnitOptions} label="Unit Options"
+                                                                                        onchange={selectUnitOption} data-record-id={item.unitId} class="selectedUnitOption"></lightning-combobox>
+                                                                        </template>
+                                                                        
+                                                                    </template>
+                                                                </div> -->
+                                                            </template>
+                                                            <template if:false={item.unitOptionDetails}>
+                                                                <div class="filter-col slds-col slds-size_3-of-12" style="padding-left: unset;">&nbsp;</div>
+                                                            </template>
+                                                            <div class="filter-col slds-col slds-size_6-of-12" style="padding-left: unset;"></div>
+                                                            <br/>
+                                                            <template if:false={isOfferSelected}>
+                                                                <template if:true={item.allUnitOptions}>
+                                                                    <template for:each={item.allUnitOptions} for:item="unitOption" for:index="installmentItemIndexVar">
+                                                                        <div key={unitOption.fieldApiName} class="filter-col slds-col slds-size_3-of-12" style="padding-left: unset;">
+                                                                            <lightning-combobox dropdown-alignment="auto" name={item.unitId} 
+                                                                                placeholder="" value={unitOption.selectedValue} required="true" onchange={handleUnitOptionSelection}
+                                                                                options={unitOption.unitOptions} data-index={installmentItemIndexVar} label={unitOption.fieldLabel}
+                                                                                data-record-id={item.unitId} class="picklistUnitOption"></lightning-combobox>
+                                                                        </div>
+                                                                    </template>
+                                                                </template>
+                                                            </template>
+                                                            
+                                                            <div class="filter-col slds-col slds-size_12-of-12" style="padding-left: unset;">
+                                                                <lightning-card variant="Narrow" title="">
+                                                                    <div class="slds-p-bottom_small">
+                                                                        <div class="slds-text-heading_xx-small slds-p-bottom_xx-small table-title">
+                                                                        <b>{paymentTypeName} </b></div>
+        
+                                                                        <table aria-multiselectable="true"
+                                                                                class="slds-table slds-no-row-hover slds-table_bordered slds-table_col-bordered slds-table_edit "
+                                                                                role="grid">
+                                                                                <thead>
+                                                                                    <tr class="slds-line-height_reset">
+                                                                                        <th scope="col"
+                                                                                            style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                                            Installment #
+                                                                                        </th>
+                                                                                        <th scope="col"
+                                                                                            style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                                            Milestone
+                                                                                        </th>
+                                                                                        <th scope="col"
+                                                                                            style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                                            Installment Percentage
+                                                                                        </th>
+                                                                                        <th scope="col"
+                                                                                            style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                                            Installment amount
+                                                                                        </th> 
+                                                                                        <th scope="col"
+                                                                                            style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                                            Broker Payout Percentage
+                                                                                        </th>
+                                                                                        <th scope="col"
+                                                                                            style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                                            Installment Date
+                                                                                        </th>
+                                                                                        
+                                                                                            
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    <template if:true={paymentInstallments}>
+                                                                                        <template for:each={paymentInstallments} for:item="installmentItem" for:index="installmentItemIndexVar">
+                                                                                            <tr key={installmentItem.Id} aria-selected="false" class="slds-hint-parent">
+                                                                                                <td class="slds-cell-edit"
+                                                                                                    role="gridcell" tabindex="0">
+                                                                                                        {installmentItem.MilestoneNumber__c}
+                                                                                                </td>
+                                                                                                <td class="slds-cell-edit"
+                                                                                                    role="gridcell" tabindex="0">
+                                                                                                    {installmentItem.MilestoneDescription__c}
+                                                                                                </td>
+                                                                                                <td class="slds-cell-edit"
+                                                                                                    role="gridcell" tabindex="0">
+                                                                                                    {installmentItem.Milestone__c}
+                                                                                                    %
+                                                                                                </td>
+                                                                                                <td class="slds-cell-edit"
+                                                                                                    role="gridcell" tabindex="0">
+                                                                                                    &nbsp;
+                                                                                                    <p> <lightning-formatted-number format-style="currency" class="table-input" value={installmentItem.amount} minimum-fraction-digits="2" maximum-fraction-digits="2" ></lightning-formatted-number></p>
+                                                                                                </td>
+                                                                                                <td class="slds-cell-edit"
+                                                                                                    role="gridcell" tabindex="0">
+                                                                                                    {installmentItem.BrokerPayout__c}
+                                                                                                    <template if:true={installmentItem.BrokerPayout__c}>&nbsp; %</template>
+                                                                                                    
+                                                                                                </td>
+                                                                                                <td class="slds-cell-edit"
+                                                                                                    role="gridcell" tabindex="0">
+                                                                                                    <lightning-formatted-date-time
+                                                                                                        value={installmentItem.Milestone_Due__c}
+                                                                                                        year="2-digit" month="2-digit"
+                                                                                                        day="2-digit" >  
+                                                                                                    </lightning-formatted-date-time>
+                                                                                                </td>
+                                                                                                
+                                                                                            </tr>
+                                                                                        </template>
+                                                                                    </template>
+                                                                                </tbody>
+                                                                            </table>
+                                                                    </div>
+                                                                </lightning-card>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={item.paymentDetails}>
+                                                        <lightning-card title="No payment plan is available for this unit."></lightning-card>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </lightning-tab>
+                                    </template>
+                                </lightning-tabset>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template if:true={showPage3}>
+                    <template if:true={isOfferSelected}>
+                        <div class="slds-card__body">
+                            <div class="slds-grid slds-container--fluid slds-gutters slds-grid_vertical-align-top">
+                                <div class="filter-col slds-col slds-size_12-of-12">
+                                    <lightning-tabset variant="scoped">
+                                        <template for:each={selectedUnitList} for:item="item" for:index="indexVar">
+                                            <lightning-tab key={item.unitId} label={item.unitName} data-target-type="tab" data-unit-id={item.unitId} value={item.unitId} onactive={handlePDFActive}>
+                                                <lightning-card variant="Narrow" title="Offer Details">
+                                                    <lightning-button slot="actions" name="Email Current Offer" label="Email Current Offer" data-unit-id={item.unitId} onclick={sendSalesOfferEmail}></lightning-button> &nbsp;&nbsp;
+                                                    <div class="customer-name-container">
+                                                        <div>
+                                                            <lightning-input label="Customer Name" type="text" class="customer-name-input" data-target-type="input" data-unit-id={item.unitId} variant="label-inline" value={customerName} onchange={handlePDFActive}></lightning-input>
+                                                        </div>
+                                                        
+                                                    </div>
+                                                    <iframe scrolling="auto" style="width:100%" height="1000" src={fullUrl}></iframe>
+                                                    <br />
+                                                    <p slot="footer"></p>
+                                                </lightning-card>
+                                            </lightning-tab>    
+                                        </template>
+                                    </lightning-tabset>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={isBookingSelected}>
+                        
+                        <br/>
+                        <div class="slds-card__body">
+                            <div class="slds-grid slds-wrap slds-container--fluid slds-gutters slds-grid_vertical-align-top">
+                                <div class=" slds-grid slds-wrap filter-col slds-col slds-size_12-of-12">
+                                    <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium slds-p-bottom_medium" >
+                                        <lightning-input type="checkbox" required="true" class="confirmationCheckbox" label="Confirm all selection" value={confirmation} onchange={updateConfirmation}></lightning-input>
+                                    </div>
+                                    <div class="filter-col slds-col slds-size_6-of-12">&nbsp;</div>
+                                    <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium slds-p-bottom_medium">
+                                        <lightning-button style="float: right;" name="SALES ORDER" label="Generate sales order"
+                                        slot="actions" onclick={generateSalesOrder}></lightning-button>
+                                    </div>
+                                </div>
+                                
+        
+        
+                                <div class="filter-col slds-col slds-size_12-of-12">
+                                    <lightning-tabset variant="scoped">
+                                        <template for:each={selectedUnitList} for:item="item" for:index="indexVar">
+                                            <lightning-tab key={item.unitId} label={item.unitName} data-target-type="tab" data-unit-id={item.unitId} value={item.unitId} onactive={handleBookingUnitActive}>
+                                                <lightning-card variant="Narrow" title="Sales order details">
+                                                    <div class="slds-grid slds-wrap">
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">Unit name : </div>
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{item.unitName}</div>
+                                                        <!-- <div class="filter-col slds-col slds-size_6-of-12">&nbsp;</div> -->
+                                                        <template lwc:if={item.selectedUnitOptionName}>
+                                                            <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">Unit Option : </div>
+                                                            <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{item.selectedUnitOptionName}</div>
+                                                        </template>
+    
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">Building name : </div>
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{item.buildingName}</div>
+                                                        <!-- <div class="filter-col slds-col slds-size_6-of-12">&nbsp;</div> -->
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">Project name : </div>
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{item.projectName}</div>
+                                                        <!-- <div class="filter-col slds-col slds-size_6-of-12">&nbsp;</div> -->
+                                                        <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">Price : </div>
+                                                        <template lwc:if={showOriginalPrice}>
+                                                            <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{item.price}</div>
+                                                        </template>
+                                                        <template lwc:else>
+                                                            <div class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{item.unitOptionPrice}</div>
+                                                        </template>
+    
+                                                        <template lwc:if={item.allUnitOptions}>
+                                                            <template for:each={item.allUnitOptions} for:item="unitOption" for:index="installmentItemIndexVar">
+                                                                <div key={unitOption} class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{unitOption.fieldLabel} </div>
+                                                                <div key={unitOption} class="filter-col slds-col slds-size_3-of-12 slds-p-top_medium">{unitOption.selectedValue} </div>
+                                                            </template>
+                                                        </template>
+                                                        
+                                                    </div>
+        
+                                                    <div class="slds-grid slds-wrap slds-p-top_large">
+                                                        <b>Selected payment plan</b> : {paymentTypeName} <br/><br/>
+        
+                                                        <table aria-multiselectable="true"
+                                                            class="slds-table slds-no-row-hover slds-table_bordered slds-table_col-bordered slds-table_edit "
+                                                            role="grid">
+                                                            <thead>
+                                                                <tr class="slds-line-height_reset">
+                                                                    <th scope="col"
+                                                                        style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                        Installment #
+                                                                    </th>
+                                                                    <th scope="col"
+                                                                        style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                        Milestone
+                                                                    </th>
+                                                                    <th scope="col"
+                                                                        style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                        Installment Percentage
+                                                                    </th>
+                                                                    <th scope="col"
+                                                                        style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                        Installment amount
+                                                                    </th>
+                                                                    <th scope="col"
+                                                                        style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                        Broker Payout Percentage
+                                                                    </th>
+                                                                    <th scope="col"
+                                                                        style="padding: var(--lwc-tableCellSpacing,0.25rem 0.5rem);">
+                                                                        Installment Date
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <template if:true={paymentInstallments}>
+                                                                    <template for:each={paymentInstallments} for:item="installmentItem" for:index="installmentItemIndexVar">
+                                                                        <tr key={installmentItem.Id} aria-selected="false" class="slds-hint-parent">
+                                                                            <td class="slds-cell-edit"
+                                                                                role="gridcell" tabindex="0">
+                                                                                    {installmentItem.MilestoneNumber__c}
+                                                                            </td>
+                                                                            <td class="slds-cell-edit"
+                                                                                role="gridcell" tabindex="0">
+                                                                                {installmentItem.MilestoneDescription__c}
+                                                                            </td>
+                                                                            <td class="slds-cell-edit"
+                                                                                role="gridcell" tabindex="0">
+                                                                                {installmentItem.Milestone__c}
+                                                                                %
+                                                                            </td>
+                                                                            <td class="slds-cell-edit"
+                                                                                role="gridcell" tabindex="0">
+                                                                                &nbsp;
+                                                                                <p> <lightning-formatted-number format-style="currency" class="table-input" value={installmentItem.amount} minimum-fraction-digits="2" maximum-fraction-digits="2" ></lightning-formatted-number></p>
+                                                                            </td>
+                                                                            <td class="slds-cell-edit"
+                                                                                role="gridcell" tabindex="0">
+                                                                                {installmentItem.BrokerPayout__c}
+                                                                                <template if:true={installmentItem.BrokerPayout__c}>&nbsp; %</template>
+                                                                                
+                                                                            </td>
+                                                                            <td class="slds-cell-edit"
+                                                                                role="gridcell" tabindex="0">
+                                                                                <lightning-formatted-date-time
+                                                                                    value={installmentItem.Milestone_Due__c}
+                                                                                    year="2-digit" month="2-digit"
+                                                                                    day="2-digit" >
+                                                                                </lightning-formatted-date-time>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </template>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </lightning-card>
+                                                <br/>
+                                                <!--template if:true={showOfferDetails}-->
+                                                    <c-offers-line-details-l-w-c data-unitid={item.unitId}></c-offers-line-details-l-w-c>
+                                                <!--/template-->
+                                            </lightning-tab>    
+                                        </template> 
+                                    </lightning-tabset>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+                <template if:true={showBlockRequestModal}>
+        
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            <!-- modal header start -->
+                            <header class="slds-modal__header">
+                                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
+                                <lightning-icon icon-name="utility:close"
+                                alternative-text="close"
+                                variant="inverse"
+                                size="small" ></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                                </button>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Block Unit Details</h2>
+                            </header>
+                       
+                            <!-- modal body start -->
+                            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                                <div class="slds-card__body">
+                                    <div class="slds-grid slds-wrap slds-grid_vertical-align-top">
+                                        <div class="slds-p-around_medium slds-col slds-size_5-of-12" style="padding-left: unset;">
+                                            <template if:true={showBlockingHours}>
+                                                <label data-main-label="true" class="slds-form-element__label"><span>Select Blocking Hours</span></label>
+                                                <lightning-combobox dropdown-alignment="auto" label=""
+                                                        placeholder="Select Blocking Hours" value={selectedBlockingHours}
+                                                        options={blockingHourOptions} variant="label-hidden"
+                                                        onchange={manageBlockingHours}  class="selectedBlockingHours blockDetails"></lightning-combobox>
+                                            </template>
+                                        </div>
+                                        <div class="slds-p-around_medium slds-col slds-size_7-of-12" style="padding-left: unset;">
+                                                <label data-main-label="true" class="slds-form-element__label"><span>Comment</span></label>
+                                                <lightning-textarea label="Comment" required="true" type="text-area" class="customer-name-input blockDetails" data-target-type="input" variant="label-hidden" value={commentValue} onchange={updateCommentValue}></lightning-textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                 
+                            <!-- modal footer start-->
+                            <footer class="slds-modal__footer">
+                                <button class="slds-button slds-button_brand" onclick={saveBlockUnits}>Save</button>
+                                <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                            </footer>
+                        
+                        </div>
+                     </section>
+                     <div class="slds-backdrop slds-backdrop_open"></div>
+            
+                </template>
+                <template if:true={unitRollbackConfirmation}>
+        
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            <!-- modal header start -->
+                            <header class="slds-modal__header">
+                                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeConfirmationModal}>
+                                <lightning-icon icon-name="utility:close"
+                                alternative-text="close"
+                                variant="inverse"
+                                size="small" ></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                                </button>
+                                <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">Confirmation</h2>
+                            </header>
+                       
+                            <!-- modal body start -->
+                            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                                <div class="slds-card__body">
+                                    <div class="slds-grid slds-wrap slds-grid_vertical-align-top">
+                                        
+                                        <div class="slds-p-around_medium slds-col slds-size_7-of-12" style="padding-left: unset;">
+                                            <h3>Are you sure you want to rollback the unit selection?</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                 
+                            <!-- modal footer start-->
+                            <footer class="slds-modal__footer">
+                                <button class="slds-button slds-button_brand" onclick={rollbackSelectedUnits}>Yes</button>
+                                <button class="slds-button slds-button_neutral" onclick={closeConfirmationModal}>No</button>
+                            </footer>
+                        
+                        </div>
+                     </section>
+                     <div class="slds-backdrop slds-backdrop_open"></div>
+            
+                </template>
+            </article>
+           
+        </template>
+        
+    <template lwc:else>
+        <lightning-card title="Sales order doesnot exist for this opportunity."></lightning-card>
+    </template>  
+</template>

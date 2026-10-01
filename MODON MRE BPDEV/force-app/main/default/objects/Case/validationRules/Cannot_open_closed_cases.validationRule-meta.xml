@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Cannot_open_closed_cases</fullName>
+    <active>true</active>
+    <description>Opening a closed case is not allowed.</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(
+        ISCHANGED(Status),
+        ISPICKVAL(PRIORVALUE(Status), &quot;Closed&quot;),
+        NOT(ISPICKVAL(Status, &quot;Closed&quot;)),
+        $Profile.Name &lt;&gt; &quot;System Administrator&quot;
+    )
+)</errorConditionFormula>
+    <errorDisplayField>Status</errorDisplayField>
+    <errorMessage>Opening a closed case is not allowed.</errorMessage>
+</ValidationRule>

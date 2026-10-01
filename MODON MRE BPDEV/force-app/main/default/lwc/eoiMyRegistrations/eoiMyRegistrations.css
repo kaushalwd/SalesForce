@@ -1,0 +1,344 @@
+/* eoiMyRegistrations — Wadeem journey design system (EOI-UI-9). @author Aurelix
+   The customer's own ledger: one compact row per payment, state chip and
+   amount on one right rail, quiet refund link in the small print. */
+
+:host {
+    --pine: var(--eoi-pine, #0D2B21);
+    --pine-2: var(--eoi-pine-2, #123A2C);
+    --abyss: var(--eoi-abyss, #071E16);
+    --champagne: var(--eoi-champagne, #C9BC8F);
+    --champ-40: var(--eoi-champ-40, rgba(201, 188, 143, 0.4));
+    --champ-18: var(--eoi-champ-18, rgba(201, 188, 143, 0.18));
+    --sand: var(--eoi-sand, #EFEAE0);
+    --shell: var(--eoi-shell, #FAF8F2);
+    --card: var(--eoi-card, #FFFFFF);
+    --ink: var(--eoi-ink, #182420);
+    --stone: var(--eoi-stone, #877F6C);
+    --line: var(--eoi-line, #DAD3C2);
+    --line-soft: var(--eoi-line-soft, #E7E2D6);
+    --amber: #8A6D1D;
+    --red: #A34433;
+    --serif: var(--eoi-serif, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: block;
+    font-family: var(--sans);
+    color: var(--ink);
+}
+
+.m-sub {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--eoi-muted, #5B6159);
+    margin: 0 0 24px;
+    max-width: 52ch;
+}
+
+.error {
+    margin: 0 0 18px;
+    padding: 10px 14px;
+    border: 1px solid rgba(163, 68, 51, 0.35);
+    background: rgba(163, 68, 51, 0.06);
+    color: var(--red);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.m-panelcap {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    margin: 0 0 10px;
+}
+
+/* the ledger */
+.m-ledger {
+    border: 1px solid var(--line);
+    background: var(--card);
+}
+.m-lgroup {
+    border-bottom: 1px solid var(--line-soft);
+}
+.m-lgroup:last-child {
+    border-bottom: none;
+}
+.m-wrow {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 14px;
+    min-width: 0;
+}
+.m-wrow__info {
+    flex: 1;
+    min-width: 0;
+}
+.m-lrow__name {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.25;
+    color: var(--ink);
+}
+.m-lrow__meta {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+}
+/* MEOI-09a. Was 10px with 0.03em tracking - a leftover from when this line was set in
+   capitals. The sentence-case sweep did not catch it because the rule carries no
+   text-transform of its own, so the EOI number sat visibly smaller than the line above
+   it. Matched to .m-lrow__meta so the whole card reads as one piece of text. */
+.m-wrow__sub {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--stone);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+.m-wrow__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 7px;
+    flex-shrink: 0;
+}
+.m-wrow__amt {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.m-wrow__amt small {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--stone);
+    margin-right: 3px;
+}
+.m-wrow--muted .m-lrow__name,
+.m-wrow--muted .m-wrow__amt {
+    color: var(--stone);
+}
+
+/* The EOI number is the one thing on this line the customer may need to quote, so it
+   keeps its weight and colour - but at the same size as its neighbours, not smaller. */
+.m-eoinum {
+    font-weight: 600;
+    color: var(--pine);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+/* chips */
+.m-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 5px 10px;
+    white-space: nowrap;
+}
+.m-chip svg {
+    width: 9px;
+    height: 9px;
+}
+.m-chip--ok {
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    box-shadow: inset 0 0 0 1px var(--champ-40);
+}
+.m-chip--proc {
+    color: var(--pine);
+    border: 1px solid var(--champ-40);
+    background: var(--champ-18);
+}
+.m-chip--warn {
+    color: var(--amber);
+    border: 1px solid rgba(138, 109, 29, 0.4);
+}
+.m-chip--mut {
+    color: var(--stone);
+    border: 1px solid var(--line-soft);
+}
+
+/* quiet refund link in the row's small print */
+.m-quiet {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--stone);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.m-quiet:hover {
+    color: var(--pine);
+}
+.m-quiet[disabled] {
+    cursor: default;
+    opacity: 0.6;
+}
+.m-quiet:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+/* inline refund confirm */
+.m-confirm {
+    border-top: 1px solid var(--line);
+    background: var(--shell);
+    padding: 16px 16px 14px;
+}
+.m-confirm p {
+    margin: 0 0 14px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--eoi-muted-2, #4A5049);
+}
+.m-confirm p b {
+    color: var(--pine);
+    font-weight: 600;
+}
+.m-confirm__row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.m-cardbtn {
+    appearance: none;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    border: 1px solid var(--champ-40);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 10px 16px;
+}
+.m-cardbtn.ghost {
+    background: none;
+    color: var(--stone);
+    border: 1px solid var(--line);
+}
+.m-cardbtn[disabled] {
+    opacity: 0.6;
+    cursor: default;
+}
+.m-cardbtn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+/* primary CTA */
+.m-btn {
+    appearance: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    border: 1px solid var(--champ-40);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 14px 20px;
+    margin-top: 24px;
+}
+.m-btn .arr {
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--champagne);
+}
+.m-btn[disabled] {
+    opacity: 0.6;
+    cursor: default;
+}
+.m-btn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+/* ---------- tablet (>=700px) ---------- */
+@media (min-width: 700px) {
+    .m-wrow {
+        padding: 13px 16px;
+    }
+}
+
+/* ================= MEOI-CANCEL (11 Sep 2026): Cancel beside the status chip, confirm modal ==== */
+.m-wrow__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cancelbtn {
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+}
+.cancelbtn:hover {
+    border-color: var(--pine);
+    color: var(--pine);
+}
+.m-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 41, 64, 0.45);
+    z-index: 40;
+}
+.m-modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 32px));
+    background: var(--card, #FFFFFF);
+    border: 1px solid var(--line);
+    padding: 22px 22px 18px;
+    z-index: 41;
+}
+.m-modal__t {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.m-modal__p {
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--stone);
+}
+.m-modal__row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}

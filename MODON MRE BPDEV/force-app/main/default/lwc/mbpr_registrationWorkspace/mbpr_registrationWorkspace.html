@@ -1,0 +1,304 @@
+<template>
+    <!-- ================= Guest shell (mirrors the sign-in page) ================= -->
+    <template lwc:if={isGuest}>
+        <section class="reg-shell" aria-label="Modon Broker Portal registration">
+            <main class="reg-main">
+                <div class="reg-stack">
+                    <div class="brand-mark">
+                        <c-mbpr_brand-mark class="brand-logo"></c-mbpr_brand-mark>
+                        <span class="brand-divider" aria-hidden="true">|</span>
+                        <span class="brand-label">Broker Portal</span>
+                    </div>
+                    <p class="brand-subtitle">Welcome</p>
+
+                    <div class="landing-card">
+                        <!-- two explicit actions. Register goes straight
+                             to step 1 so it can never overwrite a saved draft;
+                             Resume opens the lookup and never starts a blank
+                             application. -->
+                        <template lwc:if={isChoiceView}>
+                            <div class="card-head">
+                                <p class="eyebrow">Broker Registration</p>
+                            </div>
+
+                            <template lwc:if={showStatusMessage}>
+                                <p class="feedback feedback--info" role="status">{statusMessage}</p>
+                            </template>
+
+                            <button
+                                class="primary-action primary-action--block"
+                                type="button"
+                                title="Register Your Agency"
+                                onclick={handleCreateNew}
+                            >
+                                Register Your Agency
+                            </button>
+                            <p class="choice-hint">Start a new agency registration.</p>
+
+                            <p class="divider-or">Or</p>
+
+                            <button
+                                class="register-cta"
+                                type="button"
+                                title="Resume Registration"
+                                onclick={handleChooseResume}
+                            >
+                                Resume Registration
+                            </button>
+                            <p class="choice-hint">Continue an application you already started.</p>
+                        </template>
+
+                        <template lwc:if={isResumeView}>
+                            <div class="card-head">
+                                <p class="eyebrow">Resume Registration</p>
+                            </div>
+
+                            <template lwc:if={showStatusMessage}>
+                                <p class="feedback feedback--info" role="status">{statusMessage}</p>
+                            </template>
+
+                            <!-- Trade License Number only. -->
+                            <div class="field">
+                                <label class="field-label" for="reg-search-input">Trade License Number</label>
+                                <div class="input-shell">
+                                    <input
+                                        id="reg-search-input"
+                                        class="field-input"
+                                        type="text"
+                                        placeholder="Enter Trade License Number"
+                                        autocomplete="off"
+                                        value={email}
+                                        oninput={handleEmailChange}
+                                        onkeypress={handleKeyPress}
+                                    />
+                                </div>
+                            </div>
+                            <p class="choice-hint choice-hint--field">We'll email a one-time code to the company address on your application.</p>
+
+                            <div class="action-row">
+                                <button class="primary-action primary-action--inline" type="button" title="Continue" onclick={handleSendOtp}>
+                                    Continue
+                                </button>
+                                <button class="secondary-action" type="button" title="Back" onclick={handleBackToChoice}>
+                                    Back
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </main>
+
+            <c-mbpr_login-footer
+                year={currentYear}
+                terms-url={termsUrl}
+                privacy-url={privacyUrl}
+            ></c-mbpr_login-footer>
+        </section>
+    </template>
+
+    <!-- ================= Continuation states (inside the portal) ================= -->
+    <template lwc:if={isContinuation}>
+        <template lwc:if={isInitializing}>
+            <c-mbpr_loader label="Loading your registration"></c-mbpr_loader>
+        </template>
+        <template lwc:elseif={loadError}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    compact
+                    kicker="Registration"
+                    title="Something went wrong"
+                    message={loadError}
+                ></c-mbpr_empty-state>
+                <button class="reg-button reg-button--ghost" type="button" onclick={handleRetryLoad}>
+                    Try again
+                </button>
+            </div>
+        </template>
+    </template>
+
+    <!-- ================= Guided steps workspace (overlay for guests, inline in the portal) ================= -->
+    <template lwc:if={showSteps}>
+        <div class={workspaceLayerClass} onkeydown={handleWorkspaceKeydown}>
+            <section class="reg-workspace" role={workspaceRole} aria-modal={workspaceAriaModal} aria-label="Broker registration">
+                <header class="reg-workspace__header">
+                    <div class="reg-workspace__heading">
+                        <p class="reg-workspace__eyebrow">Registration</p>
+                        <h2>New Broker Request</h2>
+                    </div>
+                    <template lwc:if={isGuest}>
+                        <button class="reg-workspace__close" type="button" title="Close" onclick={handleCloseWorkspace}>
+                            <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                        </button>
+                    </template>
+                </header>
+
+                <template lwc:if={isLocked}>
+                    <!-- BP-038 - the popup's own words stay on the page while the form is view only -->
+                    <aside class="review-panel review-panel--locked" aria-label="Service Request In Progress">
+                        <p class="review-panel__comment">Service Request In Progress</p>
+                        <p class="review-panel__intro">Your registration has been submitted successfully. A service request is currently in progress.</p>
+                        <p class="review-panel__outro">We’ll notify you once it is complete. Thank you for your patience.</p>
+                    </aside>
+                </template>
+
+                <template lwc:if={shouldShowLeftPanel}>
+                    <aside class="review-panel" aria-label="Review comments">
+                        <p class="review-panel__intro">We've identified some items that need your attention before you can proceed.</p>
+                        <p class="review-panel__comment">{taskComment}</p>
+                        <p class="review-panel__outro">Please review and resolve the above points to continue your registration process. Once completed, you'll automatically receive a confirmation via email.</p>
+                    </aside>
+                </template>
+
+                <ol class="stepper" aria-label="Registration steps">
+                    <template for:each={steps} for:item="step">
+                        <li key={step.stepNumber} class={step.className} aria-current={step.isCurrent}>
+                            <span class="stepper__marker" aria-hidden="true">
+                                <template lwc:if={step.isDone}>
+                                    <lightning-icon icon-name="utility:check" size="xx-small" alternative-text=""></lightning-icon>
+                                </template>
+                                <template lwc:else>{step.stepNumber}</template>
+                            </span>
+                            <span class="stepper__label">{step.label}</span>
+                            <span class="stepper__connector" aria-hidden="true"></span>
+                        </li>
+                    </template>
+                </ol>
+
+                <div class="reg-workspace__body">
+                    <div class="step-frame">
+                        <template lwc:if={showStep1}>
+                            <c-mbpr_reg-step-company
+                                object-api-name={objectApiName}
+                                record-id={recordId}
+                                session-id={sessionId}
+                                onsuccess={handleFormSuccess}
+                                onerror={handleFormError}
+                                ontoast={handleChildToast}
+                                registration-status={registrationStatus}
+                                mode={childMode}
+                                locked={isLocked}
+                            ></c-mbpr_reg-step-company>
+                        </template>
+                        <template lwc:if={showStep2}>
+                            <c-mbpr_reg-step-trade-license
+                                object-api-name={objectApiName}
+                                record-id={recordId}
+                                session-id={sessionId}
+                                onsuccess={handleFormSuccess}
+                                onerror={handleFormError}
+                                ontoast={handleChildToast}
+                                registration-status={registrationStatus}
+                                mode={childMode}
+                                locked={isLocked}
+                            ></c-mbpr_reg-step-trade-license>
+                        </template>
+                        <template lwc:if={showStep3}>
+                            <c-mbpr_reg-step-owners
+                                object-api-name={regiAgentObjectApiName}
+                                registration-id={recordId}
+                                session-id={sessionId}
+                                onsuccess={handleFormSuccess}
+                                onerror={handleFormError}
+                                ontoast={handleChildToast}
+                                registration-status={registrationStatus}
+                                mode={childMode}
+                                locked={isLocked}
+                            ></c-mbpr_reg-step-owners>
+                        </template>
+                        <template lwc:if={showStep4}>
+                            <c-mbpr_reg-step-admins
+                                object-api-name={regiAgentObjectApiName}
+                                registration-id={recordId}
+                                session-id={sessionId}
+                                onsuccess={handleFormSuccess}
+                                onerror={handleFormError}
+                                ontoast={handleChildToast}
+                                registration-status={registrationStatus}
+                                mode={childMode}
+                                locked={isLocked}
+                            ></c-mbpr_reg-step-admins>
+                        </template>
+                        <template lwc:if={showStep5}>
+                            <c-mbpr_reg-step-bank
+                                object-api-name={objectApiName}
+                                record-id={recordId}
+                                session-id={sessionId}
+                                onsubmitted={handleRegistrationSubmitted}
+                                onsuccess={handleFormSuccess}
+                                onerror={handleFormError}
+                                ontoast={handleChildToast}
+                                registration-status={registrationStatus}
+                                mode={childMode}
+                                locked={isLocked}
+                            ></c-mbpr_reg-step-bank>
+                        </template>
+                    </div>
+                </div>
+
+                <footer class="reg-workspace__footer">
+                    <template lwc:if={shouldShowPreviousButton}>
+                        <button class="reg-button reg-button--ghost" type="button" title={previousButtonLabel} onclick={handlePrevious}>
+                            {previousButtonLabel}
+                        </button>
+                    </template>
+                    <template lwc:if={shouldShowNextButton}>
+                        <button class="reg-button" type="button" title={nextButtonLabel} onclick={handleNext}>
+                            {nextButtonLabel}
+                        </button>
+                    </template>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <template lwc:if={isLoading}>
+        <c-mbpr_loader label="Working"></c-mbpr_loader>
+    </template>
+
+    <!-- ================= OTP modal ================= -->
+    <template lwc:if={showOTPInput}>
+        <div class="modal-layer mbpr-scope" onkeydown={handleOtpKeydown}>
+            <section class="modal-card" role="dialog" aria-modal="true" aria-label="Enter OTP">
+                <header class="modal-card__header">
+                    <h2>Enter OTP</h2>
+                    <button class="modal-card__close" type="button" title="Close" onclick={closeOtpModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="modal-card__body">
+                    <lightning-input
+                        label="Enter OTP"
+                        variant="label-hidden"
+                        maxlength="6"
+                        placeholder="●●●●●●"
+                        value={enteredOTP}
+                        onchange={handleOtpChange}
+                        class="otp-input"
+                    ></lightning-input>
+                </div>
+                <footer class="modal-card__footer">
+                    <button class="reg-button reg-button--ghost" type="button" onclick={closeOtpModal}>Cancel</button>
+                    <button class="reg-button" type="button" onclick={handleVerifyOtp}>Verify OTP</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <!-- ================= In-progress popup ================= -->
+    <template lwc:if={showInProgressPopup}>
+        <div class="modal-layer mbpr-scope">
+            <section class="modal-card" role="dialog" aria-modal="true" aria-label="Service Request In Progress">
+                <header class="modal-card__header">
+                    <h2>Service Request In Progress</h2>
+                </header>
+                <div class="modal-card__body">
+                    <p>Your registration has been submitted successfully. A service request is currently in progress.</p>
+                    <p>We’ll notify you once it is complete. Thank you for your patience.</p>
+                </div>
+                <footer class="modal-card__footer">
+                    <button class="reg-button" type="button" onclick={handleClosePopup}>Got it</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+</template>

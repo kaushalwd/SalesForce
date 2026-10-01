@@ -1,0 +1,94 @@
+/* The one loader. Tokens come from the shared sheet; shadow DOM does not inherit
+   stylesheets, so this bundle imports them like every other. */
+@import "c/mscStyles";
+
+/* Matches .overlay in mscBookingPage, which this replaced. position: fixed so it
+   covers the sheet as well as the page - inside modonSheet's panel it still resolves
+   against the viewport, because the panel sets no transform. */
+.loader {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--overlay, rgba(0, 0, 0, 0.58));
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    /* 1.2 - ABOVE the overlays, not beneath them. At 60 it sat under every modal
+       and drawer (all z-index 70), so pressing Create Payment inside the payment
+       modal dimmed the booking BEHIND the modal while the modal itself stayed
+       bright and apparently interactive - the one moment the screen must look
+       busy. A blocking wait outranks whatever raised it, by definition. */
+    z-index: 90;
+}
+
+/* 1.1 - the contained variant. Absolute rather than fixed, so it fills the box it
+   is put in; OPAQUE rather than a scrim, because the point is to hide what is
+   behind it - an iframe painting white before its document arrives - not to dim
+   it; and no backdrop blur, which would blur that white rather than replace it.
+   The host supplies the rounding, so this inherits it. */
+.loader--contained {
+    position: absolute;
+    background: var(--page-bg, #0a0a0a);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    z-index: 2;
+    border-radius: inherit;
+}
+
+.loader__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--text, #fafafa);
+}
+
+/* The mark IS the spinner - it is a ring with a dot, so the dot orbiting reads as
+   progress with no added ring or arc. currentColor is why the glyph was taken as
+   vector rather than as modonFavicon.png: the raster is a fixed light-on-dark tile
+   and would sit in a box of its own here. */
+.loader__mark {
+    width: 44px;
+    height: 44px;
+    fill: currentColor;
+    transform-origin: 50% 50%;
+    animation:
+        loaderSpin 1.4s linear infinite,
+        loaderPulse 1.4s ease-in-out infinite;
+}
+
+.loader__label {
+    margin: 0;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    color: var(--text-muted, #a3a3a3);
+    text-align: center;
+}
+
+@keyframes loaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* The pulse carries the "still working" signal on its own, which is what keeps the
+   reduced-motion fallback below legible rather than a dead logo. */
+@keyframes loaderPulse {
+    0%,
+    100% {
+        opacity: 0.55;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* A spinning, pulsing mark is exactly what vestibular-motion sensitivity reacts to.
+   The overlay still appears and still blocks; only the movement stops. */
+@media (prefers-reduced-motion: reduce) {
+    .loader__mark {
+        animation: none;
+        opacity: 0.85;
+    }
+}

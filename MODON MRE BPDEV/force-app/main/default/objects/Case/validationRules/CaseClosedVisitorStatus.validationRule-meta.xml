@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CaseClosedVisitorStatus</fullName>
+    <active>false</active>
+    <description>Visitor cases should have status as Resolved Without Resolution and should have resolution comments</description>
+    <errorConditionFormula>AND(
+    NOT($Setup.Case_Validation_Bypass__c.Bypass_Validation__c),
+    AND(ISCHANGED(Status ),
+OR(
+    AND(
+        ISPICKVAL(CaseType__c, &apos;Visitor Case&apos;),
+        ISPICKVAL(Status, &apos;Closed&apos;)
+    ),
+    AND(
+        ISPICKVAL(CaseType__c, &apos;Visitor Case&apos;),
+        ISPICKVAL(Status, &apos;Closed with Service Request&apos;)
+    ),
+    AND(
+        ISPICKVAL(CaseType__c, &apos;Visitor Case&apos;),
+        ISPICKVAL(Status, &apos;Closed with Service Request&apos;)
+    ),
+    AND(
+        ISPICKVAL(CaseType__c, &apos;Visitor Case&apos;),
+        ISPICKVAL(Status, &apos;Closed without Resolution&apos;),
+        ISBLANK(Resolution_Comments__c)
+    )
+)
+)
+)</errorConditionFormula>
+    <errorDisplayField>Status</errorDisplayField>
+    <errorMessage>Visitor cases should have status as Closed Without Resolution and should have resolution comments</errorMessage>
+</ValidationRule>

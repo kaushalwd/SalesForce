@@ -1,0 +1,381 @@
+<template>
+    <div class="events">
+        <template lwc:if={isInitializing}>
+            <c-mbpr_loader label="Loading events"></c-mbpr_loader>
+        </template>
+
+        <template lwc:elseif={loadError}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    compact
+                    kicker="Events"
+                    title="Something went wrong"
+                    message={loadError}
+                ></c-mbpr_empty-state>
+                <button class="events-button events-button--ghost" type="button" onclick={handleRetryLoad}>
+                    Try again
+                </button>
+            </div>
+        </template>
+
+        <template lwc:elseif={isCompactVariant}>
+            <!-- ============ Compact: next upcoming events (Aspire) ============ -->
+            <template lwc:if={hasCompactUpcoming}>
+                <ol class="compact-list">
+                    <template for:each={compactUpcomingCards} for:item="eventRow">
+                        <li key={eventRow.id}>
+                            <button
+                                class="compact-card"
+                                type="button"
+                                data-id={eventRow.id}
+                                onclick={handleOpenDetail}
+                            >
+                                <span class="compact-card__body">
+                                    <strong>{eventRow.name}</strong>
+                                    <small>{eventRow.formattedDateTime}</small>
+                                </span>
+                                <template lwc:if={eventRow.type}>
+                                    <span class="type-chip">{eventRow.type}</span>
+                                </template>
+                            </button>
+                        </li>
+                    </template>
+                </ol>
+            </template>
+            <template lwc:else>
+                <p class="bucket-empty">No Upcoming Events</p>
+            </template>
+        </template>
+
+        <template lwc:else>
+            <!-- ============ Full: filter + calendar + occurrence lists ============ -->
+            <template lwc:if={hasAnyEvents}>
+                <div class="events-toolbar">
+                    <lightning-combobox
+                        label="Filter by Type"
+                        placeholder="All Types"
+                        options={typeOptions}
+                        value={typeFilter}
+                        onchange={handleTypeChange}
+                        class="type-select"
+                    ></lightning-combobox>
+                </div>
+
+                <section class="calendar" aria-label="Calendar">
+                    <header class="calendar__head">
+                        <div class="calendar__nav">
+                            <button
+                                class="calendar__nav-button"
+                                type="button"
+                                title="Previous month"
+                                disabled={calendarModel.isPrevDisabled}
+                                onclick={handleCalendarPrev}
+                            >
+                                <lightning-icon icon-name="utility:chevronleft" size="xx-small" alternative-text="Previous month"></lightning-icon>
+                            </button>
+                            <button
+                                class="calendar__nav-button"
+                                type="button"
+                                title="Next month"
+                                disabled={calendarModel.isNextDisabled}
+                                onclick={handleCalendarNext}
+                            >
+                                <lightning-icon icon-name="utility:chevronright" size="xx-small" alternative-text="Next month"></lightning-icon>
+                            </button>
+                            <span class="calendar__title">{calendarModel.title}</span>
+                            <button class="calendar__today" type="button" onclick={handleCalendarToday}>Today</button>
+                        </div>
+                        <!-- Same filter as the toolbar above; this instance shows on desktop and
+                             tablet where the toolbar is hidden, the toolbar one shows on phones
+                             where the calendar is hidden. Both bind the same state. -->
+                        <lightning-combobox
+                            label="Filter by Type"
+                            placeholder="All Types"
+                            options={typeOptions}
+                            value={typeFilter}
+                            onchange={handleTypeChange}
+                            class="type-select type-select--calendar"
+                        ></lightning-combobox>
+                    </header>
+                    <div class="calendar__weekdays" aria-hidden="true">
+                        <template for:each={calendarModel.weekdays} for:item="weekday">
+                            <span key={weekday}>{weekday}</span>
+                        </template>
+                    </div>
+                    <div class={calendarGridClass}>
+                        <template for:each={calendarModel.weeks} for:item="week">
+                            <div key={week.key} class="calendar__week">
+                                <template for:each={week.days} for:item="cell">
+                                    <div key={cell.key} class={cell.cellClass}>
+                                        <template lwc:if={cell.isOutside}>
+                                            <span class="calendar__day calendar__day--outside" aria-hidden="true">{cell.day}</span>
+                                        </template>
+                                        <template lwc:else>
+                                            <button
+                                                class={cell.className}
+                                                type="button"
+                                                data-iso={cell.iso}
+                                                aria-label={cell.ariaLabel}
+                                                aria-pressed={cell.ariaPressed}
+                                                onclick={handleCalendarDayClick}
+                                            >{cell.day}</button>
+                                        </template>
+                                    </div>
+                                </template>
+                                <div class="calendar__lanes">
+                                    <template for:each={week.bars} for:item="bar">
+                                        <button
+                                            key={bar.key}
+                                            class={bar.className}
+                                            type="button"
+                                            style={bar.style}
+                                            data-id={bar.id}
+                                            title={bar.tooltip}
+                                            aria-label={bar.ariaLabel}
+                                            onclick={handleOpenDetail}
+                                        >
+                                            <template lwc:if={bar.timeLabel}>
+                                                <span class="calendar__bar-time">{bar.timeLabel}</span>
+                                            </template>
+                                            <span class="calendar__bar-label">{bar.label}</span>
+                                        </button>
+                                    </template>
+                                    <template for:each={week.more} for:item="more">
+                                        <button
+                                            key={more.key}
+                                            class="calendar__more"
+                                            type="button"
+                                            style={more.style}
+                                            data-iso={more.iso}
+                                            aria-label={more.ariaLabel}
+                                            onclick={handleCalendarMoreClick}
+                                        >{more.label}</button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="calendar__legend">
+                        <template lwc:if={hasCalendarLegend}>
+                            <template for:each={calendarLegend} for:item="item">
+                                <span key={item.key} class="calendar__legend-item" style={item.style}>
+                                    <i class="calendar__legend-swatch" aria-hidden="true"></i>{item.label}
+                                </span>
+                            </template>
+                        </template>
+                        <template lwc:else>
+                            <span class="calendar__legend-empty">No events this month for the selected type.</span>
+                        </template>
+                    </div>
+                </section>
+
+                <!-- ============ Today's Occurrences ============ -->
+                <section class="bucket" aria-label="Today's Occurrences">
+                    <h3 class="bucket__title">Today's Occurrences</h3>
+                    <template lwc:if={todayView.hasRows}>
+                        <div class="bucket__header" aria-hidden="true">
+                            <span>Event</span><span>Date &amp; Time</span><span>Type</span>
+                        </div>
+                        <ol class="bucket__list">
+                            <template for:each={todayView.rows} for:item="eventRow">
+                                <li key={eventRow.id}>
+                                    <button class="event-row" type="button" data-id={eventRow.id} onclick={handleOpenDetail}>
+                                        <span class="event-row__name">{eventRow.name}</span>
+                                        <span class="event-row__time">{eventRow.formattedDateTime}</span>
+                                        <span class="event-row__type">
+                                            <template lwc:if={eventRow.type}>
+                                                <span class="type-chip">{eventRow.type}</span>
+                                            </template>
+                                        </span>
+                                    </button>
+                                </li>
+                            </template>
+                        </ol>
+                        <template lwc:if={todayView.showPagination}>
+                            <nav class="bucket__pagination" aria-label="Today's Occurrences pagination">
+                                <button class="events-button events-button--ghost" type="button" data-bucket="today" disabled={todayView.isPrevDisabled} onclick={handleBucketPrev}>⟵ Prev</button>
+                                <span>{todayView.pageLabel}</span>
+                                <button class="events-button events-button--ghost" type="button" data-bucket="today" disabled={todayView.isNextDisabled} onclick={handleBucketNext}>Next ⟶</button>
+                            </nav>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <p class="bucket-empty">No Events for Today</p>
+                    </template>
+                </section>
+
+                <!-- ============ Upcoming Occurrences ============ -->
+                <section class="bucket" aria-label="Upcoming Occurrences">
+                    <h3 class="bucket__title">Upcoming Occurrences</h3>
+                    <template lwc:if={upcomingView.hasRows}>
+                        <div class="bucket__header" aria-hidden="true">
+                            <span>Event</span><span>Date &amp; Time</span><span>Type</span>
+                        </div>
+                        <ol class="bucket__list">
+                            <template for:each={upcomingView.rows} for:item="eventRow">
+                                <li key={eventRow.id}>
+                                    <button class="event-row" type="button" data-id={eventRow.id} onclick={handleOpenDetail}>
+                                        <span class="event-row__name">{eventRow.name}</span>
+                                        <span class="event-row__time">{eventRow.formattedDateTime}</span>
+                                        <span class="event-row__type">
+                                            <template lwc:if={eventRow.type}>
+                                                <span class="type-chip">{eventRow.type}</span>
+                                            </template>
+                                        </span>
+                                    </button>
+                                </li>
+                            </template>
+                        </ol>
+                        <template lwc:if={upcomingView.showPagination}>
+                            <nav class="bucket__pagination" aria-label="Upcoming Occurrences pagination">
+                                <button class="events-button events-button--ghost" type="button" data-bucket="upcoming" disabled={upcomingView.isPrevDisabled} onclick={handleBucketPrev}>⟵ Prev</button>
+                                <span>{upcomingView.pageLabel}</span>
+                                <button class="events-button events-button--ghost" type="button" data-bucket="upcoming" disabled={upcomingView.isNextDisabled} onclick={handleBucketNext}>Next ⟶</button>
+                            </nav>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <p class="bucket-empty">No Upcoming Events</p>
+                    </template>
+                </section>
+
+                <!-- ============ Previous Occurrences ============ -->
+                <section class="bucket" aria-label="Previous Occurrences">
+                    <h3 class="bucket__title">Previous Occurrences</h3>
+                    <template lwc:if={previousView.hasRows}>
+                        <div class="bucket__header" aria-hidden="true">
+                            <span>Event</span><span>Date &amp; Time</span><span>Type</span>
+                        </div>
+                        <ol class="bucket__list">
+                            <template for:each={previousView.rows} for:item="eventRow">
+                                <li key={eventRow.id}>
+                                    <button class="event-row" type="button" data-id={eventRow.id} onclick={handleOpenDetail}>
+                                        <span class="event-row__name">{eventRow.name}</span>
+                                        <span class="event-row__time">{eventRow.formattedDateTime}</span>
+                                        <span class="event-row__type">
+                                            <template lwc:if={eventRow.type}>
+                                                <span class="type-chip">{eventRow.type}</span>
+                                            </template>
+                                        </span>
+                                    </button>
+                                </li>
+                            </template>
+                        </ol>
+                        <template lwc:if={previousView.showPagination}>
+                            <nav class="bucket__pagination" aria-label="Previous Occurrences pagination">
+                                <button class="events-button events-button--ghost" type="button" data-bucket="previous" disabled={previousView.isPrevDisabled} onclick={handleBucketPrev}>⟵ Prev</button>
+                                <span>{previousView.pageLabel}</span>
+                                <button class="events-button events-button--ghost" type="button" data-bucket="previous" disabled={previousView.isNextDisabled} onclick={handleBucketNext}>Next ⟶</button>
+                            </nav>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <p class="bucket-empty">No Previous Events</p>
+                    </template>
+                </section>
+            </template>
+
+            <template lwc:else>
+                <div class="state-panel">
+                    <c-mbpr_empty-state
+                        kicker="Events"
+                        title="No Events Available"
+                        message="There are no events scheduled for your agency at this time."
+                        show-graphic
+                    ></c-mbpr_empty-state>
+                </div>
+            </template>
+        </template>
+    </div>
+
+    <!-- ================= "+N more" day list overlay ================= -->
+    <template lwc:if={showDayList}>
+        <div class="detail-layer" onclick={handleCloseDayList} onkeydown={handleDayListKeydown}>
+            <section
+                class="detail"
+                role="dialog"
+                aria-modal="true"
+                aria-label={dayListView.title}
+                onclick={stopEventPropagation}
+            >
+                <header class="detail__header">
+                    <h2>{dayListView.title}</h2>
+                    <button class="detail__close" type="button" title="Close" onclick={handleCloseDayList}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="detail__body">
+                    <ol class="daylist">
+                        <template for:each={dayListView.rows} for:item="row">
+                            <li key={row.id}>
+                                <button class="daylist__row" type="button" style={row.style} data-id={row.id} onclick={handleOpenDetailFromDayList}>
+                                    <span class="daylist__time">{row.timeLabel}</span>
+                                    <span class="daylist__name">{row.name}</span>
+                                    <template lwc:if={row.type}>
+                                        <span class="type-chip">{row.type}</span>
+                                    </template>
+                                </button>
+                            </li>
+                        </template>
+                    </ol>
+                </div>
+                <footer class="detail__footer detail__footer--split">
+                    <span class="detail__count">{dayListView.countLabel}</span>
+                    <button class="events-button" type="button" onclick={handleCloseDayList}>Close</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+    <!-- ================= Event detail overlay ================= -->
+    <template lwc:if={selectedEvent}>
+        <div class="detail-layer" onclick={handleCloseDetail} onkeydown={handleDetailKeydown}>
+            <section
+                class="detail"
+                role="dialog"
+                aria-modal="true"
+                aria-label={selectedEvent.name}
+                onclick={stopEventPropagation}
+            >
+                <header class="detail__header">
+                    <h2>{selectedEvent.name}</h2>
+                    <button class="detail__close" type="button" title="Close" onclick={handleCloseDetail}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="detail__body">
+                    <dl class="detail__grid">
+                        <div><dt>Date &amp; Time</dt><dd>{selectedEvent.formattedDateTime}</dd></div>
+                        <template lwc:if={selectedEvent.type}>
+                            <div><dt>Type</dt><dd>{selectedEvent.type}</dd></div>
+                        </template>
+                        <template lwc:if={selectedEvent.status}>
+                            <div><dt>Status</dt><dd>{selectedEvent.status}</dd></div>
+                        </template>
+                        <template lwc:if={selectedEvent.location}>
+                            <div><dt>Location</dt><dd>{selectedEvent.location}</dd></div>
+                        </template>
+                        <template lwc:if={selectedEvent.description}>
+                            <div class="detail__grid-full"><dt>Description</dt><dd>{selectedEvent.description}</dd></div>
+                        </template>
+                    </dl>
+                    <template lwc:if={selectedEventHasLinks}>
+                        <div class="detail__links">
+                            <template lwc:if={selectedEvent.externalLink}>
+                                <a href={selectedEvent.externalLink} target="_blank" rel="noopener">External Link</a>
+                            </template>
+                            <template lwc:if={selectedEvent.socialMediaLink}>
+                                <a href={selectedEvent.socialMediaLink} target="_blank" rel="noopener">Social Media</a>
+                            </template>
+                            <template lwc:if={selectedEvent.virtualTourLink}>
+                                <a href={selectedEvent.virtualTourLink} target="_blank" rel="noopener">Virtual Tour</a>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <footer class="detail__footer">
+                    <button class="events-button" type="button" onclick={handleCloseDetail}>Close</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+</template>

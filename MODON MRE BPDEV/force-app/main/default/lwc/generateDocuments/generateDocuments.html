@@ -1,0 +1,73 @@
+<template>
+    <!-- Hide everything when the modal is open -->
+    <template if:false={showConfirmModal}>
+        <div class="header-bar">
+            <h1 class="title">📄 Generate Nintex Documents</h1>
+        </div>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="loading-section">
+                <lightning-spinner alternative-text="Generating..." size="medium"></lightning-spinner>
+                <p>Generating your document. Please wait...</p>
+            </div>
+        </template> 
+
+        <!-- Success Message -->
+        <template if:true={showSuccessMessage}>
+            <div class="success-section">
+                <lightning-icon icon-name="utility:success" size="large" class="success-icon"></lightning-icon>
+                <h2 class="slds-text-heading_small">{successMessage}</h2>
+                <lightning-button label="Back to Documents" variant="brand" onclick={handleBackToList}></lightning-button>
+            </div>
+        </template>
+
+        <!-- Document Cards -->
+        <template if:true={showDocuments}>
+            <div class="cards-grid">
+                <template for:each={documents} for:item="doc">
+                    <div key={doc.Id} class="doc-card">
+                        <div class="doc-header">
+                            <lightning-icon icon-name="doctype:pdf" size="small"></lightning-icon>
+                            <h2 class="doc-name">{doc.Name}</h2>
+                        </div>
+                        <p class="doc-desc">Click below to generate this document.</p>
+                        <lightning-button 
+                            label="Generate"
+                            variant="brand"
+                            data-id={doc.Id}
+                            data-name={doc.Name}
+                            onclick={handleGenerateClick}>
+                        </lightning-button>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- No Documents Found -->
+        <template if:true={showNoDocuments}>
+            <div class="empty-state">
+                <lightning-icon icon-name="utility:info_alt" size="large" class="empty-icon"></lightning-icon>
+                <p class="slds-text-heading_small">No Drawloop templates found for this Business Process.</p>
+            </div>
+        </template>
+    </template>
+
+    <!-- Confirmation Modal (appears alone) -->
+    <template if:true={showConfirmModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modern-modal">
+                <div class="slds-modal__header modern-modal-header">
+                    <h2 class="slds-text-heading_medium">Confirm Document Generation</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>Are you sure you want to generate the document: <strong>{selectedDocName}</strong>?</p>
+                </div>
+                <div class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Generate" variant="brand" onclick={handleConfirmGenerate}></lightning-button>
+                </div>
+            </div>
+        </section>
+    </template>
+</template>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Retired_Reason_Mandatory_Check</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+AND(
+    TEXT(Status) == &quot;Retired&quot;,
+    ISBLANK(TEXT(RetiredReason__c)),
+    NOT(ISPICKVAL(Source_Entity__c, &quot;Modon - Egypt&quot;))  
+),
+AND(
+    TEXT(Status) == &quot;Retired&quot;,
+    OR(
+    ISBLANK(TEXT(RetiredReason__c)),
+    ISBLANK(RetirementComments__c)
+    ),
+    ISPICKVAL(Source_Entity__c, &quot;Modon - Egypt&quot;) 
+)
+)</errorConditionFormula>
+    <errorMessage>Please ensure you include the appropriate reason and comment before attempting to update the status.</errorMessage>
+</ValidationRule>

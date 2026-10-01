@@ -1,0 +1,202 @@
+<template>
+    <!-- DESKTOP HEADER -->
+    <header class="header">
+        <!-- Single logo slot: picks between the Aspire logo (its own static
+             resource) and the Modon logo (from the modonImages zip) based on
+             showAspireLogo. Previously there were two separate .logo divs
+             here (one always showing logowhite, one showing the old
+             combined `logo`) — that was a leftover duplicate; collapsed to
+             one. -->
+        <div class="logo">
+            <a href="/">
+                <template if:true={showAspireLogo}>
+                    <img src={aspireLogo} alt="Aspire" />
+                </template>
+                <template if:false={showAspireLogo}>
+                    <img src={modonLogo} alt="Modon" />
+                </template>
+            </a>
+        </div>
+        <button class="menu-toggle" onclick={handleToggleMenu} title="Toggle navigation">☰</button>
+    </header>
+
+    <!-- //mobile: CUSTOM MOBILE HEADER (only visible on mobile) -->
+    <template if:true={isMobile}>
+        <header class="custom-mobile-header">
+            <div class="mobile-header-left">
+                <button class="mobile-hamburger" onclick={toggleMobileMenu} aria-label="Open menu">
+                    <span class="line"></span>
+                    <span class="line"></span>
+                    <span class="line"></span>
+                </button>
+            </div>
+            
+            <div class="mobile-header-center">
+                <a href="/">
+                    <template if:true={showAspireLogo}>
+                        <img src={aspireLogo} alt="Aspire" class="mobile-logo" />
+                    </template>
+                    <template if:false={showAspireLogo}>
+                        <img src={modonLogo} alt="Modon" class="mobile-logo" />
+                    </template>
+                </a>
+            </div>
+            
+            <div class="mobile-header-right">
+                <div class="mobile-profile-menu">
+                    <button class="mobile-icon-button" onclick={toggleMobileProfileMenu}>
+                        <img src={profileIcon} alt="Profile" />
+                    </button>
+                    <template if:true={showMobileProfileMenu}>
+                        <div class="mobile-dropdown-menu">
+                            <button onclick={handleMyInfo}>My Profile</button>
+                            <button onclick={handleLogout}>Logout</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </header>
+
+        <!-- //mobile: MOBILE SIDEBAR MENU -->
+        <div class={mobileBackdropClass} onclick={closeMobileMenu}></div>
+
+        <nav class={mobileSidebarClass}>
+            <div class="mobile-sidebar-inner">
+                <div class="mobile-sidebar-header">
+                    <img src={profileIcon} alt="Profile" class="mobile-profile-img" />
+                    <div class="mobile-user-name">{firstName} {lastName}</div>
+                </div>
+
+                <div class="mobile-menu-list">
+                    <template for:each={computedTabs} for:item="tab">
+                        <div key={tab.label} class="mobile-tab-wrapper">
+                            <button
+                                class={tab.mobileMenuClass}
+                                data-label={tab.label}
+                                onclick={handleTabClickMobile}>
+                                {tab.label}
+                            </button>
+                            
+                            <!-- //mobile: Sub-tabs container -->
+                            <template if:true={tab.hasSubTabs}>
+                                <div class="mobile-subtabs-container">
+                                    <template for:each={tab.subTabs} for:item="subTab">
+                                        <button
+                                            key={subTab.label}
+                                            class="mobile-subtab-item"
+                                            data-url={subTab.url}
+                                            onclick={handleSubTabClick}>
+                                            {subTab.label}
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="mobile-menu-footer">
+                    <a href={termsandcondtions} target="_blank">Terms &amp; Conditions</a>
+                    <a href={privacyPolicyUrl} target="_blank">Privacy Policy</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- //mobile: Profile content overlay -->
+        <template if:true={showMyInfoContent}>
+            <div class="mobile-profile-content-overlay">
+                <div class="mobile-profile-content">
+                    <div class="mobile-profile-header">
+                        <button class="mobile-back-button" onclick={handleBackFromProfile}>
+                            ← Back
+                        </button>
+                        <h2>My Profile</h2>
+                    </div>
+                    <div class="mobile-profile-body">
+                        <c-mbp_logged-in-user-details onback={handleBackFromProfile}></c-mbp_logged-in-user-details>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </template>
+
+    <!-- TAB CONTAINER (unchanged structure) -->
+    <div class="tab-container">
+        <div class="top-bar">
+            <template if:true={showMyInfoContent}>
+                <c-mbp_logged-in-user-details onback={handleBackFromProfile}></c-mbp_logged-in-user-details>
+            </template>
+
+            <!-- Tabs: desktop view -->
+            <div class="tab-header desktop-visible">
+                <template for:each={computedTabs} for:item="tab">
+                    <button key={tab.label} class={tab.className} data-label={tab.label} onclick={handleTabClick}>
+                        {tab.label}
+                    </button>
+                </template>
+            </div>
+
+            <!-- Icons (hidden on mobile) -->
+            <div class="top-icons">
+                <div class="notification-container">
+                    <button class="icon-button" title="Notifications" onclick={toggleDropdown}>
+                        <img src={notificationIcon} alt="Notifications" class="icon-image" />
+                        <template if:true={hasUnread}>
+                            <span class="badge"></span>
+                        </template>
+                    </button>
+                </div>
+
+                <div class="profile-menu">
+                    <button class="icon-button" onclick={toggleProfileMenu}>
+                        <img src={profileIcon} alt="Profile" class="icon-image" />
+                    </button>
+                    <p class="highlighted-name">{firstName} {middleName} {lastName}</p>
+                    <template if:true={showProfileMenu}>
+                        <div class="dropdown-menu">
+                            <button onclick={handleMyInfo}>My Profile</button>
+                            <button onclick={handleLogout}>Logout</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER (hidden on mobile) -->
+    <template if:false={isMobile}>
+        <footer class="footer">
+            <div class="row">
+                <div class="col-md-5 ms-2">© Modon 2025 All rights reserved</div>
+                <div class="col-md-6">
+                    <a href={termsandcondtions} class="tc">Terms and Conditions</a> |  
+                    <a href={privacyPolicyUrl} class="pp">Privacy Policy</a>
+                </div>
+                <div class="col-md-1">
+                    <div style="display:inline-flex">
+                        <a href={linkedInUrl} target="_blank">
+                            <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="LinkedIn"
+                                 src="https://e.hypermatic.com/c92cb5bd39105a473bfcfbd654d9bebe.png"/>
+                        </a>
+                        <a href={instagramUrl} target="_blank">
+                            <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="Instagram"
+                                 src="https://e.hypermatic.com/7dda10e76ce1125775a3e98bcd498eba.png"/>
+                        </a>
+                        <a href={xUrl} target="_blank">
+                            <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="X"
+                                 src="https://e.hypermatic.com/0c5ff08a5ad02ed83d457cc6b0505c3d.png"/>
+                        </a>
+                        <a href={facebookUrl} target="_blank">
+                            <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="Facebook"
+                                 src="https://e.hypermatic.com/c59407678388970d47239b45163faa70.png"/>
+                        </a>
+                        <a href={youtubeUrl} target="_blank">
+                            <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="YouTube"
+                                 src="https://e.hypermatic.com/b65787e98cc916d6885bacc41d0a6cdb.png"/>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </template>
+</template>

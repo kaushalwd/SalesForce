@@ -1,0 +1,97 @@
+<template>
+    <!-- Main card container for the KPI mass edit form -->
+    <lightning-card title="Update Sales Executive Teams KPI" icon-name="custom:custom41">
+        
+        <!-- Table container with horizontal scrolling enabled -->
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium slds-scrollable_x table-container">
+            
+            <!-- Loading indicator displayed during server calls -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+            
+            <!-- Render the table only when KPI data is loaded -->
+            <template if:true={kpiData}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Sr. No.">Sr. No.</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="First Name">First Name</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Last Name">Last Name</div>
+                            </th>
+                            <th class="" scope="col" style="width: 120px;">
+                                <div class="slds-truncate" title="Presentable">Presentable</div>
+                            </th>
+                            <th class="" scope="col" style="width: 120px;">
+                                <div class="slds-truncate" title="Punctuality">Punctuality</div>
+                            </th>
+                            <th class="" scope="col" style="width: 120px;">
+                                <div class="slds-truncate" title="Team Work">Team Work</div>
+                            </th>
+                            <!-- Target field hidden per request
+                            <th class="" scope="col" style="width: 250px;">
+                                <div class="slds-truncate" title="Target">Target</div>
+                            </th>
+                            -->
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Month">Month</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Year">Year</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={kpiData} for:item="row" for:index="index">
+                            <tr key={row.userId}>
+                                <td>
+                                    <div class="slds-truncate">{row.srNo}</div>
+                                </td>
+                                <td>
+                                    <div class="slds-truncate">{row.firstName}</div>
+                                </td>
+                                <td>
+                                    <div class="slds-truncate">{row.lastName}</div>
+                                </td>
+                                <td>
+                                    <lightning-input type="number" variant="label-hidden" value={row.presentable} data-id={row.userId} class={row.presentableClass} data-field="presentable" onchange={handleInputChange}></lightning-input>
+                                </td>
+                                <td>
+                                    <lightning-input type="number" variant="label-hidden" value={row.punctuality} data-id={row.userId} class={row.punctualityClass} data-field="punctuality" onchange={handleInputChange}></lightning-input>
+                                </td>
+                                <td>
+                                    <lightning-input type="number" variant="label-hidden" value={row.teamWork} data-id={row.userId} class={row.teamWorkClass} data-field="teamWork" onchange={handleInputChange}></lightning-input>
+                                </td>
+                                <!-- Target field hidden per request
+                                <td>
+                                    <lightning-input type="number" formatter="currency" step="0.01" variant="label-hidden" value={row.target} data-id={row.userId} class={row.targetClass} data-field="target" onchange={handleInputChange}></lightning-input>
+                                </td>
+                                -->
+                                <td>
+                                    <lightning-combobox variant="label-hidden" dropdown-alignment="auto" value={row.month} options={monthOptions} data-id={row.userId} class={row.monthClass} data-field="month" onchange={handleInputChange}></lightning-combobox>
+                                </td>
+                                <td>
+                                    <lightning-combobox variant="label-hidden" dropdown-alignment="auto" value={row.year} options={yearOptions} data-id={row.userId} class={row.yearClass} data-field="year" onchange={handleInputChange}></lightning-combobox>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+            <template if:true={error}>
+                <div class="slds-text-color_error slds-m-top_medium">
+                    Error loading data: {error}
+                </div>
+            </template>
+        </div>
+        <div slot="footer">
+            <lightning-button label={cancelOrCloseLabel} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+            <lightning-button variant="brand" label="Save" onclick={handleSave} disabled={isSaveDisabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

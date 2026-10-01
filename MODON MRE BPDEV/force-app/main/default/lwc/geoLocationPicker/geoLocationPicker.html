@@ -1,0 +1,47 @@
+<template>
+    <lightning-card title="Select Location">
+        <div class="slds-p-around_medium">
+
+            <div class="map-container" lwc:dom="manual"></div>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading address..."></lightning-spinner>
+            </template>
+
+            <lightning-input
+    type="search"
+    label="Search Location"
+    value={searchText}
+    onchange={handleSearchChange}
+    placeholder="Search location">
+</lightning-input>
+
+<template if:true={searchResults}>
+    <div class="search-results">
+        <template for:each={searchResults} for:item="item">
+            <div key={item.placeId}
+                 class="search-item"
+                 data-lat={item.lat}
+                 data-lon={item.lon}
+                 onclick={handleLocationSelect}>
+                {item.label}
+            </div>
+        </template>
+    </div>
+</template>
+
+            <template if:true={locationDetails}>
+                <div class="slds-m-top_medium">
+                    <lightning-input label="Latitude" value={locationDetails.latitude} disabled></lightning-input>
+                    <lightning-input label="Longitude" value={locationDetails.longitude} disabled></lightning-input>
+                    <lightning-input label="Address" value={locationDetails.formatted} disabled></lightning-input>
+                    <lightning-input label="City" value={locationDetails.city} disabled></lightning-input>
+                    <lightning-input label="State" value={locationDetails.state} disabled></lightning-input>
+                    <lightning-input label="Country" value={locationDetails.country} disabled></lightning-input>
+                    <lightning-input label="Postal Code" value={locationDetails.postcode} disabled></lightning-input>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,284 @@
+<template>
+    <!-- 1.8: two controls above the list. Project and Phase moved into the panel; search stays on the surface because it is incremental. -->
+    <div class="unit-tools" onkeydown={handlePanelKeydown}>
+        <div class="search">
+            <span class="search__ic">
+                <c-modon-icon name="search" size="14" color="var(--text-dim, #8a8a8a)"></c-modon-icon>
+            </span>
+            <input
+                class="search__input"
+                type="text"
+                placeholder="Search unit code…"
+                aria-label="Search units"
+                value={term}
+                oninput={handleTerm}
+            />
+            <template lwc:if={showTermClear}>
+                <button
+                    class="search__clear"
+                    type="button"
+                    aria-label="Clear search"
+                    onclick={handleTermClear}
+                >
+                    <c-modon-icon name="x" size="13" color="currentColor"></c-modon-icon>
+                </button>
+            </template>
+        </div>
+
+        <button
+            class={filterBtnClass}
+            type="button"
+            aria-expanded={panelOpen}
+            aria-haspopup="dialog"
+            aria-label="Filter units"
+            onclick={togglePanel}
+        >
+            <c-modon-icon name="clipboard-list" size="15" color="currentColor"></c-modon-icon>
+            <span class="filter-btn__label">Filters</span>
+            <template lwc:if={showFilterCount}>
+                <span class="filter-btn__count">{filterCount}</span>
+            </template>
+        </button>
+
+        <!-- the panel, ported from mbpr_homeGateway's popover. Fixed, not absolute: .body is the scrollport and would clip it; positionPanel solves the coordinates on scroll and resize. -->
+        <template lwc:if={panelOpen}>
+            <!-- zero-size at fixed 0,0: its rect is the offset of the sheet's containing block; positionPanel subtracts it -->
+            <span class="pop-probe" aria-hidden="true"></span>
+            <div class="filter-scrim" aria-hidden="true" onclick={closePanel}></div>
+            <section class={popClass} style={popStyle} role="dialog" aria-label="Filter units">
+                <div class="filter-pop__head">
+                    <div>
+                        <p class="filter-pop__kicker">Refine list</p>
+                        <h4 class="filter-pop__title">Filters</h4>
+                    </div>
+                    <button
+                        class="filter-pop__close"
+                        type="button"
+                        aria-label="Close filters"
+                        onclick={closePanel}
+                    >
+                        <c-modon-icon name="x" size="14" color="currentColor"></c-modon-icon>
+                    </button>
+                </div>
+
+                <div class="filter-pop__body">
+                    <!-- one grid, six controls, no section headings. Project and Phase re-query Apex and commit on change, clearing the refinements; the four below wait for Apply. Every option carries a live count built from the units that survive the other filters. -->
+                    <div class="filter-pop__grid">
+                        <div class="field">
+                            <label class="field__label" for="fproj">Project</label>
+                            <select
+                                id="fproj"
+                                class="field__select"
+                                disabled={busy}
+                                onchange={handleProject}
+                            >
+                                <option value="">Select a project…</option>
+                                <template for:each={projectChoices} for:item="p">
+                                    <option key={p.value} value={p.value} selected={p.selected}>
+                                        {p.label}
+                                    </option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="fphase">Phase</label>
+                            <select
+                                id="fphase"
+                                class="field__select"
+                                disabled={busy}
+                                onchange={handlePhase}
+                            >
+                                <option value="">Select a phase…</option>
+                                <template for:each={phaseChoices} for:item="p">
+                                    <option key={p.value} value={p.value} selected={p.selected}>
+                                        {p.label}
+                                    </option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="fbeds">Bedrooms</label>
+                            <select
+                                id="fbeds"
+                                class="field__select"
+                                data-f="beds"
+                                onchange={handlePendingSelect}
+                            >
+                                <template for:each={bedOptions} for:item="o">
+                                    <option key={o.key} value={o.value} selected={o.selected}>
+                                        {o.label} ({o.count})
+                                    </option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="fprice">Price</label>
+                            <select
+                                id="fprice"
+                                class="field__select"
+                                data-f="price"
+                                onchange={handlePendingSelect}
+                            >
+                                <template for:each={priceOptions} for:item="o">
+                                    <option key={o.key} value={o.value} selected={o.selected}>
+                                        {o.label} ({o.count})
+                                    </option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="fplot">Plot size</label>
+                            <select
+                                id="fplot"
+                                class="field__select"
+                                data-f="plot"
+                                onchange={handlePendingSelect}
+                            >
+                                <template for:each={plotOptions} for:item="o">
+                                    <option key={o.key} value={o.value} selected={o.selected}>
+                                        {o.label} ({o.count})
+                                    </option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="fsort">Sort by</label>
+                            <select
+                                id="fsort"
+                                class="field__select"
+                                data-f="sort"
+                                onchange={handlePendingSelect}
+                            >
+                                <template for:each={sortOptions} for:item="s">
+                                    <option key={s.value} value={s.value} selected={s.selected}>
+                                        {s.label}
+                                    </option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- the Available unit types grid. Typology, not UnitClassification__c, which is not in getUnitDetails' SELECT and is derivable from it anyway. -->
+                    <div class="filter-pop__section filter-pop__section--types">
+                        <span class="filter-pop__label">Available unit types</span>
+                        <div class="type-grid" role="group" aria-label="Unit type filters">
+                            <template for:each={typeOptions} for:item="o">
+                                <button
+                                    key={o.key}
+                                    class={o.cls}
+                                    type="button"
+                                    data-type={o.key}
+                                    aria-pressed={o.selected}
+                                    onclick={handlePendingType}
+                                >
+                                    <span class="type-choice__label">{o.label}</span>
+                                    <strong class="type-choice__count">{o.count}</strong>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-pop__foot">
+                    <button class="btn btn-link filter-pop__clear" type="button" onclick={resetPanel}>
+                        Clear
+                    </button>
+                    <button
+                        class="btn btn-primary btn-sm"
+                        type="button"
+                        disabled={applyDisabled}
+                        onclick={applyFilters}
+                    >
+                        {applyLabel}
+                    </button>
+                </div>
+            </section>
+        </template>
+    </div>
+
+    <!-- what is applied, in words; each chip removes only itself -->
+    <template lwc:if={showActiveChips}>
+        <div class="applied" aria-label="Applied filters">
+            <template for:each={activeChips} for:item="c">
+                <button
+                    key={c.key}
+                    class="applied__chip"
+                    type="button"
+                    data-chip={c.key}
+                    title="Remove this filter"
+                    onclick={handleChipRemove}
+                >
+                    <span>{c.label}</span>
+                    <c-modon-icon name="x" size="11" color="currentColor"></c-modon-icon>
+                </button>
+            </template>
+            <button class="applied__clear" type="button" onclick={clearAll}>Clear all</button>
+        </div>
+    </template>
+
+    <template lwc:if={selectedPhaseId}>
+        <div class="result-row">
+            <span class="result-count">{resultLabel}</span>
+            <template lwc:if={showCapped}>
+                <span class="result-note">{cappedNote}</span>
+            </template>
+        </div>
+    </template>
+
+    <!-- Loading units removed: busy raises c-msc-loader over the whole page -->
+
+    <!-- 1.3: a list, not a card grid -->
+    <template lwc:if={hasUnits}>
+        <div class="unit-list" role="list">
+            <template for:each={unitCards} for:item="u">
+                <button
+                    key={u.id}
+                    class={u.cls}
+                    type="button"
+                    role="listitem"
+                    data-id={u.id}
+                    aria-pressed={u.selected}
+                    onclick={handleSelect}
+                >
+                    <!-- 1.6: the PoC's three-area row, price spanning both hard right -->
+                    <span class="unit-row__main">
+                        <span class="unit-row__name">{u.name}</span>
+                        <template lwc:if={u.selected}>
+                            <c-modon-icon
+                                name="check-circle"
+                                size="16"
+                                color="var(--gold, #a8a8a8)"
+                            ></c-modon-icon>
+                        </template>
+                    </span>
+
+                    <template lwc:if={u.meta}>
+                        <span class="unit-row__meta">{u.meta}</span>
+                    </template>
+                    <template lwc:if={u.typology}>
+                        <span class="chip unit-row__chip">{u.typology}</span>
+                    </template>
+
+                    <span class="unit-row__price">{u.priceDisplay}</span>
+
+                    <!-- 1.11: the rest of the unit's facts, on the selected card, where no tour is beside the list -->
+                    <template lwc:if={u.facts}>
+                        <span class="unit-row__facts">{u.facts}</span>
+                    </template>
+                </button>
+            </template>
+        </div>
+    </template>
+
+    <!-- 1.1: said when the second unit is ticked, not at Confirm: a basket collects no payment -->
+    <template lwc:if={showBasket}>
+        <div class="banner banner--warn unit-basket">
+            <c-modon-icon name="info" size="15" color="var(--chip-amber, #d97706)"></c-modon-icon>
+            <span>{basketNote}</span>
+        </div>
+    </template>
+
+    <template lwc:if={showEmpty}>
+        <p class="empty">{emptyMessage}</p>
+    </template>
+</template>

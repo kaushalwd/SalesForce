@@ -1,0 +1,470 @@
+<template>
+    <c-mbpr_workspace-modal
+        open={open}
+        size="full"
+        title="Generate Offer"
+        close-label="Close offer workspace"
+        onclose={handleClose}
+    >
+        <div class="offer-workspace">
+            <section class="offer-workspace__left" aria-label="Offer selections">
+                <div class="offer-path" aria-label="Offer progress">
+                    <template for:each={pathSteps} for:item="step">
+                        <article key={step.key} class={step.className}>
+                            <span class="offer-path__marker">{step.marker}</span>
+                            <span>
+                                <strong>{step.title}</strong>
+                            </span>
+                        </article>
+                    </template>
+                    <div class="offer-path__track" aria-hidden="true">
+                        <span style={pathProgressStyle}></span>
+                    </div>
+                </div>
+
+                <template lwc:if={isLoading}>
+                    <div class="offer-loading">
+                        <span class="button-spinner button-spinner--dark" aria-hidden="true"></span>
+                        <span>Loading offer workspace...</span>
+                    </div>
+                </template>
+
+                <template lwc:elseif={loadError}>
+                    <c-mbpr_empty-state
+                        compact
+                        kicker="Offer"
+                        title="Offer workspace could not load"
+                        message={loadError}
+                        tone="error"
+                        primary-label="Try again"
+                        onprimary={handleRetryLoad}
+                    ></c-mbpr_empty-state>
+                </template>
+
+                <template lwc:else>
+                    <template lwc:if={showContextUnitsBody}>
+                        <section class="context-units" aria-label="Units selected from inventory">
+                            <div>
+                                <p class="context-units__eyebrow">Selected units</p>
+                                <p class="context-units__copy">Choose the unit for this customer offer.</p>
+                            </div>
+                            <div class="context-units__list">
+                                <template for:each={contextUnitChips} for:item="unit">
+                                    <button
+                                        key={unit.key}
+                                        class={unit.className}
+                                        type="button"
+                                        data-id={unit.id}
+                                        onclick={handleContextUnit}
+                                    >
+                                        <span>{unit.name}</span>
+                                        <small>{unit.projectLabel}</small>
+                                    </button>
+                                </template>
+                            </div>
+                        </section>
+                    </template>
+
+                    <section class="selector-stack" aria-label="Offer required fields">
+                        <template lwc:if={isCompactViewport}>
+                            <button class="section-toggle" type="button" data-section="selectors" onclick={handleSectionToggle} aria-expanded={isSelectorsSectionOpen}>
+                                <span class="section-toggle__text">
+                                    <strong>Offer details</strong>
+                                    <small>{selectorsSectionSummary}</small>
+                                </span>
+                                <span class="section-toggle__chevron" aria-hidden="true"></span>
+                            </button>
+                        </template>
+                        <div lwc:if={showSelectorsBody} class={leadSelectorClass} data-field="lead" onfocusout={handleSmartBlur}>
+                            <div class="smart-select__label-row">
+                                <span class="smart-select__label">Lead <span class="smart-select__required">*</span></span>
+                                <template lwc:if={hasLeadSelection}>
+                                    <button class="smart-select__clear" type="button" data-field="lead" onclick={handleSmartClear}>Clear</button>
+                                </template>
+                            </div>
+                            <div class="smart-select__control">
+                                <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                                <input
+                                    type="text"
+                                    role="combobox"
+                                    aria-label="Search leads"
+                                    aria-expanded={isLeadSelectorOpen}
+                                    aria-controls="guided-offer-lead-list"
+                                    autocomplete="off"
+                                    data-field="lead"
+                                    value={leadInputValue}
+                                    placeholder={leadPlaceholder}
+                                    onfocus={handleSmartFocus}
+                                    oninput={handleSmartInput}
+                                    onkeydown={handleSmartKeydown}
+                                />
+                            </div>
+                            <template lwc:if={isLeadSelectorOpen}>
+                                <div class="smart-select-scrim" aria-hidden="true"></div>
+                                <div id="guided-offer-lead-list" class="smart-select__menu smart-select__menu--lead" role="listbox">
+                                    <!-- Touch band: typing happens inside the sheet, directly above the
+                                         results, so the keyboard can never hide what the user types
+                                         ( addendum). Desktop never renders this row. -->
+                                    <template lwc:if={isCompactViewport}>
+                                        <div class="sheet-search">
+                                            <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                                            <input
+                                                type="text"
+                                                aria-label="Search leads"
+                                                autocomplete="off"
+                                                data-field="lead"
+                                                value={leadInputValue}
+                                                placeholder={leadPlaceholder}
+                                                onfocus={handleSheetSearchFocus}
+                                                oninput={handleSmartInput}
+                                                onkeydown={handleSmartKeydown}
+                                            />
+                                        </div>
+                                    </template>
+                                    <template lwc:if={hasFilteredLeadOptions}>
+                                        <template for:each={filteredLeadOptions} for:item="option">
+                                            <button
+                                                key={option.key}
+                                                class={option.className}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={option.isSelected}
+                                                data-field="lead"
+                                                data-value={option.value}
+                                                onmousedown={handleSmartOptionMouseDown}
+                                            >
+                                                <span class="smart-option__body">
+                                                    <strong>{option.title}</strong>
+                                                    <small>{option.meta}</small>
+                                                    <em>{option.detail}</em>
+                                                </span>
+                                                <span class="smart-option__badge">{option.badge}</span>
+                                            </button>
+                                        </template>
+                                        <template lwc:if={showLeadLimitNote}>
+                                            <p class="smart-select__hint">Showing top matches. Keep typing to narrow the list.</p>
+                                        </template>
+                                    </template>
+                                    <template lwc:else>
+                                        <p class="smart-select__empty">{leadNoResultsMessage}</p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div lwc:if={showSelectorsBody} class={unitSelectorClass} data-field="unit" onfocusout={handleSmartBlur}>
+                            <div class="smart-select__label-row">
+                                <span class="smart-select__label">Unit <span class="smart-select__required">*</span></span>
+                                <template lwc:if={hasUnitSelection}>
+                                    <button class="smart-select__clear" type="button" data-field="unit" onclick={handleSmartClear}>Clear</button>
+                                </template>
+                            </div>
+                            <div class="smart-select__control">
+                                <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                                <input
+                                    type="text"
+                                    role="combobox"
+                                    aria-label="Search units"
+                                    aria-expanded={isUnitSelectorOpen}
+                                    aria-controls="guided-offer-unit-list"
+                                    autocomplete="off"
+                                    data-field="unit"
+                                    value={unitInputValue}
+                                    placeholder={unitPlaceholder}
+                                    onfocus={handleSmartFocus}
+                                    oninput={handleSmartInput}
+                                    onkeydown={handleSmartKeydown}
+                                />
+                            </div>
+                            <template lwc:if={isUnitSelectorOpen}>
+                                <div class="smart-select-scrim" aria-hidden="true"></div>
+                                <div id="guided-offer-unit-list" class="smart-select__menu" role="listbox">
+                                    <template lwc:if={isCompactViewport}>
+                                        <div class="sheet-search">
+                                            <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                                            <input
+                                                type="text"
+                                                aria-label="Search units"
+                                                autocomplete="off"
+                                                data-field="unit"
+                                                value={unitInputValue}
+                                                placeholder={unitPlaceholder}
+                                                onfocus={handleSheetSearchFocus}
+                                                oninput={handleSmartInput}
+                                                onkeydown={handleSmartKeydown}
+                                            />
+                                        </div>
+                                    </template>
+                                    <template lwc:if={hasFilteredUnitOptions}>
+                                        <template for:each={filteredUnitOptions} for:item="option">
+                                            <button
+                                                key={option.key}
+                                                class={option.className}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={option.isSelected}
+                                                data-field="unit"
+                                                data-value={option.value}
+                                                onmousedown={handleSmartOptionMouseDown}
+                                            >
+                                                <span class="smart-option__body">
+                                                    <strong>{option.title}</strong>
+                                                    <small>{option.meta}</small>
+                                                    <em>{option.detail}</em>
+                                                </span>
+                                                <span class="smart-option__badge">{option.badge}</span>
+                                            </button>
+                                        </template>
+                                        <template lwc:if={showUnitLimitNote}>
+                                            <p class="smart-select__hint">Showing top matches. Keep typing to narrow the list.</p>
+                                        </template>
+                                    </template>
+                                    <template lwc:else>
+                                        <p class="smart-select__empty">{unitNoResultsMessage}</p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div lwc:if={showSelectorsBody} class={paymentSelectorClass} data-field="paymentPlan" onfocusout={handleSmartBlur}>
+                            <div class="smart-select__label-row">
+                                <span class="smart-select__label">Payment plan <span class="smart-select__required">*</span></span>
+                                <template lwc:if={hasPaymentSelection}>
+                                    <button class="smart-select__clear" type="button" data-field="paymentPlan" onclick={handleSmartClear}>Clear</button>
+                                </template>
+                            </div>
+                            <div class="smart-select__control">
+                                <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                                <input
+                                    type="text"
+                                    role="combobox"
+                                    aria-label="Search payment plans"
+                                    aria-expanded={isPaymentSelectorOpen}
+                                    aria-controls="guided-offer-payment-list"
+                                    autocomplete="off"
+                                    data-field="paymentPlan"
+                                    value={paymentInputValue}
+                                    placeholder={paymentPlaceholder}
+                                    disabled={isPaymentSelectorDisabled}
+                                    onfocus={handleSmartFocus}
+                                    oninput={handleSmartInput}
+                                    onkeydown={handleSmartKeydown}
+                                />
+                            </div>
+                            <template lwc:if={isPaymentSelectorOpen}>
+                                <div class="smart-select-scrim" aria-hidden="true"></div>
+                                <div id="guided-offer-payment-list" class="smart-select__menu" role="listbox">
+                                    <template lwc:if={isCompactViewport}>
+                                        <div class="sheet-search">
+                                            <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                                            <input
+                                                type="text"
+                                                aria-label="Search payment plans"
+                                                autocomplete="off"
+                                                data-field="paymentPlan"
+                                                value={paymentInputValue}
+                                                placeholder={paymentPlaceholder}
+                                                onfocus={handleSheetSearchFocus}
+                                                oninput={handleSmartInput}
+                                                onkeydown={handleSmartKeydown}
+                                            />
+                                        </div>
+                                    </template>
+                                    <template lwc:if={hasFilteredPaymentOptions}>
+                                        <template for:each={filteredPaymentOptions} for:item="option">
+                                            <button
+                                                key={option.key}
+                                                class={option.className}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={option.isSelected}
+                                                data-field="paymentPlan"
+                                                data-value={option.value}
+                                                onmousedown={handleSmartOptionMouseDown}
+                                            >
+                                                <span class="smart-option__body">
+                                                    <strong>{option.title}</strong>
+                                                    <small>{option.meta}</small>
+                                                    <em>{option.detail}</em>
+                                                </span>
+                                                <span class="smart-option__badge">{option.badge}</span>
+                                            </button>
+                                        </template>
+                                        <template lwc:if={showPaymentLimitNote}>
+                                            <p class="smart-select__hint">Showing top matches. Keep typing to narrow the list.</p>
+                                        </template>
+                                    </template>
+                                    <template lwc:else>
+                                        <p class="smart-select__empty">{paymentNoResultsMessage}</p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <template lwc:if={showFacadeBody}>
+                            <div class="facade-field">
+                                <span class="facade-field__label">Facade Style <span class="smart-select__required">*</span></span>
+                                <select class="facade-field__select" onchange={handleFacadeChange} required>
+                                    <option value="">Select facade style</option>
+                                    <template for:each={facadeOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                                <template lwc:if={showFacadeError}>
+                                    <p class="facade-field__error" role="alert">Please select a Facade Style for Al Naseem units.</p>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template lwc:if={showInstallments}>
+                            <template lwc:if={isCompactViewport}>
+                                <button class="section-toggle" type="button" data-section="schedule" onclick={handleSectionToggle} aria-expanded={isScheduleSectionOpen}>
+                                    <span class="section-toggle__text">
+                                        <strong>Payment schedule</strong>
+                                        <small>{scheduleSectionSummary}</small>
+                                    </span>
+                                    <span class="section-toggle__chevron" aria-hidden="true"></span>
+                                </button>
+                            </template>
+                            <div lwc:if={showScheduleBody} class="installment-card">
+                                <div class="installment-card__head">
+                                    <h4>Payment schedule</h4>
+                                    <span>{selectedPlanName}</span>
+                                </div>
+                                <template lwc:if={hasInstallments}>
+                                    <div class="installment-card__scroll">
+                                        <table class="installment-table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Installment #</th>
+                                                    <th scope="col">Milestone</th>
+                                                    <th scope="col">Installment Percentage</th>
+                                                    <th scope="col">Installment Amount</th>
+                                                    <th scope="col">Installment Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={installmentRows} for:item="inst">
+                                                    <tr key={inst.id}>
+                                                        <td data-label="#">{inst.number}</td>
+                                                        <td data-label="Milestone">{inst.milestone}</td>
+                                                        <td data-label="Percentage">{inst.percentLabel}</td>
+                                                        <td data-label="Amount">
+                                                            <lightning-formatted-number
+                                                                value={inst.amount}
+                                                                format-style="currency"
+                                                                currency-code="AED"
+                                                                minimum-fraction-digits="2"
+                                                                maximum-fraction-digits="2"
+                                                            ></lightning-formatted-number>
+                                                        </td>
+                                                        <td data-label="Date">
+                                                            <lightning-formatted-date-time
+                                                                value={inst.date}
+                                                                year="numeric"
+                                                                month="short"
+                                                                day="2-digit"
+                                                            ></lightning-formatted-date-time>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template lwc:else>
+                                    <p class="installment-card__empty">No installments available for this payment plan.</p>
+                                </template>
+                            </div>
+                        </template>
+                    </section>
+
+                    <template lwc:if={statusMessage}>
+                        <p class={statusMessageClass} role="status" aria-live="polite">{statusMessage}</p>
+                    </template>
+                </template>
+            </section>
+
+            <aside class="offer-workspace__right" aria-label="Customer offer PDF">
+                <div class="pdf-panel">
+                    <template lwc:if={isCompactViewport}>
+                        <button class="section-toggle section-toggle--panel" type="button" data-section="preview" onclick={handleSectionToggle} aria-expanded={isPreviewSectionOpen}>
+                            <span class="section-toggle__text">
+                                <strong>PDF preview</strong>
+                                <small>{previewSectionSummary}</small>
+                            </span>
+                            <span class="section-toggle__chevron" aria-hidden="true"></span>
+                        </button>
+                    </template>
+                    <header lwc:if={showPreviewBody} class="pdf-panel__header">
+                        <div>
+                            <p class="pdf-panel__eyebrow">PDF preview</p>
+                            <h3>{previewTitle}</h3>
+                        </div>
+                        <div class="pdf-panel__actions">
+                            <span class={previewStateClass}>{previewStateLabel}</span>
+                            <button class="pdf-panel__button" type="button" onclick={handleGeneratePdf} disabled={isGenerateDisabled}>
+                                <template lwc:if={isGeneratingPdf}>
+                                    <span class="button-spinner button-spinner--dark" aria-hidden="true"></span>
+                                </template>
+                                <template lwc:else>
+                                    <lightning-icon icon-name="utility:refresh" size="xx-small" alternative-text=""></lightning-icon>
+                                </template>
+                                <span>{generateButtonLabel}</span>
+                            </button>
+                            <template lwc:if={hasPreview}>
+                                <button class="pdf-panel__button" type="button" onclick={openExpandedPreview}>
+                                    <lightning-icon icon-name="utility:expand_alt" size="xx-small" alternative-text=""></lightning-icon>
+                                    <span>Enlarge</span>
+                                </button>
+                            </template>
+                        </div>
+                    </header>
+
+                    <div class={previewDocumentClass}>
+                        <template lwc:if={hasPreview}>
+                            <iframe class="pdf-panel__frame" src={previewUrl} title={previewIframeTitle}></iframe>
+                        </template>
+                        <template lwc:else>
+                            <div class="pdf-panel__empty">
+                                <span class="pdf-panel__empty-icon" aria-hidden="true">PDF</span>
+                                <h4>{previewEmptyTitle}</h4>
+                                <p>{previewEmptyMessage}</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <div lwc:if={showOfferFooter} slot="footer" class="offer-footer">
+            <div class="offer-footer__actions">
+                <button class="offer-footer__button offer-footer__button--ghost" type="button" onclick={handleClose}>Cancel</button>
+                <button class="offer-footer__button" type="button" onclick={handleSendOffer} disabled={isSendDisabled}>
+                    <template lwc:if={isSendingOffer}>
+                        <span class="button-spinner" aria-hidden="true"></span>
+                    </template>
+                    <template lwc:else>
+                        <lightning-icon icon-name="utility:email" size="x-small" alternative-text=""></lightning-icon>
+                    </template>
+                    <span>{sendButtonLabel}</span>
+                </button>
+            </div>
+        </div>
+    </c-mbpr_workspace-modal>
+
+    <template lwc:if={isPreviewExpanded}>
+        <section class="preview-expanded" role="dialog" aria-modal="true" aria-label="Expanded offer PDF preview" tabindex="-1" onkeydown={handleExpandedPreviewKeydown}>
+            <div class="preview-expanded__bar">
+                <div>
+                    <p>Customer offer PDF</p>
+                    <strong>{previewIframeTitle}</strong>
+                </div>
+                <button type="button" onclick={closeExpandedPreview} aria-label="Close expanded PDF preview">
+                    <lightning-icon icon-name="utility:close" size="x-small" alternative-text=""></lightning-icon>
+                </button>
+            </div>
+            <iframe class="preview-expanded__frame" src={previewUrl} title={previewIframeTitle}></iframe>
+        </section>
+    </template>
+</template>

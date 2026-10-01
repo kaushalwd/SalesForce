@@ -1,0 +1,341 @@
+<!--
+  @description       : 
+  @author            : Krishna Chaitanya
+  @group             : 
+  @last modified on  : 03-03-2025
+  @last modified by  : Krishna Chaitanya
+-->
+<template>
+    <template if:true={isSpinner}>
+        <div class="slds-is-relative" style="min-height: 50vh" if:true={isSpinner}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </div>
+    </template>
+
+    <template if:false={isSpinner}>
+        <lightning-modal-header label="Company Details">
+        </lightning-modal-header>
+
+        <lightning-modal-body>
+            <lightning-accordion 
+                allow-multiple-sections-open 
+                active-section-name={activeSections}>
+                <lightning-accordion-section name="Details" label="Details">
+                    <lightning-record-edit-form
+                    object-api-name={objectApiName}
+                    record-id={recordId}
+                    onsubmit={onSubmit}
+                    onload={handleOnLoad}
+                >
+                    <div class="slds-grid slds-wrap">
+                        <!-- Legal Full Name -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <template if:true={accTable}>
+                                <lightning-output-field
+                                    field-name="Name"
+                                    name="Name"
+                                    label="Legal Full Name"
+                                    required
+                                ></lightning-output-field>
+                            </template>
+                            <template if:false={accTable}>
+                                <lightning-output-field
+                                    field-name="Full_Name__c"
+                                    name="Full_Name__c"
+                                    label="Legal Full Name"
+                                    required
+                                ></lightning-output-field>
+                            </template>
+                        </div>
+                
+                        <!-- Legal Structure -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="LegalStructure__c"
+                                name="LegalStructure__c"
+                                value={LegalStructure}
+                                onchange={handleChangeLegalStructure}
+                            ></lightning-input-field>
+                        </div>
+                
+                        <!-- Other Legal Structure -->
+                        <template if:true={isOtherLegalStructure}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="OtherLegalStructure__c"
+                                    name="OtherLegalStructure__c"
+                                    value={OtherLegalStructure}
+                                    onchange={handleChangeOtherLegalStructure}
+                                ></lightning-input-field>
+                            </div>
+                        </template>
+                
+                        <!-- Common Fields -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="DateOfEstablishment__c"
+                                name="DateOfEstablishment__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="UnifiedNumber__c"
+                                name="UnifiedNumber__c"
+                                field-label="Trade License Number"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="TradeLicenseExpiryDate__c"
+                                name="TradeLicenseExpiryDate__c"
+                                label="Trade License Expiry Date"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="UAEVATRegisterNumber__c"
+                                name="UAEVATRegisterNumber__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="PurposeOfTransaction__c"
+                                name="PurposeOfTransaction__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="PaymentMethod__c"
+                                name="PaymentMethod__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <!-- Source of Income -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="SourceOfIncome__c"
+                                name="SourceOfIncome__c"
+                                value={SourceOfIncome}
+                                onchange={handleChangeSourceOfIncome}
+                            ></lightning-input-field>
+                        </div>
+                
+                        <template if:true={isOtherSourceOfIncome}>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field
+                                    field-name="OtherSourceOfIncome__c"
+                                    name="OtherSourceOfIncome__c"
+                                ></lightning-input-field>
+                            </div>
+                        </template>
+                
+                        <!-- Additional Fields -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <template if:true={accTable}>
+                                <lightning-input-field
+                                    field-name="Phone"
+                                    name="Phone"
+                                    label="Business Contact"
+                                ></lightning-input-field>
+                            </template>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="NoOfPropertyPurchasedWithModon__c"
+                                name="NoOfPropertyPurchasedWithModon__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="IsTheBusinessEntityRealBeneficiary__c"
+                                name="IsTheBusinessEntityRealBeneficiary__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="DeliveryChannel__c"
+                                name="DeliveryChannel__c"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <!-- Description and Address -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field
+                                field-name="Description"
+                                name="Description"
+                                label="Description of Business Activity"
+                            ></lightning-input-field>
+                        </div>
+                
+                        <div class="slds-col slds-size_2-of-2">
+                            <template if:true={accTable}>
+                                <lightning-input-field
+                                    field-name="BillingAddress"
+                                    name="BillingAddress"
+                                    label="Business Address"
+                                ></lightning-input-field>
+                            </template>
+                        </div>
+                    </div>
+                
+                    <!-- Submit Button -->
+                    <div class="slds-align_absolute-center slds-m-top_small slds-m-bottom_medium">
+                        <lightning-button
+                            class="slds-hidden slds-m-left_x-small submitButton"
+                            variant="brand"
+                            type="submit"
+                            name="submitButton"
+                            label="submitButton"
+                        ></lightning-button>
+                    </div>
+                </lightning-record-edit-form>
+                </lightning-accordion-section>
+                <!-- <lightning-accordion-section if:true={accTable} name="Shareholder" label="Shareholder Details" class="slds-m-bottom_none">
+                    <lightning-card class="slds-m-top_none">
+                        
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-var-m-top_small">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                  
+                                    <th scope="col">
+                                        <div class="slds-truncate">First Name</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Last Name</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Share(%)</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Nationality</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">DOB</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Actions</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={shareHolderRecords} for:item="record" for:index="key">
+                                    <tr key={record.key} class="slds-hint-parent">
+                                       
+                                        <td>
+                                            <lightning-input 
+                                                        data-row-index={key}
+                                                        type="text" 
+                                                        value={record.First_Name__c}
+                                                        onchange={handleChangeFirstName}
+                                            ></lightning-input>
+                                        </td>
+                                        <td>
+                                            <lightning-input 
+                                                        data-row-index={key}
+                                                        type="text" 
+                                                        value={record.Last_Name__c}
+                                                        onchange={handleChangeLastName}
+                                            ></lightning-input>
+                                        </td>
+                                        <td> <div class="slds-truncate">
+                                            <lightning-input data-row-index={key}
+                                                            type="Number" 
+                                                            max="100"
+                                                            value={record.OwnershipPercentage__c}
+                                                            onchange={handleChangeOwnershipPercentage}
+                                            ></lightning-input>
+                                        </div>
+                                        </td>
+                                        <td>
+                                            <lightning-combobox data-row-index={key}
+                                                                value={record.Nationality__c}
+                                                                options={NationalityPicklistOptions}
+                                                                onchange={handleChangeNationality}
+                                            ></lightning-combobox>
+                                        </td>
+                                        <td><div class="slds-truncate">
+                                            <lightning-input 
+                                                        data-row-index={key}
+                                                        type="Date" 
+                                                        value={record.Birthdate__c}
+                                                        onchange={handleChangeBirthdate}
+                                            ></lightning-input>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <lightning-button 
+                                                        variant="base"
+                                                        data-row-index={key}
+                                                        title="Save this row"
+                                                        icon-name="utility:save" 
+                                                        class="slds-m-left_x-medium"
+                                                        onclick={handleSaveRow}
+                                            ></lightning-button>
+
+                                            <lightning-button 
+                                                        variant="base"
+                                                        data-row-index={key}
+                                                        title="Delete this row"
+                                                        icon-name="utility:delete" 
+                                                        class="slds-m-left_x-medium"
+                                                        onclick={handleDeleteRow}
+                                            ></lightning-button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td>
+                                        <lightning-button variant="brand" 
+                                        label=""
+                                        title="Add new row"
+                                        icon-name="utility:add"
+                                        class="slds-m-left_xx-small slds-p-bottom_xx-small"
+                                        onclick={handleAddRow}>
+                        </lightning-button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </lightning-card>
+                </lightning-accordion-section> -->
+                <lightning-accordion-section name="Documents" label="Documents">
+            <c-progress-indicator-doc-upload recordid={recordId}></c-progress-indicator-doc-upload>
+                </lightning-accordion-section>
+            </lightning-accordion>
+        </lightning-modal-body>
+        <lightning-modal-footer>
+            <div class="slds-align_absolute-center slds-m-top_small slds-m-bottom_medium">
+            <lightning-button
+                    class="slds-m-left_x-small"
+                    label="Cancel"
+                    onclick={handleClose}
+            ></lightning-button>
+            <lightning-button
+                    class="slds-m-left_x-small"
+                    variant="brand"
+                    id="SaveAsDraft"
+                    onclick={handleSubmit}
+                    name="SaveAsDraft"
+                    label="Save as Draft"
+            ></lightning-button>
+            <template if:true={showSubmitForCompliance}>
+                <lightning-button
+                        class="slds-m-left_x-small"
+                        variant="brand"
+                        onclick={handleSubmitForCompliance}
+                        name="SubmitForCompliance"
+                        label="Submit for Compliance"
+                ></lightning-button>
+            </template>
+            </div>
+        </lightning-modal-footer>
+    </template>
+</template>

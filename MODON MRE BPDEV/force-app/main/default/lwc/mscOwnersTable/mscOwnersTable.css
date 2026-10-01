@@ -1,0 +1,235 @@
+/* c/mscStyles carries .chip, .pill and .eyebrow; the rest is this screen's own. Tokens only. */
+@import "c/mscStyles";
+
+/* the ownership record: a real table, six owners scan as easily as two */
+.ot {
+    border-radius: 16px;
+    background: var(--surface, rgba(15, 15, 15, 0.68));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    padding: 18px 20px 16px;
+}
+
+.ot__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.ot__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* the meter */
+.ot__meter {
+    display: flex;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+    overflow: hidden;
+    margin: 16px 0 10px;
+}
+.ot__seg {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+}
+.ot__seg--primary { background: var(--gold, #a8a8a8); }
+.ot__seg--1 { background: var(--seg-1, rgba(250, 250, 250, 0.46)); }
+.ot__seg--2 { background: var(--seg-2, rgba(250, 250, 250, 0.32)); }
+.ot__seg--3 { background: var(--seg-3, rgba(250, 250, 250, 0.22)); }
+
+.ot__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 12.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+.ot__key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.ot__swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    display: block;
+    flex: none;
+}
+.ot__key-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ot__key-share {
+    color: var(--text, #fafafa);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+/* the record */
+.ot__scroll {
+    overflow-x: auto;
+    margin-top: 18px;
+}
+.ot__tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    min-width: 620px;
+}
+.ot__tbl th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    padding: 0 14px 11px 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    white-space: nowrap;
+}
+.ot__tbl td {
+    padding: 14px 14px 14px 0;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    color: var(--text-muted, #a3a3a3);
+    vertical-align: middle;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ot__tbl tbody tr:last-child td { border-bottom: 0; }
+
+.ot__name {
+    color: var(--text, #fafafa);
+    font-weight: 600;
+    font-size: 14.5px;
+}
+.ot__c-owner { min-width: 190px; }
+.ot__c-role { width: 180px; }
+.ot__c-res { width: 168px; }
+.ot__c-unit { width: 180px; }
+/* the one numeric column, and the table ends on it */
+.ot__c-share {
+    width: 78px;
+    text-align: right;
+    padding-right: 0;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--text, #fafafa);
+    font-size: 14.5px;
+}
+.ot__c-go {
+    width: 40px;
+    text-align: right;
+    padding-right: 0;
+}
+
+/* MSC-226: since MSC-222 the sheet is ~420px wider. Every column but Owner carries a fixed px
+   width, so under `width: 100%` the whole surplus landed on Owner alone and the name drifted
+   away from its own data. The six columns now take shares of whatever width there is, and the
+   headings sit over their values the way the Total Sales table sets them.
+   Shares, not pixels, so the same rule holds at any sheet width.
+   Desktop only: the phone block below keeps today's layout untouched. */
+@media (min-width: 900px) {
+    .ot__tbl {
+        table-layout: fixed;
+        min-width: 860px;
+    }
+    .ot__tbl th,
+    .ot__tbl td {
+        text-align: center;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .ot__c-owner { width: 26%; min-width: 0; }
+    .ot__c-role { width: 16%; }
+    .ot__c-res { width: 16%; }
+    .ot__c-unit { width: 19%; }
+    /* the numeric column joins the rest; the digits stay tabular */
+    .ot__c-share { width: 14%; text-align: center; padding-right: 10px; }
+    .ot__c-go { width: 9%; text-align: center; padding-right: 10px; }
+}
+.ot__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* the row is the control; the button carries its name and the keyboard route */
+.ot__row--open { cursor: pointer; }
+.ot__row--open:hover td { background: var(--row-bg, rgba(255, 255, 255, 0.03)); }
+.ot__go {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: var(--text-dim, #8a8a8a);
+    cursor: pointer;
+    padding: 0;
+}
+.ot__row--open:hover .ot__go { color: var(--text, #fafafa); }
+.ot__go:focus-visible {
+    outline: 2px solid var(--text, #fafafa);
+    outline-offset: 2px;
+}
+.ot__lock {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    color: var(--text-dim, #8a8a8a);
+    opacity: 0.55;
+}
+
+/* the foot */
+.ot__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    margin-top: 4px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.ot__cov {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+/* pinned right even when the coverage line is absent */
+.ot__add {
+    margin-left: auto;
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.ot__add[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 899px) {
+    .ot { padding: 16px 14px 14px; }
+    .ot__foot { flex-direction: column; align-items: stretch; gap: 12px; }
+    .ot__add { width: 100%; margin-left: 0; min-height: 44px; }
+    .ot__go, .ot__lock { width: 44px; height: 44px; }
+    .ot__c-go { width: 52px; }
+}

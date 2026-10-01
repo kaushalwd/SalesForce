@@ -1,0 +1,160 @@
+/* =========================================================================
+   mbp_dynamicDataTable — V2 skin (Black / Gold / Beige · Suisse Intl)
+   Native lightning-datatable cannot be card-stacked from CSS (separate shadow
+   tree, no controllable data-label), so mobile keeps a clean tokenized
+   horizontal scroll instead.
+   ========================================================================= */
+@font-face {
+  font-family: 'Suisse Intl';
+  font-style:  normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Regular.woff2') format('woff2'),
+       url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Suisse Intl';
+  font-style:  normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Medium.woff2') format('woff2'),
+       url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Medium.woff') format('woff');
+}
+
+:host,
+.THIS {
+  --mbp-color-ink:         #0A0A0B;
+  --mbp-color-ink-2:       #15151A;
+  --mbp-color-paper:       #FBF8F1;
+  --mbp-color-paper-2:     #FFFFFF;
+  --mbp-color-beige:       #F6F1E6;
+  --mbp-color-beige-2:     #EFE7D2;
+  --mbp-color-beige-3:     #E1D6B8;
+  --mbp-color-gold:        #C4A249;
+  --mbp-color-gold-2:      #D9BD6B;
+  --mbp-color-gold-1:      #9C7E2E;
+  --mbp-color-gold-deep:   #7A5F1F;
+  --mbp-color-type:        #1A1814;
+  --mbp-color-type-2:      #3A352B;
+  --mbp-color-muted:       #8A8170;
+  --mbp-color-line:        rgba(10,10,11,.06);
+  --mbp-font-sans:         'Suisse Intl','Inter',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mbp-radius-sm:         8px;
+  --mbp-radius-md:         12px;
+  --mbp-radius-lg:         18px;
+  --mbp-shadow-1:          0 1px 2px rgba(10,10,11,.05), 0 1px 1px rgba(10,10,11,.04);
+  --mbp-tx-fast:           .18s cubic-bezier(.2,.7,.2,1);
+  --mbp-tx:                .32s cubic-bezier(.2,.7,.2,1);
+}
+
+.apple-card {
+  padding: 0;
+  max-width: 100%;
+  font-family: var(--mbp-font-sans);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.header h2 {
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: var(--mbp-color-ink);
+  font-family: var(--mbp-font-sans);
+}
+
+/* Header row — V2 ink background, gold-tinted label text */
+::deep .slds-table > thead > tr > th {
+  padding: 13px 16px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mbp-color-beige-3) !important;
+  background-color: var(--mbp-color-ink) !important;
+}
+::deep .slds-table {
+  border: 1px solid var(--mbp-color-line) !important;
+  font-size: 0.85rem !important;
+  font-family: var(--mbp-font-sans);
+}
+
+lightning-datatable::part(base) {
+  font-size: 0.85rem !important;
+}
+::deep .slds-table td,
+::deep .slds-table th {
+  border: 1px solid var(--mbp-color-line) !important;
+}
+
+/* Comfortable row height (not forced) + vertical centering */
+::deep .slds-table tbody tr th,
+::deep .slds-table tbody tr td {
+  min-height: 48px;
+  vertical-align: middle;
+  color: var(--mbp-color-type-2);
+  background-color: var(--mbp-color-paper-2) !important;
+}
+::deep .slds-table tbody tr:hover > td {
+  background-color: var(--mbp-color-beige-2) !important;
+}
+
+.custom-pagination {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: .5rem;
+}
+
+.page-info {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--mbp-color-type-2);
+  padding: 11.4px;
+  font-family: var(--mbp-font-sans);
+}
+.small-pagination-button {
+  border: 0 !important;
+}
+
+.no-records {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--mbp-color-muted);
+  padding: 10px;
+  font-family: var(--mbp-font-sans);
+}
+
+/* Wrapper — scrolls horizontally on narrow viewports without breaking layout */
+.datatable-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--mbp-color-line) !important;
+  border-radius: var(--mbp-radius-md);
+}
+.datatable-wrapper ::deep .slds-table {
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+}
+
+/* Minimum width so columns stay legible; below this the wrapper scrolls */
+.responsive-datatable {
+  min-width: 600px;
+}
+
+/* ── Tablet (≤1024px) ─────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .responsive-datatable { min-width: 560px; }
+}
+
+/* ── Mobile (≤768px) — tighter cells, smaller min-width, scroll cue ──── */
+@media (max-width: 768px) {
+  ::deep .slds-table > thead > tr > th { padding: 10px 12px; font-size: 9.5px; }
+  .responsive-datatable { min-width: 480px; }
+  .page-info { padding: 8px; font-size: 0.8rem; }
+  .custom-pagination { justify-content: center; }
+}

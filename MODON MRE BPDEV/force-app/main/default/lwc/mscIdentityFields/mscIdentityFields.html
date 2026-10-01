@@ -1,0 +1,109 @@
+<template>
+    <!-- The derived set, and ONLY the derived set: a field renders exactly when the
+         residency shows it. 1.4: the required mark follows what MODON's rules owe.
+         MSC-111: the wrapper is display:contents (as is :host), so these .field
+         blocks lay out as items of the PARENT's grid - one column system per
+         screen, no second auto-fit computing its own answer. -->
+    <template lwc:if={showAny}>
+        <div class="idf-fields">
+            <template lwc:if={showEid}>
+                <div class="field">
+                    <label class="field__label" for="idf-eid">{eidLabel}</label>
+                    <input
+                        id="idf-eid"
+                        class={eidClass}
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        autocorrect="off"
+                        spellcheck="false"
+                        placeholder="784-XXXX-XXXXXXX-X"
+                        value={eidValue}
+                        readonly={eidLocked}
+                        disabled={disabled}
+                        oninput={handleEid}
+                    />
+                    <template lwc:if={eidError}><p class="field__error">{eidError}</p></template>
+                </div>
+            </template>
+
+            <template lwc:if={showEidExpiry}>
+                <div class="field">
+                    <label class="field__label">{eidExpiryLabel}</label>
+                    <!-- 1.3: c/mscDatePicker for all three dates - dd/mm/yyyy, and a calendar
+                         drawn in the page and opened in the browser's top layer (c/mscFloat 1.2),
+                         not the native one the booking pop-up showed as mm/dd/yyyy -->
+                    <c-msc-date-picker
+                        label="Emirates ID expiry"
+                        data-f="eidExpiry"
+                        value={eidExpiryValue}
+                        min={todayISO}
+                        invalid={eidExpiryError}
+                        readonly={eidExpiryLocked}
+                        disabled={disabled}
+                        oninput={handleField}
+                    ></c-msc-date-picker>
+                    <template lwc:if={eidExpiryError}><p class="field__error">{eidExpiryError}</p></template>
+                    <template lwc:if={eidExpiryReason}><p class="field__hint idf-why">{eidExpiryReason}</p></template>
+                </div>
+            </template>
+
+            <template lwc:if={showPassport}>
+                <div class="field">
+                    <label class="field__label" for="idf-pass">{passportLabel}</label>
+                    <input
+                        id="idf-pass"
+                        class={passportClass}
+                        type="text"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        autocorrect="off"
+                        spellcheck="false"
+                        data-f="passportNumber"
+                        value={passportValue}
+                        readonly={passportLocked}
+                        disabled={disabled}
+                        oninput={handleField}
+                    />
+                    <template lwc:if={passportError}><p class="field__error">{passportError}</p></template>
+                </div>
+            </template>
+
+            <template lwc:if={showPassportIssue}>
+                <div class="field">
+                    <label class="field__label">{passportIssueLabel}</label>
+                    <c-msc-date-picker
+                        label="Passport issue date"
+                        data-f="passportIssueDate"
+                        value={passportIssueValue}
+                        max={todayISO}
+                        invalid={passportIssueError}
+                        readonly={passportIssueLocked}
+                        disabled={disabled}
+                        oninput={handleField}
+                    ></c-msc-date-picker>
+                    <template lwc:if={passportIssueError}><p class="field__error">{passportIssueError}</p></template>
+                    <template lwc:if={passportIssueReason}><p class="field__hint idf-why">{passportIssueReason}</p></template>
+                </div>
+            </template>
+
+            <template lwc:if={showPassportExpiry}>
+                <div class="field">
+                    <label class="field__label">{passportExpiryLabel}</label>
+                    <c-msc-date-picker
+                        label="Passport expiry"
+                        data-f="passportExpiryDate"
+                        value={passportExpiryValue}
+                        min={todayISO}
+                        invalid={passportExpiryError}
+                        readonly={passportExpiryLocked}
+                        disabled={disabled}
+                        oninput={handleField}
+                    ></c-msc-date-picker>
+                    <template lwc:if={passportExpiryError}><p class="field__error">{passportExpiryError}</p></template>
+                    <template lwc:if={passportExpiryReason}><p class="field__hint idf-why">{passportExpiryReason}</p></template>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

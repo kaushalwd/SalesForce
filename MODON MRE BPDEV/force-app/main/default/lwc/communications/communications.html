@@ -1,0 +1,52 @@
+<template>
+    <div class="dashboard-section">
+        <h2 class="section-title">COMMUNICATIONS</h2>
+        <template if:true={loadUI}>
+            <div class="section-content two-column-grid">
+                <template for:each={groupedFields} for:item="field">
+                    <div key={field.label} class="field-item">
+                        <span class="field-label">{field.label}: </span>
+
+                        <!-- Emails field with popup -->
+                        <template if:true={field.isEmail}>
+                            <span
+                                class="field-value owned-hover"
+                                data-tooltip={field.tooltipData}
+                                data-label={field.label}
+                                onclick={handleClick}
+                            >
+                                {field.value}
+                                <template if:true={field.showPopup}>
+                                    <div class="popup-card">
+                                        <div class="popup-header">
+                                            <span class="popup-close" onclick={handleClosePopup}>×</span>
+                                        </div>
+                                        <div class="popup-arrow"></div>
+                                        <div class="popup-content" lwc:dom="manual"></div>
+                                    </div>
+                                </template>
+                            </span>
+                        </template>
+
+                        <!-- Document Control: rendered as hyperlink -->
+                        <template if:true={field.isDocumentControl}>
+                            <lightning-formatted-rich-text class="field-value" value={field.value}></lightning-formatted-rich-text>
+                        </template>
+
+                        <!-- All other fields -->
+                        <template if:true={field.shouldRenderNormally}>
+                            <span class="field-value">{field.value}</span>
+                        </template>
+                        
+                    </div>
+                </template>
+
+                <p><strong class="field-label">Voice Calls: </strong>0</p>
+            </div>
+        </template>
+
+        <template if:false={loadUI}>
+            <p class="no-data">No communications data available.</p>
+        </template>
+    </div>
+</template>

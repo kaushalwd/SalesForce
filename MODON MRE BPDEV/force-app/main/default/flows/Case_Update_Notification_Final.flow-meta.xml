@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Email_to_new_Owner</name>
+        <label>Email to new Owner</label>
+        <locationX>208</locationX>
+        <locationY>1463</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.New_Owner_Email__c</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>ccRecipientAddressList</name>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <inputConfiguratorMode>Resource</inputConfiguratorMode>
+                <stringValue>noreply@modon.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>SubjectLine_CaseOwner_CaseOwnerUpdated</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>EmailBody_Internal_OwnerUpdated</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Log_Flow_Exception</name>
+        <label>Log Flow Exception</label>
+        <locationX>1000</locationX>
+        <locationY>1000</locationY>
+        <actionName>LoggerService</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>faultErrorMessage</name>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>flowName</name>
+            <value>
+                <stringValue>Case Update Notification - Final</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>LoggerService</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Send_Notification_to_Owner</name>
+        <label>Send Notification to Owner</label>
+        <locationX>76</locationX>
+        <locationY>863</locationY>
+        <actionName>customNotificationAction</actionName>
+        <actionType>customNotificationAction</actionType>
+        <connector>
+            <targetReference>IsEmailAvailable</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>customNotifTypeId</name>
+            <value>
+                <elementReference>Get_Case_Notification.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientIds</name>
+            <value>
+                <elementReference>OwnerRecipient</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>title</name>
+            <value>
+                <stringValue>A New Case Assigned</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>body</name>
+            <value>
+                <elementReference>SubjectLine_CaseOwner_CaseOwnerUpdated</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>targetId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>customNotificationAction</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>62.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Assign_Owner</name>
+        <label>Assign Owner</label>
+        <locationX>208</locationX>
+        <locationY>647</locationY>
+        <assignmentItems>
+            <assignToReference>OwnerRecipient</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Record.New_Owner__c</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>CheckRecepient</targetReference>
+        </connector>
+    </assignments>
+    <constants>
+        <name>ModonImage</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>&lt;img src=&quot;https://cdn.mcauto-images-production.sendgrid.net/e8b0a57e5c62d448/724783e9-c2b7-4695-aa14-b1e328552e10/1000x250.jpg&quot; style=&quot;width: 100%; height: auto; display: block;&quot;/&gt;</stringValue>
+        </value>
+    </constants>
+    <constants>
+        <name>SenderEmailAddress</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>&quot;MODON SALES&quot; &lt;Sales@Modon.ae&gt;</stringValue>
+        </value>
+    </constants>
+    <decisions>
+        <name>CheckRecepient</name>
+        <label>CheckRecepient</label>
+        <locationX>208</locationX>
+        <locationY>755</locationY>
+        <defaultConnector>
+            <targetReference>IsEmailAvailable</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Found</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>OwnerRecipient</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_Notification_to_Owner</targetReference>
+            </connector>
+            <label>Found</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Closed_Or_Owner_Updated_Check</name>
+        <label>Closed Or Owner Updated Check</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Default</defaultConnectorLabel>
+        <rules>
+            <name>Case_Closed2</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.IsClosed</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <label>Case Closed</label>
+        </rules>
+        <rules>
+            <name>Owner_Updated</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.New_Owner__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.New_Owner__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>GetNewOwner</targetReference>
+            </connector>
+            <label>Owner Updated</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>IsEmailAvailable</name>
+        <label>IsEmailAvailable</label>
+        <locationX>208</locationX>
+        <locationY>1055</locationY>
+        <defaultConnector>
+            <targetReference>GetNewOwnerDetails</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>EmailAvailable</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.New_Owner_Email__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_to_new_Owner</targetReference>
+            </connector>
+            <label>EmailAvailable</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <formulas>
+        <name>ModonImageURL</name>
+        <dataType>String</dataType>
+        <expression>{!ModonImage}</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_CaseOwner_CaseClosed</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; is closed.&apos;</expression>
+    </formulas>
+    <formulas>
+        <name>SubjectLine_CaseOwner_CaseOwnerUpdated</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case &apos; + {!$Record.CaseNumber} + &apos; is assigned to &apos; + {!GetNewOwner.Name}</expression>
+    </formulas>
+    <formulas>
+        <description>This is used for survey link</description>
+        <name>SurveyLink</name>
+        <dataType>String</dataType>
+        <expression>{!SurveyLink1}</expression>
+    </formulas>
+    <interviewLabel>Case Update Notification - Final {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Case Update Notification - Final</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Case_Notification</name>
+        <label>Get Case Notification</label>
+        <locationX>208</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Assign_Owner</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Case_Created</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CustomNotificationType</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>GetNewOwner</name>
+        <label>GetNewOwner</label>
+        <locationX>208</locationX>
+        <locationY>431</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Case_Notification</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.New_Owner__c</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>GetNewOwnerDetails</name>
+        <label>GetNewOwnerDetails</label>
+        <locationX>296</locationX>
+        <locationY>1163</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>UpdateNewOwnerEmail</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.New_Owner__c</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>UpdateNewOwnerEmail</name>
+        <label>UpdateNewOwnerEmail</label>
+        <locationX>296</locationX>
+        <locationY>1271</locationY>
+        <connector>
+            <targetReference>Email_to_new_Owner</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Log_Flow_Exception</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>New_Owner_Email__c</field>
+            <value>
+                <elementReference>GetNewOwner.Email</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Closed_Or_Owner_Updated_Check</targetReference>
+        </connector>
+        <filterLogic>((1 AND 4 AND 5) OR 2) AND 3 AND 6</filterLogic>
+        <filters>
+            <field>IsClosed</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>New_Owner__c</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>RunningTestClass__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>SurveyLink__c</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>SurveyLink__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Origin</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Email</stringValue>
+            </value>
+        </filters>
+        <object>Case</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>EmailBody_Internal_CaseClosed</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!$Record.Owner_Name__c},
+
+Case is closed. Below are the details:
+
+Case Number       :  {!$Record.CaseNumber}
+Current Status        :  {!$Record.Status}
+Case Type               :  {!$Record.CaseType__c}
+Category                :  {!$Record.CaseCategory__c}
+Sub Category         :  {!$Record.CaseSubCategory__c}
+Issue Description   :  {!$Record.Description}
+Account Name      :  {!$Record.Account_Name__c}
+Visitor Name         :   {!$Record.Visitor_First_Name__c} {!$Record.Visitor_Last_Name__c}
+Date Created         :  {!$Record.CreatedDate}
+Date Closed           :  {!$Record.ClosedDate}
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <textTemplates>
+        <name>EmailBody_Internal_OwnerUpdated</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!GetNewOwner.Name},,
+
+A case has been assigned with the following details:
+
+Case Number        :  {!$Record.CaseNumber}
+Current Status       :  {!$Record.Status}
+Case Type              :  {!$Record.CaseType__c}
+Sub Vertical            :  {!$Record.Sub_Vertical__c}
+Category                :  {!$Record.CaseCategory__c}
+Subject                   :  {!$Record.Subject}
+Account Name      :  {!$Record.Account_Name__c}
+Visitor Name         :  {!$Record.Visitor_First_Name__c}
+Customer Name    : {!$Record.Customer_Name__c}
+Date Created         :  {!$Record.CreatedDate}
+
+Please review the case and take the necessary actions to resolve it promptly.
+
+Best Regards,
+Modon Service Team</text>
+    </textTemplates>
+    <variables>
+        <name>OwnerRecipient</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>PrimaryOwnerRecipients</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>SurveyLink1</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <elementReference>$Record.SurveyLink__c</elementReference>
+        </value>
+    </variables>
+</Flow>

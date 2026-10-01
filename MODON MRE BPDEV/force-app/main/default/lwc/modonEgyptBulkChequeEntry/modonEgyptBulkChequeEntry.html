@@ -1,0 +1,101 @@
+<template>
+
+    <lightning-card>
+        <lightning-layout multiple-rows="true" horizontal-align="spread" vertical-align="start">
+
+            <!--
+            <lightning-layout-item size="6" small-device-size="6" medium-device-size="6" large-device-size="6"
+                class="slds-p-horizontal_small">
+                <lightning-combobox name="currency" label="Cheque Currency" placeholder="Select Cheque Currency"
+                    options={currencyOptions} value={selectedCurrency} onchange={handleInputChange} required="true"
+                    disabled={isConfirmationScreen}>
+                </lightning-combobox>
+            </lightning-layout-item>
+            -->
+
+            <lightning-layout-item size="6" small-device-size="6" medium-device-size="6" large-device-size="6"
+                class="slds-p-horizontal_small slds-text-heading_medium">
+                <p>
+                    {BulkChequeEntryModalheader}
+                </p>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="6" small-device-size="6" medium-device-size="6" large-device-size="6"
+                class="slds-p-horizontal_small slds-grid slds-grid_align-end">
+                <!-- <template if:true={submitForApprovalBtnVisibility}>
+                    <lightning-button name="submitForApproval" variant="brand" class="slds-p-left_small" label="Submit For Approval"
+                    onclick={handleSubmitForApproval}>
+                    </lightning-button>
+                </template> -->
+                <template if:true={approveAllBtnVisibility}>
+                    <lightning-button name="approveAll" variant="brand" class="slds-p-left_small" label="Approve All"
+                        onclick={handleApproveAll}>
+                    </lightning-button>
+                </template>
+                <template if:true={createReceiptRecordsBtnVisibility}>
+                    <lightning-button name="createReceiptRecords" variant="brand" class="slds-p-left_small"
+                        label="Create Receipts" onclick={handleCreateReceipts}>
+                    </lightning-button>
+                </template>
+                <lightning-button-icon class="slds-p-left_small" icon-name="utility:refresh"
+                    alternative-text="Refresh" title="Refresh" onclick={handleRefresh}>
+                </lightning-button-icon>
+            </lightning-layout-item>
+
+
+
+            <lightning-layout-item size="6" small-device-size="6" medium-device-size="6" large-device-size="6"
+                class="slds-p-horizontal_small">
+                <lightning-combobox name="customerBank" label="Customer Bank" placeholder="Select Customer Bank"
+                    options={customerBankOptions} value={selectedCustomerBank} onchange={handleCustomerBankChange}
+                    required="true" disabled={isConfirmationScreen}>
+                </lightning-combobox>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="6" small-device-size="6" medium-device-size="6" large-device-size="6"
+                class="slds-p-horizontal_small">
+                <lightning-combobox name="mireBank" label="MIRE Bank" placeholder="Select MIRE Bank"
+                    options={mireBankOptions} value={selectedMIREBank} onchange={handleInputChange} required="true"
+                    disabled={isConfirmationScreen}>
+                </lightning-combobox>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="6" small-device-size="6" medium-device-size="6" large-device-size="6">
+                <lightning-layout multiple-rows="true" vertical-align="center">
+
+                    <lightning-layout-item size="5" small-device-size="5" medium-device-size="5" large-device-size="5"
+                        class="slds-p-horizontal_small">
+                        <lightning-input type="text" name="initialChequeNumber" label="Initial Cheque Number"
+                            placeholder="Enter Initial Cheque Number" value={inputInitialChequeNumber}
+                            onchange={handleInputChange} disabled={isConfirmationScreen}>
+                        </lightning-input>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="4" small-device-size="4" medium-device-size="4" large-device-size="4"
+                        class="slds-p-horizontal_small">
+                        <lightning-input type="number" name="tillRow" label="Till Row"
+                            placeholder="Enter Last Row Number" value={inputTillRow} onchange={handleInputChange}
+                            disabled={isConfirmationScreen}>
+                        </lightning-input>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="3" small-device-size="3" medium-device-size="3" large-device-size="3"
+                        class="slds-p-horizontal_small">
+                        <lightning-button name="applyInitialCheque" variant="brand" class="slds-p-left_small"
+                            label="Apply" onclick={handleInputChange} disabled={isApplyInitialChequeBtnDisabled}>
+                        </lightning-button>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </lightning-layout-item>
+
+        </lightning-layout>
+        <lightning-layout class="slds-p-around_small" style="max-height: 65vh;">
+            <c-modon-egypt-bulk-cheque-entry-datatable class="hidden-scrollbar" key-field="Id" data={rowsToDisplay}
+                columns={columns} hide-checkbox-column show-row-number-column draft-values={draftValues}
+                oncellchange={handleCellChange} oncancel={handleCancel} onsave={handleDraftValuesSave}
+                onsort={handleSort} sorted-by={sortedBy} sorted-direction={sortedDirection}
+                onpicklistchanged={handlePicklistChange}>
+            </c-modon-egypt-bulk-cheque-entry-datatable>
+        </lightning-layout>
+    </lightning-card>
+</template>

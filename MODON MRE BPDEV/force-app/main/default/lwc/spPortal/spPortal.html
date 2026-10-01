@@ -1,0 +1,417 @@
+<template>
+    <div class="topbar">
+        <div class="appbar">
+            <button class="burger" onclick={toggleMenu} title="Menu">☰</button>
+            <span class="appbar-title">Service Provider</span>
+            <div class={navClass}>
+                <template for:each={tabs} for:item="tab">
+                    <button key={tab.id} class={tab.cssClass} data-id={tab.id} onclick={handleTab}>{tab.label}</button>
+                </template>
+            </div>
+            <div class="appbar-actions">
+                <div class="hdr-item">
+                    <button class="icon-btn" onclick={toggleNotif} title="Notifications">🔔</button>
+                    <div class={notifMenuClass}>
+                        <div class="dd-head">Notifications</div>
+                        <template for:each={notifications} for:item="n">
+                            <div key={n.id} class="dd-notif">
+                                <div class="nt">{n.title}</div>
+                                <div class="nm">{n.message}</div>
+                                <div class="nd">{n.date}</div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="hdr-item">
+                    <button class="icon-btn" onclick={toggleProfile} title="Profile">👤</button>
+                    <div class={profileMenuClass}>
+                        <button class="menu-item" onclick={goProfile}>👤&nbsp;&nbsp;Profile</button>
+                        <button class="menu-item" onclick={handleLogout}>↩&nbsp;&nbsp;Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- DASHBOARD -->
+        <template lwc:if={isDashboard}>
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <span>You can see only the plots assigned to you and the requests you raised.</span>
+            </div>
+
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Service Provider Portal</div>
+                    <h1>Welcome, BuildCo Contracting</h1>
+                    <div class="page-subtitle">BuildCo Contracting LLC</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" data-id="raise" onclick={handleTab}>+ Raise a Request</button>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <template for:each={stats} for:item="st">
+                    <div key={st.id} class="stat-card">
+                        <div class={st.iconClass}>{st.icon}</div>
+                        <div>
+                            <div class="stat-value">{st.value}</div>
+                            <div class="stat-label">{st.label}</div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="card mt">
+                <div class="card-header">
+                    <h3>My Recent Requests</h3>
+                    <span class="count">2 requests</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Service</th>
+                                <th>Plot</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={recentRequests} for:item="rq">
+                                <tr key={rq.id}>
+                                    <td data-label="Tracking #" class="cell-link">{rq.tracking}</td>
+                                    <td data-label="Service">{rq.service}</td>
+                                    <td data-label="Plot">{rq.plot}</td>
+                                    <td data-label="Status"><span class={rq.statusClass}>{rq.status}</span></td>
+                                    <td data-label="Submitted">{rq.submitted}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- ASSIGNED PLOTS -->
+        <template lwc:if={isPlots}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Service Provider Portal</div>
+                    <h1>Assigned Plots</h1>
+                    <div class="page-subtitle">Plots you have been granted access to</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Plots</h3>
+                    <span class="count">1 plot</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Plot Number</th>
+                                <th>Location</th>
+                                <th>Owner</th>
+                                <th>Usage</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={assignedPlots} for:item="pl">
+                                <tr key={pl.id}>
+                                    <td data-label="Plot Number" class="cell-link">{pl.plot}</td>
+                                    <td data-label="Location">{pl.location}</td>
+                                    <td data-label="Owner">{pl.owner}</td>
+                                    <td data-label="Usage">{pl.usage}</td>
+                                    <td data-label="Status"><span class={pl.statusClass}>{pl.status}</span></td>
+                                    <td data-label="">
+                                        <div class="row-actions">
+                                            <button class="btn btn-outline btn-sm" onclick={goRaise}>Raise Request</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- MY REQUESTS -->
+        <template lwc:if={isRequests}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Service Provider Portal</div>
+                    <h1>My Requests</h1>
+                    <div class="page-subtitle">Service requests you have raised</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" data-id="raise" onclick={handleTab}>+ Raise a Request</button>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <span>Requests raised by other service providers on the same plot are not visible to you.</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Requests</h3>
+                    <span class="count">2 requests</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Service</th>
+                                <th>Category</th>
+                                <th>Plot</th>
+                                <th>Status</th>
+                                <th class="num">Fee</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={myRequests} for:item="mq">
+                                <tr key={mq.id}>
+                                    <td data-label="Tracking #" class="cell-link">{mq.tracking}</td>
+                                    <td data-label="Service">{mq.service}</td>
+                                    <td data-label="Category">{mq.category}</td>
+                                    <td data-label="Plot">{mq.plot}</td>
+                                    <td data-label="Status"><span class={mq.statusClass}>{mq.status}</span></td>
+                                    <td data-label="Fee" class="num">{mq.fee}</td>
+                                    <td data-label="Submitted">{mq.submitted}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- RAISE A REQUEST -->
+        <template lwc:if={isRaise}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Service Provider Portal</div>
+                    <h1>Raise a Request</h1>
+                    <div class="page-subtitle">Submit a new service request for an assigned plot</div>
+                </div>
+            </div>
+
+            <div class="steps">
+                <template for:each={raiseSteps} for:item="sp">
+                    <div key={sp.id} class={sp.cssClass}>
+                        <div class="step-circle">{sp.num}</div>
+                        <div class="step-label">{sp.label}</div>
+                    </div>
+                </template>
+            </div>
+
+            <template lwc:if={submitted}>
+                <div class="alert alert-success">
+                    <span>✓</span>
+                    <span>Your request has been submitted successfully. Tracking number <strong>DCT-48230377</strong>. You will be notified once it is reviewed.</span>
+                </div>
+            </template>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Request Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <span>ℹ️</span>
+                        <span>Service descriptions and applicable fees are shown beside each service type. Fees are payable after approval.</span>
+                    </div>
+
+                    <form onsubmit={handleSubmit}>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Plot <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option>PLT-001-2024 — Yas Island</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Service Category <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Select a category</option>
+                                    <template for:each={serviceCategories} for:item="sc">
+                                        <option key={sc.id}>{sc.label}</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>Service Type <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Select a service type</option>
+                                    <template for:each={serviceTypes} for:item="sv">
+                                        <option key={sv.id}>{sv.label}</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>Description</label>
+                                <textarea class="form-control" placeholder="Provide any additional details for this request"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Urgency</label>
+                                <select class="form-control">
+                                    <template for:each={urgencyOptions} for:item="ur">
+                                        <option key={ur.id}>{ur.label}</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Preferred Date</label>
+                                <input type="date" class="form-control" />
+                            </div>
+                            <div class="form-group full">
+                                <label>Supporting Documents</label>
+                                <div class="file-drop">
+                                    <div class="drop-icon">📎</div>
+                                    <p>Drag and drop files here, or click to browse</p>
+                                </div>
+                                <div class="form-hint">Accepted formats: PDF, DWG, JPG. Max 20 MB per file.</div>
+                            </div>
+                            <div class="form-group full">
+                                <label class="checkrow">
+                                    <input type="checkbox" />
+                                    <span>I confirm the information provided is accurate and I accept the Modon DCT Portal terms and conditions.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="spread">
+                            <button type="button" class="btn btn-secondary">Save as Draft</button>
+                            <button type="submit" class="btn btn-primary btn-lg">Confirm &amp; Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
+
+        <!-- DOCUMENTS -->
+        <template lwc:if={isDocuments}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Service Provider Portal</div>
+                    <h1>Documents</h1>
+                    <div class="page-subtitle">Your uploaded and shared documents</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline">+ Upload Document</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Documents</h3>
+                    <span class="count">2 documents</span>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Document</th>
+                                <th>Type</th>
+                                <th>Plot</th>
+                                <th>Uploaded</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={documents} for:item="dc">
+                                <tr key={dc.id}>
+                                    <td data-label="Document" class="cell-link">{dc.name}</td>
+                                    <td data-label="Type">{dc.type}</td>
+                                    <td data-label="Plot">{dc.plot}</td>
+                                    <td data-label="Uploaded">{dc.uploaded}</td>
+                                    <td data-label="">
+                                        <div class="row-actions">
+                                            <button class="btn btn-secondary btn-sm">Download</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- PROFILE -->
+        <template lwc:if={isProfile}>
+            <div class="page-header">
+                <div>
+                    <div class="eyebrow">Service Provider Portal</div>
+                    <h1>Profile</h1>
+                    <div class="page-subtitle">Manage your company details and account security</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Company Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input class="form-control" value="BuildCo Contracting LLC" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label>TRN</label>
+                            <input class="form-control" value="TRN-100-234567-89" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label>Trade License</label>
+                            <input class="form-control" value="TL-2024-88899" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Email</label>
+                            <input class="form-control" value="sp@demo.ae" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input class="form-control" value="+971 2 555 8899" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input class="form-control" value="Office 12, Yas Island, Abu Dhabi, UAE" disabled />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Change Password</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" class="form-control" placeholder="Enter new password" />
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" class="form-control" placeholder="Re-enter new password" />
+                        </div>
+                    </div>
+                    <button class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

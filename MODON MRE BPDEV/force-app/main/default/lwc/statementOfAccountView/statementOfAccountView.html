@@ -1,0 +1,200 @@
+<!--
+  @description       : 
+  @author            : Krishna Chaitanya
+  @group             : 
+  @last modified on  : 05-20-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+    <!-- Loading Spinner -->
+    <c-custom-toast></c-custom-toast>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="large" variant="brand"></lightning-spinner>
+    </template>
+    <!-- Header -->
+        <header class="header slds-grid slds-grid_align-spread slds-p-around_medium slds-box">
+            <div class="slds-col">
+                <img src={logowhiteUrl} onclick={homepage} class="logo" alt="Modon Logo" />
+            </div>
+            <div class="slds-col">
+                <div class="slds-grid slds-grid_align-end slds-gutters_x-small slds-align-middle">
+                                    <!--<lightning-icon icon-name="utility:notification" size="small"></lightning-icon> -->
+                                    <div class="slds-col slds-is-relative">
+                                        <lightning-button-icon
+                                          icon-name="utility:home"
+                                          alternative-text="Home"
+                                          title="Home"
+                                          value="home" data-id="home"
+                                          onclick={handleMenuSelect}
+                                          variant="bare" size="large">
+                                        </lightning-button-icon>
+                                      </div>
+                                    <div class="slds-col slds-is-relative">
+                        <lightning-button-icon icon-name="utility:user" alternative-text="User Profile" onclick={toggleMenu} variant="bare" size="large"></lightning-button-icon>
+                        <template if:true={menuOpen}>
+                            <div class="slds-box slds-dropdown slds-dropdown_right slds-dropdown_small">
+                                <ul class="slds-dropdown__list" role="menu">
+                                    <li class="slds-dropdown__item" role="presentation">
+                                        <a value="profile" data-id="profile" role="menuitem" onclick={handleMenuSelect}>My Profile</a>
+                                    </li>
+                                    <li class="slds-dropdown__item" role="presentation">
+                                        <a value="logout" data-id="logout" role="menuitem" onclick={handleMenuSelect}>Log Out</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <br />
+   
+    <!-- Main Content -->
+    <template if:true={salesOrder.Id} >
+        <div class="company-font-text slds-p-around_large" >
+           
+        <!-- Top Header -->
+        <section class="slds-p-around_medium">
+            <div class="slds-grid slds-wrap slds-grid_align-spread slds-grid_vertical-align-center">
+                <!-- Left side: Heading and Date -->
+                <div class="slds-col slds-size_12-of-12 slds-large-size_8-of-12 slds-padding-left_medium">
+                    <h1 class="slds-text-heading_medium"><b>Statement of Account</b></h1>
+                    <p class="slds-m-top_x-small"><b>Date: </b>
+                        <lightning-formatted-date-time 
+                            value={dateval}
+                            year="numeric" 
+                            month="long" 
+                            day="2-digit">
+                        </lightning-formatted-date-time>
+                    </p>
+                </div>
+        
+                <!-- Right side: Button -->
+                <div class="slds-col slds-size_12-of-12 slds-large-size_4-of-12 slds-text-center">
+                    <lightning-button 
+                        icon-name="utility:download" 
+                        alternative-text="Download" 
+                        label="Download SOA" 
+                        title="Statement of Account" 
+                        onclick={handleButtonMethod} 
+                        data-id={salesOrder.Id} 
+                        data-value="SOA">
+                    </lightning-button>
+                </div>
+            </div>
+        </section>
+        
+        <div class="slds-p-around_medium">
+            <!-- Info Section: 3 Cards -->
+            <div class="slds-grid slds-wrap slds-grid_align-spread slds-gutters_medium slds-var-m-top_large">
+                <div class="slds-col slds-size_12-of-12 slds-medium-size_1-of-12"></div>
+                <!-- CUSTOMER DETAILS -->
+                <div class="slds-col slds-size_12-of-12 slds-medium-size_3-of-12">
+                    <div class="slds-box_x-small slds-theme_default slds-border_radius_medium">
+                        <h1 class="slds-text-heading_medium slds-m-bottom_small"><b>CUSTOMER DETAILS</b></h1>
+                        <p><b>Name:</b> {salesOrder.CustomerAccount__r.Name}</p>
+                        <p><b>Customer Number:</b> {salesOrder.CustomerAccount__r.UnifiedNumber__c}</p>
+                        <p><b>Date of Purchase:</b>&nbsp;&nbsp;
+                            <lightning-formatted-date-time 
+                                value={salesOrder.SPACustomerSignedDate__c}
+                                year="numeric" month="long" day="2-digit">
+                            </lightning-formatted-date-time>
+                        </p>
+                        <p><b>Purchase Price:</b> AED &nbsp;&nbsp;
+                            <lightning-formatted-number 
+                                value={salesOrder.TotalAmount__c}
+                                maximum-fraction-digits="2">
+                            </lightning-formatted-number>
+                        </p>
+                    </div>
+                </div>
+        
+                <!-- PROPERTY DETAILS -->
+                <div class="slds-col slds-size_12-of-12 slds-medium-size_3-of-12">
+                    <div class="slds-theme_default slds-border_radius_medium">
+                        <h1 class="slds-text-heading_medium slds-m-bottom_small"><b>PROPERTY DETAILS</b></h1>
+                        <p><b>Unit Number:</b> {salesOrder.Unit__r.Name}</p>
+                        <p><b>Project Name:</b> {salesOrder.ProjectName__c}</p>
+                        <p><b>ADM Unit/Plot Number:</b> {salesOrder.Unit__r.PlotNo__c}</p>
+                        <p><b>ADM District:</b> {salesOrder.Unit__r.District__c}</p>
+                    </div>
+                </div>
+        
+                <!-- ESCROW ACCOUNT DETAILS -->
+                <div class="slds-col slds-size_12-of-12 slds-medium-size_3-of-12">
+                    <div class=" slds-theme_default slds-border_radius_medium">
+                        <h1 class="slds-text-heading_medium slds-m-bottom_small"><b>ESCROW ACCOUNT DETAILS</b></h1>
+                        <p><b>Bank Name:</b> {salesOrder.VirtualAccount__r.Escrow_Bank_Name__c}</p>
+                        <p><b>Account Name:</b> {salesOrder.VirtualAccount__r.ESCROWAccountName__c}</p>
+                        <p><b>Account Number:</b> {salesOrder.VirtualAccount__r.VirtualAccountNumber__c}</p>
+                        <p><b>IBAN:</b> {salesOrder.VirtualAccount__r.VirtualIBANNumber__c}</p>
+                       
+                    </div>
+                </div>
+                <div class="slds-col slds-size_12-of-12 slds-medium-size_1-of-12"></div>
+
+            </div>
+        </div>
+        
+
+        <!-- Payment Tables & Totals -->
+        <div if:false={isMobile} class="slds-p-around_medium">
+            <h2 class="slds-text-title_caps slds-align_absolute-center"><b>PAYMENT DETAILS</b></h2>
+            <br/>
+            <div class="slds-scrollable_x">
+                <lightning-datatable
+                    key-field="id"
+                    data={installments}
+                    columns={installmentColumns}
+                    hide-checkbox-column="true"
+                    class="center-header slds-table slds-table_bordered slds-text-align_center slds-table_col-bordered slds-m-bottom_medium slds-max-medium-table_stacked-horizontal">
+                </lightning-datatable>
+            </div><br/>
+            <h2 class="slds-text-title_caps slds-align_absolute-center"><b>OTHER PAYMENT DETAILS</b></h2>
+            <br/>
+            <lightning-datatable
+                key-field="id"
+                data={otherPayments}
+                columns={otherPaymentColumns}
+                hide-checkbox-column="true"
+                class="center-header slds-table slds-table_bordered slds-text-align_center slds-table_col-bordered slds-m-bottom_medium slds-max-medium-table_stacked-horizontal">
+            </lightning-datatable>
+
+            <div class="slds-text-align_right slds-m-top_medium">
+                <p><b>Uncleared Receipt Amount:</b> AED 0.00</p>
+                <p><b>Grand Total: </b>
+                    AED <lightning-formatted-number 
+                            value={grandTotalOutstanding} 
+                            maximum-fraction-digits="2">
+                         </lightning-formatted-number>
+                </p>
+            </div>
+        </div>
+    </div>
+    </template>
+    <footer class="footer">
+        <p style="float:left">© Modon 2025 — All rights reserved</p>
+        <div class="slds-grid slds-wrap slds-text-body_small">
+            <!-- <div  class="slds-col slds-size_2-of-8 slds-p-around_x-small slds-text-color_inverse ">
+                <a href="#" style="color: aliceblue;" class="slds-align_absolute-center" onclick={handleContactUs}><b>Contact Us &nbsp;</b></a>
+            </div> -->
+          <!-- Row 1 -->
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={instagramUrl} alt="Instagram" class="slds-icon" onclick={handleinstagram} />
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={youtubeiconUrl} alt="Youtube" class="slds-icon" onclick={handleyoutube}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={linkediniconUrl} alt="Ln" class="slds-icon" onclick={handlelinkedin}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={facebookUrl} alt="Facebook" class="slds-icon" onclick={handlefacebook}/>
+          </div>
+          <div class="slds-col slds-size_1-of-6 slds-p-around_x-small slds-text-color_inverse ">
+              <img src={twitterxUrl} alt="X" class="slds-icon" onclick={handletwitterx}/>
+          </div>
+          <!-- You can add more fields here if needed -->
+      </div>
+    </footer>
+</template>

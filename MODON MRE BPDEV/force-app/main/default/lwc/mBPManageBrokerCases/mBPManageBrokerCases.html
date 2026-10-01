@@ -1,0 +1,274 @@
+<template>
+    <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+    <c-mbp_customshowtoast></c-mbp_customshowtoast>
+
+    <div class="case-management-container">
+    
+        <!-- Mobile View - Cards Layout -->
+
+        <template if:true={isMobile}>
+            <!-- Mobile Filter Section -->
+            <div class="filter-wrapper mobile-filter-wrapper">
+                <img src={filterIcon} class="filter-icon" alt="Filter" onclick={toggleFilterBox} />
+                <div class={filterBoxClass} onmousedown={stopEvent}>
+                    <div class="mobile-filter-header">
+                        <span class="mobile-filter-title">Case Filters</span>
+                    
+                        <button class="mobile-filter-close"
+                                onclick={toggleFilterBox}
+                                aria-label="Close Case Filters">
+                            ✕
+                        </button>
+                    </div>
+
+    
+                    <lightning-input label="Search Case" class="placeholder mb-2" data-id="searchKey"
+                        value={filters.searchKey} placeholder="CaseNumber, Subject, Category, RaisedBy"
+                        onchange={handleFilterChange}>
+                    </lightning-input>
+    
+                    <lightning-combobox label="Status" class="placeholder mb-2" data-id="status" value={filters.status}
+                        options={statusOptions} onchange={handleFilterChange}>
+                    </lightning-combobox>
+    
+                    <lightning-input type="date" class="placeholder mb-2" label="Start Date" data-id="startDate"
+                        value={filters.startDate} onchange={handleFilterChange}>
+                    </lightning-input>
+    
+                    <lightning-input type="date" class="placeholder mb-2" label="End Date" data-id="endDate"
+                        value={filters.endDate} onchange={handleFilterChange}>
+                    </lightning-input>
+    
+                    <div class="button-row filter-buttons">
+                        <button class="reset-btn" onclick={resetFilters}>Reset</button>
+                        <button class="apply-btn" onclick={applyFilters}>Apply</button>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Mobile Cards -->
+            <div class="mobile-cards-container">
+                <template for:each={filteredCases} for:item="caseItem">
+                    <div key={caseItem.Id} class="slds-card case-card">
+                        <!-- Card Header -->
+                     <!-- Card Header -->
+<div class="case-card-header">
+    <div class="case-header-left">
+        <h3 class="case-number">{caseItem.CaseNumber}</h3>
+    </div>
+
+<div class="case-header-right">
+    <span class="case-status new {caseItem.Status.toLowerCase().replace(' ', '-')}">
+        {caseItem.Status}
+    </span>
+
+    <template if:true={caseItem.isEditIconEmpty}>
+        <span class="edit-icon"
+              data-id={caseItem.Id}
+              onclick={handleCardEdit}
+              title="Edit Case">
+            <svg class="pencil-icon" viewBox="0 0 24 24">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71
+                         7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a1
+                         1 0 0 0-1.41 0L15.13 5.12l3.75 3.75 1.83-1.83z"/>
+            </svg>
+        </span>
+    </template>
+</div>
+
+</div>
+
+            
+                        <!-- Card Body - Always Visible -->
+                        <div class="slds-card__body slds-card__body_inner case-card-body">
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-field">
+                                    <label class="slds-text-title_caps">Subject:</label>
+                                    <span class="slds-text-body_regular">{caseItem.Subject}</span>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-field">
+                                    <label class="slds-text-title_caps">Category:</label>
+                                    <span class="slds-text-body_regular">{caseItem.CaseSubCategory__c}</span>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-field">
+                                    <label class="slds-text-title_caps">Raised By:</label>
+                                    <span class="slds-text-body_regular">{caseItem.raisedBy}</span>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 case-field">
+                                    <label class="slds-text-title_caps">Description:</label>
+                                    <span class="slds-text-body_regular">{caseItem.Description}</span>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 case-field">
+                                    <label class="slds-text-title_caps">Resolution Comments:</label>
+                                    <span class="slds-text-body_regular">{caseItem.Resolution_Comments__c}</span>
+                                </div>
+                            </div>
+            
+                           <!-- <div class="case-card-footer">
+                                <template if:true={caseItem.isEditIconEmpty}>
+                                    <button class="slds-button slds-button_brand card-edit-btn"
+                                            onclick={handleCardEdit}
+                                            data-id={caseItem.Id}>
+                                        Edit
+                                    </button>
+                                </template>
+                            </div>-->
+                        </div>
+                    </div>
+                </template>
+            
+                <template if:true={noFilteredCases}>
+                    <div class="no-cases-message">
+                        No cases found matching your criteria.
+                    </div>
+                </template>
+            
+                <!-- Bottom Buttons -->
+                <div class="mobile-action-buttons-bottom">
+                    <button type="button" class="slds-button slds-button_brand mobile-raise-btn" onclick={openCreateCaseModal}>
+                        + Raise Case
+                    </button>
+                    <button type="button" class="slds-button slds-button_outline-brand mobile-export-btn" onclick={handleExport}>
+                        Export Cases
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <template if:false={isMobile}>
+            <!-- Floating Filter Box (search & status) -->
+            <div class="filter-wrapper">
+                <img src={filterIcon} class="filter-icon" alt="Filter" onclick={toggleFilterBox} />
+                <div class={filterBoxClass} onmousedown={stopEvent}>
+                    <b>Case Filters</b>
+                    <lightning-input class="placeholder mb-2 search-input" label="Search Case" data-id="searchKey"
+                        value={filters.searchKey} onchange={handleFilterChange}
+                        placeholder="CaseNumber, Subject, Category, RaisedBy"></lightning-input>
+                    <lightning-combobox class="placeholder mb-2" label="Status" data-id="status" value={filters.status}
+                        options={statusOptions} onchange={handleFilterChange}></lightning-combobox>
+                    <lightning-input type="date" class="placeholder mb-2" label="Start Date" data-id="startDate"
+                        value={filters.startDate} onchange={handleFilterChange}>
+                    </lightning-input>
+                    <lightning-input type="date" class="placeholder mb-2" label="End Date" data-id="endDate"
+                        value={filters.endDate} onchange={handleFilterChange}>
+                    </lightning-input>
+                    <div class="button-row filter-buttons">
+                        <button class="reset-btn" onclick={resetFilters}>Reset</button>
+                        <button class="apply-btn" onclick={applyFilters}>Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="case-toolbar">
+                <div class="button-container">
+                    <button type="button" class="slds-button slds-button_brand" title="Raise case" onclick={openCreateCaseModal}>
+                    + Raise Case
+                </button>
+                    <lightning-button label="Export Cases" variant="brand" onclick={handleExport}></lightning-button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <c-mbp_adaptivedata-table title="Broker cases" records={filteredCases} columns={caseColumns} page-size="10"
+                onrowaction={handleRowAction}></c-mbp_adaptivedata-table>
+        </template>
+        <!-- Create/Edit Modal -->
+        <template if:true={showCreateCaseModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open small-confirmation-modal">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 class="slds-modal__title">{modalTitle}</h2>
+                                        <template if:true={isMobile}>
+                       <button
+    class="mobile-modal-close"
+    onclick={closeCreateCaseModal}
+    title="Close">
+    ✕
+</button>
+                    </template>
+                    </header>
+
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-combobox label="Category" name="CaseSubCategory__c"
+                            value={newCase.CaseSubCategory__c} placeholder="Select Category"
+                            options={subcategoryOptions} onchange={handleInputChange} class="placeholder" required
+                            message-when-value-missing="Please select a category">
+                        </lightning-combobox>
+                        <template if:true={errors.CaseSubCategory__c}>
+                            <div class="slds-form-element__help slds-text-color_error">
+                                {errors.CaseSubCategory__c}
+                            </div>
+                        </template>
+
+                        <lightning-input label="Subject" name="Subject" value={newCase.Subject}
+                            onchange={handleInputChange} class="placeholder" required>
+                        </lightning-input>
+                        <template if:true={errors.Subject}>
+                            <div class="error-message slds-m-top_x-small">{errors.Subject}</div>
+                        </template>
+
+                        <lightning-input label="Description" name="Description" value={newCase.Description}
+                            onchange={handleInputChange} class="placeholder" required>
+                        </lightning-input>
+                        <template if:true={errors.Description}>
+                            <div class="error-message slds-m-top_x-small">{errors.Description}</div>
+                        </template>
+
+                        <!-- File Uploads Section -->
+                        <template if:true={caseFiles.length}>
+                            <div class="slds-m-top_medium">
+                                <h2 class="attached-files-header">Attached Files</h2>
+                                <ul class="slds-list_dotted">
+                                    <template for:each={caseFiles} for:item="file">
+                                        <li key={file.id} class="slds-list__item">
+                                            <div class="slds-file">
+                                                <span class="slds-file__text">
+                                                    <span class="slds-file__title">{file.title}</span>
+                                                </span>
+                                                <div class="file-actions">
+                                                    <lightning-button-icon icon-name="utility:preview" variant="bare"
+                                                        alternative-text="Preview file"
+                                                        onclick={handlePreviewExistingFile} data-id={file.id}>
+                                                    </lightning-button-icon>
+                                                    <lightning-button-icon icon-name="utility:delete" variant="bare"
+                                                        alternative-text="Delete file"
+                                                        onclick={handleDeleteExistingFile} data-id={file.id}>
+                                                    </lightning-button-icon>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+
+                        <lightning-input type="file" label="Upload New File" accept=".pdf,.jpg,.jpeg,.png"
+                            onchange={handleFileUpload} class="slds-m-bottom_small">
+                        </lightning-input>
+                        <template if:true={uploadedFile}>
+                            <div class="file-preview slds-m-top_small">
+                                <span>File to upload: {uploadedFile.name}</span>
+                                <lightning-button-icon icon-name="utility:preview" variant="bare"
+                                    alternative-text="Preview file" onclick={previewFile}>
+                                </lightning-button-icon>
+                                <lightning-button-icon icon-name="utility:delete" variant="bare"
+                                    alternative-text="Remove file" onclick={handleDeleteFile}>
+                                </lightning-button-icon>
+                            </div>
+                        </template>
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" variant="neutral" onclick={closeCreateCaseModal} class="mr-2">
+                        </lightning-button>
+                        <lightning-button label="Submit" variant="brand" onclick={submitCase} disabled={isLoading}
+                            class="ml-2">
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>

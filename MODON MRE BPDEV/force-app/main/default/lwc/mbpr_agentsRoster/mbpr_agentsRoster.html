@@ -1,0 +1,764 @@
+<template>
+    <div class="roster">
+        <template lwc:if={isInitializing}>
+            <c-mbpr_loader label="Loading agents"></c-mbpr_loader>
+        </template>
+
+        <template lwc:elseif={loadError}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    compact
+                    kicker="My Agents"
+                    title="Something went wrong"
+                    message={loadError}
+                ></c-mbpr_empty-state>
+                <button class="roster-button roster-button--ghost" type="button" onclick={handleRetryLoad}>
+                    Try again
+                </button>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <div class="roster-toolbar">
+                <label class="roster-search">
+                    <lightning-icon icon-name="utility:search" size="xx-small" alternative-text=""></lightning-icon>
+                    <input
+                        type="search"
+                        placeholder="Search agents..."
+                        aria-label="Search agents"
+                        value={searchQuery}
+                        oninput={handleSearchInput}
+                    />
+                    <template lwc:if={searchQuery}>
+                        <button class="roster-search__clear" type="button" aria-label="Clear search" onclick={handleSearchClear}>
+                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text=""></lightning-icon>
+                        </button>
+                    </template>
+                </label>
+                <div class="roster-sort">
+                    <span class="roster-sort__kicker" aria-hidden="true">Sort</span>
+                    <select aria-label="Sort by" onchange={handleSortByChange}>
+                        <template for:each={sortOptionsView} for:item="opt">
+                            <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                    <button
+                        class="roster-sort__dir"
+                        type="button"
+                        title={sortDirectionLabel}
+                        onclick={handleSortDirectionToggle}
+                    >
+                        <template lwc:if={isSortAscending}>
+                            <lightning-icon icon-name="utility:arrowup" size="xx-small" alternative-text="Ascending"></lightning-icon>
+                        </template>
+                        <template lwc:else>
+                            <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Descending"></lightning-icon>
+                        </template>
+                    </button>
+                </div>
+                <div class="roster-toolbar__actions">
+                    <button class="roster-button roster-button--ghost" type="button" title="Export Agents" onclick={handleExport}>
+                        Export Agents
+                    </button>
+                    <button class="roster-button" type="button" title="Add Agent" onclick={handleAddAgent}>
+                        + Add Agent
+                    </button>
+                </div>
+            </div>
+
+            <template lwc:if={showRosterNoMatch}>
+                <c-mbpr_empty-state
+                    compact
+                    kicker="Search"
+                    title="No matching agents"
+                    message="Clear search to see the full team."
+                    secondary-label="Clear search"
+                    onsecondary={handleSearchClear}
+                ></c-mbpr_empty-state>
+            </template>
+            <template lwc:elseif={hasAgents}>
+                <ol class="agent-list">
+                    <template for:each={pagedAgents} for:item="agent">
+                        <li key={agent.key} class={agent.cardClass}>
+                            <button
+                                class="agent-card__head"
+                                type="button"
+                                data-key={agent.key}
+                                onclick={handleToggleExpand}
+                                aria-expanded={agent.isExpanded}
+                                title={agent.expandLabel}
+                            >
+                                <span class="agent-card__avatar" aria-hidden="true">
+                                    <template lwc:if={agent.profilePicPreview}>
+                                        <img src={agent.profilePicPreview} alt="" loading="lazy" />
+                                    </template>
+                                    <template lwc:else>{agent.initials}</template>
+                                </span>
+                                <span class="agent-card__identity">
+                                    <strong>{agent.fullName}</strong>
+                                    <small>{agent.role}</small>
+                                </span>
+                                <!-- BP-097 - warning symbol when Broker Management left rejection comments. -->
+                                <template lwc:if={agent.hasRejectionComments}>
+                                    <span class="agent-card__flag" title="Rejection comments from Broker Management">
+                                        <lightning-icon icon-name="utility:warning" size="xx-small" alternative-text="Rejection comments available"></lightning-icon>
+                                    </span>
+                                </template>
+                                <c-mbpr_status-badge label={agent.active} tone={agent.statusTone}></c-mbpr_status-badge>
+                                <lightning-icon
+                                    icon-name={agent.expandIcon}
+                                    size="xx-small"
+                                    alternative-text=""
+                                    class="agent-card__chevron"
+                                ></lightning-icon>
+                            </button>
+
+                            <template lwc:if={agent.isExpanded}>
+                                <dl class="agent-card__details">
+                                    <div><dt>S.No</dt><dd>{agent.sno}</dd></div>
+                                    <div><dt>Username</dt><dd>{agent.username}</dd></div>
+                                    <div><dt>Email ID</dt><dd>{agent.emailId}</dd></div>
+                                    <div><dt>Agent ID</dt><dd>{agent.agentId}</dd></div>
+                                    <div><dt>Region</dt><dd>{agent.region}</dd></div>
+                                    <div><dt>Country</dt><dd>{agent.country}</dd></div>
+                                    <div><dt>Phone Number</dt><dd>{agent.phoneNumber}</dd></div>
+                                    <div><dt>Status</dt><dd>{agent.active}</dd></div>
+                                </dl>
+
+                                <template lwc:if={agent.hasRejectionComments}>
+                                    <div class="agent-card__rejection" role="note">
+                                        <span class="agent-card__rejection-label">
+                                            <lightning-icon icon-name="utility:warning" size="xx-small" alternative-text=""></lightning-icon>
+                                            Rejection comments
+                                        </span>
+                                        <p>{agent.rejectionComments}</p>
+                                    </div>
+                                </template>
+
+                                <!-- Row actions live inside the expanded
+                                     section only (user direction). -->
+                                <div class="agent-card__actions">
+                                    <button
+                                        class="agent-action"
+                                        type="button"
+                                        data-key={agent.key}
+                                        title="Edit Agent"
+                                        onclick={handleEditAgent}
+                                    >
+                                        <lightning-icon icon-name="utility:edit" size="xx-small" alternative-text="Edit"></lightning-icon>
+                                        <span>Edit</span>
+                                    </button>
+                                    <button
+                                        class="agent-action"
+                                        type="button"
+                                        data-key={agent.key}
+                                        title="Reset Password"
+                                        onclick={handleResetPasswordClick}
+                                    >
+                                        <lightning-icon icon-name="utility:lock" size="xx-small" alternative-text="Reset Password"></lightning-icon>
+                                        <span>Reset Password</span>
+                                    </button>
+                                    <button
+                                        class="agent-action"
+                                        type="button"
+                                        data-key={agent.key}
+                                        title={agent.toggleTooltip}
+                                        onclick={handleStatusToggleClick}
+                                    >
+                                        <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="Enable/Disable Agent"></lightning-icon>
+                                        <span>{agent.toggleTooltip}</span>
+                                    </button>
+                                </div>
+                            </template>
+                        </li>
+                    </template>
+                </ol>
+
+                <template lwc:if={showPagination}>
+                    <nav class="roster-pagination" aria-label="Agent pagination">
+                        <button class="roster-button roster-button--ghost" type="button" disabled={disablePrev} onclick={handlePrevPage}>
+                            ⟵ Prev
+                        </button>
+                        <span>{pageLabel}</span>
+                        <button class="roster-button roster-button--ghost" type="button" disabled={disableNext} onclick={handleNextPage}>
+                            Next ⟶
+                        </button>
+                    </nav>
+                </template>
+            </template>
+
+            <template lwc:else>
+                <div class="state-panel">
+                    <c-mbpr_empty-state
+                        compact
+                        kicker="My Agents"
+                        title="No records found."
+                        message="Agents added to your agency will appear here."
+                    ></c-mbpr_empty-state>
+                </div>
+            </template>
+        </template>
+
+        <template lwc:if={isLoading}>
+            <div class="roster-refresh" role="status" aria-label="Refreshing agents"></div>
+        </template>
+    </div>
+
+    <!-- ================= Add / Edit Agent overlay ================= -->
+    <template lwc:if={showModal}>
+        <div class="overlay-layer" onkeydown={handleModalKeydown}>
+            <section class="overlay" role="dialog" aria-modal="true" aria-label={modalHeader}>
+                <header class="overlay__header">
+                    <h2>
+                        {modalHeader}
+                        <template lwc:if={modalHeaderDetail}>
+                            <span class="overlay__who">{modalHeaderDetail}</span>
+                        </template>
+                    </h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+
+                <!-- BP-036 - the form is six titled sections on a soft ground; every control is the
+                     native themed field (label above), the Email / Mobile actions sit on the control
+                     line, and the actions live in the footer bar outside the sections. Every input
+                     keeps its data-id, name, required, disabled and handler from before. -->
+                <div class="overlay__body agent-form">
+                    <section class="form-card" aria-label="Personal">
+                        <div class="form-card__head"><h3>Personal</h3></div>
+                        <div class="form-grid form-grid--name">
+                            <label class="portal-text-field">
+                                <span>Title</span>
+                                <select data-id="title" required disabled={disableForm} onchange={handleInputChange}>
+                                    <option value="" disabled hidden>Select</option>
+                                    <template for:each={titleSelectOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="portal-text-field">
+                                <span>First Name</span>
+                                <input
+                                    type="text"
+                                    data-id="firstName"
+                                    placeholder="First name"
+                                    value={firstName}
+                                    required
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                />
+                            </label>
+                            <label class="portal-text-field">
+                                <span>Last Name</span>
+                                <input
+                                    type="text"
+                                    data-id="lastName"
+                                    placeholder="Last name"
+                                    value={lastName}
+                                    required
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                />
+                            </label>
+                        </div>
+                        <div class="form-grid">
+                            <label class="portal-date-field">
+                                <span>Date of Birth</span>
+                                <input
+                                    type="date"
+                                    data-id="dateOfBirth"
+                                    value={birthdate}
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                    required
+                                    />
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="form-card" aria-label="Contact">
+                        <div class="form-card__head"><h3>Contact</h3><small>Email and mobile are verified before you can save</small></div>
+                        <div class="contact-field">
+                            <label class="portal-text-field contact-field__field">
+                                <span>Email ID</span>
+                                <input
+                                    type="email"
+                                    data-id="email"
+                                    placeholder="name@agency.ae"
+                                    value={email}
+                                    name="email"
+                                    required
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                />
+                            </label>
+                            <button
+                                class={emailButtonClass}
+                                type="button"
+                                disabled={emailValidateDisabled}
+                                onclick={handleEmailValidation}
+                            >
+                                {emailButtonLabel}
+                            </button>
+                            <template lwc:if={emailValidated}>
+                                <span class="contact-field__status">Email validated</span>
+                            </template>
+                        </div>
+                        <div class="contact-field contact-field--code">
+                            <label class="portal-text-field contact-field__code">
+                                <span>Code</span>
+                                <select data-id="countryCode" required disabled={disableForm} onchange={handleInputChange}>
+                                    <option value="" disabled hidden>Code</option>
+                                    <template for:each={countryCodeSelectOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <label class="portal-text-field contact-field__field">
+                                <span>Mobile Number</span>
+                                <input
+                                    type="tel"
+                                    data-id="phone"
+                                    placeholder="5X XXX XXXX"
+                                    value={phone}
+                                    name="phone"
+                                    required
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                />
+                            </label>
+                            <button
+                                class={mobileButtonClass}
+                                type="button"
+                                disabled={mobileValidateDisabled}
+                                onclick={handleMobileValidation}
+                            >
+                                {mobileButtonLabel}
+                            </button>
+                            <template lwc:if={mobileValidated}>
+                                <span class="contact-field__status">Mobile validated</span>
+                            </template>
+                        </div>
+                    </section>
+
+                    <section class="form-card" aria-label="Role">
+                        <div class="form-card__head"><h3>Role</h3></div>
+                        <div class="form-grid">
+                            <label class="portal-text-field">
+                                <span>Role</span>
+                                <select data-id="role" required disabled={disableForm} onchange={handleInputChange}>
+                                    <option value="" disabled hidden>Select</option>
+                                    <template for:each={roleSelectOptions} for:item="option">
+                                        <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                    </template>
+                                </select>
+                            </label>
+                            <template lwc:if={showPrimaryOwner}>
+                                <div class="portal-checks">
+                                    <label class="portal-check">
+                                        <input type="checkbox" data-id="isBroker" checked={isBroker} disabled={disableForm} onchange={handleInputChange} />
+                                        Is Broker
+                                    </label>
+                                    <label class="portal-check">
+                                        <input type="checkbox" data-id="isPrimaryOwner" checked={isPrimaryOwner} disabled={disableForm} onchange={handlePrimaryOwnerChange} />
+                                        Primary Owner
+                                    </label>
+                                </div>
+                            </template>
+                            <template lwc:if={showPrimaryAdmin}>
+                                <div class="portal-checks">
+                                    <label class="portal-check">
+                                        <input type="checkbox" data-id="isPrimaryAgencyAdmin" checked={isPrimaryAgencyAdmin} disabled={disableForm} onchange={handlePrimaryAdminChange} />
+                                        Primary Agency Admin
+                                    </label>
+                                </div>
+                            </template>
+                        </div>
+                    </section>
+
+                    <!-- BP-096 - licence fields hidden for now. The Broker Card document is captured instead.
+                    <template lwc:if={isBroker}>
+                        <section class="form-card" aria-label="Broker card">
+                            <div class="form-card__head"><h3>Broker card</h3><small>Shown because Is Broker is ticked</small></div>
+                            <div class="form-grid">
+                                <label class="portal-text-field">
+                                    <span>Broker Card License Number</span>
+                                    <input
+                                        type="text"
+                                        data-id="brokerCertificateNumber"
+                                        placeholder="e.g. BRN-12345"
+                                        value={brokerCertificateNumber}
+                                        required
+                                        disabled={disableForm}
+                                        onchange={handleInputChange}
+                                    />
+                                </label>
+                                <label class="portal-text-field">
+                                    <span>Issuing Authority</span>
+                                    <input
+                                        type="text"
+                                        data-id="issuingAuthority"
+                                        placeholder="e.g. RERA"
+                                        value={issuingAuthority}
+                                        required
+                                        disabled={disableForm}
+                                        onchange={handleInputChange}
+                                    />
+                                </label>
+                            </div>
+                            <div class="form-grid">
+                                <label class="portal-date-field">
+                                    <span>Issue Date</span>
+                                    <input
+                                        type="date"
+                                        data-id="brokerCertificateIssueDate"
+                                        value={brokerCertificateIssueDate}
+                                        disabled={disableForm}
+                                        onchange={handleInputChange}
+                                        required
+                                        />
+                                </label>
+                                <label class="portal-date-field">
+                                    <span>Expiry Date</span>
+                                    <input
+                                        type="date"
+                                        data-id="brokerCertificateExpiryDate"
+                                        value={brokerCertificateExpiryDate}
+                                        disabled={disableForm}
+                                        onchange={handleInputChange}
+                                        required
+                                        />
+                                </label>
+                            </div>
+                        </section>
+                    </template>
+                    -->
+
+                    <section class="form-card" aria-label="Identity">
+                        <div class="form-card__head"><h3>Identity</h3><small>{identityHint}</small></div>
+                        <template lwc:if={showEmirates}>
+                            <!-- BP-021 - Emirates ID alone on its row, the two EID dates on the
+                                 next; same format hint as the lead and registration forms. -->
+                            <label class="portal-text-field">
+                                <span>Emirates ID</span>
+                                <input
+                                    type="text"
+                                    data-id="emiratesID"
+                                    placeholder="784-XXXX-XXXXXXX-X"
+                                    value={emiratesID}
+                                    maxlength="18"
+                                    required
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                />
+                            </label>
+                            <div class="form-grid">
+                                <label class="portal-date-field">
+                                    <span>EID Issue Date</span>
+                                    <input
+                                        type="date"
+                                        data-id="eidIssueDate"
+                                        value={eidIssueDate}
+                                        disabled={disableForm}
+                                        onchange={handleInputChange}
+                                        required
+                                        />
+                                </label>
+                                <label class="portal-date-field">
+                                    <span>EID Expiry Date</span>
+                                    <input
+                                        type="date"
+                                        data-id="expiryDate"
+                                        value={expiryDate}
+                                        disabled={disableForm}
+                                        onchange={handleInputChange}
+                                        required
+                                        />
+                                </label>
+                            </div>
+                        </template>
+                        <label class="portal-text-field">
+                            <span>Passport Number</span>
+                            <input
+                                type="text"
+                                data-id="passportNumber"
+                                placeholder="As printed on the passport"
+                                value={passportNumber}
+                                required
+                                disabled={disableForm}
+                                onchange={handleInputChange}
+                            />
+                        </label>
+                        <label class="portal-text-field">
+                            <span>Nationality</span>
+                            <select data-id="nationality" required disabled={disableForm} onchange={handleInputChange}>
+                                <option value="" disabled hidden>Select</option>
+                                <template for:each={nationalitySelectOptions} for:item="option">
+                                    <option key={option.value} value={option.value} selected={option.isSelected}>{option.label}</option>
+                                </template>
+                            </select>
+                        </label>
+                        <div class="form-grid">
+                            <label class="portal-date-field">
+                                <span>Passport Issue Date</span>
+                                <input
+                                    type="date"
+                                    data-id="passportIssueDate"
+                                    value={passportIssueDate}
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                    required
+                                    />
+                            </label>
+                            <label class="portal-date-field">
+                                <span>Passport Expiry Date</span>
+                                <input
+                                    type="date"
+                                    data-id="passportExpiryDate"
+                                    value={passportExpiryDate}
+                                    disabled={disableForm}
+                                    onchange={handleInputChange}
+                                    required
+                                    />
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="form-card" aria-label="Documents">
+                        <div class="form-card__head"><h3>Documents</h3><small>2MB in total for all files</small></div>
+                        <div class="form-grid doc-grid">
+                            <template lwc:if={showEmirates}>
+                                <div class="doc-slot">
+                                    <span class="doc-slot__label">Emirates ID / Residence Visa</span>
+                                    <div class={emiratesSlotClass}>
+                                        <template lwc:if={emiratesSlotFiles.length}>
+                                            <ul class="doc-slot__files">
+                                                <template for:each={emiratesSlotFiles} for:item="file">
+                                                    <li key={file.key} class="file-chip">
+                                                        <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                                                        <template lwc:if={file.hasDownload}>
+                                                            <a href={file.downloadUrl} target="_blank" rel="noopener">{file.filename}</a>
+                                                        </template>
+                                                        <template lwc:else>
+                                                            <span>{file.filename}</span>
+                                                        </template>
+                                                        <button class="file-chip__delete" type="button" data-id={file.filename} title="Delete File" disabled={disableForm} onclick={handleRemoveFile}>
+                                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Delete"></lightning-icon>
+                                                        </button>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="doc-slot__rule">Both sides and the visa page</span>
+                                        </template>
+                                        <template lwc:if={canAddEmirates}>
+                                            <label class="doc-slot__pick">
+                                                <input type="file" name="emirate" disabled={disableForm} onchange={handleFileUpload} />
+                                                {emiratesPickLabel}
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="doc-slot">
+                                <span class="doc-slot__label">Passport Page</span>
+                                <div class={passportSlotClass}>
+                                    <template lwc:if={passportSlotFiles.length}>
+                                        <ul class="doc-slot__files">
+                                            <template for:each={passportSlotFiles} for:item="file">
+                                                <li key={file.key} class="file-chip">
+                                                    <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                                                    <template lwc:if={file.hasDownload}>
+                                                        <a href={file.downloadUrl} target="_blank" rel="noopener">{file.filename}</a>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span>{file.filename}</span>
+                                                    </template>
+                                                    <button class="file-chip__delete" type="button" data-id={file.filename} title="Delete File" disabled={disableForm} onclick={handleRemoveFile}>
+                                                        <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Delete"></lightning-icon>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </template>
+                                    <template lwc:else>
+                                        <span class="doc-slot__rule">Photo page</span>
+                                    </template>
+                                    <template lwc:if={canAddPassport}>
+                                        <label class="doc-slot__pick">
+                                            <input type="file" name="passport" disabled={disableForm} onchange={handleFileUpload} />
+                                            {passportPickLabel}
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                            <template lwc:if={showReraUpload}>
+                                <div class="doc-slot">
+                                    <span class="doc-slot__label">RERA Broker Card</span>
+                                    <div class={reraSlotClass}>
+                                        <template lwc:if={reraSlotFiles.length}>
+                                            <ul class="doc-slot__files">
+                                                <template for:each={reraSlotFiles} for:item="file">
+                                                    <li key={file.key} class="file-chip">
+                                                        <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                                                        <template lwc:if={file.hasDownload}>
+                                                            <a href={file.downloadUrl} target="_blank" rel="noopener">{file.filename}</a>
+                                                        </template>
+                                                        <template lwc:else>
+                                                            <span>{file.filename}</span>
+                                                        </template>
+                                                        <button class="file-chip__delete" type="button" data-id={file.filename} title="Delete File" disabled={disableForm} onclick={handleRemoveFile}>
+                                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Delete"></lightning-icon>
+                                                        </button>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="doc-slot__rule">Dubai brokers</span>
+                                        </template>
+                                        <template lwc:if={canAddRera}>
+                                            <label class="doc-slot__pick">
+                                                <input type="file" name="rera" disabled={disableForm} onchange={handleFileUpload} />
+                                                Choose file
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            <template lwc:if={showAdmUpload}>
+                                <div class="doc-slot">
+                                    <span class="doc-slot__label">ADM Card</span>
+                                    <div class={admSlotClass}>
+                                        <template lwc:if={admSlotFiles.length}>
+                                            <ul class="doc-slot__files">
+                                                <template for:each={admSlotFiles} for:item="file">
+                                                    <li key={file.key} class="file-chip">
+                                                        <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                                                        <template lwc:if={file.hasDownload}>
+                                                            <a href={file.downloadUrl} target="_blank" rel="noopener">{file.filename}</a>
+                                                        </template>
+                                                        <template lwc:else>
+                                                            <span>{file.filename}</span>
+                                                        </template>
+                                                        <button class="file-chip__delete" type="button" data-id={file.filename} title="Delete File" disabled={disableForm} onclick={handleRemoveFile}>
+                                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Delete"></lightning-icon>
+                                                        </button>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="doc-slot__rule">Abu Dhabi brokers</span>
+                                        </template>
+                                        <template lwc:if={canAddAdm}>
+                                            <label class="doc-slot__pick">
+                                                <input type="file" name="adm" disabled={disableForm} onchange={handleFileUpload} />
+                                                Choose file
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            <!-- BP-094 - Broker Card for agencies outside Dubai and Abu Dhabi. -->
+                            <template lwc:if={showBrokerCardUpload}>
+                                <div class="doc-slot">
+                                    <span class="doc-slot__label">Broker Card</span>
+                                    <div class={brokerCardSlotClass}>
+                                        <template lwc:if={brokerCardSlotFiles.length}>
+                                            <ul class="doc-slot__files">
+                                                <template for:each={brokerCardSlotFiles} for:item="file">
+                                                    <li key={file.key} class="file-chip">
+                                                        <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                                                        <template lwc:if={file.hasDownload}>
+                                                            <a href={file.downloadUrl} target="_blank" rel="noopener">{file.filename}</a>
+                                                        </template>
+                                                        <template lwc:else>
+                                                            <span>{file.filename}</span>
+                                                        </template>
+                                                        <button class="file-chip__delete" type="button" data-id={file.filename} title="Delete File" disabled={disableForm} onclick={handleRemoveFile}>
+                                                            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Delete"></lightning-icon>
+                                                        </button>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="doc-slot__rule">Broker licence card</span>
+                                        </template>
+                                        <template lwc:if={canAddBrokerCard}>
+                                            <label class="doc-slot__pick">
+                                                <input type="file" name="brokerCard" disabled={disableForm} onchange={handleFileUpload} />
+                                                Choose file
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <template lwc:if={hasOtherSlotFiles}>
+                            <!-- Files already on the agent whose slot is not shown for this role or
+                                 agency (for example a RERA card on an Owner) stay visible here. -->
+                            <div class="doc-slot">
+                                <span class="doc-slot__label">Other documents on file</span>
+                                <ul class="doc-slot__files">
+                                    <template for:each={otherSlotFiles} for:item="file">
+                                        <li key={file.key} class="file-chip">
+                                            <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                                            <template lwc:if={file.hasDownload}>
+                                                <a href={file.downloadUrl} target="_blank" rel="noopener">{file.filename}</a>
+                                            </template>
+                                            <template lwc:else>
+                                                <span>{file.filename}</span>
+                                            </template>
+                                            <button class="file-chip__delete" type="button" data-id={file.filename} title="Delete File" disabled={disableForm} onclick={handleRemoveFile}>
+                                                <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Delete"></lightning-icon>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </section>
+                </div>
+
+                <footer class="overlay__footer">
+                    <div class="overlay__actions">
+                        <button class="roster-button roster-button--ghost" type="button" onclick={closeModal}>Cancel</button>
+                        <button class="roster-button roster-button--primary" type="button" disabled={submitDisabled} onclick={handleSubmit}>{submitLabel}</button>
+                    </div>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <!-- ================= Confirmation overlay ================= -->
+    <template lwc:if={confirmationOpen}>
+        <div class="confirmation-layer" onclick={closeConfirmation}>
+            <section
+                class="confirmation"
+                role="dialog"
+                aria-modal="true"
+                aria-label={confirmationTitle}
+                onclick={stopEventPropagation}
+                onkeydown={handleConfirmationKeydown}
+            >
+                <p class="confirmation__eyebrow">My Agents</p>
+                <h3>{confirmationTitle}</h3>
+                <p>{confirmationMessage}</p>
+                <div class="confirmation__actions">
+                    <button class="roster-button roster-button--ghost" type="button" onclick={closeConfirmation}>Cancel</button>
+                    <button class="roster-button confirmation__action--primary" type="button" onclick={handleConfirmAction}>
+                        {confirmationActionLabel}
+                    </button>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    <template lwc:if={isActionPending}>
+        <c-mbpr_loader label="Working"></c-mbpr_loader>
+    </template>
+</template>

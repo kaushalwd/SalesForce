@@ -1,0 +1,138 @@
+<template>
+    <lightning-card title="Service Request Documents" class="slds-card_boundary">
+
+        <!-- Error -->
+        <template if:true={validationError}>
+            <div class="error-box">{validationError}</div>
+        </template>
+
+        <!-- Documents -->
+        <template for:each={documents} for:item="doc">
+
+            <!-- Document Row -->
+            <div key={doc.Id} class="doc-row {doc.missingClass} {doc.completedClass}">
+
+                <!-- LEFT -->
+                <div class="doc-left">
+
+                    <!--div class="doc-name">{doc.docName}</div-->
+                    <div class="doc-name-wrapper">
+
+                        <div class="doc-name">
+                            {doc.docName}
+                        </div>
+
+                     
+                        <template if:true={doc.stepDescription}>
+                            <lightning-helptext content={doc.stepDescription} class="help-icon">
+                            </lightning-helptext>
+                        </template>
+
+                    </div>
+                    <!--<div><strong>Step Name: </strong>{doc.stepName}</div>-->
+                    <div class="slds-text-body_small slds-text-color_weak">
+    Step: {doc.stepName}
+</div>
+
+                    <div class="doc-meta">
+                        <span class={doc.requiredClass}>
+                            {doc.isRequired ? 'Required' : 'Optional'}
+                        </span>
+
+                        <!--<span class="file-count">
+                            {doc.files.length} file(s)
+                        </span>-->
+                        <span class="slds-badge">
+    {doc.files.length} Files
+</span>
+
+                        <!-- Expand -->
+                        <template if:true={doc.files.length}>
+                            <lightning-button-icon icon-name={doc.iconChevron} variant="bare" size="small"
+                                class="expand-icon" data-id={doc.docId} onclick={handleExpandClick}>
+                            </lightning-button-icon>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="doc-right">
+
+                    <!-- Completed Icon -->
+                    <template if:true={doc.isCompleted}>
+                        <lightning-icon icon-name="utility:success" size="x-small" class="success-icon">
+                        </lightning-icon>
+                    </template>
+
+                    <!-- Upload / Replace -->
+                    <template if:true={doc.isShowAutoGen}>
+                    <template if:true={doc.showUpload}>
+                        <template if:true={doc.files.length}>
+                            <lightning-button label="Re-upload" icon-name="utility:refresh" variant="border-filled"
+                                 data-id={doc.docId} onclick={handleUploadClick}>
+                            </lightning-button>
+                        </template>
+
+                        <template if:false={doc.files.length}>
+                            <lightning-button   label="Upload" icon-name="utility:upload" variant="brand" title="Upload File"
+                                data-id={doc.docId} onclick={handleUploadClick}>
+                            </lightning-button>
+                        </template>
+                    </template>
+                  </template>
+
+                </div>
+            </div>
+
+            <!-- File List -->
+            <template if:true={doc.isExpanded}>
+                <div key={doc.docId} class="file-list">
+
+                    <template for:each={doc.files} for:item="file">
+                        <div key={file.ContentDocumentId} class="file-row">
+
+                            <div>
+                                <div class="file-name">{file.fileName}</div>
+                                <div class="file-date">{file.formattedDate}</div>
+                                <div class="slds-text-color_weak slds-text-body_small"> Uploaded By - {file.uploadedBy}</div>
+                            </div>
+
+                            <lightning-button-icon icon-name="utility:preview" variant="bare" title="View File"
+                                data-file-id={file.ContentDocumentId} onclick={navigateToFile}>
+                            </lightning-button-icon>
+
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
+        </template>
+
+        <!-- Upload Modal -->
+        <template if:true={isUploadModalOpen}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+
+                    <header class="slds-modal__header">
+                        <h2 class="slds-text-heading_medium">Upload File</h2>
+                    </header>
+
+                    <div class="slds-modal__content">
+                        <lightning-file-upload record-id={selectedDocId} onuploadfinished={handleUploadFinished}
+                            multiple="false">
+                        </lightning-file-upload>
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Close" onclick={closeUploadModal}></lightning-button>
+                    </footer>
+
+                </div>
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </lightning-card>
+</template>

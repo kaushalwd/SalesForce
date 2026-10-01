@@ -1,0 +1,70 @@
+<apex:page controller="EOIRecaptchaFrameController" showHeader="false" sidebar="false" standardStylesheets="false"
+           applyHtmlTag="false" applyBodyTag="false" docType="html-5.0" cache="false">
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Security check</title>
+    <style>
+        html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+        /* the badge is hidden unless the page is opened with ?badge=1; the hosting page then
+           shows Google's disclosure line instead, as their terms require */
+        body.nobadge .grecaptcha-badge { visibility: hidden !important; }
+    </style>
+</head>
+<body>
+    <!--
+      MEOI-CAPTCHA (Aurelix, 11 Sep 2026). Same-origin bridge between an LWR page and Google
+      reCAPTCHA v3, in the pattern of CheckoutFlowContainer: the site page embeds this page in an
+      iframe and posts { type: 'eoi-recaptcha-request', action, nonce }; this page answers with
+      { type: 'eoi-recaptcha-token', nonce, action, token } (or error). The site key is public;
+      the secret is only ever used server-side through the reCAPTCHA API named credential.
+    -->
+    <script>
+        (function () {
+            var SITE_KEY = '{!JSENCODE(siteKey)}';
+            var SF_ORIGIN = /(\.force\.com|\.salesforce\.com|\.visualforce\.com|\.site\.com)$/;
+            var PARAMS = new URLSearchParams(window.location.search || '');
+            if (PARAMS.get('badge') !== '1') { document.body.className = 'nobadge'; }
+            var failed = '';
+            function toParent(payload) {
+                if (window.parent && window.parent !== window) { window.parent.postMessage(payload, '*'); }
+            }
+            function fail(code) { failed = code; toParent({ type: 'eoi-recaptcha-error', message: code }); }
+            if (!SITE_KEY) { fail('no-site-key'); return; }
+            var s = document.createElement('script');
+            s.src = 'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent(SITE_KEY);
+            s.async = true;
+            s.onload = function () {
+                if (window.grecaptcha && window.grecaptcha.ready) {
+                    window.grecaptcha.ready(function () { toParent({ type: 'eoi-recaptcha-ready' }); });
+                } else { fail('no-grecaptcha'); }
+            };
+            s.onerror = function () { fail('script-blocked'); };
+            document.head.appendChild(s);
+            window.addEventListener('message', function (event) {
+                var host = '';
+                try { host = new URL(event.origin).hostname; } catch (e) { return; }
+                if (!SF_ORIGIN.test(host)) { return; }
+                var data = event.data || {};
+                if (data.type !== 'eoi-recaptcha-request') { return; }
+                var reply = function (token, err) {
+                    toParent({ type: 'eoi-recaptcha-token', nonce: data.nonce, action: data.action, token: token || '', error: err || '' });
+                };
+                if (failed) { reply('', failed); return; }
+                if (!window.grecaptcha || !window.grecaptcha.execute) { reply('', 'not-ready'); return; }
+                var action = String(data.action || 'submit').replace(/[^A-Za-z0-9_\/]/g, '_');
+                try {
+                    window.grecaptcha.ready(function () {
+                        window.grecaptcha.execute(SITE_KEY, { action: action }).then(
+                            function (t) { reply(t, ''); },
+                            function () { reply('', 'execute-failed'); }
+                        );
+                    });
+                } catch (e) { reply('', 'execute-threw'); }
+            });
+        })();
+    </script>
+</body>
+</html>
+</apex:page>

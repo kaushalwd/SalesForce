@@ -1,0 +1,528 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+.locked-note {
+    margin: 0 0 12px;
+}
+
+/* ── MSC-173  the payment plan lookup ──────────────────────────────────────
+   1.4's wrapping pill row is gone. Fourteen plans wrapped to five rows and
+   pushed the schedule they produce off the card, and a name like
+   "Golf - 17 Milestones Semi-Annual" cannot be scanned in a wrapped row anyway.
+
+   Two states, the same two a Salesforce lookup has: the chosen record on one
+   line, or a search field over a floating result panel. */
+
+.lk {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+/* ── closed: the chosen plan ────────────────────────────────────────────────
+   Same height, radius and border as .field__input, so opening and closing never
+   resizes the card. */
+/* The container carries the border, the two children carry the two jobs - see
+   the markup note. :focus-within rather than :focus-visible, because the ring
+   has to appear for whichever of the two inner controls has focus. */
+.lk__pill {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    min-height: 48px;
+    padding: 3px 6px 3px 4px;
+    border-radius: 12px;
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    box-sizing: border-box;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+.lk__pill:hover {
+    border-color: var(--gold, #a8a8a8);
+}
+
+.lk__pill:focus-within {
+    border-color: var(--gold, #a8a8a8);
+    box-shadow: 0 0 0 3px var(--gold-wash, rgba(168, 168, 168, 0.16));
+}
+
+/* The name, and the whole of it is the door into the search. Transparent and
+   borderless: the box around it belongs to the container. */
+.lk__pill-main {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text, #fafafa);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.lk__pill-main:hover:not(:disabled) {
+    background: var(--surface-3, rgba(255, 255, 255, 0.07));
+}
+
+/* The container already draws the ring for either child. */
+.lk__pill-main:focus-visible {
+    outline: none;
+}
+
+.lk__pill-main:disabled {
+    cursor: default;
+    opacity: 0.72;
+}
+
+/* Nothing chosen yet - the normal first view on a unit with more than one plan
+   since MSC-174. The row is a prompt, so it is drawn as one: the name reverts to
+   placeholder weight and colour rather than sitting there in the same 600 as a
+   real plan, which read as a plan literally called "Search payment plans by name
+   or type". */
+.lk__pill--empty {
+    border-style: dashed;
+}
+
+.lk__pill-main--empty .lk__pill-name {
+    font-weight: 400;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.lk__pill-ico,
+.lk__opt-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+/* Two lines, as a lookup result is: the record, then what distinguishes it. */
+.lk__pill-txt,
+.lk__opt-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lk__pill-name,
+.lk__opt-name {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.lk__pill-meta,
+.lk__opt-meta {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--text-muted, #a3a3a3);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── open: the search field ─────────────────────────────────────────────────
+   The icon and the clear button anchor to the FIELD, not to .lk, or they would
+   centre themselves against the panel below as well. */
+.lk__field {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.lk__ico {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    /* Must never eat the click that belongs to the field behind it. */
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Padding, not width: the field stays 100% and its text starts clear of both
+   ornaments. */
+.lk__input {
+    padding-left: 38px;
+    padding-right: 38px;
+}
+
+.lk__x {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    z-index: 1;
+    transition: background 0.15s ease;
+}
+
+.lk__x:hover {
+    background: var(--surface-3, rgba(255, 255, 255, 0.11));
+}
+
+.lk__x:focus-visible {
+    outline: 2px solid var(--gold, #a8a8a8);
+    outline-offset: 1px;
+}
+
+/* Inside the closed row rather than over a field, so it is placed by the grid
+   and not by an offset. */
+.lk__x--pill {
+    position: static;
+    transform: none;
+    flex: none;
+}
+
+/* ── the result panel ───────────────────────────────────────────────────────
+   Floats over the schedule instead of pushing it down - what a lookup does, and
+   what stops the card jumping by 240px every time the agent opens it.
+
+   --page-bg, and it has to be that one. This panel sits directly on top of the
+   milestone table, so any transparency lets those rows read through the results.
+   Every --surface-* token in this system is a translucent white; --page-bg is the
+   one the stylesheet documents as opaque in BOTH themes (see the autofill note in
+   mscStyles), so the panel stays solid on the light theme too. */
+.lk__panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: var(--page-bg, #0f0f0f);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.lk__count {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 2px 4px 8px;
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+.lk__kept {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-muted, #a3a3a3);
+}
+
+/* Five and a bit rows, so the list always reads as scrollable. */
+.lk__opts {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 264px;
+    overflow-y: auto;
+    /* Never sideways: a long plan name wraps inside its own row. */
+    overflow-x: hidden;
+    padding-right: 4px;
+    /* Same treatment mscMilestoneModal's body uses, so the scrollbars in this
+       journey are one scrollbar. */
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.lk__opts::-webkit-scrollbar {
+    width: 10px;
+}
+.lk__opts::-webkit-scrollbar-track {
+    background: transparent;
+}
+.lk__opts::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: 6px;
+}
+.lk__opts::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.32);
+    background-clip: content-box;
+    border: 3px solid transparent;
+}
+
+.lk__opt {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text, #fafafa);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.lk__opt:hover {
+    background: var(--surface-3, rgba(255, 255, 255, 0.09));
+}
+
+.lk__opt:focus-visible {
+    outline: none;
+    background: var(--surface-3, rgba(255, 255, 255, 0.11));
+    box-shadow: inset 0 0 0 1px var(--gold, #a8a8a8);
+}
+
+.lk__opt--on {
+    background: var(--gold-wash, rgba(168, 168, 168, 0.12));
+}
+
+.lk__none {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+}
+
+.lk__none-t {
+    margin: 0;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--text-muted, #a3a3a3);
+    overflow-wrap: anywhere;
+}
+
+/* ── 1.1  the PoC's schedule table ──────────────────────────────────────────
+   Mobile-first: a card per milestone, since a four-column table cannot survive
+   390px. The header row only appears once there is room for the columns it
+   labels - a stray "MILESTONE DUE INSTALLMENT % AMOUNT" strip above stacked
+   cards labels nothing. */
+.sched {
+    margin-top: 10px;
+    /* 1.10 - UI-03: the table follows the card's own width, not the window's */
+    container-type: inline-size;
+}
+
+.sched-head {
+    display: none;
+}
+
+.sched-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.sched-row {
+    display: grid;
+    /* minmax(0, 1fr) - a long milestone description must truncate, not widen
+       the row and push the amount off the card. */
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "name   amount"
+        "due    pct";
+    align-items: center;
+    gap: 4px 10px;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    color: var(--text, #fafafa);
+}
+
+.sched-name {
+    grid-area: name;
+    font-weight: 500;
+    min-width: 0;
+}
+
+.sched-due {
+    grid-area: due;
+    color: var(--text-muted, #a3a3a3);
+}
+
+.sched-pct {
+    grid-area: pct;
+    color: var(--text-muted, #a3a3a3);
+    text-align: right;
+}
+
+.sched-amount {
+    grid-area: amount;
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+    /* Read down a column against each other, so the digits have to line up. */
+    font-variant-numeric: tabular-nums;
+}
+
+/* Table proper, once four columns fit. Same track on the header and the rows so
+   the two stay in register. */
+/* 1.2 - the four-column table engages at 1024, NOT 768.
+   A media query measures the VIEWPORT, and this table lives in a card that is
+   half the pair at 1440 (~530px) - so "the window is 768 wide" said nothing
+   useful about whether four columns fit here. Below 1024 the card layout is
+   safer and always legible.
+
+   And every track is minmax(0, …), never a bare fr: a bare fr track takes an
+   `auto` minimum, so "Booking Amount (10%)" and "AED 1,624,768" refused to
+   shrink and simply overlapped the columns either side of them. */
+/* 1.10 - UI-03: at 1366 the amount track was 90px and "AED 1,350,121.50" ran past the card edge.
+   The table now engages on the card's own width (a container query) and the three figure
+   columns are fixed, so the amount always has 118px and the milestone name takes the rest. */
+@container (min-width: 400px) {
+    .sched-head,
+    .sched-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 84px 44px 118px;
+        grid-template-areas: none;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* ── THE CELLS MUST RELEASE THEIR NAMED AREAS ──────────────────────────
+       Clearing grid-template-areas on the CONTAINER is not enough: each cell
+       still carried `grid-area: name|due|pct|amount` from the card layout, and
+       with no such areas defined those resolve to line names that do not exist.
+       Every one of the four then auto-placed into the same cell and the text
+       rendered stacked on top of itself - "AED 812,383.9" printed over
+       "Installment 2" over "5%". Resetting to auto lets them fall into the four
+       columns in source order. */
+    .sched-name,
+    .sched-due,
+    .sched-pct,
+    .sched-amount {
+        grid-area: auto;
+    }
+
+    /* A long milestone name wraps inside its own cell instead of running under
+       the due date. */
+    .sched-name {
+        overflow-wrap: anywhere;
+    }
+    .sched-head {
+        padding: 0 12px 8px;
+        border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    }
+    .sched-th {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim, #8a8a8a);
+    }
+    .sched-th--end,
+    .sched-th:last-child {
+        text-align: right;
+    }
+    .sched-due,
+    .sched-pct {
+        text-align: left;
+    }
+}
+/* ── 1.5  the card's own wait ───────────────────────────────────────────────
+   A skeleton rather than a spinner, and rather than the journey's full-screen
+   overlay. Choosing a payment plan re-fetches one card's contents; blanking the
+   whole sheet to say so costs the agent the customer's details, the unit and the
+   summary they were reading a second ago. This says "these rows are coming" in
+   the exact place the rows will be, and leaves everything else legible. */
+.sk {
+    display: block;
+    border-radius: 8px;
+    /* Two stops of the same surface token, so the sweep works on either theme
+       without a second colour being introduced for it. */
+    background-image: linear-gradient(
+        90deg,
+        var(--surface-2, rgba(255, 255, 255, 0.05)) 0%,
+        var(--surface-3, rgba(255, 255, 255, 0.11)) 45%,
+        var(--surface-2, rgba(255, 255, 255, 0.05)) 90%
+    );
+    background-size: 220% 100%;
+    animation: sk-sweep 1.25s ease-in-out infinite;
+}
+
+/* The pills sit in the same flex row the real ones do, so nothing moves when
+   they are replaced. Heights match .plan-pill and .sched-row respectively. */
+/* 1.7 - a full-width bar matching .lk__pill, so the closed picker and its
+   skeleton are the same height and the card does not jump when plans land. */
+.sk--planrow {
+    height: 48px;
+    width: 100%;
+    border-radius: 12px;
+}
+.sk--row {
+    height: 30px;
+}
+
+/* Uneven widths. A column of identical bars reads as a progress indicator; an
+   uneven one reads as text that has not arrived. */
+.sk--w6 { width: 27%; }
+.sk--w7 { width: 32%; }
+.sk--w8 { width: 80%; }
+.sk--w9 { width: 38%; }
+.sk--w10 { width: 100%; }
+
+.sk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sk-sched {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* The row bars are the full width of the table, so the two width classes above
+   that are meant for pills must not apply here. */
+.sk-sched .sk--w9 {
+    width: 92%;
+}
+
+@keyframes sk-sweep {
+    0% {
+        background-position: 120% 0;
+    }
+    100% {
+        background-position: -40% 0;
+    }
+}
+
+/* Reduced motion keeps the placeholder and drops the sweep - the shape is the
+   information; the movement is only there to say it is not stuck. */
+@media (prefers-reduced-motion: reduce) {
+    .sk {
+        animation: none;
+    }
+}

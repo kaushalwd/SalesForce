@@ -1,0 +1,159 @@
+<template>
+  <lightning-messages></lightning-messages>
+  <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+    <!--<lightning-accordion-section name="Type of Registration" label="Type of Registration">-->
+    <div class="slds-content-align_center">
+      <div class="slds-grid slds-wrap placeholder slds-p-around_small">
+        <lightning-combobox class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" name="Type_of_Registration__c" label="Type of Registration" placeholder="--Select--" value={registrationRec.Type_of_Registration__c} options={typeOfRegistrationOptions} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please select Type of Registration" aria-required="true"></lightning-combobox>
+      </div>
+      <!--</lightning-accordion-section>-->
+      <!--<lightning-accordion-section name="CI" label="CI">-->
+      <div class="slds-grid slds-wrap placeholder slds-p-around_small">
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="Agency_Name__c" label="Agency Name" value={registrationRec.Agency_Name__c} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please enter Agency Name" aria-required="true"></lightning-input>
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="email" name="Company_Email_Address__c" data-id="Company_Email_Address__c" label="Company Email Address" value={registrationRec.Company_Email_Address__c} onchange={handleFieldChange1} disabled={isDisabled} required message-when-value-missing="Please enter Company Email Address" aria-required="true"></lightning-input>
+        <!-- Email Button -->
+        <button class="slds-button slds-button_brand slds-botton-top-40" onclick={validateEmail} disabled={isValidatingEmail}> {validateButtonLabel} </button>
+      </div>
+      <!--<div class="slds-grid slds-wrap slds-m-top_small"><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="text"
+                    name="Agency_Name__c"
+                    label="Agency Name"
+                    value={registrationRec.Agency_Name__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    message-when-value-missing="Please enter Agency Name"
+                    aria-required="true"
+                ></lightning-input><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="text"
+                    name="Company_City__c"
+                    label="Company City"
+                    value={registrationRec.Company_City__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    message-when-value-missing="Please enter Company City"
+                    aria-required="true"
+                ></lightning-input></div>-->
+      <div class="slds-grid slds-wrap placeholder slds-p-around_small">
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="Address_Line_1__c" label="Address Line 1" value={registrationRec.Address_Line_1__c} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please enter Address Line 1" aria-required="true"></lightning-input>
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="Address_Line_2__c" label="Address Line 2" value={registrationRec.Address_Line_2__c} onchange={handleFieldChange} disabled={isDisabled} message-when-value-missing="Please enter Address Line 2" aria-required="true"></lightning-input>
+      </div>
+      <div class="slds-grid slds-wrap placeholder  slds-p-around_small">
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="City__c" label="City" value={registrationRec.City__c} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please enter city" aria-required="true"></lightning-input>
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="PO_Box_Emirate__c" label="PO box" value={registrationRec.PO_Box_Emirate__c} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please enter PO box " aria-required="true"></lightning-input>
+      </div>
+      <div class="slds-grid slds-wrap placeholder slds-p-around_small">
+        <lightning-combobox class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" name="Country__c" label="Country" placeholder="--Select--" value={registrationRec.Country__c} options={countryOptionsList} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please select Country" aria-required="true"></lightning-combobox>
+        <lightning-combobox class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" name="State__c" label="State" placeholder="--Select--" value={registrationRec.State__c} options={stateOptions} onchange={handleFieldChange} disabled={isDisabled} required message-when-value-missing="Please select State" aria-required="true"></lightning-combobox>
+      </div>
+      <!--<div class="slds-grid slds-wrap slds-m-top_small"><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="text"
+                    name="Mobile_Number__c"
+                    label="Mobile Number"
+                    value={registrationRec.Mobile_Number__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    pattern="[0-9]*"
+                    inputmode="numeric"
+                    onblur={handleNumericInput}
+                    message-when-pattern-mismatch="Please enter only numbers"
+                    message-when-value-missing="Please enter Mobile Number"
+                    aria-required="true"
+                ></lightning-input><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="text"
+                    name="Company_Mobile_Number__c"
+                    label="Company Mobile Number"
+                    value={registrationRec.Company_Mobile_Number__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    pattern="[0-9]*"
+                    inputmode="numeric"
+                    onblur={handleNumericInput}
+                    message-when-pattern-mismatch="Please enter only numbers"
+                    message-when-value-missing="Please enter Company Mobile Number"
+                    aria-required="true"
+                ></lightning-input></div>-->
+      <template if:true={isUploading}>
+        <lightning-spinner alternative-text="Uploading file..." size="medium"></lightning-spinner>
+      </template>
+      <div class="slds-grid slds-wrap placeholder slds-p-around_small">
+        <lightning-combobox class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" name="Mobile_Country_Code__c" label="Country Code" placeholder="--Select--" value={mobileNum} data-id="Mobile_Country_Code__c" required options={mobCountryOptions} onchange={handleFieldChange} disabled={isDisabled} message-when-value-missing="Please select Mobile Country Code"></lightning-combobox>
+        <lightning-input data-id="Mobile_Number__c" class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="Mobile_Number__c" label="Mobile Number" value={registrationRec.Mobile_Number__c} onchange={handleFieldChange1} disabled={isDisabled} required pattern="[0-9]*" inputmode="numeric" onblur={handleNumericInput} message-when-pattern-mismatch="Please enter only numbers" message-when-value-missing="Please enter Mobile Number" aria-required="true"></lightning-input>
+        <!-- Phone Button -->
+        <button class="slds-button slds-button_brand slds-botton-top-40" onclick={validatePhone} disabled={isValidatingPhone}> {validatePhoneButtonLabel} </button>
+        <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small customSelect" type="text" name="Website__c" label="Website" value={registrationRec.Website__c} onchange={handleFieldChange} disabled={isDisabled} message-when-value-missing="Please enter Website Address" aria-required="true"></lightning-input>
+      </div>
+      <!--<div class="slds-grid slds-wrap slds-m-top_small"><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="email"
+                    name="Company_Email_Address__c"
+                    label="Company Email Address"
+                    value={registrationRec.Company_Email_Address__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    message-when-value-missing="Please enter Company Email Address"
+                    aria-required="true"
+                ></lightning-input><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="email"
+                    name="Company_Email_Address__c"
+                    label="Company Email Address"
+                    value={registrationRec.Company_Email_Address__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    message-when-value-missing="Please enter Company Email Address"
+                    aria-required="true"
+                ></lightning-input></div>-->
+      <!--<div class="slds-grid slds-wrap slds-m-top_small"><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="text"
+                    name="Building_Name__c"
+                    label="Building Name"
+                    value={registrationRec.Building_Name__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    required
+                    message-when-value-missing="Please enter Building Name"
+                    aria-required="true"
+                ></lightning-input><lightning-input
+                    class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_x-small placeholder"
+                    type="text"
+                    name="Street_Name__c"
+                    label="Street Name"
+                    value={registrationRec.Street_Name__c}
+                    onchange={handleFieldChange}
+                    disabled={isDisabled}
+                    message-when-value-missing="Please enter Street Name"
+                    aria-required="true"
+                ></lightning-input></div>-->
+      <!--</lightning-accordion-section>-->
+      <!--<lightning-accordion-section name="Document Uploads" label="Document Uploads">-->
+      <div class="slds-grid slds-wrap  placeholder slds-p-around_small">
+        <template if:false={isFileUploaded}>
+          <lightning-input class="slds-grid slds-wrap placeholder slds-p-around_small" type="file" label="Company Brochure/Profile" accept=".pdf,.jpg" disabled={isDisabled} onchange={handleFileChange}></lightning-input>
+        </template>
+        <template if:true={isFileUploaded}>
+          <div class="slds-m-top_small">
+            <p>
+              <strong>Uploaded File:</strong> &nbsp; <a href="javascript:void(0);" onclick={handlePreviewFile}>{uploadedFileName}</a>
+              <lightning-icon icon-name="action:preview" size="xx-small" alternative-text="Preview File" onclick={handlePreviewFile} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+               <template if:true={showDeleteIcon}>
+              <lightning-icon icon-name="action:delete" size="xx-small" alternative-text="Remove File" onclick={handleRemoveFile} class="slds-m-left_small lwc-icon-small"></lightning-icon>
+            </template>
+            </p>
+          </div>
+        </template>
+      </div>
+    </div>
+    <!--</lightning-accordion-section>-->
+  </lightning-accordion>
+</template>

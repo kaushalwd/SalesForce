@@ -1,0 +1,187 @@
+<template>
+    <section class="login-card" aria-label="Sign in form">
+        <div class="card-head">
+            <template lwc:if={hasViewEyebrow}>
+                <p class="eyebrow">{viewEyebrow}</p>
+            </template>
+            <h2>{viewTitle}</h2>
+            <template lwc:if={hasViewDescription}>
+                <p>{viewDescription}</p>
+            </template>
+        </div>
+
+        <template lwc:if={hasFeedback}>
+            <div class={feedbackClass} role="status" aria-live="polite">
+                {feedbackMessage}
+            </div>
+        </template>
+
+        <template lwc:if={isLoginView}>
+            <form onsubmit={submitLogin} novalidate>
+                <div class="field">
+                    <label class="field-label" for="username">Username</label>
+                    <div class="input-shell">
+                        <lightning-icon icon-name="utility:email" size="xx-small" alternative-text=""></lightning-icon>
+                        <input
+                            id="username"
+                            data-field="username"
+                            class="field-input"
+                            type="email"
+                            value={username}
+                            autocomplete="username"
+                            inputmode="email"
+                            placeholder="name@example.com"
+                            oninput={handleInput}
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-row">
+                        <label class="field-label" for="password">Password</label>
+                        <button type="button" class="text-button" onclick={showReset}>Forgot password?</button>
+                    </div>
+                    <div class="input-shell">
+                        <lightning-icon icon-name="utility:lock" size="xx-small" alternative-text=""></lightning-icon>
+                        <input
+                            id="password"
+                            data-field="password"
+                            class="field-input field-input--password"
+                            type={passwordType}
+                            value={password}
+                            autocomplete="current-password"
+                            placeholder="Enter password"
+                            oninput={handleInput}
+                            required
+                        />
+                        <button type="button" class="icon-button" onclick={togglePassword} aria-label={passwordToggleLabel}>
+                            <lightning-icon icon-name={passwordToggleIcon} size="xx-small" alternative-text=""></lightning-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <label class="privacy-row">
+                    <input
+                        data-field="privacyAccepted"
+                        type="checkbox"
+                        checked={privacyAccepted}
+                        onchange={handleCheckbox}
+                    />
+                    <span class="privacy-copy">
+                        <span>I accept the</span>
+                        <a class="policy-link" href={privacyUrl} target="_blank" rel="noopener">Privacy Policy</a>
+                    </span>
+                </label>
+
+                <button class="primary-action" type="submit" disabled={signInDisabled}>
+                    <template lwc:if={loading}>
+                        <span class="spinner" aria-hidden="true"></span>
+                    </template>
+                    <span>{signInLabel}</span>
+                </button>
+
+                <p class="register-copy">
+                    <span>Not registered yet?</span>
+                    <a class="register-link" href={registrationUrl} target="_blank" rel="noopener">Register your agency</a>
+                </p>
+                <!-- Resume an application already started. -->
+                <p class="register-copy">
+                    <span>Started an application?</span>
+                    <a class="register-link" href={resumeUrl} target="_blank" rel="noopener">Resume registration</a>
+                </p>
+            </form>
+        </template>
+
+        <template lwc:elseif={isResetView}>
+            <form onsubmit={submitReset} novalidate>
+                <div class="field">
+                    <label class="field-label" for="resetUsername">Username</label>
+                    <div class="input-shell">
+                        <lightning-icon icon-name="utility:email" size="xx-small" alternative-text=""></lightning-icon>
+                        <input
+                            id="resetUsername"
+                            data-field="resetUsername"
+                            class="field-input"
+                            type="text"
+                            value={resetUsername}
+                            autocomplete="username"
+                            placeholder="Enter your username"
+                            oninput={handleInput}
+                            required
+                        />
+                    </div>
+                    <p class="field-help">
+                        If the account is eligible, reset instructions will be sent to the registered email.
+                    </p>
+                </div>
+
+                <div class="action-row">
+                    <button type="submit" class="primary-action primary-action--inline" disabled={loading}>
+                        <template lwc:if={loading}>
+                            <span class="spinner" aria-hidden="true"></span>
+                        </template>
+                        <span>{resetLabel}</span>
+                    </button>
+                    <button type="button" class="secondary-action" onclick={backToLogin} disabled={loading}>
+                        Back
+                    </button>
+                </div>
+            </form>
+        </template>
+
+        <template lwc:elseif={isOtpView}>
+            <form onsubmit={submitOtp} novalidate>
+                <div class="otp-summary">
+                    <span class="otp-icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:shield" size="small" alternative-text=""></lightning-icon>
+                    </span>
+                    <div>
+                        <p class="otp-title">Verification required</p>
+                        <p class="otp-copy">{otpHelpText}</p>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="otpCode">Secure code</label>
+                    <input
+                        id="otpCode"
+                        data-field="otpCode"
+                        class="otp-input"
+                        type="text"
+                        value={otpCode}
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        maxlength="6"
+                        autocomplete="one-time-code"
+                        placeholder="000000"
+                        oninput={handleOtpInput}
+                        required
+                    />
+                    <p class="field-help">{otpCooldownText}</p>
+                </div>
+
+                <div class="action-row action-row--stack">
+                    <button type="submit" class="primary-action" disabled={loading}>
+                        <template lwc:if={loading}>
+                            <span class="spinner" aria-hidden="true"></span>
+                        </template>
+                        <span>{verifyLabel}</span>
+                    </button>
+                    <div class="secondary-row">
+                        <button type="button" class="secondary-action" onclick={resendOtp} disabled={resendDisabled}>
+                            {resendLabel}
+                        </button>
+                        <button type="button" class="secondary-action" onclick={backToLogin} disabled={loading}>
+                            Back
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </template>
+
+        <div class="card-note">
+            Access is restricted to authorised Modon broker users.
+        </div>
+    </section>
+</template>

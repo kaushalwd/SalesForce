@@ -1,0 +1,308 @@
+/* eoiWadeemGardens — the modon.com project-page template (Hudayriyat Golf Estates) re-pointed
+   at Wadeem Gardens. Measurements read from the live template on 11 Sep 2026: SuisseIntl
+   Regular/Medium, H1 40/48 500, H2 32/38 500, band copy 26/36, body 20/26, white square
+   button 18px uppercase 15x30, beige band #B2AA98, grey bands #F4F2F0, black terms footer.
+   @author Aurelix */
+
+@font-face {
+    font-family: 'SuisseIntl';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Regular.woff') format('woff');
+}
+@font-face {
+    font-family: 'SuisseIntl';
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff2') format('woff2'),
+         url('/sfsites/c/resource/Microsite_Fonts/SuisseIntl-Medium.woff') format('woff');
+}
+
+:host {
+    /* MEOI-LAND7 (11 Sep, Mridul): the landing page keeps the modon.com template's white look
+       (white ground, beige information band, grey bands, black footer); only the buttons take the
+       EOI site's style. The EOI pages adopt this white ground in turn (eoiSplitPage). */
+    --sans: 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --pine: #2B2940;      /* EOI dark - buttons only */
+    --pine-2: #3B3856;
+    --cream: #F2EFE6;     /* EOI button text */
+    --champ-40: rgba(201, 188, 143, 0.4);
+    --card: #FFFFFF;
+    --ink: #000000;
+    --ink-2: #212529;
+    --beige: #B2AA98;
+    --grey: #F4F2F0;
+    --line: #DEDEDE;
+    --line-soft: #E3E3E3;
+    --green: #2F5F4F;
+    --foot: #000000;
+    display: block;
+    font-family: var(--sans);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    background: #fff;
+}
+
+.page { overflow-x: hidden; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
+img { max-width: 100%; }
+h1, h2, h3, p, figure { margin: 0; }
+.title, .section-title { font-size: 32px; line-height: 38px; font-weight: 500; color: var(--ink-2); }
+.title-row { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 32px; }
+
+/* ---------- header: logo only ---------- */
+.hdr { position: absolute; top: 0; left: 0; right: 0; height: 88px; z-index: 5; }
+.hdr__row { height: 100%; display: flex; align-items: center; }
+.hdr__logo { display: inline-flex; line-height: 0; }
+.hdr__logo img { height: 20px; width: auto; } /* MEOI-HERO: 20px, as measured on the reference */
+
+/* ---------- hero ---------- */
+.hero { position: relative; min-height: 100vh; overflow: hidden; background: #1B1A2B; }
+.hero__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero__scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,.10) 60%, rgba(0,0,0,.55) 100%);
+}
+.hero__body { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: flex-end; padding-bottom: 88px; padding-top: 120px; }
+.hero__content { color: #fff; max-width: 720px; }
+/* MEOI-HERO (12 Sep, Mridul's reference at 1920): stacked lockup 160px (its viewBox is 160x108, the
+   artwork 122px wide), heading 40/48, tagline 22/30, white uppercase button 54px tall, all left-aligned */
+.hero__brand { margin-bottom: 20px; line-height: 0; }
+.hero__logo { width: 160px; max-width: 100%; height: auto; }
+.hero__title h1 { font-size: 40px; line-height: 48px; font-weight: 500; color: #fff; }
+.hero__title p { font-size: 22px; line-height: 30px; margin-top: 20px; color: #fff; }
+.hero__btns { margin-top: 50px; display: flex; flex-wrap: wrap; gap: 16px; }
+
+/* ---------- hero carousel (EOI-UI-19, 16 Sep 2026) ---------- */
+/* Several comma-separated hero images become slides, exactly as on the agreed artifact: a wipe every 6.5s, swipe on
+   touch screens, no zoom, no controls. The slides get their own stacking context so the scrim above still darkens
+   them. One hero image renders the original <picture> and none of these rules apply. */
+.hero--carousel { touch-action: pan-y; }
+.hero__slides { position: absolute; inset: 0; z-index: 0; }
+.hero__slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; visibility: hidden; }
+.hero__slide--active { opacity: 1; visibility: visible; z-index: 2; }
+.hero__slide--leaving { opacity: 1; visibility: visible; z-index: 1; }
+.hero__slide-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; display: block; }
+.hero__slide--active.hero__slide--from-next { animation: wgWipeNext 1.2s cubic-bezier(.77, 0, .18, 1) both; }
+.hero__slide--active.hero__slide--from-prev { animation: wgWipePrev 1.2s cubic-bezier(.77, 0, .18, 1) both; }
+.hero__slide--leaving .hero__slide-img { filter: brightness(.72); transition: filter 1.2s ease; }
+@keyframes wgWipeNext { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+@keyframes wgWipePrev { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+/* EOI-UI-20: the shadow behind the brand block. The terrace render is dark where the logo, tagline and button sit (about
+   37/255 behind them, live scrim included); MODON's offer banners are about twice as bright there, so in carousel mode
+   this shadow brings that corner back to the terrace's darkness (calibrated on the three banners: 33 to 40). A left
+   band, strongest at the foot, gone by 45% of the width and 65% of the height, so the offer text on the right is not
+   touched. It does not exist with a single hero image. */
+.hero--carousel .hero__slides::after {
+    content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    background: linear-gradient(90deg, rgba(0, 0, 0, .7) 0%, rgba(0, 0, 0, .6) 22%, rgba(0, 0, 0, 0) 45%);
+    -webkit-mask-image: linear-gradient(0deg, #000 30%, transparent 65%); mask-image: linear-gradient(0deg, #000 30%, transparent 65%);
+}
+
+.btn {
+    display: inline-block; box-sizing: border-box; padding: 15px 30px; font-family: var(--sans); font-size: 16px; line-height: 22px;
+    font-weight: 600; text-decoration: none; border-radius: 0; cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+}
+/* MEOI-HERO2 (12 Sep, Mridul): the hero button looks like the floating "Register Your EOI" bar —
+   the EOI site's dark ground, cream text, champagne hairline, 15px semibold, sentence case
+   (the reference's white uppercase button was tried first and rejected) */
+.btn--primary, .btn--primary:link, .btn--primary:visited { background-color: var(--pine) !important; color: var(--cream) !important; border: 1px solid var(--champ-40); font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: .01em; text-transform: none; text-decoration: none !important; }
+.btn--primary:hover, .btn--primary:focus-visible, .btn--primary:active { background-color: var(--pine-2) !important; color: var(--cream) !important; }
+
+/* ---------- floating Register now (MEOI-LAND3) ---------- */
+.float-cta, .float-cta:link, .float-cta:visited {
+    position: fixed; right: 24px; bottom: 92px; z-index: 60;
+    display: inline-block; box-sizing: border-box; padding: 15px 30px;
+    font-family: var(--sans); font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: .01em;
+    text-decoration: none !important; color: var(--cream) !important; background-color: var(--pine) !important;
+    border: 1px solid var(--champ-40); box-shadow: 0 10px 30px rgba(27, 26, 43, .28);
+    opacity: 0; transform: translateY(16px); pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease, background-color .2s ease;
+}
+.float-cta--on, .float-cta--on:link, .float-cta--on:visited { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.float-cta:hover, .float-cta:focus-visible { background-color: var(--pine-2) !important; color: var(--cream) !important; }
+
+/* ---------- scroll cue (EOI-UI-17, 16 Sep 2026) ---------- */
+/* The hero fills the screen, so visitors could not tell the page goes on. A label and a down arrow sit at the foot of
+   the hero, centred; hidden once the visitor scrolls, back at the top. Absolutely positioned inside the hero: nothing
+   else on the page moves. EOI-UI-18 (16 Sep 2026): the line with its running light became the site's own arrow
+   (the rail-button glyph, turned down) with a springy bounce, in the same space, so the label does not move. */
+.fold-cue {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; width: max-content; margin: 0 auto; padding: 0 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    -webkit-appearance: none; appearance: none; background: none; border: 0; border-radius: 0; cursor: pointer;
+    color: #fff; font-family: var(--sans); font-size: 15px; line-height: 18px; font-weight: 500; letter-spacing: .04em;
+    transition: opacity .35s ease; -webkit-tap-highlight-color: transparent;
+}
+.fold-cue--gone { opacity: 0; pointer-events: none; }
+.fold-cue:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.fold-cue__label { display: block; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, .6), 0 0 18px rgba(0, 0, 0, .6); }
+.fold-cue__arrow { position: relative; display: block; width: 22px; height: 48px; } /* the space the line took */
+.fold-cue__arrow svg { position: absolute; left: 0; top: 0; display: block; width: 22px; height: 22px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)) drop-shadow(0 0 8px rgba(0, 0, 0, .45)); transform-origin: 50% 100%; animation: wgArrowBounce 1.8s ease-in-out .6s infinite; }
+.fold-cue--gone .fold-cue__arrow svg { animation-play-state: paused; }
+@keyframes wgArrowBounce { /* a little lift, a dive, a squash on landing, a spring back */
+    0%, 90%, 100% { transform: translateY(0) scale(1, 1); }
+    15% { transform: translateY(-3px) scale(.96, 1.04); }
+    40% { transform: translateY(8px) scale(.92, 1.1); }
+    52% { transform: translateY(10px) scale(1.12, .86); }
+    68% { transform: translateY(-2px) scale(.97, 1.04); }
+    80% { transform: translateY(1px) scale(1.02, .98); }
+}
+.fold-cue--nudge { animation: wgBob .9s ease-in-out 3; } /* still at the top after a few seconds: three gentle bobs */
+@keyframes wgBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+/* ---------- reCAPTCHA badge (MEOI-CAPTCHA) ---------- */
+/* bottom-right like modon.com: Google's collapsed badge peeks in from the frame's right edge,
+   exactly as it does from a normal page edge; the floating Register now sits above it */
+.rc-badge { position: fixed; right: 0; bottom: 0; width: 300px; height: 80px; border: 0; background: transparent; z-index: 55; pointer-events: none; } /* MEOI-CAPTCHA2: only the badge's corner is painted; the rest must not swallow taps */
+
+/* ---------- beige band ---------- */
+.info { background: var(--beige); padding: 60px 0; }
+.info p { color: #fff; font-size: 26px; line-height: 36px; font-weight: 400; }
+
+/* ---------- villas ---------- */
+.detail { padding: 60px 0; }
+.detail__row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.detail__media img { width: 100%; height: auto; display: block; }
+.detail__text h2 { font-size: 32px; line-height: 38px; font-weight: 500; color: var(--ink); margin-bottom: 18px; }
+.detail__text p { font-size: 20px; line-height: 26px; color: var(--ink); }
+
+/* ---------- rails (factsheet, gallery) ---------- */
+.rail-btns { display: flex; gap: 8px; flex: 0 0 auto; }
+.title-row .title { min-width: 0; }
+.rail-btn {
+    width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--line); border-radius: 0; cursor: pointer; padding: 0;
+    transition: background-color .2s ease;
+}
+.rail-btn:hover { background: #fff; }
+.rail-btn svg { width: 20px; height: 20px; color: #000; display: block; }
+.rail {
+    display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+    scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 4px;
+}
+.rail::-webkit-scrollbar { display: none; }
+
+.facts { padding: 60px 0; }
+.card {
+    flex: 0 0 calc((100% - 48px) / 3); min-width: 300px; box-sizing: border-box; scroll-snap-align: start;
+    border: 1px solid var(--line); padding: 32px; background: #fff;
+}
+.card h3 { font-size: 28px; line-height: 34px; font-weight: 500; color: var(--ink); margin-bottom: 22px; }
+.card ul { list-style: none; margin: 0; padding: 0; }
+.card li { display: flex; align-items: center; gap: 12px; font-size: 16px; line-height: 22px; color: var(--ink); margin-bottom: 14px; }
+.card li:last-child { margin-bottom: 0; }
+.card li img { width: 24px; height: 24px; flex: 0 0 24px; }
+
+/* ---------- amenities ---------- */
+.amen { background: var(--grey); padding: 60px 0; }
+.amen .title { margin-bottom: 40px; }
+.amen__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 44px 24px; } /* 11 items: 4-4-3 */
+.amen__item { text-align: center; }
+.amen__item img { height: 56px; width: 62px; object-fit: contain; display: block; margin: 0 auto 14px; }
+.amen__item span { display: block; font-size: 16px; line-height: 22px; color: var(--green); }
+
+/* ---------- map ---------- */
+.map { padding: 60px 0; background: #fff; } /* MEOI-MAP2 (12 Sep, Mridul): the map sits inside the 1320px wrap with white space, as on modon.com; it was full-bleed */
+.map img { width: 100%; height: auto; display: block; }
+
+/* ---------- gallery ---------- */
+.gallery { background: var(--grey); padding: 60px 0; }
+.gallery__slide { flex: 0 0 calc(50% - 12px); min-width: 320px; aspect-ratio: 16 / 9; scroll-snap-align: start; overflow: hidden; background: #ddd; }
+.gallery__slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ---------- FAQ ---------- */
+.faq { padding: 80px 0 120px; }
+.faq .section-title { margin-bottom: 28px; }
+.faq__item { border-bottom: 1px solid var(--line-soft); }
+.faq__q {
+    width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+    padding: 22px 0; background: none; border: 0; font-family: var(--sans); font-size: 18px; line-height: 26px;
+    color: var(--ink); text-align: left; cursor: pointer;
+}
+.faq__plus { position: relative; width: 16px; height: 16px; flex: 0 0 16px; }
+.faq__plus::before, .faq__plus::after { content: ''; position: absolute; background: var(--ink); transition: transform .2s ease; }
+.faq__plus::before { left: 0; right: 0; top: 7px; height: 2px; }
+.faq__plus::after { top: 0; bottom: 0; left: 7px; width: 2px; }
+.faq__item--open .faq__plus::after { transform: scaleY(0); }
+.faq__a { padding: 0 0 24px; font-size: 16px; line-height: 26px; color: #333; max-width: 920px; white-space: pre-line; } /* MEOI-FAQ: preserve paragraph and bullet line breaks */
+
+/* ---------- black terms footer ---------- */
+.foot { background: var(--foot); color: #fff; padding: 26px 0; }
+.foot__row { display: flex; justify-content: space-between; align-items: center; gap: 24px; font-size: 16px; line-height: 22px; }
+.foot__links a, .foot__links a:link, .foot__links a:visited { color: #fff !important; text-decoration: none; margin-left: 32px; }
+.foot__links a:hover { text-decoration: underline; }
+.hdr__logo, .hdr__logo:link, .hdr__logo:visited { text-decoration: none; }
+
+/* ---------- tablet ---------- */
+@media (max-width: 1023px) {
+    .card { flex-basis: calc((100% - 24px) / 2); }
+    .amen__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------- phone ---------- */
+@media (max-width: 767px) {
+    .hdr { height: 72px; }
+    .hdr__logo img { height: 20px; }
+    .hero__body { padding-bottom: 56px; }
+    .hero__brand { margin-bottom: 16px; }
+    .hero__logo { width: 120px; } /* MEOI-HERO: stacked lockup on phones (MEOI-LAND13 had the wide one at 200px) */
+    .hero__title h1 { font-size: 32px; line-height: 40px; }
+    .hero__title p { font-size: 18px; line-height: 26px; margin-top: 10px; }
+    .hero__btns { margin-top: 32px; }
+    .btn, .btn--primary, .btn--primary:link, .btn--primary:visited { font-size: 15px; line-height: 20px; padding: 14px 24px; }
+    .info { padding: 44px 0; }
+    .info p { font-size: 20px; line-height: 30px; }
+    .detail { padding: 44px 0; }
+    .map { padding: 44px 0; }
+    .detail__row { grid-template-columns: 1fr; gap: 28px; }
+    .detail__text h2, .title, .section-title { font-size: 26px; line-height: 32px; }
+    .detail__text p { font-size: 18px; line-height: 26px; }
+    .facts, .amen, .gallery { padding: 44px 0; }
+    .card { flex-basis: 85%; min-width: 0; padding: 24px; }
+    .card h3 { font-size: 22px; line-height: 28px; }
+    .amen__grid { grid-template-columns: repeat(2, 1fr); gap: 32px 16px; }
+    .gallery__slide { flex-basis: 85%; min-width: 0; }
+    .faq { padding: 56px 0 72px; }
+    .faq__q { font-size: 16px; line-height: 24px; padding: 18px 0; }
+    .foot__row { flex-direction: column; text-align: center; gap: 12px; }
+    .foot__links a { margin: 0 12px; }
+    .float-cta, .float-cta:link, .float-cta:visited { left: 16px; right: 16px; bottom: 16px; text-align: center; padding: 16px 20px; }
+    .float-cta, .float-cta:link, .float-cta:visited { bottom: 16px; }
+    /* MEOI-CAPTCHA3 (12 Sep 2026, MODON): a smaller badge on phones, tucked in the corner; it rises
+       above the Register bar only while that bar is showing (badgeClass follows floatCta). */
+    .rc-badge { bottom: 0; transform: scale(.62); transform-origin: 100% 100%; transition: bottom .25s ease; }
+    .rc-badge--raised { bottom: 76px; }
+}
+
+/* ---------- scroll cue on phones and small screens (EOI-UI-17) ---------- */
+@media (max-width: 767px) {
+    /* level with Register Your EOI and right-aligned to the page margin; the arrow sits under the label, left of the
+       reCAPTCHA badge in the corner */
+    .fold-cue { left: auto; right: 16px; margin: 0; font-size: 13px; }
+    .fold-cue__arrow { height: 64px; }
+}
+@media (max-width: 359px) { .fold-cue__label { display: none; } } /* too narrow for the label beside the button */
+@media (max-height: 500px) { .fold-cue { display: none; } }       /* short landscape screens already scroll */
+@media (prefers-reduced-motion: reduce) {
+    .fold-cue__arrow svg, .fold-cue--nudge { animation: none; }
+    .fold-cue { transition: none; }
+}
+
+/* ---------- hero carousel with reduced motion (EOI-UI-19) ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .hero__slide--active.hero__slide--from-next, .hero__slide--active.hero__slide--from-prev { animation: none; }
+    .hero__slide--leaving { visibility: hidden; }
+}
+
+/* ---------- hero carousel shadow on phones (EOI-UI-20): the brand block spans most of the width there ---------- */
+@media (max-width: 767px) {
+    .hero--carousel .hero__slides::after {
+        background: linear-gradient(90deg, rgba(0, 0, 0, .45) 0%, rgba(0, 0, 0, .4) 55%, rgba(0, 0, 0, 0) 100%);
+        -webkit-mask-image: linear-gradient(0deg, #000 35%, transparent 55%); mask-image: linear-gradient(0deg, #000 35%, transparent 55%);
+    }
+}

@@ -1,0 +1,209 @@
+<template>
+    <lightning-card>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 0.75rem 1rem 0.25rem;">
+            <div style="font-size:1.35rem; font-weight:200;">
+                Operations Associate Assignment Matrix
+            </div>
+
+            <div style="display:flex; align-items:center; gap:.5rem;">
+                <lightning-input
+                    type="search"
+                    variant="label-hidden"
+                    placeholder="Search Sales / Ops User"
+                    value={searchText}
+                    onchange={onSearchChange}>
+                </lightning-input>
+
+                <lightning-button
+                    label="Add Sales User"
+                    variant="brand"
+                    onclick={openAddModal}
+                    disabled={isAddDisabled}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <div class="slds-p-around_medium">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+
+            <template if:true={errorMessage}>
+                <div class="slds-text-color_error slds-m-bottom_small">{errorMessage}</div>
+            </template>
+
+            <lightning-datatable
+                key-field="id"
+                data={rows}
+                columns={columns}
+                draft-values={draftValues}
+                onsave={handleSave}
+                hide-checkbox-column
+                sorted-by={sortedBy}
+                sorted-direction={sortedDirection}
+                onsort={handleSort}
+                onrowaction={handleRowAction}>
+            </lightning-datatable>
+        </div>
+    </lightning-card>
+
+    <template if:true={isAddOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close" onclick={closeAddModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_large" style="font-weight:200;">Add Sales User</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-record-picker
+                                data-id="salesUserPicker"
+                                label="Sales User (Sales Associate)"
+                                object-api-name="User"
+                                value={add_salesAssociateId}
+                                onchange={onSalesAssociatePick}
+                                required
+                                filters={userFilter}>
+                            </lightning-record-picker>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-record-picker
+                                data-id="salesOpsPicker"
+                                label="Sales Operations User"
+                                object-api-name="User"
+                                value={add_salesOpsId}
+                                onchange={onSalesOpsPick}
+                                required
+                                filters={userFilter}>
+                            </lightning-record-picker>
+                        </div>
+
+                        <!--<div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-input
+                                type="date"
+                                label="Expiry Date"
+                                value={add_expiryDate}
+                                onchange={onAddExpiry}>
+                            </lightning-input>
+                        </div>-->
+
+                        <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-input
+                                type="checkbox"
+                                label="Is Active"
+                                checked={add_isActive}
+                                onchange={onAddActive}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <template if:true={addError}>
+                        <div class="slds-text-color_error slds-m-top_small">{addError}</div>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeAddModal}></lightning-button>
+                    <lightning-button label="Submit" variant="brand" class="slds-m-left_small" onclick={submitAdd}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isEditOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close" onclick={closeEditModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_large" style="font-weight:200;">Edit Assignment</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-input
+                                label="Sales User"
+                                value={edit_salesAssociateName}
+                                disabled>
+                            </lightning-input>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-record-picker
+                                data-id="editSalesOpsPicker"
+                                label="Sales Operations User"
+                                object-api-name="User"
+                                value={edit_salesOpsId}
+                                onchange={onEditSalesOpsPick}
+                                required
+                                filters={userFilter}>
+                            </lightning-record-picker>
+                        </div>
+
+                        <!--<div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-input
+                                type="date"
+                                label="Expiry Date"
+                                value={edit_expiryDate}
+                                onchange={onEditExpiry}>
+                            </lightning-input>
+                        </div>-->
+
+                        <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                            <lightning-input
+                                type="checkbox"
+                                label="Is Active"
+                                checked={edit_isActive}
+                                onchange={onEditActive}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <template if:true={editError}>
+                        <div class="slds-text-color_error slds-m-top_small">{editError}</div>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeEditModal}></lightning-button>
+                    <lightning-button label="Save" variant="brand" class="slds-m-left_small" onclick={submitEdit}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isDeleteOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close" onclick={closeDeleteModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_large" style="font-weight:200;">Confirm Delete</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    Are you sure you want to delete this assignment?
+                    <template if:true={deleteError}>
+                        <div class="slds-text-color_error slds-m-top_small">{deleteError}</div>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button label="No" onclick={closeDeleteModal}></lightning-button>
+                    <lightning-button label="Yes" variant="destructive" class="slds-m-left_small" onclick={confirmDelete}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

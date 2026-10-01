@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Comm_Percentage_Based_on_Unit_Sold_DT__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+  NOT(ISBLANK(Unit__r.Unit_Sold_Date__c)),
+
+  IF(
+    OR(
+      Unit__r.Category__c = &quot;MEGA MANSIONS&quot;,
+      Unit__r.Category__c = &quot;MANSIONS&quot;
+    ),
+    
+    /* MANSIONS / MEGA MANSIONS logic */
+    CASE(ProjectName__c,
+      &quot;Nawayef West&quot;,
+        IF(Unit__r.Unit_Sold_Date__c &lt;= DATE(2024, 11, 30), &quot;2%&quot;, &quot;3%&quot;),
+      &quot;Nawayef East&quot;,
+        IF(Unit__r.Unit_Sold_Date__c &lt;= DATE(2024, 11, 30), &quot;2%&quot;, &quot;3%&quot;),
+      &quot;AED 0 (0%)&quot;
+    ),
+    
+    /* Non-mansion logic */
+    CASE(ProjectName__c,
+      &quot;Al Naseem&quot;,
+        IF(Unit__r.Unit_Sold_Date__c &lt;= DATE(2024, 11, 30), &quot;2%&quot;, &quot;4%&quot;),
+      &quot;Muheira&quot;, &quot;4%&quot;,
+      &quot;Maysan&quot;, &quot;3%&quot;,
+      &quot;Nawayef West&quot;,
+        IF(Unit__r.Unit_Sold_Date__c &lt;= DATE(2024, 11, 30), &quot;2%&quot;, &quot;4%&quot;),
+      &quot;Nawayef East&quot;,
+        IF(Unit__r.Unit_Sold_Date__c &lt;= DATE(2024, 11, 30), &quot;2%&quot;, &quot;4%&quot;),
+      &quot;Nawayef Park View&quot;, &quot;3%&quot;,
+      &quot;Nawayef Village Townhouses&quot;, &quot;4%&quot;,
+      &quot;&quot;
+    )
+  ),
+
+  /* If Unit_Sold_Date__c is blank, return blank */
+  &quot;&quot;
+)</formula>
+    <label>Comm. Percentage (Based on Unit Sold DT)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

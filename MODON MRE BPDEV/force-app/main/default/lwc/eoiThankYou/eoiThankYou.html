@@ -1,0 +1,36 @@
+<template>
+    <!-- MEOI-THANKS. Shown after the LAST payment when EOI_Site_Thank_You_Enabled is true. -->
+    <div class="m-wrap">
+        <span class="m-tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17.5 19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h1 class="m-h1">Thank you</h1>
+        <p class="m-sub">Your payment was successful and your interest is registered.</p>
+
+        <template lwc:if={hasRows}>
+            <p class="m-cap">Your EOI numbers</p>
+            <div class="m-list">
+                <template for:each={rows} for:item="r">
+                    <div key={r.rangeId} class="m-row">
+                        <span class="m-row__desc">{r.desc}</span>
+                        <template lwc:if={r.eoiLabel}>
+                            <span class="m-row__num">{r.eoiLabel}</span>
+                        </template>
+                        <template lwc:else>
+                            <span class="m-row__wait">EOI number to follow</span>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <p class="m-note">A confirmation with your EOI number is on its way by email and SMS. Our team will be in touch about the next release.</p>
+
+        <div class="m-actions">
+            <button class="m-btn" type="button" onclick={viewRegistrations} disabled={isBusy}>
+                View my registrations <span class="arr" aria-hidden="true">&#10230;</span>
+            </button>
+            <template lwc:if={backUrl}>
+                <a class="m-btn m-btn--ghost" href={backUrl}>Back to home</a>
+            </template>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,27 @@
+<template>
+    <!-- A dialog, not a sheet: it sits over the whole console so the form's 900px width has
+         room, and it scrolls inside itself. MODON's component renders unchanged within. -->
+    <template lwc:if={show}>
+        <div class="kycm__backdrop" onclick={handleBackdrop} onkeydown={handleKey}>
+            <section class="kycm" role="dialog" aria-modal="true" aria-label={title}>
+                <header class="kycm__head">
+                    <p class="kycm__title">{title}</p>
+                    <button type="button" class="kycm__close" onclick={handleClose}
+                            aria-label={labels.KYCM_CLOSE}>{labels.KYCM_CLOSE}</button>
+                </header>
+                <!-- 2.7 - R2-06: Escape or a click outside asks first once the rep has worked in the form -->
+                <template lwc:if={confirmClose}>
+                    <div class="kycm__confirm" role="group" aria-label={text.ASK}>
+                        <span class="kycm__confirm-q">{text.ASK}</span>
+                        <button type="button" class="kycm__btn" onclick={handleDiscard}>{text.DISCARD}</button>
+                        <button type="button" class="kycm__btn kycm__btn--keep"
+                                onclick={handleKeep}>{text.KEEP}</button>
+                    </div>
+                </template>
+                <div class="kycm__body" oninput={markTouched} onclick={markTouched} onkeydown={handleBodyKey}>
+                    <c-accountkycform record-id={subjectId} onclose={handleFormClose}></c-accountkycform>
+                </div>
+            </section>
+        </div>
+    </template>
+</template>

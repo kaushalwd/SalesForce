@@ -1,0 +1,245 @@
+<template>
+    <template lwc:if={shownoCheques}>
+        <div class="slds-theme_warning slds-p-around_small slds-align_absolute-center">
+            <h1> No cheque is available to process.</h1>
+        </div>
+    </template>
+    <template lwc:else>
+        <template if:true={showModal}>
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={closeModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"
+                                size="small"></lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Cheque Details –
+                            Processing Results</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <template for:each={errors} for:item="error">
+                            <div style="color:#097969" key={error.key} if:true={error.type}>
+                                <li key={error.key}> <strong>{error.key}: </strong> &nbsp; &nbsp; {error.value} </li>
+                            </div>
+                            <div style="color:#d83a00" key={error.key} if:false={error.type}>
+                                <li key={error.key}> <strong>{error.key}: </strong> &nbsp; &nbsp; {error.value} </li>
+                            </div>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick={closeModal}
+                            title="Cancel">Close</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        <template if:false={showModal}>
+            <template if:true={showNoproperSo}>
+                <div class="slds-theme_warning slds-p-around_small slds-align_absolute-center">
+                    <h1>Sales Order should not be completed/cancelled</h1>
+                </div>
+            </template>
+            <template if:false={showNoproperSo}>
+                <div class="spinner">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+                        </lightning-spinner>
+                    </template>
+                </div>
+                <template if:false={isLoading}>
+                        <div class="slds-card__body" lwc:if={showfilters}>
+                            <div class="slds-align_absolute-center">
+                                <h2 class="slds-text-heading_medium"><strong> Cheque Filters</strong></h2>
+                            </div>
+                            <lightning-layout multiple-rows>
+                                <lightning-layout-item padding="around-small" size="12" medium-size="12" large-size="12" >
+                                    
+                                </lightning-layout-item>
+                                <lightning-layout-item padding="around-small" size="3" medium-size="3" large-size="3">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Project</span></label>
+                                    <lightning-combobox dropdown-alignment="auto" name="project"
+                                                        label="Select Project" value={selectedProject} options={allProjects}
+                                                        onchange={handleChange} variant="label-hidden">
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                                <lightning-layout-item padding="around-small" size="3" medium-size="3" large-size="3">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Select Phase</span></label>
+                                    <lightning-combobox dropdown-alignment="auto" name="phase"
+                                                        label="Select Phase" value={selectedPhase} options={phaseOptions}
+                                                        onchange={handleChange} variant="label-hidden">
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                                                                    <lightning-layout-item padding="around-small" size="2" medium-size="2" large-size="2">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Start Date :</span></label>
+                                    <lightning-input type="Date" dropdown-alignment="auto" name="startDate"
+                                                        label="Select Date" value={startDate}  
+                                                        onchange={handleChange} variant="label-hidden">
+                                    </lightning-input>
+                                </lightning-layout-item>
+                                    <lightning-layout-item padding="around-small" size="2" medium-size="2" large-size="2">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">EndDate:</span></label>
+                                    <lightning-input type="Date" dropdown-alignment="auto" name="endDate"
+                                                        label="Select Date" value={endDate}  
+                                                        onchange={handleChange} variant="label-hidden">
+                                    </lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item size="2"></lightning-layout-item>
+                                
+                                <lightning-layout-item padding="around-small" size="3" medium-size="3" large-size="3">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Search Unit</span></label>
+                                    <lightning-input dropdown-alignment="auto" name="unit" label="Search Unit" placeholder="Search Unit"
+                                                    value={selectedUnit} onchange={handleSearch} variant="label-hidden" type="search">
+                                    </lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item padding="around-small" size="3" medium-size="3" large-size="3">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Search Customer</span></label>
+                                    <lightning-input dropdown-alignment="auto" name="customerName" label="Search Customer" placeholder="Search Customer"
+                                                    value={selectedCustomer} onchange={handleSearch} variant="label-hidden" type="search">
+                                    </lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item padding="around-small" size="3" medium-size="3" large-size="3">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Search cheque No</span></label>
+                                    <lightning-input dropdown-alignment="auto" name="chequeNo" label="Search Cheque No" placeholder="Search Cheque No"
+                                                    value={selectedChequeNo} onchange={handleSearch} variant="label-hidden" type="search">"
+                                                   
+                                    </lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item padding="around-small" size="3" medium-size="3" large-size="3">
+                                    <label data-main-label="true" class=""><span style="font-weight:600;">Search Payee</span></label>
+                                    <lightning-input dropdown-alignment="auto" name="payee" label="Search Payee" placeholder="Search Payee"
+                                                    value={selectedPayee} onchange={handleSearch} variant="label-hidden" type="search">"
+                                                   
+                                    </lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item padding="around-small" size="4" medium-size="4" large-size="4"></lightning-layout-item>
+                                <lightning-layout-item size="5"> </lightning-layout-item>
+                            </lightning-layout>
+                        </div>
+                        <div class="slds-card slds-p-left_x-large slds-p-right_x-large slds-theme_default slds-box">
+                        <div class="slds-align_absolute-center">
+                            <h2 class="slds-text-heading_medium"><strong>Manage Cheque Details</strong></h2>
+                        </div>
+                        <div class="slds-align_absolute-center">
+                            <lightning-button label="Save" name="save" onclick={handleChange} variant="brand-outline"
+                                class="slds-p-around_small" disabled={disSave}></lightning-button>
+                            <lightning-button label="Confirm" name="confirm" onclick={handleChange} variant="brand-outline"
+                                disabled={disConfirm}></lightning-button>
+                        </div>
+                        <template if:true={records}>
+                            <table
+                                class="slds-table slds-table_bordered slds-table_fixed-layout slds-table_resizable-cols slds-table_cell-buffer"
+                                role="grid">
+                                <thead>
+                                    <tr>
+                                        <th class="slds-text-align_right slds-cell_action-mode" scope="col"
+                                            style="width:3.25rem">
+                                            <span id="column-group-header" class="slds-assistive-text">Choose a row</span>
+                                            <div class="slds-th__action slds-th__action_form"></div>
+                                        </th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Cheque No</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Cheque Issuer</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Account Number</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Amount</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Cheque Date</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Bank</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">IBAN_No</th>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">Customer</th>
+                                        <template if:false={recordId}>
+                                            <th class="slds-is-resizable slds-truncate" scope="col">Unit</th>
+                                            <th class="slds-is-resizable slds-truncate" scope="col">SalesOrder</th>
+                                        </template>
+                                        <th class="slds-is-resizable slds-truncate" scope="col">MileStone</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={records} for:item="rec" for:index="index">
+                                        <tr key={rec.Id} style="height: 3.25rem;">
+                                            <td class="slds-text-align_right slds-cell_action-mode" role="gridcell">
+                                                <lightning-input type="checkbox" name="checkbox" data-id={rec.Id}
+                                                    checked={rec.isSelected} onchange={handleChange}>
+                                                </lightning-input>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">
+                                                    <a href={rec.link} target="_blank">{rec.chequeNumber}</a>
+                                                </div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">{rec.chequeIssuer}</div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">{rec.accountNumber}</div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">{rec.amount}</div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">{rec.chequeDate}</div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">{rec.bankName}</div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate">{rec.iBAN}</div>
+                                            </td>
+                                            <td class="slds-cell-wrap"  role="gridcell">
+                                                <div class="slds-truncate" lwc:if={recordId}>
+                                                    <a href={rec.customerLink} target="_blank">{rec.customerName}</a>
+                                                </div>
+                                                    <lightning-record-edit-form record-id={rec.Id} lwc:else
+                                                            object-api-name="Cheque_Details__c">
+                                                            <lightning-input-field field-name="Account__c" variant="label-hidden"  placeholder="Select Customer"
+                                                                value={rec.customerId} name="customer" title={rec.Id} data-id={rec.Id}
+                                                                onchange={handleChange}>
+                                                            </lightning-input-field>
+                                                    </lightning-record-edit-form>
+                                            </td>
+                                            <template if:false={recordId}>
+                                                <td class="slds-cell-wrap" >
+                                                    <div>
+                                                        <lightning-record-edit-form record-id={rec.Id}
+                                                            object-api-name="Cheque_Details__c">
+                                                            <lightning-input-field field-name="Unit__c" variant="label-hidden" placeholder="Select Unit"
+                                                                value={rec.unit} name="unit" title={rec.Id} data-id={rec.Id}
+                                                                onchange={handleChange}>
+                                                            </lightning-input-field>
+                                                        </lightning-record-edit-form>
+                                                    </div>
+                                                </td>
+                                                <td class="slds-cell-wrap"  role="gridcell">
+                                                    <div class="slds-truncate">
+                                                        <a href={rec.salesOrderLink} target="_blank">{rec.salesOrderName}</a>
+                                                    </div>
+                                                </td>
+                                            </template>    
+                                            <td  role="gridcell">
+                                                <div>
+                                                    <lightning-combobox name="mileStone" label="MileStone"
+                                                        variant="label-hidden" value={rec.salesOrderInstallmentId}
+                                                        placeholder="Select a MileStone" options={rec.soiOptions}
+                                                        data-id={rec.Id} onchange={handleChange}>
+                                                    </lightning-combobox>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <div class="slds-align_absolute-center slds-m-top_medium" if:false={isFilterApplied}>
+                            <lightning-button label="Previous" onclick={handlePrevious}
+                                disabled={isPreviousDisabled}></lightning-button>
+                            <span class="slds-m-horizontal_medium">Page {currentPage} of {totalPages}</span>
+                            <lightning-button label="Next" onclick={handleNext}
+                                disabled={isNextDisabled}></lightning-button>
+                        </div>
+                    </div>                    
+                </template>
+            </template>
+        </template>
+    </template>
+</template>

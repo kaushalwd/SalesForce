@@ -1,0 +1,89 @@
+<template>
+    <div class="lv-card">
+
+        <div class="lv-head">
+            <div class="lv-head-icon">
+                <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+            </div>
+            <div class="lv-head-text">
+                <h2 class="lv-head-title">New Lead</h2>
+                <p class="lv-head-sub">Verify mobile &amp; email before creating the lead</p>
+            </div>
+        </div>
+
+        <div class="lv-progress-wrap">
+            <div class="lv-progress-track">
+                <div class="lv-progress-fill" style={progressStyle}></div>
+            </div>
+            <p class={progressLabelClass}>{progressLabel}</p>
+        </div>
+
+        <template if:false={apiActive}>
+            <div class="lv-notice">
+                <span>&#9888;</span>
+                API validation is disabled — you can still create the lead.
+            </div>
+        </template>
+
+        <div class="lv-field-block">
+            <div class={phoneInputClass}>
+                <lightning-input
+                    label="Mobile Number"
+                    type="tel"
+                    value={phone}
+                    onchange={onPhoneChange}
+                    onkeypress={onPhoneKeyPress}
+                    required
+                    placeholder="+971*********">
+                </lightning-input>
+                <template if:true={phoneDone}>
+                    <span class={phoneCheckClass}></span>
+                </template>
+                <template if:true={phoneVerifying}>
+                    <div class="lv-spinner"></div>
+                </template>
+            </div>
+            <p class="lv-field-hint">Enter full number with country code, e.g. +971*********</p>
+            <template if:true={phoneDone}>
+                <p class={phoneStatusClass}>{phoneStatusText}</p>
+            </template>
+        </div>
+
+        <div class="lv-field-block">
+            <div class={emailInputClass}>
+                <lightning-input
+                    label="Email Address"
+                    type="email"
+                    value={email}
+                    onchange={onEmailChange}
+                    required
+                    placeholder="example@domain.com">
+                </lightning-input>
+                <template if:true={emailDone}>
+                    <span class={emailCheckClass}></span>
+                </template>
+                <template if:true={emailVerifying}>
+                    <div class="lv-spinner"></div>
+                </template>
+            </div>
+            <template if:true={emailDone}>
+                <p class={emailStatusClass}>{emailStatusText}</p>
+            </template>
+        </div>
+
+        <div class="lv-footer">
+            <template if:true={allVerified}>
+                <div class="lv-all-done">
+                    <span>&#10003;</span> Both fields verified — ready to proceed!
+                </div>
+            </template>
+            <div class="lv-btn-row">
+                <button class="lv-btn-cancel" onclick={onCancel}>Cancel</button>
+                <button class={continueBtnClass} onclick={onContinue} disabled={continueDisabled}>
+                    Continue to Create Lead &#8594;
+                </button>
+            </div>
+        </div>
+
+    </div>
+</template>

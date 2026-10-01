@@ -1,0 +1,41 @@
+<template>
+    <template lwc:if={hasItems}>
+        <!-- A REGION of the payment card, not a banner floating on top of it. The
+             page's own history is explicit about this: a filled banner was tried
+             inside the action bar and again under the plan cards, and rejected both
+             times as a second surface fighting the card it sits in. This is separated
+             the way every other region on this card is - by the rule above it. -->
+        <section class="todo" aria-label="Still to do">
+            <p class="field__label todo__title">{labels.TODO_TITLE}</p>
+
+            <ul class="todo__list">
+                <template for:each={rows} for:item="r">
+                    <li key={r.key} class={r.rowClass}>
+                        <button
+                            class="todo__hit"
+                            type="button"
+                            data-key={r.key}
+                            onclick={handleClick}
+                        >
+                            <!-- The kind, before the words. An agent scanning this
+                                 should be able to tell money from paperwork without
+                                 reading either line. -->
+                            <c-modon-icon
+                                name={r.icon}
+                                size="15"
+                                color={r.iconColor}
+                            ></c-modon-icon>
+                            <span class="todo__text">{r.text}</span>
+                            <span class="todo__go">{labels.TODO_GO}</span>
+                            <c-modon-icon
+                                name="arrow-right"
+                                size="14"
+                                color="currentColor"
+                            ></c-modon-icon>
+                        </button>
+                    </li>
+                </template>
+            </ul>
+        </section>
+    </template>
+</template>

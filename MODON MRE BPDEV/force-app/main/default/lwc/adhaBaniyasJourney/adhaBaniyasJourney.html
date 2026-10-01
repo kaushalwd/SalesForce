@@ -1,0 +1,766 @@
+<template>
+    <!-- Stages 2-4. dir is set here, not on <html>: the language switch is component-owned,
+         and a platform-level switch would reload the page and reset the map camera. -->
+    <div class={journeyClass} dir={dir} style={arrivalStyle}>
+        <!-- Covers the strip of white Experience Cloud page that sits below our 100dvh component.
+             Always on, unlike .stage-bg, because it is a flat fill and costs nothing on the map. -->
+        <div class="page-floor" aria-hidden="true"></div>
+        <!-- Masterplan only, fixed so it never shortens the viewport and reflows the map camera.
+             role=status, not alert: a standing condition would be re-announced on every render. -->
+        <template lwc:if={showShortNotice}>
+            <div class="exploration-banner" role="status">
+                <div class="exploration-banner__text">
+                    <b>{noticeTitle}</b>
+                    <span>{noticeLead}</span>
+                    <template lwc:if={noticeExpanded}>
+                        <span class="exploration-banner__rest">{noticeRest}</span>
+                    </template>
+                </div>
+                <template lwc:if={noticeRest}>
+                    <button
+                        class="exploration-banner__toggle"
+                        type="button"
+                        aria-expanded={noticeExpanded}
+                        onclick={handleNoticeToggle}
+                    >
+                        {noticeToggleLabel}
+                    </button>
+                </template>
+            </div>
+        </template>
+
+        <!-- The expanded state as a sheet below 640px, picked by media query so no resize
+             listener is needed; growing the strip in place squeezed the villa card. -->
+        <template lwc:if={noticeExpanded}>
+            <div class="notice-sheet" role="dialog" aria-modal="true" onclick={handleNoticeToggle}>
+                <div class="notice-sheet__card" onclick={handleNoticeCardClick}>
+                    <b class="notice-sheet__title">{noticeTitle}</b>
+                    <p class="notice-sheet__body">{noticeShort}</p>
+                    <button class="ghost" type="button" onclick={handleNoticeToggle}>
+                        {labels.close}
+                    </button>
+                </div>
+            </div>
+        </template>
+        <!-- Both languages visible and reachable at every stage. No dir of its own: inset-inline-end
+             resolves against the element's OWN direction, so pinning ltr also pinned it to the right edge. -->
+        <div class="lang-switch">
+            <button
+                class={arClass}
+                type="button"
+                data-lang="ar"
+                title="العربية"
+                aria-label="العربية"
+                aria-pressed={arActive}
+                onclick={handleLanguageSelect}
+            >
+                ع
+            </button>
+            <button
+                class={enClass}
+                type="button"
+                data-lang="en"
+                title="English"
+                aria-label="English"
+                aria-pressed={enActive}
+                onclick={handleLanguageSelect}
+            >
+                E
+            </button>
+        </div>
+
+        <!-- The render plane, on every screen before the map. aria-hidden covers only the
+             pictures and the scrim; the lockup and dots are real content. -->
+        <template lwc:if={showMediaPlane}>
+            <div class="arrival-media">
+                <div class="shots" aria-hidden="true">
+                    <template for:each={slides} for:item="s">
+                        <img
+                            key={s.key}
+                            class={s.cls}
+                            src={s.src}
+                            alt=""
+                            decoding="async"
+                            data-index={s.index}
+                            onerror={handleSlideError}
+                        />
+                    </template>
+                    <!-- Last inside .shots on purpose: over the renders, under the scrim and
+                         lockup. A z-index here painted it over the ADHA lockup. -->
+                    <!-- preload=metadata: the film is a 60MB master. moov sits at the front of
+                         the file, so playback still begins early. -->
+                    <template lwc:if={showHeroVideo}>
+                        <video
+                            class="hero-video"
+                            autoplay
+                            muted
+                            loop
+                            playsinline
+                            preload="metadata"
+                            poster={heroPoster}
+                            src={heroVideoUrl}
+                            onerror={handleHeroVideoError}
+                        ></video>
+                    </template>
+                </div>
+                <div class="arrival-scrim" aria-hidden="true"></div>
+
+                <div class="lockup">
+                    <!-- White plate: the artwork is charcoal and the brand book forbids
+                         recolouring, so an approved white ground makes it read. -->
+                    <div class="adha-logo">
+                        <img src={logoSrc} alt={labels.authority} />
+                    </div>
+                </div>
+
+                <!-- Name and dots share one column at the foot, so they stay apart by
+                     construction rather than by a hand-kept offset. -->
+                <div class="plane-foot">
+                    <!-- Not a heading: the card's own h1 is the heading of every screen, and the
+                         project name standing beside it would make two on one page. -->
+                    <p class="wordmark">{labels.project}</p>
+
+                    <!-- Hidden while the film plays, when they would steer nothing. Under
+                         reduced motion they are the only way to reach the other renders. -->
+                    <template lwc:if={showSlideDots}>
+                        <div class="cap">
+                            <!-- Labelled with the room, not "slide 3 of 6". -->
+                            <div class="dots">
+                                <template for:each={slideDots} for:item="d">
+                                    <button
+                                        key={d.key}
+                                        class={d.cls}
+                                        type="button"
+                                        data-index={d.index}
+                                        aria-current={d.current}
+                                        aria-label={d.label}
+                                        onclick={handleSlideDot}
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Opaque hold while a stored session resolves: the map mounts behind it, and the
+             delayed spinner keeps a fast resume free of flicker. -->
+        <template lwc:if={resuming}>
+            <div class="booting" role="status" aria-label={labels.loadingJourney}>
+                <div class="booting-spinner" aria-hidden="true"></div>
+            </div>
+        </template>
+
+        <template lwc:if={showMap}>
+            <div class="map-host">
+                <div class="pinned-banner" lwc:if={pinnedBannerText}>{pinnedBannerText}</div>
+                <c-masterplan-unit-selector
+                    ops-mode={isOpsSession}
+                    pinned-plot-uid={pinnedPlotUid}
+                    masterplan-url={masterplanUrl}
+                    mapping-url={mappingUrl}
+                    walkthrough-base-url={walkthroughBaseUrl}
+                    session-token={sessionToken}
+                    lang={lang}
+                    held-plot-uid={heldPlotUid}
+                    held-committed={reservationSubmitted}
+                    muted={mapMuted}
+                    held-reference={heldReference}
+                    held-days-label={heldDaysLabel}
+                    held-urgent={heldUrgent}
+                    reservations-closed={reservationsClosed}
+                    reserve-refusal={reserveRefusal}
+                    onunitselected={handleUnitSelected}
+                    onswaprequest={handleSwapRequest}
+                    onshowdetails={handleShowDetails}
+                    onsignout={handleAskSignOut}
+                ></c-masterplan-unit-selector>
+            </div>
+        </template>
+
+        <template lwc:if={isLocked}>
+            <div class="pane">
+                <div class="card">
+                    <div class="eyebrow">{labels.sessionEnded}</div>
+                    <h1 class="title">{lockTitle}</h1>
+                    <p class="lede">{lockMessage}</p>
+                    <button class="cta" type="button" onclick={handleSignInAgain}>
+                        {labels.signInAgain}
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:if={showCard}>
+            <div class={paneClass}>
+                <!-- On the plane the rail sits on the seam - the card is transparent there, so
+                     a rail on it would land beside the text. Over the map the card keeps its own copy. -->
+                <template lwc:if={railInPlane}>
+                    <div class="rail rail-plane">
+                        <template for:each={railSegments} for:item="seg">
+                            <i key={seg.key} class={seg.cls}></i>
+                        </template>
+                    </div>
+                </template>
+
+                <div class={cardClass}>
+                    <template lwc:if={railInCard}>
+                        <div class="rail">
+                            <template for:each={railSegments} for:item="seg">
+                                <i key={seg.key} class={seg.cls}></i>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Who the site thinks you are. First row of the card because it frames
+                         everything below it, and quiet because it is reassurance, not a heading. -->
+                    <!-- The map carries its own copy; one handler and one label keep the two
+                         from drifting apart. -->
+                    <!-- On a line of its own: inline beside the name, a phone wrapped the name
+                         around it and pushed Sign out onto a third line. -->
+                    <template lwc:if={isDone}>
+                        <div class="card-nav">
+                            <button
+                                class="who-back"
+                                type="button"
+                                aria-label={labels.backToCommunity}
+                                title={labels.backToCommunity}
+                                onclick={handleHideDetails}
+                            >
+                                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path
+                                        d="M10 3.5L5.5 8l4.5 4.5"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    ></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- The button is its own grid item, so a long name never pushes it off or
+                         gets truncated to make room. -->
+                    <template lwc:if={showWho}>
+                        <div class="who">
+                            <span class="who__name">{whoLabel}</span>
+                            <button class="who-signout" type="button" onclick={handleAskSignOut}>
+                                {labels.signOut}
+                            </button>
+                            <span class="who__app">{applicationLabel}</span>
+                        </div>
+                    </template>
+
+                    <!-- One clock in this slot, never two: stacked clocks read as ten minutes
+                         to finish the whole booking. -->
+                    <template lwc:if={showHoldBar}>
+                        <div class={holdClass}>
+                            <span class="hold-n" aria-hidden="true">{holdLabel}</span>
+                            <span class="hold-days">{daysRemainingLabel}</span>
+                            <!-- Announced twice in ten minutes, not six hundred times. -->
+                            <span class="hold-live" aria-live="polite">{holdAnnouncement}</span>
+                        </div>
+                    </template>
+
+                    <template lwc:if={showSlaBar}>
+                        <div class={slaClass}>
+                            <span class="sla-n">{daysRemainingLabel}</span>
+                            <span class="sla-bar"><i style={slaStyle}></i></span>
+                        </div>
+                    </template>
+
+                    <!-- Home: one idea, one action. The steps live in a disclosure, and the
+                         notice moved to sign-in where its clock actually starts. -->
+                    <template lwc:if={isWelcome}>
+                        <h1 class="title">{labels.welcomeLede}</h1>
+                        <p class="lede">{labels.whatYouNeedBody}</p>
+
+                        <!-- ADHA's full wording, for the page the project link opens on. Above the
+                             call to action, because it changes what pressing it leads to. -->
+                        <template lwc:if={showFullNotice}>
+                            <div class="notice notice--exploration" role="status">
+                                <b class="notice__title">{noticeTitle}</b>
+                                <template for:each={noticeParagraphs} for:item="p">
+                                    <p key={p.key}>{p.text}</p>
+                                </template>
+                            </div>
+                        </template>
+
+                        <button class="cta" type="button" onclick={handleBegin}>{labels.begin}</button>
+
+                        <!-- Native disclosure: keyboard and screen-reader behaviour for free. -->
+                        <details class="disclose">
+                            <summary>{labels.whatYouNeed}</summary>
+                            <ol class="steps">
+                                <li><span>1</span> {labels.step1}</li>
+                                <li><span>2</span> {labels.step2}</li>
+                                <li><span>3</span> {labels.step3}</li>
+                            </ol>
+                        </details>
+                    </template>
+
+                    <!-- Stage 2a: identify -->
+                    <template lwc:if={isLogin}>
+                        <div class="eyebrow">{labels.stepOneOfFour}</div>
+                        <h1 class="title">{labels.verifyIdentity}</h1>
+                        <p class="lede">{labels.loginLede}</p>
+
+                        <label class={emiratesIdFieldClass}>
+                            <span>{labels.emiratesId}</span>
+                            <!-- dir="ltr": the ID would otherwise be bidi-reordered around its
+                                 hyphens in an RTL block. maxlength 18 = 15 digits + 3 hyphens. -->
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                dir="ltr"
+                                maxlength="18"
+                                placeholder={emiratesIdPlaceholder}
+                                value={emiratesId}
+                                disabled={busy}
+                                oninput={handleEmiratesId}
+                                onkeydown={handleEmiratesIdKey}
+                            />
+                        </label>
+
+                        <!-- Against the field it is about, not the foot of the card; role=alert
+                             so it is still announced. -->
+                        <template lwc:if={errorMessage}>
+                            <div class="field-error" role="alert">{errorMessage}</div>
+                        </template>
+
+                        <!-- One string, no inline <strong>. Splitting a sentence around markup
+                             forces the translator into English word order. -->
+                        <template lwc:if={showWelcomeNotice}>
+                            <div class="notice">{labels.welcomeNotice}</div>
+                        </template>
+
+                        <button class="cta" type="button" disabled={sendCodeDisabled} onclick={handleSendCode}>
+                            {labels.sendCode}
+                        </button>
+                        <button class="ghost" type="button" disabled={busy} onclick={handleBackToWelcome}>
+                            {labels.back}
+                        </button>
+                    </template>
+
+                    <!-- Stage 2b: verify -->
+                    <template lwc:if={isOtp}>
+                        <div class="eyebrow">{labels.stepOneOfFour}</div>
+                        <h1 class="title">{labels.enterCode}</h1>
+                        <p class="lede">{infoMessage}</p>
+                        <template lwc:if={maskedTarget}>
+                            <p class="target">{sentToLabel}</p>
+                        </template>
+
+                        <label class="field">
+                            <span>{labels.verificationCode}</span>
+                            <input
+                                class="otp"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="6"
+                                dir="ltr"
+                                placeholder="------"
+                                value={otp}
+                                disabled={busy}
+                                oninput={handleOtpInput}
+                                onkeydown={handleOtpKey}
+                            />
+                        </label>
+
+                        <button class="cta" type="button" disabled={busy} onclick={handleVerify}>
+                            {labels.verifyContinue}
+                        </button>
+                        <button class="ghost" type="button" disabled={cannotResend} onclick={handleResend}>
+                            {resendLabel}
+                        </button>
+                        <!-- The most common mistake on this screen is a mistyped Emirates ID, and
+                             without this there was no way to correct it short of a reload. -->
+                        <button class="ghost" type="button" disabled={busy} onclick={handleChangeEmiratesId}>
+                            {labels.changeEmiratesId}
+                        </button>
+                    </template>
+
+                    <!-- Stage 3: general declaration -->
+                    <template lwc:if={isDeclaration}>
+                        <div class="eyebrow">{labels.stepTwoOfFour}</div>
+                        <h1 class="title">{labels.generalDeclaration}</h1>
+                        <!-- No days-remaining lede. The SLA strip in the card chrome above already
+                             carries it, and showSlaBar is true on this stage, so it read twice. -->
+
+                        <template lwc:if={declaration}>
+                            <template lwc:if={declaration.placeholder}>
+                                <div class="warn">{labels.declarationPlaceholder}</div>
+                            </template>
+
+                            <!-- dir and lang follow the declaration's OWN language so legal text is voiced correctly.
+                                 tabindex: without it arrow keys cannot scroll, onscroll never fires, Accept never enables. -->
+                            <div
+                                class="declaration"
+                                dir={declarationDir}
+                                lang={declarationLang}
+                                tabindex="0"
+                                role="region"
+                                aria-label={labels.generalDeclaration}
+                                onscroll={handleDeclarationScroll}
+                            >
+                                <pre>{declaration.body}</pre>
+                            </div>
+
+                            <div class="progress" aria-hidden="true"><i style={readProgressStyle}></i></div>
+
+                            <!-- One element, not two branches: the id has to be unique in the
+                                 template for aria-describedby to compile. -->
+                            <p id="dec-hint" class={declarationHintClass}>{declarationHintLabel}</p>
+
+                            <button
+                                class="cta"
+                                type="button"
+                                disabled={acceptDisabled}
+                                aria-describedby="dec-hint"
+                                onclick={handleAccept}
+                            >
+                                {acceptLabel}
+                            </button>
+                        </template>
+
+                        <!-- The body is a round trip. Without these the screen was a heading over
+                             nothing while it loaded, and a permanent blank card if it failed. -->
+                        <template lwc:if={declarationLoading}>
+                            <p class="read-hint">{labels.loadingUndertaking}</p>
+                        </template>
+                        <template lwc:if={declarationFailed}>
+                            <button class="ghost" type="button" onclick={handleRetryDeclaration}>
+                                {labels.retry}
+                            </button>
+                        </template>
+                    </template>
+
+                    <!-- Step 4a: the shortfall and how it will be funded. Its own screen, and
+                         skipped entirely when nothing is owed. -->
+                    <template lwc:if={isFinance}>
+                        <div class="eyebrow">{labels.stepFourOfFour}</div>
+                        <h1 class="title">{labels.financeTitle}</h1>
+                        <p class="lede">{labels.financeLede}</p>
+
+                        <div class="money">
+                            <div class="money-row">
+                                <span>{labels.fPrice}</span>
+                                <b class="num">{priceLabel}</b>
+                            </div>
+                            <div class="money-row muted">
+                                <span>{labels.fApproved}</span>
+                                <b class="num">{approvedLabel}</b>
+                            </div>
+                            <div class="money-row total">
+                                <span>{labels.fExtra}</span>
+                                <b class="num">{additionalLabel}</b>
+                            </div>
+                        </div>
+
+                        <!-- radiogroup, not independent toggles: this is one choice from five,
+                             and aria-pressed announced it as five switches. -->
+                        <div id="opts-label" class="opts-label">{labels.fMethod}</div>
+                        <div class="opts" role="radiogroup" aria-labelledby="opts-label">
+                            <template for:each={paymentOptions} for:item="opt">
+                                <button
+                                    key={opt.key}
+                                    class={opt.cls}
+                                    type="button"
+                                    role="radio"
+                                    data-method={opt.key}
+                                    aria-checked={opt.checked}
+                                    onclick={handlePaymentMethod}
+                                >
+                                    <span class="dot"></span>{opt.label}
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- aria-live: the notes change under the selection, not on navigation,
+                             so a screen reader would otherwise never announce them. -->
+                        <template lwc:if={hasSelectedNotes}>
+                            <ul class="pay-notes" aria-live="polite">
+                                <template for:each={selectedNotes} for:item="note">
+                                    <li key={note.key}>{note.text}</li>
+                                </template>
+                            </ul>
+                        </template>
+
+                        <button class="cta" type="button" disabled={financeDisabled} onclick={handleFinanceContinue}>
+                            {labels.continueLabel}
+                        </button>
+                        <template lwc:if={canChangeVilla}>
+                            <button class="ghost" type="button" onclick={handleChangeVilla}>
+                                {labels.changeVilla}
+                            </button>
+                        </template>
+                    </template>
+
+                    <!-- Step 4b: the undertaking, scroll-gated like the declaration. Same real
+                         approved Grant or Loan text, now signed against a specific villa. -->
+                    <template lwc:if={isUndertaking}>
+                        <div class="eyebrow">{labels.stepFourOfFour}</div>
+                        <h1 class="title">{labels.undertakingTitle}</h1>
+                        <p class="lede">{undertakingLede}</p>
+
+                        <!-- Consent evidence about a specific villa at a specific price, which
+                             was being signed with none of that on screen. -->
+                        <p class="recap num">{undertakingRecap}</p>
+
+                        <template lwc:if={undertaking}>
+                            <div
+                                class="declaration"
+                                dir={undertakingDir}
+                                lang={undertakingLang}
+                                tabindex="0"
+                                role="region"
+                                aria-label={labels.undertakingTitle}
+                                onscroll={handleUndertakingScroll}
+                            >
+                                <pre>{undertaking.body}</pre>
+                            </div>
+
+                            <!-- Distance left in the text; the gate itself does not move. -->
+                            <div class="progress" aria-hidden="true"><i style={readProgressStyle}></i></div>
+
+                            <p id="und-hint" class={undertakingHintClass}>{undertakingHintLabel}</p>
+
+                            <button
+                                class="cta"
+                                type="button"
+                                disabled={undertakingDisabled}
+                                aria-describedby="und-hint"
+                                onclick={handleAcceptUndertaking}
+                            >
+                                {labels.signContinue}
+                            </button>
+                        </template>
+
+                        <!-- Outside the guard above: if the body fetch fails the guard never
+                             opens, and the only way off the screen must not be inside it. -->
+                        <template lwc:if={undertakingLoading}>
+                            <p class="read-hint">{labels.loadingUndertaking}</p>
+                        </template>
+                        <template lwc:if={declarationFailed}>
+                            <button class="ghost" type="button" onclick={handleRetryDeclaration}>
+                                {labels.retry}
+                            </button>
+                        </template>
+                        <!-- disabled while confirming: pressing this mid-flight navigated to the
+                             map and the pending .then still confirmed the villa being abandoned. -->
+                        <template lwc:if={canChangeVilla}>
+                            <button class="ghost" type="button" disabled={busy} onclick={handleChangeVilla}>
+                                {labels.changeVilla}
+                            </button>
+                        </template>
+                    </template>
+
+                    <!-- Step 4, done. Rendered in full on every arrival; collapses to the
+                         map's bar only when the customer presses back. -->
+                    <template lwc:if={isDone}>
+                        <!-- Mark and heading share a line: the stacked header cost 100px before
+                             the villa and reference the customer came for. -->
+                        <div class="done-head">
+                            <span class={doneMarkClass} aria-hidden="true">
+                                <svg viewBox="0 0 22 22" fill="none">
+                                    <!-- Unsigned shows a clock, not a tick: a tick is a claim
+                                         of completion. -->
+                                    <template lwc:if={awaitingSignatureOnDone}>
+                                        <path
+                                            d="M11 6.2V11l3.2 2"
+                                            stroke="currentColor"
+                                            stroke-width="2.2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        ></path>
+                                    </template>
+                                    <template lwc:else>
+                                        <path
+                                            d="M5 11.5l4.5 4.5 7.5-9"
+                                            stroke="currentColor"
+                                            stroke-width="2.2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        ></path>
+                                    </template>
+                                </svg>
+                            </span>
+                            <h1 class="title">{doneTitleLabel}</h1>
+                        </div>
+                        <p class="lede">{doneLede}</p>
+
+                        <!-- One strip: the clocks run concurrently, and a stacked list read as
+                             a sequence. -->
+                        <div class="facts">
+                            <div>
+                                <b class="num">{referenceLabel}</b>
+                                <span>{labels.refLabel}</span>
+                            </div>
+                            <!-- Same getter as the Change villa button, so the card cannot
+                                 promise a deadline it has refused to honour. -->
+                            <template lwc:if={canChangeVilla}>
+                                <div>
+                                    <b class="num">{reservationDeadlineShort}</b>
+                                    <span>{labels.factAmend}</span>
+                                </div>
+                            </template>
+                            <template lwc:if={showPaymentDeadline}>
+                                <div>
+                                    <b class="num">{paymentDeadlineShort}</b>
+                                    <span>{labels.factDue}</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Gone once signed, and gone with signing off - it would describe a
+                             step that does not exist. -->
+                        <template lwc:if={showSignNote}>
+                            <div class="note">{labels.signingToFollow}</div>
+                        </template>
+
+                        <!-- On the confirmation screen, not a stage of its own: with
+                             Signing_Enabled__c off the block disappears and the journey is unchanged. -->
+                        <template lwc:if={showSigned}>
+                            <div class="signed">
+                                <b>{labels.signedHeading}</b>
+                                <span>{labels.signedBody}</span>
+                            </div>
+                        </template>
+
+                        <!-- Served through Apex against the session token, not a public link. -->
+                        <template lwc:if={showDownloads}>
+                            <div class="downloads">
+                                <template for:each={downloadOptions} for:item="copy">
+                                    <button key={copy.kind} class="ghost" type="button"
+                                            data-kind={copy.kind} onclick={handleDownload}
+                                            disabled={downloadBusy}>
+                                        {copy.label}
+                                    </button>
+                                </template>
+                                <template lwc:if={downloadNotice}>
+                                    <div class="warn">{downloadNotice}</div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template lwc:if={showSignPrompt}>
+                            <div class="sign-block">
+                                <b>{labels.signHeading}</b>
+                                <span>{labels.signBody}</span>
+                                <template lwc:if={signNotice}>
+                                    <div class="warn">{signNotice}</div>
+                                </template>
+                                <button class="cta" type="button" onclick={handleSign} disabled={signBusy}>
+                                    <!-- The label already says what is happening; the ring is
+                                         decoration, so it is hidden from assistive tech. -->
+                                    <template lwc:if={signBusy}>
+                                        <span class="cta-spinner" aria-hidden="true"></span>
+                                    </template>
+                                    {signCtaLabel}
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- Accept-and-sign has no button of its own to grey out; without this
+                             the tab jumped to DocuSign unannounced. -->
+                        <template lwc:if={showSigningWait}>
+                            <div class="sign-wait" role="status">
+                                <span class="cta-spinner" aria-hidden="true"></span>
+                                <span>{labels.signOpening}</span>
+                            </div>
+                        </template>
+
+                        <template lwc:if={showRefusal}>
+                            <div class="warn">{refusalMessage}</div>
+                        </template>
+
+                        <!-- Never gated: this is the only way off the screen, and a customer
+                             whose window has closed still needs it. -->
+                        <button class="ghost" type="button" onclick={handleHideDetails}>
+                            {backOrChangeLabel}
+                        </button>
+                    </template>
+
+                    <!-- role=alert so errors are announced. Not on the identify stage, which
+                         renders the error against the field instead. -->
+                    <template lwc:if={showCardError}>
+                        <div class="error" role="alert">{errorMessage}</div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- signOutBody picks the wording: before the undertaking is accepted signing out
+             gives up the hold, after it the villa is safe. -->
+        <template lwc:if={confirmingSignOut}>
+            <div
+                class="idle-warning"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="signout-title"
+                aria-describedby="signout-text"
+            >
+                <div class="idle-card">
+                    <h2 id="signout-title" class="idle-title">{labels.signOutTitle}</h2>
+                    <p id="signout-text" class="idle-text">{signOutBody}</p>
+                    <button class="cta idle-cta" type="button" onclick={handleConfirmSignOut}>
+                        {labels.confirmSignOut}
+                    </button>
+                    <button class="ghost" type="button" onclick={handleCancelSignOut}>
+                        {labels.cancel}
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Confirms a swap before a villa is given up. Same getter as the Change villa
+             route, so the wording cannot drift. -->
+        <template lwc:if={confirmingSwap}>
+            <div
+                class="idle-warning"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="swap-title"
+                aria-describedby="swap-text"
+            >
+                <div class="idle-card">
+                    <h2 id="swap-title" class="idle-title">{labels.changeVilla}</h2>
+                    <p id="swap-text" class="idle-text">{changeVillaWarning}</p>
+                    <button class="cta idle-cta" type="button" onclick={handleConfirmSwap}>
+                        {labels.confirmChange}
+                    </button>
+                    <button class="ghost" type="button" onclick={handleCancelSwap}>
+                        {labels.cancel}
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Countdown before an idle sign-out. Without it a short idle window reads as the site
+             breaking; with it, the customer is always given the choice. -->
+        <template lwc:if={showWarning}>
+            <div
+                class="idle-warning"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="idle-title"
+                aria-describedby="idle-text"
+                onkeydown={handleIdleKey}
+            >
+                <div class="idle-card">
+                    <h2 id="idle-title" class="idle-title">{labels.stillThere}</h2>
+                    <!-- aria-live on the countdown line only. On the container it re-announced
+                         the entire dialog once a second for a minute. -->
+                    <p id="idle-text" class="idle-text" aria-live="polite">{idleWarningLabel}</p>
+                    <button class="cta idle-cta" type="button" onclick={handleStaySignedIn}>
+                        {labels.staySignedIn}
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

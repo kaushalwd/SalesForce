@@ -1,0 +1,39 @@
+<template>
+  <template lwc:if={isRendered}>
+    <div class={backdropClass} onclick={handleBackdrop}></div>
+
+    <div
+      class={panelClass}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      tabindex="-1"
+      onanimationend={handleAnimationEnd}
+    >
+      <header class="head">
+        <div class="titles">
+          <p class="title">{title}</p>
+          <template lwc:if={hasSubtitle}>
+            <p class="sub">{subtitle}</p>
+          </template>
+        </div>
+        <button class="close" onclick={requestClose} aria-label="Close">
+          <c-modon-icon name="x" size="18" color="currentColor"></c-modon-icon>
+        </button>
+      </header>
+
+      <!-- Anything the host needs between the header and the footer: its own
+           stepper, filters, scroll region. The sheet does not assume a shape. -->
+      <slot></slot>
+
+      <!-- Opt-in: a <slot> is always a child, so the container can never be
+           :empty and would otherwise cost padding and a divider on panes that
+           have no actions. -->
+      <template lwc:if={hasFooter}>
+        <div class="foot">
+          <slot name="footer"></slot>
+        </div>
+      </template>
+    </div>
+  </template>
+</template>

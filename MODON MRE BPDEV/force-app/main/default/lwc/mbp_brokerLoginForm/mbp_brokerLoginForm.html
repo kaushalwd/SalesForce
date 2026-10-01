@@ -1,0 +1,169 @@
+<template>  
+<div class="body responsive-container" style={backgroundStyle}>
+    <div>
+        <div class="content-overlay">
+         <header class="header">
+                <div class="logo"><img src={logowhite} alt="Modon"></div>
+            </header> 
+
+            <main class="main-container">
+                <div class="row login-container">
+                    <div class="col-md-6">
+                        <div class="login-card">
+                            <div class="card-logo"><img src={logo} alt="Modon"></div>
+                            <div class="card-title">Broker Portal</div>
+                            <div class="card-subtitle spacer">Welcome</div>
+                            <div class="register-text spacer">
+                                Sign in with your registered user name<br/> and password.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <form id="loginForm">
+
+                            <!-- Error Message -->
+                            <div if:true={errorCheck} class="error-msg">{errorMessage}</div>
+
+                            <!-- Login Fields (Hide When Reset Form Shown) -->
+                            <div if:true={showLoginForm}>
+                                <div class="form-group">
+                                    <label class="form-label" for="username">User Name</label>
+                                    <input name="username" value={username} type="text" id="username"
+       class="form-input" placeholder="Enter User Name"
+       data-id="txtEmailAddress" onchange={handleUsernameChange} required>    </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="password">Password</label>
+                                   <input name="password" value={password} type="password" id="password"
+       class="form-input" placeholder="Enter Password"
+       data-id="txtPassword" onkeypress={keyCheck}
+       onchange={handlePasswordChange} required>      </div>
+
+                                <a href="#" class="forgot-password" onclick={handleForgotPasswordClick}>Forgot Password</a>
+
+                                <div class="checkbox-wrapper">
+                                <lightning-input class="mb-0" type="checkbox" checked={isChecked}
+                                        onchange={handleCheckboxChange}>
+                                </lightning-input><a href="https://www.modon.com/privacy-policy" class="forgot-password spacer" target="_blank"> Accept Our Privacy Policy </a></div>
+
+                                
+                                <button 
+    type="submit" 
+    class="sign-in-btn spacer"
+    onclick={handleLogin}
+    disabled={disableSignInButton}
+    style={signInButtonStyle}>
+    Sign In
+</button>
+
+
+                                <div class="register-text">
+                                    Not registered yet? 
+                                    <a href={selfRegistrationUrl} class="register-link" target="_blank" style="font-weight: bold; text-decoration: underline; margin-left:5px;">Register your agency</a>
+                                </div>
+
+                                <div class="register-text spacer">
+                                    Already started your registration? 
+                                    <a href={resumeRegistrationUrl} class="register-link" target="_blank" style="font-weight: bold; text-decoration: underline; margin-left:5px;">Resume Registration</a>
+                                </div>
+                            </div>
+
+                            <!-- Forgot Password Reset Form -->
+                            <div if:true={showResetForm} class="forgot-password-reset-section">
+                                <div class="form-group">
+                                    <label class="form-label" for="resetUsername">Enter your username to reset password</label>
+                                    <input
+                                        name="resetUsername"
+                                        type="text"
+                                        id="resetUsername"
+                                        class="form-input"
+                                        placeholder="Enter Username"
+                                        value={resetUsername}
+                                        onchange={handleResetUsernameChange}>
+                                    </div>
+
+                                <div class="button-container btn_login_div_forgot">
+                                    <button class="slds-button slds-button_brand primary-btn-preview" onclick={handleBackToLogin}>Back to Login</button>
+                                    <button class="slds-button slds-button_outline-brand secondary-btn-preview" type="button" onclick={handleSendResetLink}>Send Reset Link</button>
+</div>
+                            </div>
+
+
+
+                            <template if:true={showCustomToast}>
+                        <div class="modon-toast-container">
+                            <div class={toastClass}>{toastMessage}</div>
+                        </div>
+                        </template>
+
+
+                            <!-- Enter OTP Section -->
+                             <div class="customSelect">
+                            <div class="enter-otp-form" if:true={showEnterOTPForm}>
+                                <div class="subheading_div"><strong>Enter OTP</strong></div>
+                                <p class="help_text_div">OTP is sent to your email address: {otpSentEmailAddress}</p>
+                                <div class="fields spacer">
+                                    <lightning-input
+    label="Enter OTP"
+    data-id="txtEnteredOTP"
+    type="text"
+    maxlength="6"
+    onchange={handleOtpChange}
+    required
+></lightning-input>
+
+                                </div>
+                                <div if:true={errorCheckWrongOTP} class="error-msg-wrongotp">{errorMessageWrongOTP}</div>
+                                <p if:true={showCountDownTimer} class="xx_countdown_timer">OTP is expiring in {refreshCounter} second(s)</p>
+                                <div class="button-container btn_login_div_forgot">
+                                    <button class="slds-button slds-button_outline-brand " onclick={showHideEnterOTPForm}>Back</button>
+                                    <button class="slds-button slds-button_brand" onclick={handleVerifyOTP}>Submit</button>
+                                    <button if:true={showResendOTPButton} class="slds-button slds-button_brand resend-otp" onclick={handleResendOTP}>Resend OTP</button>
+                                </div>
+                            </div></div>
+
+                        
+                        </form>
+                    </div>
+                </div>
+            </main>
+
+             <!-- Footer -->
+            <footer class="footer">
+        <div class="row">
+            <div class="col-md-5 ms-2">© Modon 2025 All rights reserved</div>
+            <div class="col-md-6">
+                <a href={termsandcondtions} class="tc">Terms and Conditions</a> | | 
+                <a href={privacyPolicyUrl} class="pp">Privacy Policy</a>
+            </div>
+            <div class="col-md-1">
+                <div style="display:inline-flex">
+                    <a href={linkedInUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="LinkedIn"
+                             src="https://e.hypermatic.com/c92cb5bd39105a473bfcfbd654d9bebe.png"/>
+                    </a>
+                    <a href={instagramUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="Instagram"
+                             src="https://e.hypermatic.com/7dda10e76ce1125775a3e98bcd498eba.png"/>
+                    </a>
+                    <a href={xUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="X"
+                             src="https://e.hypermatic.com/0c5ff08a5ad02ed83d457cc6b0505c3d.png"/>
+                    </a>
+                    <a href={facebookUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="Facebook"
+                             src="https://e.hypermatic.com/c59407678388970d47239b45163faa70.png"/>
+                    </a>
+                    <a href={youtubeUrl} target="_blank">
+                        <img style="padding:1px; width:16px; height:16px; margin:0 5px" alt="YouTube"
+                             src="https://e.hypermatic.com/b65787e98cc916d6885bacc41d0a6cdb.png"/>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+        </div>
+    </div>
+</div>
+</template>

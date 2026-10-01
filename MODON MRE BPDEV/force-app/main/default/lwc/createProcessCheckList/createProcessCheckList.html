@@ -1,0 +1,112 @@
+<template>
+    <lightning-quick-action-panel 
+        header="Create Checklist" 
+        class="custom-panel slds-p-around_medium"
+        data-cy="checklist-creation-panel">
+        
+        <!-- Header with informative icon -->
+        <div slot="header" class="slds-media slds-media_center slds-m-bottom_small">
+            <div class="slds-media__figure">
+                <lightning-icon 
+                    icon-name="standard:checklist" 
+                    size="small"
+                    alternative-text="Checklist">
+                </lightning-icon>
+            </div>
+            <div class="slds-media__body">
+                <h2 class="slds-text-heading_small">Create Checklist</h2>
+                <p class="slds-text-body_small slds-text-color_weak">
+                    Select a process and checklist to create for this business process
+                </p>
+            </div>
+        </div>
+
+        <div class="panel-body slds-p-vertical_small">
+            <!-- Process Selection -->
+            <div class="slds-form-element slds-m-bottom_medium">
+                <label class="slds-form-element__label" for="process-combobox">
+                    Select Checklist Process <abbr class="slds-required" title="required">*</abbr>
+                </label>
+                <div class="slds-form-element__control">
+                    <lightning-combobox
+                        id="process-combobox"
+                        value={selectedProcessName}
+                        options={processNameOptions}
+                        onchange={handleProcessNameChange}
+                        placeholder="Choose a process..."
+                        variant="label-hidden"
+                        class="process-combobox">
+                    </lightning-combobox>
+                </div>
+                <div if:true={selectedProcessName} class="slds-form-element__help slds-text-color_success">
+                    Process selected: {selectedProcessName}
+                </div>
+            </div>
+
+            <!-- Checklist Selection (only shows when process is selected) -->
+            <template if:true={selectedProcessName}>
+                <div class="slds-form-element slds-m-bottom_large" style="min-height: 200px;">
+                    <label class="slds-form-element__label" for="checklist-lookup">
+                        Select Checklist Name <abbr class="slds-required" title="required">*</abbr>
+                    </label>
+                    <div class="slds-form-element__control">
+                        <c-generic-lookup-lwc 
+                            id="checklist-lookup"
+                            objname="Checklist_Metadata__c" 
+                            iconname="standard:checklist" 
+                            display-field='Checklist_Name_in_short__c'
+                            placeholder="Search checklists..."
+                            onlookupselectedname={handleChecklistNameChange}
+                            onclearlookup={handleProcessFlowClear}
+                            class="checklist-lookup">
+                        </c-generic-lookup-lwc>
+                    </div>
+                    <div if:true={selectedChecklistName} class="slds-form-element__help slds-text-color_success">
+                        Checklist selected: {selectedChecklistName}
+                    </div>
+                </div>
+            </template>
+
+            <!-- Loading indicator -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-m-vertical_large">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                    <span class="slds-m-left_small">Loading options...</span>
+                </div>
+            </template>
+
+            <!-- Empty state messaging -->
+            <template if:true={showEmptyState}>
+                <div class="slds-box slds-box_x-small slds-theme_default slds-align_absolute-center slds-m-vertical_medium">
+                    <lightning-icon icon-name="utility:info" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    <span>No checklists available for the selected process.</span>
+                </div>
+            </template>
+        </div>
+
+        <!-- Footer with improved button styling -->
+        <div slot="footer" class="slds-clearfix">
+            <div class="slds-float_left">
+                <lightning-button 
+                    variant="neutral" 
+                    label="Cancel" 
+                    onclick={handleCancel}
+                    class="slds-m-right_x-small"
+                    data-cy="cancel-button">
+                </lightning-button>
+            </div>
+            <div class="slds-float_right">
+                <lightning-button 
+                    variant="brand" 
+                    label="Create Checklist" 
+                    onclick={handleSave}
+                    data-cy="save-button">
+                    <span if:true={isSaving} slot="prefix">
+                        <lightning-spinner alternative-text="Saving" size="small" variant="brand"></lightning-spinner>
+                    </span>
+                </lightning-button>
+                <!--        disabled={isSaving || !selectedChecklistName}   -->
+            </div>
+        </div>
+    </lightning-quick-action-panel>
+</template>

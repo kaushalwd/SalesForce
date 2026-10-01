@@ -1,0 +1,130 @@
+<messaging:emailTemplate subject="Pre Unit Cancellation Request Created - {!relatedTo.Name}" 
+    recipientType="User" 
+    relatedToType="ServiceRequest__c">
+
+<messaging:htmlEmailBody >
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  body { margin:0; padding:0; background:#f4f4f4; }
+</style>
+</head>
+
+<body>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+
+<!-- HEADER -->
+<tr>
+<td>
+<img src="{!$Label.Customer_Communication_Modon_Logo}" 
+     width="600" style="width:100%; height:auto;" />
+</td>
+</tr>
+
+<!-- BODY -->
+<tr>
+<td style="padding:20px; font-family:Arial; font-size:14px; color:#000;">
+
+<p>Dear {!relatedTo.Salesorder__r.CustomerAccount__r.Name},</p>
+
+<p>
+Thank you for reaching out to us. Your <b>Pre Unit Cancellation request</b> has been successfully created and is currently under review.
+</p>
+
+<p>Below are the details of your request:</p>
+
+<!-- DETAILS -->
+<table style="width:100%; font-size:14px;">
+
+<tr>
+<td><b>Request Number:</b></td>
+<td>{!relatedTo.Name}</td>
+</tr>
+
+<tr>
+<td><b>Project Name:</b></td>
+<td>{!relatedTo.Salesorder__r.ProjectName__c}</td>
+</tr>
+
+<tr>
+<td><b>Phase Name:</b></td>
+<td>{!relatedTo.Salesorder__r.Phase_Name__c}</td>
+</tr>
+
+<tr>
+<td><b>Unit Name:</b></td>
+<td>
+<apex:outputText value="{!IF(NOT(ISBLANK(relatedTo.Salesorder__r.Unit__r.Name)), relatedTo.Salesorder__r.Unit__r.Name, 'N/A')}" />
+</td>
+</tr>
+
+<tr>
+<td><b>Request Type:</b></td>
+<td>{!relatedTo.RecordType.Name}</td>
+</tr>
+
+<tr>
+<td><b>Created On:</b></td>
+<td>
+<apex:outputText value="{0,date,dd MMM yyyy hh:mm a}">
+    <apex:param value="{!relatedTo.CreatedDate}"/>
+</apex:outputText>
+</td>
+</tr>
+
+</table>
+
+<!-- OPTIONAL REMARKS -->
+<apex:outputPanel rendered="{!NOT(ISBLANK(relatedTo.Description__c))}">
+<p style="margin-top:15px;">
+<b>Remarks:</b><br/>
+{!relatedTo.Description__c}
+</p>
+</apex:outputPanel>
+
+<p style="margin-top:20px;">
+Our team is reviewing your request and will keep you updated on the progress.
+</p>
+
+<p>
+If you have any urgent queries, please contact us at  
+<b>customercare@modon.com</b> or call <b>800 MODON (800-66366)</b>.
+</p>
+
+<p>
+Thank you for choosing Modon.
+</p>
+
+<p>
+Best regards,<br/>
+<b>Customer Support Team</b>
+</p>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style="background:#000; color:#fff; padding:15px; font-size:12px;">
+FOLLOW US ON SOCIAL MEDIA
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+
+</messaging:htmlEmailBody>
+</messaging:emailTemplate>

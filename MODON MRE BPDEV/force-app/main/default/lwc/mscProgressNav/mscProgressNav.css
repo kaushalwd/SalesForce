@@ -1,0 +1,348 @@
+@import "c/mscStyles";
+
+:host {
+    display: block;
+}
+
+/* ── THE DEAL TAPE ──────────────────────────────────────────────────────────
+   Four equal tracks across the full width of the bar. `1fr` rather than
+   `flex: 1 1 auto` on purpose: auto would size each segment to its own text, so
+   the tape would rearrange itself every time a value arrived - the unit segment
+   widening as a price appears and pushing the three beside it along. Equal
+   tracks hold their position for the whole journey, and a long value ellipses
+   inside its own track rather than stealing width from its neighbours.
+
+   minmax(0, 1fr), not 1fr: a grid track's default minimum is min-content, which
+   for a track holding a long unbroken value like "GolfEstate-GV-126 · AED
+   16,290,891" is the whole string. Without the explicit 0 the tape would refuse
+   to shrink below the sum of those minimums and overflow the bar. */
+.tape {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* 44px. The chips this replaces sat in a 64px bar; 20px of that was the ring
+       and the padding a pill needs, neither of which survives here. */
+    min-height: 44px;
+}
+
+/* 1.6 - the track is the <li>, the control is the <button> inside it.
+   The separator moved up here with it: the buttons are no longer siblings of each
+   other, so `.seg + .seg` would match nothing. */
+.seg-item {
+    position: relative;
+    display: flex;
+    min-width: 0;
+}
+
+.seg {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    min-width: 0;
+    padding: 6px 16px 8px 0;
+    /* A button brings its own chrome, font and alignment. All of it goes. */
+    margin: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    /* Default, not pointer: most segments are not a way to get anywhere, and the
+       jump rule below turns it on only for the ones that are. */
+    cursor: default;
+}
+
+.seg-item + .seg-item .seg {
+    padding-left: 16px;
+}
+
+/* Hairline between segments, inset from both ends so it reads as a separator
+   rather than as a border on a box. */
+.seg-item + .seg-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 11px;
+    bottom: 11px;
+    width: 1px;
+    background: var(--bar-border, rgba(255, 255, 255, 0.12));
+    z-index: 1;
+}
+
+/* THE PROGRESS INDICATOR. This 2px rule is the entire thing the numbered circles
+   used to do: solid under the step you are on, faded under the ones behind it,
+   absent ahead. It is drawn on the segment's own track and stops short of the
+   separator so two adjacent rules never touch and read as one bar. */
+.seg::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 16px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.25s ease;
+}
+
+.seg-item + .seg-item .seg::after {
+    left: 16px;
+}
+
+/* The tape spans the bar edge to edge, so the last track runs to the right gutter
+   rather than stopping 16px short of it - the gap after the fourth segment has no
+   neighbour to separate it from, and an inset there reads as the tape failing to
+   reach the end of the sheet. */
+.seg-item:last-child .seg {
+    padding-right: 0;
+}
+.seg-item:last-child .seg::after {
+    right: 0;
+}
+
+.seg__label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.seg__value {
+    font-size: 13px;
+    line-height: 1.3;
+    /* 1.8 - the slot holds its height when there is no value (no prompt any more),
+       so the tape does not reflow as the booking fills in. */
+    min-height: 1.3em;
+    color: var(--text-dim, #8a8a8a);
+    /* Prices sit one above the other between steps and one beside the other
+       across them; lining figures are what make either scannable. */
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── 1.7  ONE COLOUR PER SEGMENT ────────────────────────────────────────────
+   green   this step has everything it needs
+   amber   started and not finished, including the step you are standing on
+   grey    not reached
+
+   The tone class is computed in the JS and exactly one of the three is applied,
+   so these rules never compete and source order between them is irrelevant. That
+   is the point: the previous version let --ready and --current fight in the
+   cascade, and --ready won, which is how a half-filled step came to read green.
+
+   Amber is --chip-amber, the same amber every warning in the journey uses; green
+   is --step-done, the green the numbered chips used for a finished step. Neither
+   is a colour invented for this bar. */
+
+/* HAS EVERYTHING IT NEEDS. */
+.seg--ready .seg__value {
+    color: var(--text-muted, #a3a3a3);
+}
+.seg--ready::after {
+    background: var(--step-done, #16a34a);
+}
+
+/* WHERE THE AGENT IS, AND IT IS NOT FINISHED. Exactly one segment can carry
+   this - see the tone rule in the JS. The label takes it as well as the rule: at
+   2px the rule alone is easy to miss on the step being worked in, which is the
+   one place the distinction has to land. */
+.seg--wip .seg__label {
+    color: var(--chip-amber, #fbbf24);
+}
+.seg--wip .seg__value {
+    color: var(--text-muted, #a3a3a3);
+}
+.seg--wip::after {
+    background: var(--chip-amber, #fbbf24);
+}
+
+/* Not reached yet. Dimmer than a finished step rather than hidden: the point of
+   the tape is that the whole journey is legible from the first screen. */
+.seg--todo .seg__value {
+    opacity: 0.6;
+}
+
+/* WHERE YOU ARE - weight, not colour, so it composes with any of the three
+   above. Last, because it is the one rule that must win on the value. */
+.seg--current .seg__value {
+    color: var(--text, #fafafa);
+    font-weight: 500;
+    opacity: 1;
+}
+
+/* 1.8 / 1.9 - a step with no value yet: the value slot is not drawn and the label
+   grows to fill the line, so the segment does not read as a caption over a hole.
+   The tape's 44px min-height is taller than either arrangement, so nothing reflows
+   when the value arrives and the label shrinks back over it. */
+.seg--empty .seg__value {
+    display: none;
+}
+.seg--empty .seg__label {
+    font-size: 13px;
+    letter-spacing: 0.11em;
+    line-height: 1.3;
+}
+
+/* ── the ones you can go back to ────────────────────────────────────────────
+   Only a completed segment is a control, so only a completed segment looks like
+   one. Everything here is scoped to --jump; a disabled segment keeps its default
+   cursor and gets no hover, which is the point. */
+.seg--jump {
+    cursor: pointer;
+}
+.seg--jump:hover .seg__value,
+.seg--jump:focus-visible .seg__value {
+    color: var(--text, #fafafa);
+}
+.seg--jump:hover .seg__label,
+.seg--jump:focus-visible .seg__label {
+    color: var(--text-muted, #a3a3a3);
+}
+/* The rule thickens rather than changing colour - green still means finished, and
+   a hover that recoloured it would be saying something about state that is not
+   true. */
+.seg--jump:hover::after,
+.seg--jump:focus-visible::after {
+    height: 3px;
+}
+.seg--jump:focus-visible {
+    outline: 2px solid var(--gold, #a8a8a8);
+    outline-offset: -2px;
+    border-radius: 4px;
+}
+
+/* ── the caption, phone only ────────────────────────────────────────────── */
+.step-caption,
+.step-value {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    /* The tape is replaced wholesale rather than stripped down. Four segments do
+       not fit 390px - three chips did not either, which is what 1.1 was written
+       for. The caption states position in words, and the value keeps its own line
+       so the figure an agent is reading out loud survives the width. */
+    .tape {
+        display: none;
+    }
+    .step-caption {
+        display: block;
+        margin: 0;
+        padding: 9px 0 0;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted, #a3a3a3);
+    }
+    .step-value {
+        display: block;
+        margin: 0;
+        padding: 1px 0 9px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text, #fafafa);
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+/* Between the phone caption and the full tape the labels are what give first, not
+   the values: "CUSTOMER & PAYMENT PLAN" at 9px is a caption for a figure that can
+   still be read without it. */
+@media (min-width: 768px) and (max-width: 1100px) {
+    .seg {
+        padding-right: 12px;
+    }
+    .seg-item + .seg-item .seg {
+        padding-left: 12px;
+    }
+    .seg::after {
+        right: 12px;
+    }
+    .seg-item + .seg-item .seg::after {
+        left: 12px;
+    }
+    .seg__label {
+        font-size: 8px;
+        letter-spacing: 0.1em;
+    }
+    .seg--empty .seg__label {
+        font-size: 12px;
+    }
+    .seg__value {
+        font-size: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .seg::after {
+        transition: none;
+    }
+}
+
+/* 1.12 - R2-03. The short name waits for a narrow tab; the value's two parts sit on one line. */
+.seg__label--short {
+    display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+    .seg__label--full {
+        display: none;
+    }
+    .seg__label--short {
+        display: block;
+    }
+    /* the unit and its price, or the customer and the plan, each on its own line */
+    .seg__value {
+        white-space: normal;
+    }
+    .seg__sep {
+        display: none;
+    }
+    .seg__v1,
+    .seg__v2 {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* UI-06: a short screen gives the height to the step; the tabs keep their names only */
+@media (min-width: 768px) and (max-height: 520px) {
+    .tape {
+        min-height: 34px;
+    }
+    .seg {
+        padding-top: 4px;
+        padding-bottom: 6px;
+    }
+    .seg__label--full {
+        display: none;
+    }
+    .seg__label--short {
+        display: block;
+    }
+    .seg__value {
+        display: none;
+    }
+    .seg__label,
+    .seg--empty .seg__label {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        line-height: 1.3;
+    }
+    .seg--current .seg__label {
+        color: var(--text, #fafafa);
+    }
+}

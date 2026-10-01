@@ -1,0 +1,333 @@
+/* eoiTypologyPicker — Wadeem journey design system (EOI-UI-9). @author Aurelix
+   Residence ledger: one compact row per typology, sticky summary keeps the
+   total and Continue on screen at every width. */
+
+:host {
+    --pine: var(--eoi-pine, #0D2B21);
+    --pine-2: var(--eoi-pine-2, #123A2C);
+    --abyss: var(--eoi-abyss, #071E16);
+    --champagne: var(--eoi-champagne, #C9BC8F);
+    --champ-40: var(--eoi-champ-40, rgba(201, 188, 143, 0.4));
+    --champ-18: var(--eoi-champ-18, rgba(201, 188, 143, 0.18));
+    --sand: var(--eoi-sand, #EFEAE0);
+    --shell: var(--eoi-shell, #FAF8F2);
+    --card: var(--eoi-card, #FFFFFF);
+    --ink: var(--eoi-ink, #182420);
+    --stone: var(--eoi-stone, #877F6C);
+    --line: var(--eoi-line, #DAD3C2);
+    --line-soft: var(--eoi-line-soft, #E7E2D6);
+    --amber: #8A6D1D;
+    --red: #A34433;
+    --serif: var(--eoi-serif, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    --sans: var(--eoi-sans, 'SuisseIntl', -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    display: block;
+    font-family: var(--sans);
+    color: var(--ink);
+}
+
+.error {
+    margin: 0 0 18px;
+    padding: 10px 14px;
+    border: 1px solid rgba(163, 68, 51, 0.35);
+    background: rgba(163, 68, 51, 0.06);
+    color: var(--red);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.m-panelcap {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+    margin: 0 0 10px;
+}
+
+/* the ledger */
+/* MEOI-11. Was a single-column ledger of thin rows with a 52px thumbnail; now a
+   card grid, two per row, with the image leading. The breakpoint is deliberately
+   VIEWPORT-based, matching eoiParTypologyJourney: this component renders inside
+   eoiSplitPage's 40% column, so a container query would never fire and the grid
+   would stay one-up forever.
+   Note the cards are ~220px wide in the current 540px shell. Raising
+   eoiSplitPage's .inner max-width is a one-line follow-up if MODON wants them
+   larger; it is left alone here because it would widen every other step too. */
+.m-ledger {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    border: none;
+    background: none;
+}
+@media (min-width: 700px) {
+    .m-ledger {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.m-lrow {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--card);
+    min-width: 0;
+    overflow: hidden;
+}
+/* MEOI-13a. The ASPECT RATIO LIVES ON THE BOX, not on the image. The image used to
+   own it, so when a render 404s and the img is hidden the whole top of the card
+   collapsed. Now a missing image leaves a calm sand panel of exactly the right
+   height, with the bedrooms chip still legible on it - the card keeps its shape and
+   nothing looks broken. Tolerable before, when this was a 52px thumbnail; not once
+   the image became the top half of a card. */
+.m-lrow__media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--sand);
+    overflow: hidden;
+}
+.m-lrow__thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+/* bedrooms, lifted off the info line and onto the image */
+.m-lrow__chip {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    background: var(--card);
+    color: var(--ink);
+    padding: 3px 9px;
+    font-size: 12px;
+    line-height: 1.4;
+    z-index: 2;
+}
+.m-lrow__body {
+    padding: 12px 13px;
+}
+.m-lrow__info {
+    min-width: 0;
+}
+.m-lrow__name {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.25;
+    color: var(--ink);
+}
+.m-lrow__meta {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+}
+.m-lrow__meta .loc {
+    display: inline;   /* MEOI-11: the card has room the thin row did not */
+}
+.m-lrow__price {
+    display: block;    /* MEOI-11: always visible on a card */
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    min-width: 112px;
+    text-align: right;
+}
+.m-lrow__price small {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--stone);
+    margin-right: 3px;
+}
+.m-lrow__price em {
+    font-style: normal;
+    font-size: 9px;
+    color: var(--stone);
+    margin-left: 3px;
+}
+.m-lrow.is-picked {
+    border-color: var(--pine);
+    box-shadow: 0 0 0 1px var(--pine);
+}
+.m-lrow.is-picked .m-lrow__body {
+    background: var(--shell);
+}
+.m-lrow.is-picked .m-lrow__name {
+    color: var(--pine);
+}
+.m-lrow.is-picked .m-stepper {
+    border-color: var(--pine);
+}
+
+/* stepper */
+/* MEOI-11a. On a card the stepper is a full-width control, so the minus and plus
+   sit at the two ends with the count centred between them. It previously packed
+   all three children hard left - correct when this was a thin row and the stepper
+   was a shrink-to-fit item at the end of a flex line, wrong once it became a
+   block-level control in a card body, where it left a dead gap inside its border. */
+.m-stepper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    border: 1px solid var(--line);
+    background: var(--card);
+}
+.m-stepper .qty-btn {
+    appearance: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex: 0 0 auto;
+    width: 42px;
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--pine);
+    line-height: 1;
+    padding: 8px 0;
+}
+.m-stepper .qty-btn[disabled] {
+    opacity: 0.35;
+    cursor: default;
+}
+.m-stepper .qty-btn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: -2px;
+}
+.m-stepper b {
+    flex: 1 1 auto;      /* takes the middle, so the buttons anchor to the edges */
+    min-width: 26px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid var(--line-soft);
+    border-right: 1px solid var(--line-soft);
+    padding: 8px 0;
+}
+
+/* sticky summary bar — negative margins mirror the shell's .inner padding */
+.m-sum {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 22px -20px -40px;
+    padding: 14px 20px;
+    background: var(--eoi-shell-94, rgba(250, 248, 242, 0.94));
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+.m-sum__l {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.m-sum__count {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--stone);
+}
+.m-sum__amt {
+    font-size: 17px;
+    font-family: var(--serif);
+    color: var(--pine);
+    font-variant-numeric: tabular-nums;
+}
+
+.m-btn {
+    appearance: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background: var(--pine);
+    color: var(--eoi-cream, #F2EFE6);
+    border: 1px solid var(--champ-40);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 12px 22px;
+    margin: 0;
+    flex-shrink: 0;
+}
+.m-btn .arr {
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--champagne);
+}
+.m-btn:focus-visible {
+    outline: 2px solid var(--champagne);
+    outline-offset: 2px;
+}
+
+.empty {
+    font-size: 13.5px;
+    color: var(--eoi-muted, #5B6159);
+    margin: 0;
+}
+
+/* ---------- tablet (>=700px) ---------- */
+@media (min-width: 700px) {
+    /* MEOI-11: the row-era thumb width and row padding overrides are gone - the card
+       image is full-bleed at every width and the body owns the padding. */
+    .m-lrow__body {
+        padding: 13px 15px;
+    }
+    .m-sum {
+        margin: 26px -44px -52px;
+        padding: 15px 44px;
+    }
+}
+
+/* ---------- desktop (>=1000px) ----------
+   MEOI-11: this block used to collapse the tiles back to compact 52px-thumb rows
+   because the component sits in eoiSplitPage's 40% column. That is exactly what
+   MODON asked us to stop doing, so the collapse is removed and the two-up card
+   grid now holds at every width above 700px. */
+@media (min-width: 1000px) {
+    .m-lrow__body {
+        padding: 12px 13px;
+    }
+    .m-sum {
+        margin: 24px -40px -52px;
+        padding: 14px 40px;
+    }
+}
+
+/* MEOI-11b. Zone on the left, price on the right, one baseline. */
+.m-lrow__line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 2px 0 10px;
+}
+.m-lrow__line .m-lrow__meta,
+.m-lrow__line .m-lrow__price {
+    margin: 0;
+}
+
+/* MEOI-TILE: with the zone gone the price sits at the left of its line, under the title */
+.m-lrow__line {
+    justify-content: flex-start;
+}
+.m-lrow__line .m-lrow__price {
+    text-align: left;
+    min-width: 0;
+}

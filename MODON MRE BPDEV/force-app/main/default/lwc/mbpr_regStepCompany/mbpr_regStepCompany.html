@@ -1,0 +1,216 @@
+<template>
+    <div class="regf">
+        <template lwc:if={isBusy}>
+            <c-mbpr_loader veil></c-mbpr_loader>
+        </template>
+
+        <section class="regf__section">
+            <h3 class="regf__section-title">Company Information</h3>
+
+            <div class="regf__grid">
+                <label class={fieldClasses.Type_of_Registration__c}>
+                    <span class="regf-field__label">Type of Registration</span>
+                    <select class="regf-field__control" name="Type_of_Registration__c" data-field="Type_of_Registration__c"
+                        onchange={handleFieldChange} disabled={isDisabled} required>
+                        <template for:each={typeOfRegistrationSelectOptions} for:item="opt">
+                            <option key={opt.key} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                    <template lwc:if={fieldErrors.Type_of_Registration__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Type_of_Registration__c}</p>
+                    </template>
+                </label>
+
+                <label class={fieldClasses.Agency_Name__c}>
+                    <span class="regf-field__label">Agency Name</span>
+                    <input class="regf-field__control" type="text" name="Agency_Name__c" data-field="Agency_Name__c"
+                        autocomplete="organization" value={registrationRec.Agency_Name__c}
+                        oninput={handleFieldChange} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.Agency_Name__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Agency_Name__c}</p>
+                    </template>
+                </label>
+
+                <label class={fieldClasses.Trade_License_Number__c}>
+                    <span class="regf-field__label">Trade License Number</span>
+                    <input class="regf-field__control" type="text" name="Trade_License_Number__c" data-field="Trade_License_Number__c"
+                        pattern="[a-zA-Z0-9]*" inputmode="text" value={registrationRec.Trade_License_Number__c}
+                        oninput={handleTradeLicenseNumberInput} onblur={handleTradeLicenseNumberBlur} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.Trade_License_Number__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Trade_License_Number__c}</p>
+                    </template>
+                    <template lwc:else>
+                        <p class="regf-field__help">Letters and numbers only.</p>
+                    </template>
+                </label>
+            </div>
+
+            <div class="regf-validate-row">
+                <label class={fieldClasses.Company_Email_Address__c}>
+                    <span class="regf-field__label">Company Email Address</span>
+                    <input class="regf-field__control" type="email" name="Company_Email_Address__c" data-field="Company_Email_Address__c"
+                        autocomplete="email" value={registrationRec.Company_Email_Address__c}
+                        oninput={handleEmailInput} onchange={handleEmailChange} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.Company_Email_Address__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Company_Email_Address__c}</p>
+                    </template>
+                </label>
+                <button type="button" class="regf-button" onclick={handleValidateEmail} disabled={emailValidateDisabled}>
+                    <template lwc:if={isValidatingEmail}>
+                        <span class="regf-button__spinner"></span>
+                    </template>
+                    {validateButtonLabel}
+                </button>
+            </div>
+
+            <div class="regf__grid">
+                <label class={fieldClasses.Address_Line_1__c}>
+                    <span class="regf-field__label">Address Line 1</span>
+                    <input class="regf-field__control" type="text" name="Address_Line_1__c" data-field="Address_Line_1__c"
+                        autocomplete="address-line1" value={registrationRec.Address_Line_1__c}
+                        oninput={handleFieldChange} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.Address_Line_1__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Address_Line_1__c}</p>
+                    </template>
+                </label>
+
+                <label class={fieldClasses.Address_Line_2__c}>
+                    <span class="regf-field__label">Address Line 2</span>
+                    <input class="regf-field__control" type="text" name="Address_Line_2__c" data-field="Address_Line_2__c"
+                        autocomplete="address-line2" value={registrationRec.Address_Line_2__c}
+                        oninput={handleFieldChange} disabled={isDisabled} />
+                    <template lwc:if={fieldErrors.Address_Line_2__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Address_Line_2__c}</p>
+                    </template>
+                </label>
+            </div>
+
+            <div class="regf__grid">
+                <label class={fieldClasses.City__c}>
+                    <span class="regf-field__label">City</span>
+                    <input class="regf-field__control" type="text" name="City__c" data-field="City__c"
+                        autocomplete="address-level2" value={registrationRec.City__c}
+                        oninput={handleFieldChange} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.City__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.City__c}</p>
+                    </template>
+                </label>
+
+                <label class={fieldClasses.PO_Box_Emirate__c}>
+                    <span class="regf-field__label">PO box</span>
+                    <input class="regf-field__control" type="text" name="PO_Box_Emirate__c" data-field="PO_Box_Emirate__c"
+                        value={registrationRec.PO_Box_Emirate__c}
+                        oninput={handleFieldChange} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.PO_Box_Emirate__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.PO_Box_Emirate__c}</p>
+                    </template>
+                </label>
+            </div>
+
+            <div class="regf__grid">
+                <label class={fieldClasses.Country__c}>
+                    <span class="regf-field__label">Country</span>
+                    <select class="regf-field__control" name="Country__c" data-field="Country__c"
+                        onchange={handleFieldChange} disabled={isDisabled} required>
+                        <template for:each={countrySelectOptions} for:item="opt">
+                            <option key={opt.key} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                    <template lwc:if={fieldErrors.Country__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Country__c}</p>
+                    </template>
+                </label>
+
+                <label class={fieldClasses.State__c}>
+                    <span class="regf-field__label">State</span>
+                    <select class="regf-field__control" name="State__c" data-field="State__c"
+                        onchange={handleFieldChange} disabled={isDisabled} required>
+                        <template for:each={stateSelectOptions} for:item="opt">
+                            <option key={opt.key} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                    <template lwc:if={fieldErrors.State__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.State__c}</p>
+                    </template>
+                </label>
+            </div>
+
+            <div class="regf-validate-row">
+                <label class={fieldClasses.Mobile_Country_Code__c}>
+                    <span class="regf-field__label">Country Code</span>
+                    <select class="regf-field__control" name="Mobile_Country_Code__c" data-field="Mobile_Country_Code__c"
+                        onchange={handleFieldChange} disabled={isDisabled} required>
+                        <template for:each={mobCountrySelectOptions} for:item="opt">
+                            <option key={opt.key} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                        </template>
+                    </select>
+                    <template lwc:if={fieldErrors.Mobile_Country_Code__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Mobile_Country_Code__c}</p>
+                    </template>
+                </label>
+
+                <label class={fieldClasses.Mobile_Number__c}>
+                    <span class="regf-field__label">Mobile Number</span>
+                    <input class="regf-field__control" type="text" name="Mobile_Number__c" data-field="Mobile_Number__c"
+                        inputmode="numeric" pattern="[0-9]*" autocomplete="tel-national"
+                        value={registrationRec.Mobile_Number__c}
+                        oninput={handleMobileInput} onchange={handleMobileChange} onblur={handleMobileBlur}
+                        disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.Mobile_Number__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Mobile_Number__c}</p>
+                    </template>
+                </label>
+
+                <button type="button" class="regf-button" onclick={handleValidatePhone} disabled={phoneValidateDisabled}>
+                    <template lwc:if={isValidatingPhone}>
+                        <span class="regf-button__spinner"></span>
+                    </template>
+                    {validatePhoneButtonLabel}
+                </button>
+            </div>
+
+            <div class="regf__grid">
+                <label class={fieldClasses.Website__c}>
+                    <span class="regf-field__label">Website</span>
+                    <input class="regf-field__control" type="text" name="Website__c" data-field="Website__c"
+                        autocomplete="url" value={registrationRec.Website__c}
+                        oninput={handleFieldChange} disabled={isDisabled} />
+                    <template lwc:if={fieldErrors.Website__c}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.Website__c}</p>
+                    </template>
+                </label>
+            </div>
+        </section>
+
+        <section class="regf__section">
+            <h3 class="regf__section-title">Documents</h3>
+            <p class="regf__section-hint">Upload your Company Brochure/Profile as a PDF or JPG file (maximum 2MB).</p>
+
+            <template lwc:if={isFileUploaded}>
+                <div class="regf-chip">
+                    <span class="regf-chip__label">Company Brochure/Profile</span>
+                    <button type="button" class="regf-chip__name" onclick={handlePreviewFile}>{uploadedFileName}</button>
+                    <button type="button" class="regf-chip__action" title="Preview" aria-label="Preview file" onclick={handlePreviewFile}>
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5c-3 0-5.4 1.9-6.5 4.5C2.6 10.6 5 12.5 8 12.5s5.4-1.9 6.5-4.5C13.4 5.4 11 3.5 8 3.5zm0 7.2A2.7 2.7 0 1 1 8 5.3a2.7 2.7 0 0 1 0 5.4zm0-1.4a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>
+                    </button>
+                    <template lwc:if={showDeleteIcon}>
+                        <button type="button" class="regf-chip__action regf-chip__action--danger" title="Remove" aria-label="Remove file" onclick={handleRemoveFile}>
+                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h4l.5 1H14v1.3H2V3h3.5L6 2zm-2.5 3.5h9L12 14a1 1 0 0 1-1 .9H5A1 1 0 0 1 4 14l-.5-8.5zM6.3 7v6h1.2V7H6.3zm2.2 0v6h1.2V7H8.5z"/></svg>
+                        </button>
+                    </template>
+                </div>
+            </template>
+            <template lwc:else>
+                <label class={uploadClasses}>
+                    <span class="regf-upload__title">Company Brochure/Profile</span>
+                    <span class="regf-upload__hint">PDF or JPG, up to 2MB</span>
+                    <input type="file" class="regf-upload__input" data-field="CompanyProfileFile" accept=".pdf,.jpg"
+                        onchange={handleFileChange} disabled={isDisabled} required />
+                    <template lwc:if={fieldErrors.CompanyProfileFile}>
+                        <p class="regf-field__error" role="alert">{fieldErrors.CompanyProfileFile}</p>
+                    </template>
+                </label>
+            </template>
+        </section>
+    </div>
+</template>

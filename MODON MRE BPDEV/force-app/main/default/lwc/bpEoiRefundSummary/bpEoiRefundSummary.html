@@ -1,0 +1,79 @@
+<template>
+
+    <template if:true={showEOIList}>
+
+        <section class="eoi-summary-card gradient-bg slds-m-around_medium slds-p-around_medium slds-card">
+
+            <div class="slds-grid slds-grid_align-spread slds-p-bottom_small">
+                <h3 class="slds-text-heading_small">
+                    EOI Refund Summary
+                </h3>
+
+                <span class="slds-badge">{eoiCount}</span>
+            </div>
+
+            <div class="white-underline"></div>
+
+            <div class="eoi-summary-container">
+
+                <!-- ================================================= -->
+                <!-- ASSOCIATED EXPRESSIONS OF INTEREST -->
+                <!-- ================================================= -->
+
+                <template if:true={hasEOIs}>
+
+                    <div class="eoi-table-wrapper">
+
+                        <h4 class="eoi-table-title">
+                            Associated Expressions of Interest
+                        </h4>
+
+                        <table class="slds-table slds-table_bordered slds-table_cell-buffer eoi-summary-table">
+
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col">Name</th>
+                                    <th scope="col">EOI Id</th>
+                                    <th scope="col">Account</th>
+                                    <th scope="col">Project</th>
+                                    <th scope="col">EOI Amount (AED)</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template for:each={eois} for:item="eoi">
+                                    <tr key={eoi.id}>
+                                        <td>{eoi.name}</td>
+                                        <td>{eoi.eoiId}</td>
+                                        <td>{eoi.accountName}</td>
+                                        <td>{eoi.projectName}</td>
+                                        <td>
+                                            <lightning-formatted-number
+                                                value={eoi.eoiAmountAED}
+                                                format-style="currency"
+                                                currency-code="AED">
+                                            </lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </template>
+
+                <template if:false={hasEOIs}>
+                    <p class="eoi-empty-state">
+                        No Expressions of Interest are associated with this Business Process.
+                    </p>
+                </template>
+
+            </div>
+
+        </section>
+
+    </template>
+
+</template>

@@ -1,0 +1,275 @@
+<template>
+    <div class="eoi-wrap">
+
+        <!-- Opportunity context chip -->
+        <div class="brand-header">
+            <div class="brand-left">
+                <div class="brand-mark">
+                    <lightning-icon icon-name="standard:home" size="x-small" alternative-text="EOI"></lightning-icon>
+                </div>
+                <div>
+                    <div class="brand-name">Expression of Interest</div>
+                </div>
+            </div>
+            <div class="opp-chip">
+                <span class="opp-dot"></span>
+                <span class="opp-chip-text">{opportunityName}</span>
+            </div>
+        </div>
+
+        <!-- Quota banner (shows after project selected) -->
+        <template if:true={showQuota}>
+            <div class="quota-banner">
+                <div class="quota-left">
+                    <div class="quota-top">
+                        <span class="quota-project">{selectedProject}</span>
+                        <span class="quota-numbers">
+                            Used <strong>{quotaUsed}</strong> / <strong>{quotaLimit}</strong>
+                        </span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style={progressBarStyle}></div>
+                    </div>
+                </div>
+                <div class={quotaBadgeClass}>
+                    <div class={quotaNumClass}>{quotaRemaining}</div>
+                    <div class="quota-label-sm">remaining</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Opportunity eligibility status -->
+        <template if:true={showOppStatus}>
+            <div class={oppStatusClass}>
+                <template if:true={isDuplicate}>
+                    <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                    <span class="opp-status-text">EOI already exists for this opportunity</span>
+                    <span class="opp-status-sub">&nbsp;· {existingEOIRef}</span>
+                </template>
+                <template if:false={isDuplicate}>
+                    <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                    <span class="opp-status-text">Opportunity eligible · no existing EOI</span>
+                </template>
+            </div>
+        </template>
+
+        <!-- Main form card -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <lightning-icon icon-name="standard:document" size="x-small" alternative-text="EOI Form"></lightning-icon>
+                    </div>
+                    <div>
+                        <div class="h-title">New Expression of Interest</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-body">
+
+                <!-- Section: EOI Range -->
+                <div class="section-row">
+                    <span class="section-label">EOI Range</span>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="field-grid">
+
+                    <div class="field-group">
+                        <label class="field-label">Project <abbr title="required" class="req">*</abbr></label>
+                        <div class="select-wrap">
+                            <select class="eoi-select" onchange={handleProjectChange} disabled={isFormDisabled}>
+                                <option value="">Select project</option>
+                                <template for:each={projectOptions} for:item="opt">
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Phase <abbr title="required" class="req">*</abbr></label>
+                        <div class="select-wrap">
+                            <select class="eoi-select" onchange={handlePhaseChange} disabled={isPhaseDisabled}>
+                                <option value="">Select phase</option>
+                                <template for:each={phaseOptions} for:item="opt">
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Unit Type <abbr title="required" class="req">*</abbr></label>
+                        <div class="select-wrap">
+                            <select class="eoi-select" onchange={handleUnitTypeChange} disabled={isUnitTypeDisabled}>
+                                <option value="">Select unit type</option>
+                                <template for:each={unitTypeOptions} for:item="opt">
+                                    <option key={opt} value={opt}>{opt}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Number of Bedrooms <abbr title="required" class="req">*</abbr></label>
+                        <div class="select-wrap">
+                            <select class="eoi-select" onchange={handleBedroomsChange} disabled={isBedroomsDisabled}>
+                                <option value="">Select bedrooms</option>
+                                <template for:each={bedroomOptions} for:item="opt">
+                                    <option key={opt} value={opt}>{opt}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Section: Unit Interest -->
+                <div class="section-row">
+                    <span class="section-label">Unit Interest</span>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="field-grid">
+
+                    <div class="field-group">
+                        <label class="field-label">Number of Units Interested <abbr title="required" class="req">*</abbr></label>
+                        <input
+                            type="number"
+                            class="eoi-input"
+                            min="1"
+                            max="99"
+                            placeholder="e.g. 2"
+                            value={numberOfUnits}
+                            oninput={handleUnitsChange}
+                            disabled={isFormDisabled}
+                        />
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">EOI Amount (AED)</label>
+                        <div class={amountBoxClass}>
+                            <span class="amount-value">{displayAmount}</span>
+                            <span class="amount-source">{amountSourceLabel}</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Section: Remarks -->
+                <div class="section-row">
+                    <span class="section-label">Remarks</span>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="field-group" style="margin-bottom: 0.25rem;">
+                    <label class="field-label">Remarks <abbr title="required" class="req">*</abbr></label>
+                    <textarea
+                        class="eoi-input eoi-textarea"
+                        placeholder="Add any notes or comments..."
+                        value={remarks}
+                        oninput={handleRemarksChange}
+                        disabled={isFormDisabled}
+                        rows="3"
+                    ></textarea>
+                </div>
+
+                <!-- Error message -->
+                <template if:true={errorMessage}>
+                    <div class="error-bar">
+                        <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                        <span>{errorMessage}</span>
+                    </div>
+                </template>
+
+                <div class="divider"></div>
+
+                <!-- Footer actions -->
+                <div class="footer-actions">
+                    <button class="btn-cancel" onclick={handleCancel}>Cancel</button>
+                    <button class="btn-create" onclick={handleCreate} disabled={isCreateDisabled}>
+                        <template if:true={isLoading}>
+                            <lightning-spinner alternative-text="Creating..." size="x-small" variant="inverse"></lightning-spinner>
+                        </template>
+                        <template if:false={isLoading}>
+                            Create EOI
+                        </template>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Success toast -->
+        <template if:true={showSuccess}>
+            <div class="toast-success">
+                <div class="toast-icon">
+                    <lightning-icon icon-name="utility:check" size="x-small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <div class="toast-ref">{createdEOIRef} created successfully</div>
+                    <div class="toast-sub">Customer auto-mapped from opportunity · quota updated</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Quota exceeded modal -->
+        <template if:true={showQuotaModal}>
+            <div class="modal-backdrop" onclick={handleModalBackdropClick}>
+                <div class="modal-box" onclick={stopPropagation}>
+
+                    <div class="modal-icon-wrap">
+                        <div class="modal-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                 stroke="white" stroke-width="2" stroke-linecap="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="modal-title">Maximum EOI limit reached</div>
+                    <div class="modal-body">
+                        We have already reached the maximum EOI creation limit of
+                        <strong>{quotaLimit}</strong> for
+                        <strong>{selectedProject}</strong>.
+                        No new EOIs can be created for this project until the limit is increased.
+                    </div>
+
+                    <div class="modal-meta-row">
+                        <div class="modal-meta-item">
+                            <div class="modal-meta-label">Project</div>
+                            <div class="modal-meta-value">{selectedProject}</div>
+                        </div>
+                        <div class="modal-meta-divider"></div>
+                        <div class="modal-meta-item">
+                            <div class="modal-meta-label">EOIs created</div>
+                            <div class="modal-meta-value">{quotaUsed}</div>
+                        </div>
+                        <div class="modal-meta-divider"></div>
+                        <div class="modal-meta-item">
+                            <div class="modal-meta-label">Limit</div>
+                            <div class="modal-meta-value">{quotaLimit}</div>
+                        </div>
+                        <div class="modal-meta-divider"></div>
+                        <div class="modal-meta-item">
+                            <div class="modal-meta-label">Remaining</div>
+                            <div class="modal-meta-value modal-meta-zero">0</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="modal-btn-close" onclick={closeQuotaModal}>
+                            Got it, close
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

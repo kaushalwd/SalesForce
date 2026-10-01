@@ -1,0 +1,60 @@
+<template>
+  <template if:true={isLimitedLogin}>
+    <div class="restricted-wrap">
+      <div class="restricted-card">
+        <div class="restricted-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="12" cy="14.5" r="1.3" fill="currentColor"/>
+            <path d="M12 16v1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- Fast Track: waiting state, both actions relevant. -->
+        <template if:true={isFastTrack}>
+          <h2 class="restricted-title">Your dashboard isn't ready just yet</h2>
+          <p class="restricted-body">
+            Your registration is on the <b>Fast Track</b> path, so the full dashboard
+            unlocks once your agency details are complete. Until then, you can still
+            work your leads or finish setting up your agency to unlock full access.
+          </p>
+        </template>
+
+        <!-- Not Fast Track: this is purely a "we need info from you" state -
+             Leads isn't relevant here at all, so no Fast Track wording and
+             no Leads button. -->
+        <template if:false={isFastTrack}>
+          <h2 class="restricted-title">We need a bit more from you</h2>
+          <p class="restricted-body">
+            Before we can finish setting up your dashboard, we need some additional
+            information about your agency. Please complete the pending details in
+            My Agency to continue.
+          </p>
+        </template>
+
+        <div class="restricted-actions">
+         
+          <template if:true={isFastTrack}>
+            <a class="restricted-btn restricted-btn-secondary"
+               href="https://modonproperties--uat.sandbox.my.site.com/Brokers/Leads?view=leads">
+              Go to my leads
+            </a>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template if:false={isLimitedLogin}>
+    <template if:true={isAgent}>
+      <c-mbp_agent-dashboard account-id={accountId} logged-in-user-name={loggedInUserName} agency-name={agencyName} contact-id={ContactId} user-photo-url={userPhotoUrl}></c-mbp_agent-dashboard>
+    </template>
+    <template if:true={isOwner}>
+      <c-mbp_agency-dashboard account-id={accountId} logged-in-user-name={loggedInUserName} agency-name={agencyName} user-photo-url={userPhotoUrl} contact-id={ContactId}></c-mbp_agency-dashboard>
+    </template>
+    <template if:true={isAdmin}>
+      <c-mbp_agency-dashboard account-id={accountId} logged-in-user-name={loggedInUserName} agency-name={agencyName} user-photo-url={userPhotoUrl} contact-id={ContactId}></c-mbp_agency-dashboard>
+    </template>
+  </template>
+</template>

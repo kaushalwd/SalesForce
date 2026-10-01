@@ -1,0 +1,130 @@
+/* The host fills whatever the parent gives it, so the inline presentation can
+   be a full-height column in the booking modal without knowing its own size. */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+.tour-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 240px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+  background: var(--row-bg, rgba(0, 0, 0, 0.3));
+}
+/* Absolute rather than height:100%. A percentage height resolves only against a
+   parent whose height is DEFINITE, and when it cannot resolve an iframe does not
+   fail visibly - it falls back to the replaced element's 150px intrinsic default,
+   so the tour app lays itself out for a 150px viewport and its chrome stacks and
+   clips. `inset` resolves against the used size, whatever sized the frame. */
+.tour-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  /* The scroll stops at the frame. This is a cross-origin viewer, so when its
+     own document runs out of scroll - or ignores the wheel, which the plan view
+     does - the browser hands the remainder to the nearest scrollable ancestor.
+     That is the journey's .body, which holds the unit list too, so spinning the
+     wheel over the floorplan was scrolling the units on the left.
+
+     Set on the frame AND on .rail-tour in mscBookingPage.css: Safari applies
+     this to the iframe element, Chrome to the scroll port that would receive the
+     chained delta, and the pair covers both. */
+  overscroll-behavior: contain;
+}
+
+.tour-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 24px;
+}
+.tour-empty-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted, #a3a3a3);
+}
+
+/* ── accordion (phone) ── */
+.tour-accordion {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.tour-frame--compact {
+  flex: 0 0 auto;
+  /* Fluid rather than a fixed 240px: scales with the viewport so short phones
+     don't lose half the screen to the frame and tall ones aren't letterboxed. */
+  height: clamp(200px, 44vh, 320px);
+  min-height: 0;
+  margin-top: 8px;
+}
+.tour-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-muted, #a3a3a3);
+}
+.tour-toggle:hover {
+  color: var(--text, #fff);
+}
+.tour-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring, #fafafa);
+  outline-offset: 2px;
+}
+
+/* Tablet: the tour is a fixed band above the steps rather than a side column. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tour-frame {
+    flex: 0 0 auto;
+    height: clamp(240px, 36vh, 380px);
+    min-height: 0;
+  }
+}
+
+c-modon-icon {
+  color: var(--text-dim, rgba(255, 255, 255, 0.4));
+}
+
+/* ── Hide scrollbars app-wide (scroll still works) ────────────────────────
+   Requested: no visible scrollbar on any page or device. Chromium/Safari use
+   ::-webkit-scrollbar; Firefox uses scrollbar-width; legacy Edge uses
+   -ms-overflow-style. Applied to :host and every element in this shadow tree
+   so it covers whichever element owns the scroll region. */
+:host,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:host::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

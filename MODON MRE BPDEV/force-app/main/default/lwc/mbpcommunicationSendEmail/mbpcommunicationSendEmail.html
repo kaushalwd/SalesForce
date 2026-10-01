@@ -1,0 +1,54 @@
+<template>
+    <lightning-card title="Send Communication Email">
+        <div class="slds-p-around_medium">
+            
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-m-vertical_large">
+                    <lightning-spinner alternative-text="Sending email..."></lightning-spinner>
+                    <p class="slds-m-top_small">Sending email, please wait...</p>
+                </div>
+            </template>
+            
+            <!-- Ready State -->
+            <template if:false={isLoading}>
+                <div class="slds-text-align_center">
+                    
+                 <!-- Status Info -->
+<div class="slds-m-bottom_medium">
+    <p>
+        <strong>Status:</strong> {approvalStatus}<br>
+        <strong>Email Sent:</strong> {emailSentLabel}
+    </p>
+</div>
+
+                    
+                    <!-- Send Button -->
+                  <lightning-button
+    label="Send Email Now"
+    variant="brand"
+    onclick={handleSend}
+    disabled={isSendDisabled}>
+</lightning-button>
+
+                    
+                    <!-- Help Text -->
+                    <p class="slds-text-color_weak slds-m-top_small">
+                        <template if:true={canSend}>
+                            This communication is approved and ready to send.
+                        </template>
+                        <template if:false={canSend}>
+                            <template if:true={emailSent}>
+                                Email has already been sent.
+                            </template>
+                            <template if:false={emailSent}>
+                                Communication must be approved before sending.
+                            </template>
+                        </template>
+                    </p>
+                </div>
+            </template>
+            
+        </div>
+    </lightning-card>
+</template>

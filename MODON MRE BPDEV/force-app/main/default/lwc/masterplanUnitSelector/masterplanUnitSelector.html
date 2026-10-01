@@ -1,0 +1,699 @@
+<template>
+    <!-- Map-first single page: a compact card anchored to the unit, then a full-screen explore
+         view that covers the map without unmounting it, so the camera survives the round trip. -->
+    <div class="app" dir={dir}>
+        <div
+            class={frameClass}
+            onwheel={handleWheel}
+            onclick={handleFrameClick}
+            onpointerdown={handlePointerDown}
+            onpointermove={handlePointerMove}
+            onpointerup={handlePointerUp}
+            onpointercancel={handlePointerUp}
+        >
+            <!-- The chrome mirrors, the map must not: dir="ltr" on the stage keeps the geographic
+                 image and the pan maths physical, and `direction` out of the manual SVG. -->
+            <div class="stage" dir="ltr">
+                <!-- Tile pyramid, not one raster: the 28 MB sheet beats the static resource cap.
+                     Built manually - see mountTiles and tileManifest.js. -->
+                <div class="tile-layer" lwc:dom="manual"></div>
+                <!-- Darkens the pale CAD sheet just enough for the overlay colours to read.
+                     The reference viewer gets this free from a photoreal aerial. -->
+                <div class={scrimClass}></div>
+                <div class="overlay-host" lwc:dom="manual"></div>
+            </div>
+
+            <!-- Identity stays on screen the whole time. Desktop only - a phone gives this corner
+                 to the language switch. -->
+            <!-- Identity and reservation in ONE card - two stacked panels overlapped once Sign out
+                 added a row. Each half stays conditional; the card renders when either has something to say. -->
+            <template lwc:if={showIdCard}>
+                <div class="id-card">
+
+                    <template lwc:if={showTools}>
+                        <div class="id-top">
+                            <div class="brand-row">
+                                <span class="brand">{labels.project}</span>
+                                <!-- Beside the name because that is what it acts on; the journey
+                                     owns the session, so this only asks. -->
+                                <template lwc:if={applicantName}>
+                                    <button class="top-signout" type="button" onclick={handleSignOut}>
+                                        {labels.signOut}
+                                    </button>
+                                </template>
+                            </div>
+                            <template lwc:if={applicantName}>
+                                <div class="who">{applicantName}</div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template lwc:if={showIdDivide}>
+                        <div class="id-divide"></div>
+                    </template>
+
+                    <!-- The reservation, on the map itself: a finished customer must not open
+                         anything to see it. The name is the control. -->
+                    <template lwc:if={showHeldHeader}>
+                        <div class="held-part">
+                            <div class="held-line">
+                                <button class="held-go-btn" type="button" onclick={handleGoToHeld}>
+                                    <span class="held-tick" aria-hidden="true">&#10003;</span>
+                                    <span class="held-title">{heldTitle}</span>
+                                </button>
+                                <button class="held-details" type="button" onclick={handleHeldDetails}>
+                                    {labels.details}
+                                </button>
+                            </div>
+                            <template lwc:if={heldMeta}>
+                                <div class={heldMetaClass}>{heldMeta}</div>
+                            </template>
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
+            <!-- Summoned, not permanent. One row: the plot number and a way out. -->
+            <template lwc:if={showSearchHud}>
+            <div class="hud hud-search">
+                <div class="unit-search">
+                    <input
+                        class="search-input"
+                        type="search"
+                        autocomplete="off"
+                        placeholder={labels.searchPlaceholder}
+                        aria-label={labels.searchAria}
+                        dir="ltr"
+                        disabled={notReady}
+                        onkeydown={handleSearchKeydown}
+                        oninput={handleSearchInput}
+                    />
+                    <button class="primary" type="button" disabled={notReady} onclick={handleSearch}>
+                        {labels.search}
+                    </button>
+                    <button class="search-cancel" type="button" onclick={handleClosePanel}>
+                        {labels.close}
+                    </button>
+                </div>
+                <!-- Everything search has to say, in the panel that produced it. -->
+                <template lwc:if={searchMessage}>
+                    <div class="search-msg" role="status">{searchMessage}</div>
+                </template>
+            </div>
+            </template>
+
+            <!-- Full-height rail. A filtered-out villa goes inert, not merely dimmed, so the
+                 count cannot promise a set the customer can then book outside of. -->
+            <template lwc:if={showFilterRail}>
+                <aside class="filter-rail">
+                    <div class="rail-head">
+                        <div class="rail-title">{labels.filters}</div>
+                        <button class="rail-close" type="button" aria-label={labels.closeFilters} onclick={handleToggleFilters}>
+                            &times;
+                        </button>
+                    </div>
+
+                    <div class="rail-body">
+                        <template for:each={facets} for:item="facet">
+                            <div class="facet" key={facet.key}>
+                                <div class="facet-label">{facet.label}</div>
+                                <div class="chips">
+                                    <template for:each={facet.options} for:item="opt">
+                                        <button
+                                            key={opt.id}
+                                            class={opt.cls}
+                                            type="button"
+                                            data-facet={facet.key}
+                                            data-value={opt.value}
+                                            disabled={opt.disabled}
+                                            onclick={handleFacetToggle}
+                                        >
+                                            <!-- Leading swatch in the exact PRODUCTS hue the map
+                                                 paints this product, so the rows are the key. -->
+                                            <template lwc:if={opt.hasSwatch}>
+                                                <span class="swatch" style={opt.swatchStyle}></span>
+                                            </template>
+                                            {opt.label}
+                                            <span class="chip-count">{opt.count}</span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- No footer. .chip.on inverts the selected row and handleFacetToggle
+                         toggles, so the rows are both the state and the way to clear it. -->
+                </aside>
+            </template>
+
+            <!-- Amenities from the plan's own land-use layers, summoned from the toolbar. -->
+            <template lwc:if={showAmenityBar}>
+                <div class="amenity-bar">
+                    <button
+                        class="panel-close"
+                        type="button"
+                        aria-label={labels.hidePanel}
+                        onclick={handleClosePanel}
+                    >
+                        &#8964;
+                    </button>
+                    <template for:each={amenityChips} for:item="chip">
+                        <button
+                            key={chip.key}
+                            class={chip.cls}
+                            type="button"
+                            data-key={chip.key}
+                            title={chip.title}
+                            aria-label={chip.title}
+                            aria-pressed={chip.pressed}
+                            onclick={handleAmenityToggle}
+                        >
+                            <span class="amenity-icon">{chip.icon}</span>
+                            <span class="amenity-name">{chip.label}</span>
+                        </button>
+                    </template>
+                </div>
+            </template>
+
+            <template lwc:if={showZoomControls}>
+                <div class="image-controls">
+                    <button class="zoom-btn" type="button" title={labels.zoomIn} onclick={handleZoomIn}>+</button>
+                    <button class="zoom-btn" type="button" title={labels.zoomOut} onclick={handleZoomOut}>-</button>
+                </div>
+            </template>
+
+            <!-- Reset lives at the bottom as a labelled action rather than an icon, and only
+                 appears once there is something to zoom out of. -->
+            <template lwc:if={showZoomOut}>
+                <button class="zoom-out-bar" type="button" onclick={handleReset}>{labels.zoomOut}</button>
+            </template>
+
+            <!-- One bar, four tools, nothing else until one is tapped. Written out rather than
+                 looped because each icon differs. -->
+            <template lwc:if={showTools}>
+                <div class="map-tools">
+                    <button
+                        class={searchToolClass}
+                        type="button"
+                        data-panel="search"
+                        aria-label={labels.search}
+                        onclick={handleTool}
+                    >
+                        <svg class="tool-ico" viewBox="0 0 20 20" aria-hidden="true">
+                            <circle cx="8.6" cy="8.6" r="5.4"></circle>
+                            <path d="M12.7 12.7 L17 17"></path>
+                        </svg>
+                        <span class="tool-label">{labels.search}</span>
+                    </button>
+
+                    <template lwc:if={hasFacets}>
+                        <button
+                            class={filtersToolClass}
+                            type="button"
+                            data-panel="filters"
+                            aria-label={labels.filters}
+                            onclick={handleTool}
+                        >
+                            <svg class="tool-ico" viewBox="0 0 20 20" aria-hidden="true">
+                                <path d="M3 6h14M3 10h14M3 14h14"></path>
+                                <circle cx="7" cy="6" r="1.9"></circle>
+                                <circle cx="13" cy="10" r="1.9"></circle>
+                                <circle cx="9" cy="14" r="1.9"></circle>
+                            </svg>
+                            <span class="tool-label">{filterToggleLabel}</span>
+                        </button>
+                    </template>
+
+                    <template lwc:if={amenityChips.length}>
+                        <button
+                            class={amenitiesToolClass}
+                            type="button"
+                            data-panel="amenities"
+                            aria-label={labels.amenities}
+                            onclick={handleTool}
+                        >
+                            <svg class="tool-ico" viewBox="0 0 20 20" aria-hidden="true">
+                                <rect x="3" y="3" width="6" height="6" rx="1.6"></rect>
+                                <rect x="11" y="3" width="6" height="6" rx="1.6"></rect>
+                                <rect x="3" y="11" width="6" height="6" rx="1.6"></rect>
+                                <rect x="11" y="11" width="6" height="6" rx="1.6"></rect>
+                            </svg>
+                            <span class="tool-label">{labels.amenities}</span>
+                        </button>
+                    </template>
+
+                </div>
+            </template>
+
+            <!-- Stage 1: compact details, anchored beside the unit. -->
+            <template lwc:if={showCard}>
+                <div class={cardClass} onclick={handleCardClick}>
+                    <button class="close-details" type="button" aria-label={labels.close} onclick={handleCloseDetails}>
+                        &times;
+                    </button>
+                    <div class="detail-sub">{labels.selectedUnit}</div>
+                    <h3 class="detail-title">{plotTitle}</h3>
+                    <template lwc:if={showStatusBadge}>
+                        <div class={badgeClass}>{selectedStatusLabel}</div>
+                    </template>
+
+                    <div class="floating-rows">
+                        <template for:each={cardRows} for:item="row">
+                            <div class={row.cls} key={row.label}>
+                                <div class="detail-row-label">{row.label}</div>
+                                <div class="detail-row-value">{row.value}</div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Explore only: committing belongs on the screen that shows the villa. The
+                         card's job is to say whether this one is worth opening. -->
+                    <template lwc:if={opsMode}>
+                        <!-- Ops assigns from the card. Pinned shows who; assignable shows
+                             search + Assign; anything else the badge already explains. -->
+                        <template lwc:if={opsCardPin}>
+                            <div class="ops-pin-line">{opsCardPinLabel}</div>
+                            <div class="floating-actions">
+                                <template lwc:if={opsConfirmingUnpin}>
+                                    <button class="ops-btn ops-danger" type="button" disabled={opsBusy} onclick={handleOpsUnpin}>{labels.opsUnpinConfirm}</button>
+                                </template>
+                                <template lwc:else>
+                                    <button class="ops-btn" type="button" onclick={handleOpsUnpinAsk}>{labels.opsUnpin}</button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:elseif={opsCardAssignable}>
+                            <template lwc:if={opsSelected}>
+                                <div class="ops-chip">
+                                    <span class="ops-chip-name">{opsSelectedLabel}</span>
+                                    <button class="ops-chip-clear" type="button" onclick={handleOpsClearApplicant}>{labels.opsChangeApplicant}</button>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <input
+                                    class="ops-card-search"
+                                    type="text"
+                                    autocomplete="off"
+                                    placeholder={labels.opsSearch}
+                                    value={opsTerm}
+                                    oninput={handleOpsTerm}
+                                />
+                                <template lwc:if={hasOpsResults}>
+                                    <ul class="ops-card-results">
+                                        <template for:each={opsResultRows} for:item="row">
+                                            <li key={row.applicationNumber}>
+                                                <button type="button" class={row.cls} data-app={row.applicationNumber} disabled={row.blocked} onclick={handleOpsPick}>
+                                                    <span class="ops-result-main"><b>{row.applicationNumber}</b> {row.customerName}</span>
+                                                    <template lwc:if={row.tag}><span class="ops-result-tag">{row.tag}</span></template>
+                                                </button>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </template>
+                            <template lwc:if={hasOpsWarnings}>
+                                <ul class="ops-warnings">
+                                    <template for:each={opsWarnings} for:item="w">
+                                        <li key={w}>{w}</li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <div class="floating-actions">
+                                <button class="assign-btn" type="button" disabled={opsPinDisabled} onclick={handleOpsPin}>{opsAssignLabel}</button>
+                            </div>
+                        </template>
+                        <!-- A taken villa says who has it. Read-only, ops only. -->
+                        <p class="ops-holder" lwc:if={opsHolderLine}>{opsHolderLine}</p>
+                        <p class="ops-error" lwc:if={opsMessage}>{opsMessage}</p>
+                    </template>
+                    <template lwc:else>
+                        <div class="floating-actions">
+                            <button class="explore-btn" type="button" onclick={handleExplore}>{labels.explore}</button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <div class={veilClass}>
+                <template lwc:if={loadError}>
+                    <div class="veil-error">{loadError}</div>
+                    <!-- The veil is opaque and blocking, so without a way off it a failed image
+                         load was terminal. -->
+                    <button class="veil-retry" type="button" onclick={handleRetryLoad}>
+                        {labels.retry}
+                    </button>
+                </template>
+                <template lwc:else>
+                    <div class="spinner"></div>
+                    <div class="veil-text">{loadingMessage}</div>
+                </template>
+            </div>
+
+            <!-- Nothing to book. Without this the customer saw an unmarked plan, a legend of
+                 colours that appear nowhere, and no filter rail to explain the emptiness. -->
+            <template lwc:if={hasNothingEligible}>
+                <div class="nothing">
+                    <h2 class="nothing-title">{labels.nothingEligibleTitle}</h2>
+                    <p class="nothing-body">{labels.nothingEligibleBody}</p>
+                </div>
+            </template>
+        </div>
+
+        <!-- Stage 2: full-screen explore, modelled on the DPG unit viewer: a dark spec card
+             over a blurred backdrop, floor selector, plan zoom and a bottom action bar. -->
+        <template lwc:if={exploring}>
+            <section class="explore">
+                <div class="explore-bg" style={exploreBgStyle}></div>
+
+                <div class="spec-card">
+                    <button class="explore-back" type="button" onclick={handleBackToCommunity}>
+                        {backLabel}
+                    </button>
+
+                    <div class="spec-head">
+                        <h1 class="spec-title">{plotTitle}</h1>
+                        <template lwc:if={showStatusBadge}>
+                            <div class={badgeClass}>{selectedStatusLabel}</div>
+                        </template>
+                    </div>
+
+                    <div class="spec-rows">
+                        <div class="spec-row">
+                            <span class="spec-label">{labels.type}</span>
+                            <span class="spec-value">{selectedTypeLabel}</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">{labels.bedrooms}</span>
+                            <span class="spec-value">{selectedUnit.bedrooms}</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">{labels.gsa}</span>
+                            <span class="spec-value">{gsaValue}</span>
+                            <span class="unit-toggle">
+                                <button class={sqftClass} type="button" data-unit="sqft" onclick={handleAreaUnit}>{labels.sqft}</button>
+                                <button class={sqmClass} type="button" data-unit="sqm" onclick={handleAreaUnit}>{labels.sqm}</button>
+                            </span>
+                        </div>
+                        <!-- One toggle for both area rows; two controls that could never disagree
+                             read as a bug. -->
+                        <div class="spec-row">
+                            <span class="spec-label">{labels.plotArea}</span>
+                            <span class="spec-value">{plotAreaValue}</span>
+                            <!-- The toggle above drives this row too, so without a unit here the
+                                 number read as bare. Text, not a second control. -->
+                            <span class="spec-unit">{areaUnitLabel}</span>
+                        </div>
+                        <div class="spec-row total">
+                            <span class="spec-label">{labels.totalPrice}</span>
+                            <span class="spec-value">{selectedUnit.price}</span>
+                        </div>
+                        <!-- Directly under the price and only when there is something to pay, the
+                             same rule and the same figure the selection card uses. -->
+                        <template lwc:if={showExploreExtra}>
+                            <div class="spec-row extra">
+                                <span class="spec-label">{labels.extraToPay}</span>
+                                <span class="spec-value">{exploreExtraValue}</span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <template lwc:if={showProvisionalNote}>
+                        <div class="spec-note">{labels.provisionalNote}</div>
+                    </template>
+
+                    <template lwc:if={reserveRefused}>
+                        <div class="spec-note">{reserveRefusalMessage}</div>
+                    </template>
+
+                    <!-- Disabled rather than silently inert; gone entirely once the window has
+                         closed, and the note above says why. -->
+                    <template lwc:if={showSelectCta}>
+                        <button
+                            class="spec-cta"
+                            type="button"
+                            disabled={selectDisabled}
+                            onclick={handleSelect}
+                        >
+                            {selectLabel}
+                        </button>
+                    </template>
+                </div>
+
+                <div class="explore-stage">
+                    <!-- Real media since 19 Aug; the drawn villa is the FALLBACK, keeping a broken
+                         image off a government booking page. -->
+                    <div class="media-plate" style={exploreMediaStyle}>
+                        <template lwc:if={showMediaImage}>
+                            <img
+                                class={mediaImgClass}
+                                src={mediaSrc}
+                                alt={mediaAlt}
+                                decoding="async"
+                                onload={handleMediaLoad}
+                                onerror={handleMediaError}
+                            />
+                            <!-- Sits inside the plate, which is already sized, so the card does
+                                 not resize when the picture lands. -->
+                            <template lwc:if={mediaPending}>
+                                <div class="media-loading">
+                                    <div class="spinner"></div>
+                                    <div class="veil-text">{labels.loadingMedia}</div>
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- playWalkthrough() drives it so refused unmuted playback downgrades to a silent play. preload=metadata,
+                             not none - with none playback never begins - so the 223-273MB master export is fetched on opening the tab. -->
+                        <template lwc:if={showWalkthroughVideo}>
+                            <video
+                                class="walkthrough-video"
+                                controls
+                                playsinline
+                                preload="metadata"
+                                poster={walkthroughPoster}
+                                src={mediaSrc}
+                                title={labels.walkthroughPlay}
+                                onerror={handleMediaError}
+                            ></video>
+                        </template>
+
+                        <template lwc:if={showDrawnVilla}>
+                            <canvas class="villa-art"></canvas>
+                        </template>
+
+                        <!-- The room, then the standing representative note; only interiors name
+                             a room. -->
+                        <div class="media-cap">
+                            <template lwc:if={hasGalleryRoom}>
+                                <span class="media-room">{galleryRoom}</span>
+                            </template>
+                            {indicativeLabel}
+                        </div>
+
+                        <!-- Inside the plate, bottom trailing corner - measured emptiest across
+                             the supplied sheets. -->
+                        <template lwc:if={showFloors}>
+                            <div class="floor-picker">
+                                <div class="floor-cap">{labels.floor}</div>
+                                <template for:each={floors} for:item="floor">
+                                    <button
+                                        key={floor.key}
+                                        class={floor.cls}
+                                        type="button"
+                                        data-floor={floor.key}
+                                        onclick={handleFloor}
+                                    >
+                                        {floor.key}
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- THE CHEVRONS ARE CONSTANT: U+2039/U+203A are Bidi_Mirrored, so Arabic flips them and inset-inline swaps the buttons - anything else that turns them is a third flip.
+                         Both have been tried; check the rendered pixels, not textContent. -->
+                    <template lwc:if={showGallery}>
+                        <button
+                            class="media-prev"
+                            type="button"
+                            title={labels.prevImage}
+                            aria-label={labels.prevImage}
+                            onclick={handleGalleryPrev}
+                        >
+                            &#8249;
+                        </button>
+                        <!-- dir=ltr: "1 / 2" is two digit runs either side of a neutral slash, so
+                             an Arabic paragraph reorders it and the customer reads "2 / 1". -->
+                        <div class="media-count" dir="ltr">{galleryCount}</div>
+                        <button
+                            class="media-next"
+                            type="button"
+                            title={labels.nextImage}
+                            aria-label={labels.nextImage}
+                            onclick={handleGalleryNext}
+                        >
+                            &#8250;
+                        </button>
+                    </template>
+                </div>
+
+                <template lwc:if={showZoomControls}>
+                    <div class="explore-zoom">
+                        <button class="ez-btn" type="button" title={labels.zoomIn} onclick={handleExploreZoomIn}>+</button>
+                        <button class="ez-btn" type="button" title={labels.zoomOut} onclick={handleExploreZoomOut}>-</button>
+                    </div>
+                </template>
+
+                <div class="explore-bar">
+                    <button class="bar-btn" type="button" onclick={handleBackToCommunity}>{labels.backToCommunity}</button>
+                    <template for:each={mediaTabs} for:item="tab">
+                        <button
+                            key={tab.key}
+                            class={tab.barCls}
+                            type="button"
+                            data-tab={tab.key}
+                            onclick={handleTab}
+                        >
+                            {tab.label}
+                        </button>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={toastMessage}>
+            <div class="toast">{toastMessage}</div>
+        </template>
+
+        <!-- Pin mode. Ops sessions only; the server re-checks the gate on every call. -->
+        <template lwc:if={opsMode}>
+            <!-- The panel is the pin board - assignment moved onto the villa card. -->
+            <aside class="ops-panel">
+                <div class="ops-head">
+                    <h2 class="ops-title">{labels.opsBoardTitle}</h2>
+                    <button class="ops-enlarge" type="button" onclick={handleOpsBoardOpen}>{labels.opsEnlarge}</button>
+                </div>
+                <div class="ops-counts">
+                    <div class="ops-count"><b>{opsCountPinned}</b><span>{labels.opsCountPinned}</span></div>
+                    <div class="ops-count"><b>{opsCountWaiting}</b><span>{labels.opsStatusWaiting}</span></div>
+                    <div class="ops-count"><b>{opsCountBooked}</b><span>{labels.opsStatusBooked}</span></div>
+                    <div class="ops-count"><b>{opsCountSigned}</b><span>{labels.opsStatusSigned}</span></div>
+                </div>
+                <!-- The pool is only legible if the reader knows what the two tints mean; the map
+                     is otherwise a field of teal with no key. -->
+                <ul class="ops-legend">
+                    <li><i class="ops-key ops-key--reserve"></i>{labels.opsLegendReserve}</li>
+                    <li><i class="ops-key ops-key--pinned"></i>{labels.opsLegendPinned}</li>
+                </ul>
+                <!-- A payload with no reserve pool paints an inert map; say so rather than let ops
+                     hunt a plan that cannot answer. -->
+                <p class="ops-error" lwc:if={opsReserveMissing}>{labels.opsReserveMissing}</p>
+                <!-- Support readout, only with ?opsdebug in the URL. -->
+                <p class="ops-debug" lwc:if={showOpsDebug}>{opsDebugLine}</p>
+                <!-- Counts only. Applicant names and villa numbers live solely on the enlarged
+                     board: this panel sits over the plan, so it stays a glance, never a list. -->
+                <template lwc:if={opsPanelEmpty}>
+                    <p class="ops-hint">{labels.opsBoardEmpty}</p>
+                </template>
+            </aside>
+
+            <!-- The board, enlarged: a working table over the map. -->
+            <template lwc:if={opsBoardOpen}>
+                <div class="ops-board-overlay" onclick={handleOpsBoardScrim}>
+                    <section class="ops-board-sheet" role="dialog" aria-modal="true" aria-label={labels.opsBoardTitle}>
+                        <div class="ops-sheet-head">
+                            <h2 class="ops-title">{labels.opsBoardTitle}</h2>
+                            <button class="ops-sheet-close" type="button" aria-label={labels.close} onclick={handleOpsBoardClose}>&times;</button>
+                        </div>
+                        <div class="ops-tabs">
+                            <button class={opsAssignedTabClass} type="button" data-tab="assigned" onclick={handleOpsTab}>{labels.opsTabAssigned}</button>
+                            <button class={opsAvailableTabClass} type="button" data-tab="available" onclick={handleOpsTab}>{opsFreeLabel}</button>
+                        </div>
+
+                        <!-- The free executive stock: the list ops assigns from. -->
+                        <template lwc:if={showOpsAvailable}>
+                            <template lwc:if={hasOpsStock}>
+                                <div class="ops-table-scroll">
+                                    <table class="ops-table">
+                                        <thead>
+                                            <tr>
+                                                <th>{labels.opsColVilla}</th>
+                                                <th>{labels.opsColCluster}</th>
+                                                <th>{labels.opsColType}</th>
+                                                <th>{labels.opsColBeds}</th>
+                                                <th>{labels.opsColPrice}</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={opsStockRows} for:item="u">
+                                                <tr key={u.plotUid}>
+                                                    <td dir="ltr">{u.plotUid}</td>
+                                                    <td>{u.cluster}</td>
+                                                    <td>{u.villaType}</td>
+                                                    <td>{u.bedrooms}</td>
+                                                    <td dir="ltr">{u.price}</td>
+                                                    <td class="ops-row-actions">
+                                                        <button type="button" data-plot={u.plotUid} onclick={handleOpsBoardJump}>{labels.opsAssignThis}</button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <p class="ops-hint">{labels.opsStockEmpty}</p>
+                            </template>
+                        </template>
+
+                        <template lwc:if={showOpsAssigned}>
+                        <template lwc:if={hasOpsBoard}>
+                            <div class="ops-table-scroll">
+                                <table class="ops-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{labels.opsColApplicant}</th>
+                                            <th>{labels.opsColVilla}</th>
+                                            <th><button type="button" data-sort="age" onclick={handleOpsSort}>{labels.opsColPinnedOn}</button></th>
+                                            <th>{labels.opsColDays}</th>
+                                            <th><button type="button" data-sort="status" onclick={handleOpsSort}>{labels.opsColStatus}</button></th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={opsTableRows} for:item="r">
+                                            <tr key={r.plotUid}>
+                                                <td>{r.applicationNumber} {r.customerName}</td>
+                                                <td dir="ltr">{r.plotUid}</td>
+                                                <td dir="ltr">{r.pinnedOnLabel}</td>
+                                                <td>{r.daysWaiting}</td>
+                                                <td>{r.statusLabel}</td>
+                                                <td class="ops-row-actions">
+                                                    <button type="button" data-plot={r.plotUid} onclick={handleOpsBoardJump}>{labels.opsJump}</button>
+                                                    <template lwc:if={r.confirming}>
+                                                        <button type="button" class="ops-danger-link" data-plot={r.plotUid} onclick={handleOpsTableUnpin}>{labels.opsUnpinConfirm}</button>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <button type="button" class="ops-danger-link" data-plot={r.plotUid} onclick={handleOpsTableUnpin}>{labels.opsUnpin}</button>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <p class="ops-hint">{labels.opsBoardEmpty}</p>
+                        </template>
+                        </template>
+                        <p class="ops-error" lwc:if={opsMessage}>{opsMessage}</p>
+                    </section>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

@@ -1,0 +1,150 @@
+<template>
+    <section class="mc">
+        <header class="mc__hd">
+            <div>
+                <h4 class="mc__t">{title}</h4>
+                <template lwc:if={requested}><p class="mc__hint">{requested}</p></template>
+            </div>
+            <span class={chipClass}>{chipText}</span>
+        </header>
+
+        <template lwc:if={note}>
+            <p class="mc__note">{note}</p>
+        </template>
+
+        <ol class="mc__track">
+            <template for:each={steps} for:item="s">
+                <li key={s.key} class={s.cls}>
+                    <span class="mc__st-label">
+                        <span class={s.markCls} aria-hidden="true">
+                            <template lwc:if={s.done}>
+                                <c-modon-icon name="check" size="9"></c-modon-icon>
+                            </template>
+                        </span>
+                        <span>{s.label}</span>
+                    </span>
+                    <span class={s.barCls}></span>
+                    <template lwc:if={s.fact}><span class="mc__st-fact">{s.fact}</span></template>
+                </li>
+            </template>
+        </ol>
+
+        <template lwc:if={hasProblems}>
+            <div class="mc__problems">
+                <span class="mc__problems-t">{labels.DD_PROBLEMS}</span>
+                <ul class="mc__problems-l">
+                    <template for:each={problems} for:item="p">
+                        <li key={p}>{p}</li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        <dl class="mc__facts">
+            <template for:each={facts} for:item="r">
+                <div key={r.k} class="mc__kv">
+                    <dt>{r.label}</dt>
+                    <dd>{r.value}</dd>
+                </div>
+            </template>
+        </dl>
+
+        <template lwc:if={covers}>
+            <p class="mc__line">{covers}</p>
+        </template>
+
+        <div class="mc__docs">
+            <span class="mc__docs-t">{labels.DDC_DOCS}</span>
+            <ul class="mc__docs-l">
+                <template for:each={documents} for:item="d">
+                    <li key={d.key} class="mc__doc">
+                        <span class="mc__doc-n">{d.label}</span>
+                        <template lwc:if={d.url}>
+                            <a class="mc__doc-a" href={d.url} target="_blank" rel="noopener">{labels.CTA_VIEW_FORM}</a>
+                            <span class="mc__doc-on">{d.on}</span>
+                        </template>
+                        <template lwc:else>
+                            <span class="mc__doc-none">{labels.DDC_DOC_NONE}</span>
+                            <template lwc:if={d.canFetch}>
+                                <button class="btn btn-ghost btn-xs" type="button" data-signed={d.signed}
+                                    onclick={handleFetch} disabled={disabled}>{labels.CTA_FETCH_FORM}</button>
+                            </template>
+                        </template>
+                    </li>
+                </template>
+            </ul>
+        </div>
+
+        <template lwc:if={message}><p class="mc__msg">{message}</p></template>
+        <template lwc:if={error}><p class="mc__err">{error}</p></template>
+        <template lwc:if={working}><p class="mc__hint">{labels.DDC_WORKING}</p></template>
+
+        <template lwc:if={confirmingDiscard}>
+            <div class="mc__confirm">
+                <p class="mc__hint">{labels.DDC_DISCARD_HINT}</p>
+                <span class="mc__acts">
+                    <button class="btn btn-ghost btn-sm" type="button" onclick={handleBack} disabled={disabled}>{labels.CTA_CANCEL}</button>
+                    <button class="btn btn-primary btn-sm" type="button" onclick={handleDiscard} disabled={disabled}>{labels.CTA_CONFIRM_DISCARD}</button>
+                </span>
+            </div>
+        </template>
+
+        <template lwc:if={confirmingCancel}>
+            <div class="mc__confirm">
+                <p class="mc__hint">{labels.DDC_CANCEL_HINT}</p>
+                <div class="mc__grid">
+                    <label class="mc__fld">
+                        <span class="mc__lbl">{labels.DDC_CANCEL_REASON} *</span>
+                        <select class="mc__sel" onchange={handleReason} disabled={disabled}>
+                            <option value="">{labels.DD_CHOOSE}</option>
+                            <template for:each={reasonChoices} for:item="o">
+                                <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                            </template>
+                        </select>
+                    </label>
+                    <label class="mc__fld">
+                        <span class="mc__lbl">{labels.DDC_CANCEL_COMMENT}</span>
+                        <input autocomplete="off" class="mc__in" type="text" value={cancelComment} oninput={handleComment} disabled={disabled} />
+                    </label>
+                </div>
+                <span class="mc__acts">
+                    <button class="btn btn-ghost btn-sm" type="button" onclick={handleBack} disabled={disabled}>{labels.CTA_CANCEL}</button>
+                    <button class="btn btn-primary btn-sm" type="button" onclick={handleCancel} disabled={cancelDisabled}>{labels.CTA_SEND_CANCELLATION}</button>
+                </span>
+            </div>
+        </template>
+
+        <template lwc:if={actionsOffNote}><p class="mc__hint">{actionsOffNote}</p></template>
+        <template lwc:if={discardIsFinances}><p class="mc__hint">{labels.DDC_DISCARD_FINANCE}</p></template>
+
+        <footer class="mc__ft">
+            <span class="mc__foot">
+                <!-- 1.4: the sentence only while Finance and the bank are still ahead (showFoot);
+                     the separator belongs to it, so "Last read" stands alone without it -->
+                <template lwc:if={showFoot}>
+                    {labels.DD_FOOT}
+                    <template lwc:if={lastRead}><span class="mc__read"> · {lastRead}</span></template>
+                </template>
+                <template lwc:else>
+                    <template lwc:if={lastRead}><span class="mc__read">{lastRead}</span></template>
+                </template>
+            </span>
+            <span class="mc__acts">
+                <button class="btn btn-ghost btn-sm" type="button" onclick={handleHide} disabled={working}>{labels.CTA_HIDE_MANDATE}</button>
+                <button class="btn btn-ghost btn-sm" type="button" onclick={handleReread} disabled={disabled}>{labels.DDC_REREAD}</button>
+                <template lwc:if={showRefresh}>
+                    <button class="btn btn-ghost btn-sm" type="button" onclick={handleRefresh} disabled={disabled}>{labels.CTA_REFRESH_BANK}</button>
+                </template>
+                <template lwc:if={showDiscard}>
+                    <button class="btn btn-ghost btn-sm" type="button" onclick={handleAskDiscard} disabled={disabled}>{labels.CTA_DISCARD_MANDATE}</button>
+                </template>
+                <template lwc:if={showCancel}>
+                    <button class="btn btn-ghost btn-sm" type="button" onclick={handleAskCancel} disabled={disabled}>{labels.CTA_REQUEST_CANCELLATION}</button>
+                </template>
+                <template lwc:if={showSetupAgain}>
+                    <button class="btn btn-primary btn-sm" type="button" onclick={handleSetupAgain} disabled={disabled}>{labels.CTA_SETUP_AGAIN}</button>
+                </template>
+            </span>
+        </footer>
+    </section>
+</template>

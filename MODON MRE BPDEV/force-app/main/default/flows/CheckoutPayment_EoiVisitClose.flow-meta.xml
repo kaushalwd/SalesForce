@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Settle_Visit_Eois</name>
+        <label>Settle Visit EOIs</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <actionName>EOIVisitCloseAction</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>paymentIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>EOIVisitCloseAction</nameSegment>
+    </actionCalls>
+    <actionCalls>
+        <name>Settle_Visit_Eois_Retry</name>
+        <label>Settle Visit EOIs Retry</label>
+        <locationX>440</locationX>
+        <locationY>134</locationY>
+        <actionName>EOIVisitCloseAction</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>paymentIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>EOIVisitCloseAction</nameSegment>
+    </actionCalls>
+    <apiVersion>62.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <environments>Default</environments>
+    <interviewLabel>CheckoutPayment EOI Visit Close {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>CheckoutPayment EOI Visit Close</label>
+    <processType>AutoLaunchedFlow</processType>
+    <runInMode>SystemModeWithoutSharing</runInMode>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>EOI_Site_State__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Finalized</stringValue>
+            </value>
+        </filters>
+        <object>Checkout_Payment__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <scheduledPaths>
+            <connector>
+                <targetReference>Settle_Visit_Eois</targetReference>
+            </connector>
+            <pathType>AsyncAfterCommit</pathType>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>Retry_After_15_Minutes</name>
+            <connector>
+                <targetReference>Settle_Visit_Eois_Retry</targetReference>
+            </connector>
+            <label>Retry after 15 minutes</label>
+            <offsetNumber>15</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <timeSource>RecordTriggerEvent</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

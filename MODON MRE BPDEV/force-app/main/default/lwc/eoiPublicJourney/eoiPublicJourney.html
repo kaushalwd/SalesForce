@@ -1,0 +1,434 @@
+<template>
+    <div class="journey" data-step={step}>
+
+        <template lwc:if={isHero}>
+            <section class="hero">
+                <div class="hero__media"></div>
+                <div class="hero__chrome">
+                    <header class="topbar topbar--hero">
+                        <div class="topbar__spacer"></div>
+                        <div class="brand">
+                            <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                        </div>
+                        <div class="topbar__spacer"></div>
+                    </header>
+
+                    <div class="hero__center">
+                        <p class="eyebrow">By Invitation</p>
+                        <h1 class="display">A waterfront and hillside golf estate for those seeking a lifestyle with <em>no compromise.</em></h1>
+                        <span class="rule"></span>
+                        <h2 class="display display--md hero__tagline">{heroTagline}</h2>
+                        <button class="cta cta--ghost" onclick={handleStart}>
+                            <span>Begin</span><span class="cta__arrow">⟶</span>
+                        </button>
+                    </div>
+
+                    <div class="hero__progress">
+                        <span class="progress__dash progress__dash--active"></span>
+                        <span class="progress__dash"></span>
+                        <span class="progress__dash"></span>
+                        <span class="progress__dash"></span>
+                        <span class="progress__dash"></span>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={showStepHeader}>
+            <header class="topbar topbar--step">
+                <button class="back" onclick={handleBack}>‹</button>
+                <div class="brand brand--dark">
+                    <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                </div>
+                <div class="counter">{stepCounter}</div>
+            </header>
+        </template>
+
+        <template lwc:if={isIdentity}>
+            <section class="split">
+                <aside class="split__media">
+                    <div class="split__media-overlay">
+                        <p class="caps caps--gold">{projectLocation}</p>
+                        <p class="serif-quote">Golf Mansions, Villas and <em>Townhomes.</em></p>
+                    </div>
+                </aside>
+                <main class="split__form">
+                    <p class="eyebrow eyebrow--dark">{stepLabel}</p>
+                    <h2 class="display display--md">Tell me <em>about yourself</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <div class="tabs">
+                        <button class={individualTabClass} data-value="Individual" onclick={handleSelectCustomerType}>
+                            <em>Individual</em>
+                        </button>
+                        <span class="tabs__divider">|</span>
+                        <button class={organizationTabClass} data-value="Organization" onclick={handleSelectCustomerType}>
+                            Organisation
+                        </button>
+                    </div>
+
+                    <template lwc:if={isIndividual}>
+                        <div class="grid grid--two">
+                            <div class="field">
+                                <label class="field__label">First Name</label>
+                                <input class="field__input" type="text" data-field="firstName"
+                                    value={form.firstName} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Last Name</label>
+                                <input class="field__input" type="text" data-field="lastName"
+                                    value={form.lastName} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Email</label>
+                                <input class="field__input" type="email" data-field="email"
+                                    value={form.email} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Mobile</label>
+                                <input class="field__input" type="tel" data-field="mobile"
+                                    placeholder="+9715XXXXXXXX"
+                                    value={form.mobile} oninput={handleFieldChange} />
+                            </div>
+                        </div>
+
+                        <div class="field field--block">
+                            <label class="field__label">Resident Status</label>
+                            <div class="segmented segmented--two">
+                                <button class={residentClass} data-value="Resident" onclick={handleSelectResidentStatus}>Resident</button>
+                                <button class={nonResidentClass} data-value="Non Resident" onclick={handleSelectResidentStatus}>Non-Resident</button>
+                            </div>
+                        </div>
+
+                        <template lwc:if={isResident}>
+                            <div class="field">
+                                <label class="field__label">Emirates ID No.</label>
+                                <input class="field__input" type="text" data-field="emiratesId"
+                                    placeholder="784-XXXX-XXXXXXX-X"
+                                    value={form.emiratesId} oninput={handleFieldChange} />
+                            </div>
+                        </template>
+                        <template lwc:if={isNonResident}>
+                            <div class="field">
+                                <label class="field__label">Passport Number</label>
+                                <input class="field__input" type="text" data-field="passportNumber"
+                                    value={form.passportNumber} oninput={handleFieldChange} />
+                            </div>
+                        </template>
+                    </template>
+
+                    <template lwc:if={isOrganization}>
+                        <div class="grid grid--two">
+                            <div class="field">
+                                <label class="field__label">Company Name</label>
+                                <input class="field__input" type="text" data-field="companyName"
+                                    value={form.companyName} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Trade License No.</label>
+                                <input class="field__input" type="text" data-field="tradeLicenseNumber"
+                                    value={form.tradeLicenseNumber} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Trade License Expiry</label>
+                                <input class="field__input" type="date" data-field="tradeLicenseExpiryDate"
+                                    value={form.tradeLicenseExpiryDate} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field"></div>
+                            <div class="field">
+                                <label class="field__label">Authorised First Name</label>
+                                <input class="field__input" type="text" data-field="authorizedFirstName"
+                                    value={form.authorizedFirstName} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Authorised Last Name</label>
+                                <input class="field__input" type="text" data-field="authorizedLastName"
+                                    value={form.authorizedLastName} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Authorised Email</label>
+                                <input class="field__input" type="email" data-field="authorizedEmail"
+                                    value={form.authorizedEmail} oninput={handleFieldChange} />
+                            </div>
+                            <div class="field">
+                                <label class="field__label">Authorised Phone</label>
+                                <input class="field__input" type="tel" data-field="authorizedPhone"
+                                    placeholder="+9715XXXXXXXX"
+                                    value={form.authorizedPhone} oninput={handleFieldChange} />
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="error">{errorMessage}</p>
+                    </template>
+
+                    <footer class="actions">
+                        <button class="cta cta--pill" onclick={handleIdentityContinue}>
+                            <em>Continue</em> <span class="cta__arrow">⟶</span>
+                        </button>
+                        <span class="actions__hint">Your information stays private.</span>
+                    </footer>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isVerification}>
+            <section class="split">
+                <aside class="split__media split__media--dim">
+                    <div class="split__media-overlay">
+                        <p class="caps caps--gold">A moment of trust</p>
+                        <p class="serif-quote">Verify <em>your contact.</em></p>
+                    </div>
+                </aside>
+                <main class="split__form">
+                    <p class="eyebrow eyebrow--dark">{stepLabel}</p>
+                    <h2 class="display display--md">Verify your <em>contact.</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <div class="field field--block">
+                        <label class="field__label">Channel</label>
+                        <div class="segmented segmented--two">
+                            <button class={emailChannelClass} data-value="Email" onclick={handleSelectChannel}>Email</button>
+                            <button class={smsChannelClass} data-value="SMS" onclick={handleSelectChannel}>SMS</button>
+                        </div>
+                    </div>
+
+                    <template lwc:if={verificationRequestId}>
+                        <p class="subdued">We sent a 6-digit code to <strong>{maskedTarget}</strong>.</p>
+                        <div class="field field--block">
+                            <label class="field__label">Verification Code</label>
+                            <input class="field__input field__input--otp" type="text" inputmode="numeric"
+                                maxlength="6" value={enteredCode} oninput={handleCodeChange} />
+                        </div>
+
+                        <template lwc:if={errorMessage}>
+                            <p class="error">{errorMessage}</p>
+                        </template>
+
+                        <footer class="actions actions--row">
+                            <button class="cta cta--pill" onclick={handleVerify}>
+                                <em>Verify</em> <span class="cta__arrow">⟶</span>
+                            </button>
+                            <button class="link" onclick={handleResend}>Resend code</button>
+                        </footer>
+                    </template>
+
+                    <template lwc:if={isLoading}>
+                        <p class="subdued">Sending verification code…</p>
+                    </template>
+
+                    <template lwc:if={verificationRequestId}>
+                    </template>
+                    <template lwc:else>
+                        <template lwc:if={errorMessage}>
+                            <p class="error">{errorMessage}</p>
+                        </template>
+                        <footer class="actions">
+                            <button class="cta cta--text" onclick={handleSendCode}>
+                                <em>Send code</em> <span class="cta__arrow">⟶</span>
+                            </button>
+                        </footer>
+                    </template>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isResidence}>
+            <section class="split">
+                <aside class="split__media split__media--residence">
+                    <div class="split__media-overlay">
+                        <p class="caps caps--gold">The Collection</p>
+                        <p class="serif-quote">Choose your <em>residence.</em></p>
+                    </div>
+                </aside>
+                <main class="split__form split__form--scroll">
+                    <p class="eyebrow eyebrow--dark">{stepLabel}</p>
+                    <h2 class="display display--md">Select your <em>residence.</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <template lwc:if={tiles.length}>
+                        <div class="tiles">
+                            <template for:each={tileViewModels} for:item="t">
+                                <div key={t.rangeId} class={t.tileClass} data-range-id={t.rangeId}>
+                                    <div class="tile__media">
+                                        <img src={t.renderUrl} alt={t.unitTypology}
+                                            class="tile__media-img" onerror={handleTileImageError} />
+                                        <span class="tile__chip">{t.bedrooms}</span>
+                                        <template lwc:if={t.quantity}>
+                                            <span class="tile__qty-badge">× {t.quantity}</span>
+                                        </template>
+                                    </div>
+                                    <div class="tile__body">
+                                        <p class="caps caps--gold tile__phase">{t.phaseName}</p>
+                                        <p class="tile__title">{t.unitTypology}</p>
+                                        <span class="tile__divider"></span>
+                                        <div class="tile__price-row">
+                                            <p class="tile__price-label">EOI Amount</p>
+                                            <p class="tile__price">AED {t.formattedAmount}</p>
+                                        </div>
+                                        <div class="tile__cart">
+                                            <button type="button" class="tile__cart-btn"
+                                                data-range-id={t.rangeId}
+                                                onclick={handleTileRemove}
+                                                disabled={t.removeDisabled}>−</button>
+                                            <span class="tile__cart-qty">{t.quantity}</span>
+                                            <button type="button" class="tile__cart-btn"
+                                                data-range-id={t.rangeId}
+                                                onclick={handleTileAdd}>+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <p class="subdued">Residence collection coming soon.</p>
+                    </template>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="error">{errorMessage}</p>
+                    </template>
+
+                    <template lwc:if={selectionCount}>
+                        <div class="selection-summary">
+                            <p class="caps caps--gold">Your Selection</p>
+                            <p class="selection-summary__line">{selectionCount} unit(s) selected</p>
+                            <p class="selection-summary__total">AED {formattedSelectionTotal}</p>
+                        </div>
+                    </template>
+
+                    <footer class="actions">
+                        <button class="cta cta--pill" onclick={handleResidenceContinue}>
+                            <em>Continue</em> <span class="cta__arrow">⟶</span>
+                        </button>
+                    </footer>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isReview}>
+            <section class="split">
+                <aside class="split__media split__media--review">
+                    <div class="split__media-overlay">
+                        <p class="caps caps--gold">Your Selection</p>
+                        <p class="serif-quote">{selectionCount} residence(s).</p>
+                    </div>
+                </aside>
+                <main class="split__form">
+                    <p class="eyebrow eyebrow--dark">{stepLabel}</p>
+                    <h2 class="display display--md">Confirm your <em>interest.</em></h2>
+                    <span class="rule rule--dark"></span>
+
+                    <div class="summary">
+                        <template for:each={selectedTilesView} for:item="sel">
+                            <div key={sel.rangeId} class="summary__row summary__row--cart">
+                                <div class="summary__line">
+                                    <span class="summary__label">{sel.unitTypology} · {sel.bedrooms} · {sel.phaseName}</span>
+                                    <span class="summary__qty">× {sel.quantity}</span>
+                                </div>
+                                <div class="summary__line-end">
+                                    <span class="summary__value">AED {sel.formattedLineTotal}</span>
+                                    <button type="button" class="summary__remove"
+                                        data-range-id={sel.rangeId} onclick={handleRemoveLine}
+                                        title="Remove">×</button>
+                                </div>
+                            </div>
+                        </template>
+                        <div class="summary__row summary__row--total">
+                            <span class="summary__label">Total EOI Amount</span>
+                            <span class="summary__value summary__value--gold">AED {formattedSelectionTotal}</span>
+                        </div>
+                    </div>
+
+                    <div class="field field--block">
+                        <label class="field__label">Payment Type</label>
+                        <div class="segmented segmented--two">
+                            <button class={chequeClass} data-value="Cheque" onclick={handleSelectPaymentType}>Pay by Cheque</button>
+                            <button class={wireTransferClass} data-value="Bank Transfer" onclick={handleSelectPaymentType}>Wire Transfer</button>
+                        </div>
+                        <template lwc:if={isPayByCheque}>
+                            <p class="payment__note">*Please ensure to submit original current-dated cheque/s within 24 hours at Modon Sales Centre.</p>
+                        </template>
+                        <template lwc:if={isWireTransfer}>
+                            <p class="payment__note">*Please ensure to email us the proof of wire transfer within 24 hours to sales@modon.com.</p>
+                        </template>
+                    </div>
+
+                    <input type="text" class="hp" tabindex="-1" autocomplete="off"
+                        aria-hidden="true" value={honeypot} oninput={handleHoneypotChange} />
+
+                    <p class="legal">By submitting you agree to our <a href="https://www.modon.com/terms-and-conditions" target="_blank" rel="noopener noreferrer" class="link">Terms &amp; Conditions</a>.</p>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="error">{errorMessage}</p>
+                    </template>
+
+                    <footer class="actions">
+                        <button class="cta cta--accent" onclick={handleSubmit} disabled={isLoading}>
+                            <em>Submit registration</em> <span class="cta__arrow">⟶</span>
+                        </button>
+                    </footer>
+                </main>
+            </section>
+        </template>
+
+        <template lwc:if={isConfirmation}>
+            <section class="hero hero--confirmation">
+                <div class="hero__media hero__media--sunset"></div>
+                <div class="hero__chrome">
+                    <header class="topbar topbar--hero">
+                        <div class="topbar__spacer"></div>
+                        <div class="brand">
+                            <img class="brand__logo" src="/sfsites/c/resource/Microsite_Logo/logo.svg" alt={projectName}>
+                        </div>
+                        <div class="topbar__spacer"></div>
+                    </header>
+                    <div class="hero__center">
+                        <h1 class="display">Thank you, your <em>interest is registered.</em></h1>
+                        <span class="rule"></span>
+                        <p class="subdued">You will receive a confirmation message shortly with your EOI reference number/s</p>
+                        <p class="subdued">To complete your registration, please act within 24 hours of receiving your EOI reference: if you selected Pay by Cheque, submit your original current-dated cheque(s) at the Modon Sales Centre; if you selected Wire Transfer, email the proof of transfer to sales@modon.com, quoting your EOI reference number(s).</p>
+                        <p class="subdued">Our team will be in touch with you shortly.</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={isQuotaClosed}>
+            <section class="hero hero--closed">
+                <div class="hero__media hero__media--closed"></div>
+                <div class="hero__chrome">
+                    <div class="hero__center">
+                        <p class="eyebrow">A Note from Modon</p>
+                        <h1 class="display">Registrations are <em>now closed.</em></h1>
+                        <span class="rule"></span>
+                        <p class="subdued">Thank you for your interest in {projectName}. Please contact our team for future opportunities.</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:if={isUnavailable}>
+            <section class="hero hero--closed">
+                <div class="hero__chrome">
+                    <div class="hero__center">
+                        <p class="eyebrow">Pending Launch</p>
+                        <h1 class="display">No <em>active launch.</em></h1>
+                        <span class="rule"></span>
+                        <p class="subdued">Our next collection will be announced soon.</p>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <footer class="site-footer">
+            <p class="site-footer__copy">&copy; Modon {currentYear} &mdash; All rights reserved</p>
+            <nav class="site-footer__links">
+                <a href="https://www.modon.com/terms-and-conditions" target="_blank" rel="noopener" class="site-footer__link">Terms &amp; Conditions</a>
+                <a href="https://www.modon.com/privacy-policy" target="_blank" rel="noopener" class="site-footer__link">Privacy Policy</a>
+            </nav>
+        </footer>
+
+    </div>
+</template>

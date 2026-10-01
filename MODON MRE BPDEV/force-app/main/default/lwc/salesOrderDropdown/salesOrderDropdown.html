@@ -1,0 +1,207 @@
+<template>
+  <div class="sales-order-container">
+    <h2 class="section-title">Project Summary</h2>
+
+    <!-- Project Summary List -->
+    <template if:true={hasData}>
+      <div class="project-scroll">
+        <template for:each={projects} for:item="proj">
+          <!--  Use projectKey as key -->
+          <div key={proj.projectKey} class="sales-order-card">
+            <div class="card-header">
+              <template if:true={proj.imageUrl}>
+                <img src={proj.imageUrl} alt="Project" class="project-image" />
+              </template>
+              <template if:false={proj.imageUrl}>
+                <div class="no-image-placeholder">No Image</div>
+              </template>
+
+              <div class="order-summary">
+                <div class="data-block">
+                  <strong>Project Name</strong>
+                  <span>{proj.projectName}</span>
+                </div>
+                <div class="data-block">
+                  <strong>Sales Orders</strong>
+                  <span>{proj.salesOrderCount}</span>
+                </div>
+                <div class="data-block">
+                  <strong>Units</strong>
+                  <span>{proj.unitCount}</span>
+                </div>
+                <div class="data-block">
+                  <strong>Total Amount</strong>
+                  <span>{proj.totalAmount} AED</span>
+                </div>
+                <div class="data-block">
+                  <strong>Paid Amount</strong>
+                  <span>{proj.totalPaid} AED</span>
+                </div>
+                <div class="data-block">
+                  <strong>Outstanding Amt</strong>
+                  <span>{proj.outstanding} AED</span>
+                </div>
+                <div class="data-block">
+                  <strong>Future Collection</strong>
+                  <span>{proj.future} AED</span>
+                </div>
+              </div>
+
+              <!--  Use projectKey for dataset -->
+              <div class="expand-arrow-right"
+                   data-project={proj.projectKey}
+                   onclick={openProjectModal}>
+                <lightning-icon icon-name="utility:expand_alt" size="x-small"></lightning-icon>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- No Data -->
+    <template if:false={hasData}>
+      <div class="no-data-container">
+        <p class="no-data-text">No data available</p>
+        <p class="no-data-subtext">
+          There is no project summary data to display at the moment. Please check again later.
+        </p>
+      </div>
+    </template>
+  </div>
+
+  <!--  Full Screen Modal -->
+  <template if:true={showProjectModal}>
+  <div data-portal-wrapper>
+    <div class="modal-backdrop" onclick={closeProjectModal}>
+      <div class="modal-container project-modal-container" onclick={stopModalClose}>
+        <button class="modal-close" title="Close" onclick={closeProjectModal}>✕</button>
+
+        <div class="modal-header">
+          <div class="modal-title">{selectedProject.projectName}</div>
+        </div>
+
+        <div class="modal-body project-modal-body">
+          <template for:each={selectedProject.salesOrders} for:item="order">
+            <div key={order.id} class="sales-order-block">
+              <div class="order-header" data-id={order.id} onclick={handleModalOrderExpand}>
+                <span class={order.ownerTagClass}>
+                  <strong
+                    class="owner-name clickable"
+                    data-id={order.id}
+                    onclick={navigateToOrder}
+                  >
+                    {order.name}
+                  </strong>
+                  <div class="owner-label">{order.ownerTypeLabel}</div>
+                </span>
+              </div>
+
+              <template if:true={order.isExpanded}>
+                <div class="expanded-section">
+                  <!-- Joint Owners -->
+                  <template if:true={order.hasJointOwners}>
+                    <div class="maincode">
+                      <h3>Joint Owners Information</h3>
+                      <div class="joint-owner-container">
+                        <template for:each={order.jointOwners} for:item="jo">
+                          <div key={jo.SalesOrder__c} class="joint-card">
+                            <div class="data-block">
+                              <strong>Joint Owner Name</strong>
+                              <span
+                                class="clickable-link"
+                                data-id={jo.JointOwnerAccount__c}
+                                onclick={navigateToAccount}
+                              >
+                                {jo.JointOwnerAccount__r.Name}
+                              </span>
+                            </div>
+
+                            <div class="data-block">
+                              <strong>Relationship Name</strong>
+                              <span>{jo.RelationshipType__c}</span>
+                            </div>
+
+                            <div class="data-block">
+                              <strong>Relationship Type</strong>
+                              <span>{jo.RelationshipSubType__c}</span>
+                            </div>
+
+                            <div class="data-block">
+                              <strong>Ownership Percentage %</strong>
+                              <span>{jo.OwnershipPercentage__c}%</span>
+                            </div>
+
+                            <div class="data-block">
+                              <strong>Opportunity</strong>
+                              <span>{jo.Opportunity__r.Name}</span>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Primary Owner -->
+                  <div class="sales-info">
+                    <template if:false={order.hasJointOwners}>
+                      <h3>Primary Owner Information</h3>
+                      <div class="data-block">
+                        <strong>Primary Owner Name</strong>
+                        <span
+                          class="clickable-link"
+                          data-id={order.accountId}
+                          onclick={navigateToAccount}
+                        >
+                          {order.primaryOwner}
+                        </span>
+                      </div>
+
+                      <div class="data-block">
+                        <strong>Ownership Percentage</strong>
+                        <span>100%</span>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Unit Info -->
+                  <div class="unit-section">
+                    <h3>Unit Information</h3>
+
+                    <div class="data-block">
+                      <strong>Unit Name</strong>
+                      <span
+                        class="clickable-link"
+                        data-id={order.unitId}
+                        onclick={navigateToUnit}
+                      >
+                        {order.unitName}
+                      </span>
+                    </div>
+
+                    <div class="data-block">
+                      <strong>Status</strong>
+                      <span class={order.unitStatusClass}>{order.unitStatus}</span>
+                    </div>
+
+                    <div class="data-block">
+                      <strong>Classification</strong>
+                      <span>{order.unitClassification}</span>
+                    </div>
+
+                    <div class="data-block">
+                      <strong>Payment Plan</strong>
+                      <span>{order.paymentPlan}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+</template>

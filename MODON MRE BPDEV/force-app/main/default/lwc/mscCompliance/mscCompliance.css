@@ -1,0 +1,404 @@
+/* c/mscStyles for .btn / .btn-primary / .btn-ghost / .btn-sm. Everything else here is
+   local: the panel's own head, the segmented path (1.2), notes and actions. */
+@import "c/mscStyles";
+
+.cmp {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── head ─────────────────────────────────────────────────────────────── */
+.cmp__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.cmp__eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted, #a3a3a3);
+}
+.cmp__head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.cmp__checked {
+    font-size: 11px;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.cmp__refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+.cmp__refresh-btn:hover:not(:disabled) {
+    border-color: var(--text-dim, #8a8a8a);
+    color: var(--text, #fafafa);
+}
+.cmp__refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.cmp__refresh-btn:focus-visible {
+    outline: 2px solid var(--focus-ring, #fafafa);
+    outline-offset: 2px;
+}
+.cmp__refresh {
+    display: inline-flex;
+    line-height: 0;
+}
+.cmp__refresh--spin {
+    animation: mscSpin 1s linear infinite;
+}
+
+/* the chip: the state, coloured to match the segment it describes */
+.vchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.vchip i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+.vchip--muted {
+    color: var(--text-dim, #8a8a8a);
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+.vchip--ok {
+    color: var(--chip-green, #4ade80);
+    background: rgba(22, 163, 74, 0.16);
+}
+.vchip--warn {
+    color: var(--chip-red, #f87171);
+    background: rgba(220, 38, 38, 0.14);
+}
+.vchip--info {
+    color: var(--chip-blue, #60a5fa);
+    background: rgba(59, 130, 246, 0.16);
+}
+
+/* Visible to screen readers, not on screen - the icon alone is not a label. */
+.assistive {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ── the path: four segments, edge to edge ─────────────────────────────── */
+/* Each segment = icon tile + label, a rounded bar (green done · amber in play ·
+   blue with compliance · red on a problem · dim ahead), and the fact beneath.
+   No wire, no dots - nothing to misalign. */
+.steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    padding: 4px 0 0;
+}
+.step {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+.step .head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+.step .tile {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--input-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-dim, #8a8a8a);
+    flex-shrink: 0;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+.step .tile c-modon-icon {
+    display: flex;
+}
+.step .lbl {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim, #8a8a8a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.step .bar {
+    position: relative;
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+    overflow: hidden;
+}
+.step .meta {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 17px;
+}
+.step .strong {
+    font-weight: 600;
+    color: var(--text, #fafafa);
+}
+.step .strong--x {
+    color: var(--chip-red, #f87171);
+}
+.step .meta--ok {
+    color: var(--chip-green, #4ade80);
+}
+.step .meta--bad {
+    color: var(--chip-red, #f87171);
+}
+/* done */
+.step--done .tile {
+    background: rgba(22, 163, 74, 0.16);
+    border-color: rgba(22, 163, 74, 0.4);
+    color: var(--chip-green, #4ade80);
+}
+.step--done .lbl {
+    color: var(--text, #fafafa);
+}
+.step--done .bar {
+    background: linear-gradient(90deg, var(--step-done, #16a34a), var(--chip-green, #4ade80));
+}
+/* In play. Neutral, and still: it is a step waiting on someone else, not a process
+   running, and a sweeping bar said the console was doing something it was not. Tokens
+   rather than literals, so it holds in both themes. */
+.step--active .tile {
+    background: var(--row-bg, rgba(255, 255, 255, 0.03));
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.16));
+    color: var(--text-muted, #a3a3a3);
+}
+.step--active .lbl {
+    color: var(--text, #fafafa);
+}
+.step--active .meta {
+    color: var(--text-muted, #a3a3a3);
+}
+.step--active .bar {
+    background: var(--text-dim, #8a8a8a);
+}
+/* with compliance */
+.step--info .tile {
+    background: rgba(59, 130, 246, 0.16);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: var(--chip-blue, #60a5fa);
+}
+.step--info .lbl {
+    color: var(--text, #fafafa);
+}
+.step--info .meta {
+    color: var(--text-muted, #a3a3a3);
+}
+.step--info .bar {
+    background: rgba(59, 130, 246, 0.26);
+}
+.step--info .bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -45%;
+    width: 45%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, var(--chip-blue, #60a5fa), transparent);
+    animation: cmp-sweep 1.9s ease-in-out infinite;
+}
+/* problem */
+.step--warn .tile {
+    background: rgba(220, 38, 38, 0.14);
+    border-color: rgba(220, 38, 38, 0.4);
+    color: var(--chip-red, #f87171);
+}
+.step--warn .lbl {
+    color: var(--text, #fafafa);
+}
+.step--warn .bar {
+    background: rgba(220, 38, 38, 0.55);
+}
+@keyframes cmp-sweep {
+    to {
+        left: 100%;
+    }
+}
+
+/* ── notes: blocked reason, note from compliance, last check, company account ── */
+.note {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+.note c-modon-icon {
+    display: flex;
+    margin-top: 2px;
+    color: var(--text-dim, #8a8a8a);
+}
+.note b {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    margin-bottom: 2px;
+}
+.note q {
+    quotes: none;
+    font-style: italic;
+    color: var(--text, #fafafa);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.note--warn {
+    border-color: rgba(245, 158, 11, 0.35);
+    color: var(--text, #fafafa);
+}
+.note--warn c-modon-icon {
+    color: var(--chip-amber, #fbbf24);
+}
+
+/* ── actions ──────────────────────────────────────────────────────────── */
+/* A footer, not a row of buttons left where the content happened to end. The rule
+   closes the card off, the actions sit at the right edge with the one that finishes the
+   step furthest right, and anything the rep needs to read stays left of them. */
+.acts {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+    padding-top: 14px;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+}
+.acts .btn {
+    border-radius: 999px;
+}
+.acts .btn c-modon-icon {
+    display: flex;
+    flex-shrink: 0;
+}
+.acts__hint {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    margin-right: auto;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── phone: the same four segments, stacked ───────────────────────────── */
+@media (max-width: 640px) {
+    /* Nothing to align against on a phone: the actions stack and fill the width. */
+    .acts {
+        align-items: stretch;
+    }
+    .acts .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+    .acts__hint {
+        width: 100%;
+        margin-right: 0;
+        white-space: normal;
+    }
+    .steps {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .step {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        column-gap: 12px;
+        row-gap: 6px;
+        align-items: center;
+    }
+    .step .head {
+        display: contents;
+    }
+    .step .lbl {
+        white-space: normal;
+    }
+    .step .bar {
+        grid-column: 2;
+        height: 4px;
+    }
+    .step .meta {
+        grid-column: 2;
+    }
+    .acts .btn {
+        flex: 1 1 auto;
+    }
+    .acts__hint {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Respect a stated preference for less motion - a perpetual spinner is the
+   classic offender. The disabled state still communicates that work is in
+   progress. */
+@media (prefers-reduced-motion: reduce) {
+    .cmp__refresh--spin,
+    .step--info .bar::after {
+        animation: none;
+    }
+}

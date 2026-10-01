@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Required_Fields_for_Qualified_Leads</fullName>
+    <active>true</active>
+    <description>This validation rule checks required fields values.</description>
+    <errorConditionFormula>AND(
+    ISCHANGED(Status),
+    OR( 
+        AND(ISPICKVAL(Status, &quot;Qualified&quot;), IsConverted = TRUE),
+        ISPICKVAL(Status, &quot;Lead Qualified&quot;)
+    ),
+    OR(
+        ISBLANK(TEXT(CustomerBudget__c)),
+        ISBLANK(TEXT(UnitType__c))
+    ),
+    ISPICKVAL(Source_Entity__c, &quot;Modon - Egypt&quot;),
+				$Profile.Name &lt;&gt; &quot;Modon Egypt - Call Center&quot;
+)</errorConditionFormula>
+    <errorMessage>For Lead to be Qualified or move forward with Customer Budget and Unit Type fields are required.</errorMessage>
+</ValidationRule>

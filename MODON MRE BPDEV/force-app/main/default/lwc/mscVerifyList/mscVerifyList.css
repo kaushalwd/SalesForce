@@ -1,0 +1,380 @@
+/* c/mscStyles carries .chip, .pill and .eyebrow; the rest is this screen's own. Tokens only. */
+@import "c/mscStyles";
+
+/* MSC-190: ONE surface. In the tab the host (c/mscOwnersPane) already draws the card, so the
+   pane adds nothing; the journey has no section card on this step, so there it keeps one. */
+.vl {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    padding: 0;
+}
+.vl--journey {
+    /* MSC-192: this variant draws its own padding, so it was its own bleed.
+       2.x+3 - UI-06 / R2-19: no bleed here; the band stays inside the card at every width */
+    --vl-bleed: 0px;
+    border-radius: 16px;
+    background: var(--surface, rgba(15, 15, 15, 0.68));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.16));
+    padding: 18px 20px 16px;
+}
+
+/* head */
+.vl__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.vl__head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    /* pinned right even when the eyebrow is absent */
+    margin-left: auto;
+}
+.vl__checked {
+    font-size: 12px;
+    color: var(--text-dim, #8a8a8a);
+    font-variant-numeric: tabular-nums;
+}
+.vl__refresh {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: transparent;
+    color: var(--text-muted, #a3a3a3);
+    cursor: pointer;
+    padding: 0;
+    flex: none;
+}
+.vl__refresh:hover:not([disabled]) { color: var(--text, #fafafa); }
+.vl__refresh[disabled] { opacity: 0.45; cursor: not-allowed; }
+.vl__refresh:focus-visible {
+    outline: 2px solid var(--text, #fafafa);
+    outline-offset: 2px;
+}
+.vl__refresh--busy { animation: vl-spin 900ms linear infinite; }
+@keyframes vl-spin { to { transform: rotate(360deg); } }
+
+.vl__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+}
+.vl__none {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--text-dim, #8a8a8a);
+}
+
+/* one person */
+.vl__people {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    margin-top: 16px;
+}
+/* MSC-190: a hairline between parties instead of a border around each */
+.vl__person {
+    border-radius: 0;
+    border: 0;
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    background: none;
+    padding: 16px 0 18px;
+}
+/* the first row under a group heading needs no rule above it */
+.vl__grp-h + .vl__person {
+    border-top: 0;
+}
+.vl__person-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+.vl__who {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.vl__name {
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text, #fafafa);
+}
+.vl__meta {
+    font-size: 12.5px;
+    color: var(--text-dim, #8a8a8a);
+}
+.vl__chip--green { color: var(--chip-green, #4ade80); border-color: var(--edge-green, rgba(74, 222, 128, 0.34)); }
+.vl__chip--blue  { color: var(--chip-blue,  #60a5fa); border-color: var(--edge-blue,  rgba(96, 165, 250, 0.34)); }
+.vl__chip--amber { color: var(--chip-amber, #fbbf24); border-color: var(--edge-amber, rgba(251, 191, 36, 0.34)); }
+.vl__chip--red   { color: var(--chip-red,   #f87171); border-color: var(--edge-red,   rgba(248, 113, 113, 0.34)); }
+
+/* the four stages */
+.vl__track {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* MSC-191: four stages read as one object; without this they stretch to the window */
+    max-width: 900px;
+}
+/* 1.3: a company has two real stages, not four with two dashes */
+.vl__track--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* MSC-226: the booking detail's sheet is ~420px wider since MSC-222, and the cap above left
+   that width empty to the right of the track. The cap is lifted THERE ONLY.
+   The booking journey keeps its 900px and is not touched by one pixel: it renders this
+   component as variant="journey", so variantClass gives it `vl vl--journey` and it can never
+   match `:not(.vl--journey)`. Its step sits beside a persistent rail, where four stages spread
+   across the window would read badly - that is what MSC-191 was protecting, and it still holds.
+   Nothing above is edited and no markup changes, so there is no route by which the journey moves.
+   Desktop only: below 900px the media query at the foot turns the track two-by-two in both
+   hosts, and the cap never binds at that width anyway. */
+@media (min-width: 900px) {
+    .vl:not(.vl--journey) .vl__track { max-width: none; }
+}
+.vl__st { min-width: 0; }
+.vl__st-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--text-dim, #8a8a8a);
+    margin-bottom: 8px;
+}
+.vl__st.is-done .vl__st-label,
+.vl__st.is-warn .vl__st-label { color: var(--text, #fafafa); }
+/* 2.x+3 - UI-08: the step in progress reads in the text colour, not link blue */
+.vl__st.is-now .vl__st-label { color: var(--text, #fafafa); }
+
+.vl__st-mark {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid var(--divider, rgba(255, 255, 255, 0.13));
+    display: grid;
+    place-items: center;
+    flex: none;
+    color: transparent;
+}
+.vl__st-mark.is-done {
+    background: var(--chip-green, #4ade80);
+    border-color: var(--chip-green, #4ade80);
+    color: #06240f;
+}
+.vl__st-mark.is-now { border-color: var(--text-muted, #a3a3a3); }
+.vl__st-mark.is-warn {
+    background: var(--chip-amber, #fbbf24);
+    border-color: var(--chip-amber, #fbbf24);
+    color: #2a1c00;
+}
+
+.vl__st-bar {
+    display: block;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--divider, rgba(255, 255, 255, 0.13));
+}
+.vl__st-bar.is-done { background: var(--chip-green, #4ade80); }
+.vl__st-bar.is-warn { background: var(--chip-amber, #fbbf24); }
+.vl__st-bar.is-now  { background: var(--text-dim, #8a8a8a); }
+
+.vl__st-fact {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-dim, #8a8a8a);
+}
+.vl__st.is-done .vl__st-fact { color: var(--text-muted, #a3a3a3); }
+.vl__st.is-warn .vl__st-fact { color: var(--chip-amber, #fbbf24); }
+
+/* whose move it is */
+/* MSC-191: no rule here - a party's sentence is part of the party, not a new section */
+.vl__next {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 13px;
+}
+.vl__next-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+    min-width: 0;
+}
+.vl__acts {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+.vl__act { min-height: 36px; padding: 6px 14px; font-size: 12.5px; }
+.vl__act--primary {
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.vl__act[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* ownership, as context */
+/* MSC-192: no rule above ownership either; the space says it is a footer */
+.vl__strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 0;
+}
+.vl__strip-l {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted, #a3a3a3);
+    min-width: 0;
+}
+.vl__strip-l b {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim, #8a8a8a);
+    margin-bottom: 5px;
+}
+.vl__add {
+    margin-left: auto;
+    color: var(--pill-fg, #fafafa);
+    border-color: var(--pill-border, #fafafa);
+}
+.vl__add[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* phone */
+@media (max-width: 899px) {
+    .vl--journey { padding: 16px 14px 14px; }
+    /* four abreast becomes two rows of two */
+    .vl__track { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+    .vl__next { flex-direction: column; align-items: stretch; }
+    .vl__acts { margin-left: 0; }
+    .vl__acts .pill { flex: 1; justify-content: center; min-height: 44px; }
+    .vl__strip { flex-direction: column; align-items: stretch; }
+    .vl__add { width: 100%; margin-left: 0; justify-content: center; min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .vl__refresh--busy { animation: none; }
+}
+
+/* MSC-182: two groups, one company card, an edge for what needs the rep */
+.vl__grp { display: flex; flex-direction: column; gap: 0; }
+.vl__grp + .vl__grp { margin-top: 16px; }
+/* MSC-191: the group is named once and the name stays with you - the strip sticks to the top of
+   the pane's scroll while its own parties pass under it, then hands over to the next group.
+   The ground is opaque (both themes) so rows slide beneath it cleanly. */
+.vl__grp-h {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex; align-items: center; gap: 10px;
+    /* MSC-192: bled to the host's edges - the negative margin and the equal padding cancel, so
+       the heading's text still lines up with the names below it. --vl-bleed is the host's own
+       horizontal padding (c/mscOwnersPane declares it; the journey sets its own); 0 if unset. */
+    margin: 0 calc(-1 * var(--vl-bleed, 0px));
+    padding: 10px var(--vl-bleed, 0px);
+    /* MSC-192: the two rules that held this strip up are gone. It reads by its ground: opaque
+       (rows slide under a sticky heading) with the row wash over it, so it steps away from the
+       pane in BOTH themes rather than by a fixed grey. */
+    background-color: var(--panel-bg, #141414);
+    background-image: linear-gradient(
+        var(--row-bg, rgba(255, 255, 255, 0.03)),
+        var(--row-bg, rgba(255, 255, 255, 0.03))
+    );
+    font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text, #fafafa);
+    /* 2.x+3 - UI-06: lets the cover below know when the band is pinned */
+    container-type: scroll-state;
+}
+/* 2.x+3 - UI-06: the scroll area's top padding leaves a gap above a pinned band where rows showed
+   through. While pinned, a strip of the band's own ground fills it. Browsers without scroll-state
+   queries keep the old look. */
+.vl__grp-cover {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 24px;
+    background-color: var(--panel-bg, #141414);
+    background-image: linear-gradient(
+        var(--row-bg, rgba(255, 255, 255, 0.03)),
+        var(--row-bg, rgba(255, 255, 255, 0.03))
+    );
+    pointer-events: none;
+}
+@container scroll-state(stuck: top) {
+    .vl__grp-cover {
+        display: block;
+    }
+}
+/* how many are below, before you scroll */
+.vl__grp-n {
+    font-size: 11px; font-weight: 600; letter-spacing: 0; text-transform: none;
+    color: var(--text-dim, #8a8a8a);
+    border: 1px solid var(--input-border, rgba(255, 255, 255, 0.16));
+    border-radius: 999px; padding: 1px 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* MSC-191: the row the rep must act on says so in words, on its own line */
+.vl__flag {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-left: auto; flex: none;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--chip-amber, #fbbf24);
+}
+.vl__flag i {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--chip-amber, #fbbf24);
+}
+
+/* MSC-190: a company buyer is still two tracks, drawn without the wrapper or their frames */
+.vl__co {
+    display: flex; flex-direction: column; gap: 0; padding: 0;
+    border: 0; border-radius: 0;
+}
+.vl__sec {
+    display: flex; flex-direction: column; gap: 14px;
+    /* MSC-193: the same vertical rhythm a party row uses, so the rule between the company and
+       its signatory sits in balanced space rather than tight against either track */
+    padding: 16px 0 18px;
+    border: 0; border-radius: 0; background: none;
+}
+/* MSC-193: the company's two tracks are separated like any other pair - one hairline, the same
+   weight and the same full width as the rule between parties. The indent still says the
+   signatory belongs to the company above it. */
+.vl__sec + .vl__sec {
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.13));
+    padding-left: 22px;
+}

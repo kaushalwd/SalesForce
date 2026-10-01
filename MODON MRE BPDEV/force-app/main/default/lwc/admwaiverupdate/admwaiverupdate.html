@@ -1,0 +1,226 @@
+<template>
+    <lightning-card title="ADM Waiver Upload" icon-name="custom:custom63">
+        <div class="slds-p-around_medium">
+
+            <div class="slds-grid slds-wrap slds-gutters">
+
+                <!-- Left Section -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_7-of-12">
+                    <div class="slds-grid slds-wrap slds-gutters">
+
+                        <!-- 5.0 Arvind Kesharwani 10/05/2026 - Waiver Type selector: ADM Fee Waiver or Only Dari Fee -->
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-combobox
+                                name="waiverType"
+                                label="Waiver Type"
+                                value={waiverType}
+                                options={waiverTypeOptions}
+                                onchange={handleWaiverTypeChange}
+                                required>
+                            </lightning-combobox>
+                        </div>
+
+                        <!-- 5.0 Arvind Kesharwani 10/05/2026 - Show Waiver % and DARI combobox only for ADM type -->
+                        <template if:true={showADMFields}>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input
+                                    type="number"
+                                    name="waiverpercent"
+                                    label="Waiver Percentage (%)"
+                                    message-when-range-underflow="Waiver Percentage must be at least 1%"
+                                    message-when-range-overflow="Waiver Percentage cannot exceed 2%"
+                                    min="1"
+                                    max="2"
+                                    step="1"
+                                    value={waiverpercent}
+                                    onchange={waiverpercentChange}
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <template if:true={showDariWaiverField}>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-combobox
+                                        name="applyDariWaiver"
+                                        label="Apply DARI Waiver"
+                                        value={applyDariWaiver}
+                                        options={dariWaiverOptions}
+                                        onchange={handleDariWaiverChange}>
+                                    </lightning-combobox>
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- 5.0 Arvind Kesharwani 10/05/2026 - Only Dari Fee: display Dari charges amount read-only, sourced from Daricharges__c -->
+                        <template if:true={showOnlyDariFields}>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input
+                                    type="text"
+                                    name="dariChargesDisplay"
+                                    label="Dari Fee Amount (from Invoice)"
+                                    value={formattedDariChargesAmount}
+                                    readonly>
+                                </lightning-input>
+                            </div>
+                        </template>
+
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-textarea
+                                name="waiverMemo"
+                                label="Waiver Reason"
+                                value={waiverMemo}
+                                onchange={handleMemoChange}
+                                required>
+                            </lightning-textarea>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-input
+                                type="text"
+                                name="waiverMemoNumber"
+                                label="Waiver Memo Number"
+                                value={waiverMemoNumber}
+                                onchange={handleWaiverMemoNumberChange}>
+                            </lightning-input>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1">
+                            <p class="slds-text-body_regular slds-m-top_x-small">
+                                <strong>ADM Payment Status:</strong> {admPaymentStatus}
+                            </p>
+                        </div>
+
+                        <!-- Custom File Upload -->
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-input
+                                type="file"
+                                label="Upload Files"
+                                accept={acceptedFormatsString}
+                                multiple
+                                onchange={handleFileChange}>
+                            </lightning-input>
+                        </div>
+
+                        <template if:true={uploadedFiles.length}>
+                            <div class="slds-col slds-size_1-of-1">
+                                <div class="slds-box slds-theme_default slds-m-top_small">
+                                    <p class="slds-text-title_caps slds-m-bottom_x-small">
+                                        Files ready to attach to Offer &amp; Collection
+                                    </p>
+                                    <ul class="slds-list_dotted slds-m-left_large">
+                                        <template for:each={uploadedFiles} for:item="f">
+                                            <li key={f.fileName}>{f.fileName}</li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+
+                <!-- Right Section : Calculation Summary -->
+                <template if:true={calculationReady}>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_5-of-12">
+                        <div class="slds-box slds-theme_shade calc-box">
+                            <h3 class="slds-text-heading_small slds-m-bottom_medium">Waiver Calculation</h3>
+
+                            <!-- 5.0 Arvind Kesharwani 10/05/2026 - Show Total Amount row only for ADM type -->
+                            <template if:true={showADMFields}>
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <strong>Total Amount</strong>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                        {formattedTotalAmount}
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <strong>Waiver %</strong>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                        {displayWaiverPercent}
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <strong>ADM Discount</strong>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                        {formattedAdmDiscount}
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- DARI Waiver row: shown for ADM type when percent=2, or always for Only Dari Fee -->
+                            <!-- 5.0 Arvind Kesharwani 10/05/2026 - Always show Dari row for Only Dari Fee type -->
+                            <template if:true={showDariWaiverField}>
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <strong>DARI Waiver</strong>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                        {formattedDariWaiverAmount}
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- 5.0 Arvind Kesharwani 10/05/2026 - Dari row for Only Dari Fee mode -->
+                            <template if:true={showOnlyDariFields}>
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <strong>Dari Fee Waiver</strong>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                        {formattedDariWaiverAmount}
+                                    </div>
+                                </div>
+                            </template>
+
+                            <div class="slds-border_top slds-m-vertical_small"></div>
+
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <strong>Total Waiver Amount</strong>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-text-align_right slds-text-heading_small">
+                                    {formattedTotalWaiverAmount}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template if:false={calculationReady}>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_5-of-12">
+                        <div class="slds-box slds-theme_shade calc-box">
+                            <h3 class="slds-text-heading_small slds-m-bottom_medium">Waiver Calculation</h3>
+                            <p class="slds-text-body_regular slds-text-align_center slds-m-top_medium">
+                                <b style="color:red">Please enter a valid Waiver Percentage (1% - 2%) to see the calculation summary.</b>
+                            </p>
+                        </div>
+                    </div>
+                </template>
+
+            </div>
+
+            <div class="slds-m-top_medium slds-grid slds-grid_align-end">
+                <lightning-button
+                    variant="brand"
+                    label="Save Waiver"
+                    onclick={handleSave}
+                    disabled={saveDisabled}>
+                </lightning-button>
+            </div>
+
+            <template if:true={isSaving}>
+                <div class="slds-m-top_small slds-align_absolute-center">
+                    <lightning-spinner alternative-text="Saving waiver..." size="small"></lightning-spinner>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

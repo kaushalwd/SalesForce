@@ -1,0 +1,286 @@
+<template>
+    <section class="sheet">
+        <header class="sheet__hd">
+            <div class="sheet__title">
+                <h4 class="sheet__t">{title}</h4>
+                <p class="sheet__hint sheet__hint--lead">{labels.SHEET_HINT}</p>
+            </div>
+            <div class="sheet__ctl">
+                <label class="sheet__fld">
+                    <span class="sheet__lbl">{labels.SHEET_BANK}</span>
+                    <select class="sheet__sel" onchange={handleBank} disabled={busy}>
+                        <option value="">{labels.SHEET_BANK_PLACEHOLDER}</option>
+                        <template for:each={bankChoices} for:item="o">
+                            <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                        </template>
+                    </select>
+                </label>
+            </div>
+        </header>
+
+        <div class="sheet__scroll">
+            <table class="sheet__tbl">
+                <!-- MSC-198: the widths live here, so a long file name or a landed image can no
+                     longer widen a column and push +/x past the right edge -->
+                <colgroup>
+                    <col class="w-tick" />
+                    <col class="w-ms" />
+                    <col class="w-due" />
+                    <col class="w-left" />
+                    <col class="w-img" />
+                    <col class="w-no" />
+                    <col class="w-date" />
+                    <col class="w-amt" />
+                    <col class="w-act" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="c-tick"></th>
+                        <th>{labels.SHEET_COL_MILESTONE}</th>
+                        <th>{labels.SHEET_COL_DUE}</th>
+                        <th class="c-num">{labels.SHEET_COL_LEFT}</th>
+                        <th>{labels.SHEET_COL_IMAGE}</th>
+                        <th>{labels.SHEET_COL_NUMBER}</th>
+                        <th>{labels.SHEET_COL_DATE}</th>
+                        <th class="c-num">{labels.SHEET_COL_AMOUNT}</th>
+                        <th class="c-act"></th>
+                    </tr>
+                </thead>
+                <template for:each={viewRows} for:item="r">
+                    <tbody key={r.groupKey}>
+                        <tr class={r.rowClass}>
+                            <td class="c-tick">
+                                <input
+                                    type="checkbox"
+                                    class="sheet__cb"
+                                    checked={r.ticked}
+                                    data-key={r.key}
+                                    onchange={handleTick}
+                                    disabled={r.tickDisabled}
+                                    aria-label={r.label}
+                                />
+                            </td>
+                            <td class="c-ms">
+                                <span class={r.msClass}>{r.msLabel}</span>
+                                <template lwc:if={r.overdue}>
+                                    <span class="chip chip--alert sheet__late">{labels.LEDGER_ROW_OVERDUE}</span>
+                                </template>
+                            </td>
+                            <td class="c-due">{r.dueLabel}</td>
+                            <td class="c-num c-left">{r.leftLabel}</td>
+                            <td class="c-img">
+                                <template lwc:if={r.image}>
+                                    <span class="img img--ok" title={r.image.fileName}>
+                                        <template lwc:if={r.image.dataUrl}>
+                                            <img class="img__th" src={r.image.dataUrl} alt="" />
+                                        </template>
+                                        <template lwc:else>
+                                            <c-modon-icon name="file-check" size="13"></c-modon-icon>
+                                        </template>
+                                        <!-- MSC-198: a phone's file name says nothing; it is the tooltip now -->
+                                        <span class="img__name">{labels.SHEET_ATTACHED}</span>
+                                        <span class="img__tick">✓</span>
+                                        <!-- MSC-200b: not while the read is in flight - removing
+                                             the image mid-read leaves the answer with nothing to
+                                             land on -->
+                                        <template lwc:if={r.canRemoveImage}>
+                                            <button
+                                                class="img__x"
+                                                type="button"
+                                                data-key={r.key}
+                                                onclick={handleRemoveImage}
+                                                title="Remove image"
+                                                disabled={busy}
+                                            >×</button>
+                                        </template>
+                                    </span>
+                                    <template lwc:if={r.readingText}>
+                                        <span class="sheet__reading">{r.readingText}</span>
+                                    </template>
+                                </template>
+                                <template lwc:elseif={r.staging}>
+                                    <span class="img img--busy">{labels.SHEET_STAGING}</span>
+                                </template>
+                                <template lwc:else>
+                                    <button
+                                        class={r.attachClass}
+                                        type="button"
+                                        data-key={r.key}
+                                        onclick={handleAttach}
+                                        disabled={r.tickDisabled}
+                                    >
+                                        <c-modon-icon name="paperclip" size="12"></c-modon-icon>
+                                        <span>{labels.SHEET_ATTACH}</span>
+                                    </button>
+                                </template>
+                                <template lwc:if={r.error}>
+                                    <span class="sheet__err">{r.error}</span>
+                                </template>
+                            </td>
+                            <!-- MSC-200: the cheque image is the source. These three are text,
+                                 and only become boxes when automatic reading is switched off. -->
+                            <td>
+                                <template lwc:if={r.locked}>
+                                    <span class={r.numberTextClass} title={labels.SHEET_AWAIT_TITLE}
+                                        >{r.numberText}</span>
+                                </template>
+                                <template lwc:else>
+                                    <input
+                                        class={r.numberClass}
+                                        type="text"
+                                        autocomplete="off"
+                                        value={r.chequeNumber}
+                                        data-key={r.key}
+                                        data-field="chequeNumber"
+                                        oninput={handleField}
+                                        disabled={r.inputsDisabled}
+                                    />
+                                </template>
+                            </td>
+                            <td>
+                                <template lwc:if={r.locked}>
+                                    <span class={r.dateTextClass} title={labels.SHEET_AWAIT_TITLE}
+                                        >{r.dateText}</span>
+                                </template>
+                                <template lwc:else>
+                                    <input
+                                        class={r.dateClass}
+                                        type="date"
+                                        value={r.chequeDate}
+                                        data-key={r.key}
+                                        data-field="chequeDate"
+                                        oninput={handleField}
+                                        disabled={r.inputsDisabled}
+                                    />
+                                </template>
+                            </td>
+                            <td class="c-num">
+                                <!-- 1.9: always an input, so the rep can correct a misread amount -->
+                                <template lwc:if={r.showAmountInput}>
+                                    <input
+                                        class={r.amountClass}
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        inputmode="decimal"
+                                        value={r.amount}
+                                        data-key={r.key}
+                                        data-field="amount"
+                                        oninput={handleField}
+                                        disabled={r.tickDisabled}
+                                    />
+                                </template>
+                            </td>
+                            <td class="c-act">
+                                <template lwc:if={r.showAdd}>
+                                    <button
+                                        class="sheet__ico"
+                                        type="button"
+                                        data-key={r.key}
+                                        onclick={handleAddRow}
+                                        title={labels.SHEET_ANOTHER}
+                                        disabled={busy}
+                                    >
+                                        <c-modon-icon name="plus" size="12"></c-modon-icon>
+                                    </button>
+                                </template>
+                                <template lwc:if={r.showRemove}>
+                                    <button
+                                        class="sheet__ico"
+                                        type="button"
+                                        data-key={r.key}
+                                        onclick={handleRemoveRow}
+                                        title={labels.SHEET_REMOVE_ROW}
+                                        disabled={busy}
+                                    >
+                                        <c-modon-icon name="x" size="12"></c-modon-icon>
+                                    </button>
+                                </template>
+                            </td>
+                        </tr>
+                        <!-- MSC-198: the read sits under the row it is about, not under the table -->
+                        <template lwc:if={r.note}>
+                            <tr class="sheet__noterow">
+                                <td></td>
+                                <td colspan="8">
+                                    <span class={r.note.cls}>
+                                        <span>{r.note.text}</span>
+                                        <template lwc:if={r.note.canRetry}>
+                                            <button
+                                                class="sheet__again"
+                                                type="button"
+                                                data-key={r.key}
+                                                onclick={handleReadAgain}
+                                                disabled={busy}
+                                            >{labels.SHEET_READ_AGAIN}</button>
+                                        </template>
+                                    </span>
+                                    <!-- MSC-205: flags, not sentences -->
+                                    <template lwc:if={r.note.flags.length}>
+                                        <span class="flags">
+                                            <template for:each={r.note.flags} for:item="f">
+                                                <span key={f.key} class={f.cls}>{f.text}</span>
+                                            </template>
+                                        </span>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                        <template lwc:if={r.result}>
+                            <tr class="sheet__res">
+                                <td></td>
+                                <td colspan="8" class={r.resultClass}>{r.result}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </template>
+            </table>
+        </div>
+
+        <!-- 1.1: the desktop route; never shown, only clicked -->
+        <input
+            class="sheet__file"
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            onchange={handlePickedFile}
+            tabindex="-1"
+            aria-hidden="true"
+        />
+
+        <template lwc:if={capturing}>
+            <div class="sheet__cam">
+                <div class="sheet__camhd">
+                    <span>{capturingLabel}</span>
+                    <button class="btn-link" type="button" onclick={handleCaptureClose}>Close</button>
+                </div>
+                <c-msc-capture
+                    aspect="2.4"
+                    label={labels.SHEET_CAPTURE_LABEL}
+                    hint={labels.SHEET_CAPTURE_HINT}
+                    disabled={busy}
+                    oncapture={handleCaptured}
+                ></c-msc-capture>
+            </div>
+        </template>
+
+        <template lwc:if={warning}>
+            <p class="sheet__hint sheet__hint--warn">{warning}</p>
+        </template>
+        <p class="sheet__hint">{labels.SHEET_RULES}</p>
+        <template lwc:if={shownErrorMessage}>
+            <p class="sheet__hint sheet__hint--bad">{shownErrorMessage}</p>
+        </template>
+
+        <footer class="sheet__ft">
+            <span class="sheet__sum">{summary}</span>
+            <span class="sheet__acts">
+                <button class="btn btn-ghost btn-sm" type="button" onclick={handleCancel} disabled={busy}>
+                    {labels.CTA_CANCEL}
+                </button>
+                <button class="btn btn-primary btn-sm" type="button" onclick={handleSubmit} disabled={submitDisabled}>
+                    {submitLabel}
+                </button>
+            </span>
+        </footer>
+    </section>
+</template>

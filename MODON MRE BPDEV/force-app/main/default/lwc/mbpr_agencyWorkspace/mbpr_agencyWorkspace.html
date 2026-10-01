@@ -1,0 +1,548 @@
+<template>
+    <div class="agency">
+        <template lwc:if={isInitializing}>
+            <c-mbpr_loader label="Loading agency information"></c-mbpr_loader>
+        </template>
+
+        <template lwc:elseif={accessError}>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    compact
+                    kicker="My Agency"
+                    title="Something went wrong"
+                    message={accessError}
+                ></c-mbpr_empty-state>
+                <button class="agency-button agency-button--ghost" type="button" onclick={handleRetryLoad}>
+                    Try again
+                </button>
+            </div>
+        </template>
+
+        <!-- Limited login, agency not blocked: onboarding continuation owns the surface -->
+        <template lwc:elseif={showOnboardingContinuation}>
+            <c-mbpr_registration-workspace mode="continuation"></c-mbpr_registration-workspace>
+        </template>
+
+        <template lwc:elseif={hasAccount}>
+            <nav class="subview-tabs" aria-label="Agency views">
+                <button class={infoTabClass} type="button" onclick={handleShowInfoTab}>Agency Info</button>
+                <template lwc:if={showAgentsTab}>
+                    <button class={agentsTabClass} type="button" onclick={handleShowAgentsTab}>My Agents</button>
+                </template>
+            </nav>
+
+            <template lwc:if={isInfoSubview}>
+                <div class="agency-body">
+                    <!-- ============ Agency Information ============ -->
+                    <section class="info-card" aria-label="Agency Information">
+                        <h2 class="section-title">Agency Information</h2>
+                        <dl class="info-grid">
+                            <div><dt>Agency Name</dt><dd>{accountName}</dd></div>
+                            <div><dt>Phone</dt><dd>{accountPhone}</dd></div>
+                            <div><dt>Email</dt><dd>{accountEmail}</dd></div>
+                            <div><dt>City</dt><dd>{accountCity}</dd></div>
+                            <div><dt>Country</dt><dd>{accountCountry}</dd></div>
+                            <div><dt>PO Box</dt><dd>{accountPoBox}</dd></div>
+                            <div><dt>Region</dt><dd>{accountRegion}</dd></div>
+                        </dl>
+                    </section>
+
+                    <!-- ============ VAT ============ -->
+                    <template lwc:if={showVatSection}>
+                        <section class="info-card" aria-label="VAT Information">
+                            <div class="section-head">
+                                <h2 class="section-title section-title--toggle">
+                                    <button class="section-toggle" type="button" aria-expanded={vatAriaExpanded} onclick={toggleVatSection}>
+                                        <span>VAT Information</span>
+                                        <span class="section-caret" aria-hidden="true"></span>
+                                    </button>
+                                </h2>
+                                <span class="help-icon" tabindex="0" aria-label="VAT guidance">
+                                    <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Help"></lightning-icon>
+                                    <span class="tooltip" role="tooltip">
+                                        <span>VAT number must match your VAT registration document exactly.</span>
+                                        <span>Start and expiry dates must be valid and within the active VAT period.</span>
+                                        <span>Upload a scanned PDF of the VAT certificate or undertaking (max 5MB).</span>
+                                        <span>Use file name format: <em>VAT_Certificate_AgencyName.pdf</em> or <em>VAT_Undertaking_AgencyName.pdf</em></span>
+                                    </span>
+                                </span>
+                            </div>
+                            <template lwc:if={vatSectionExpanded}>
+                            <div class="section-body">
+                            <dl class="info-grid">
+                                <div><dt>VAT Type</dt><dd>{vatCertificateType}</dd></div>
+                                <div><dt>VAT Registration Number</dt><dd>{vatRegistrationNumber}</dd></div>
+                                <div><dt>VAT Start Date</dt><dd>{vatStartDate}</dd></div>
+                                <div class="info-grid__file">
+                                    <dt>VAT Document</dt>
+                                    <dd>
+                                        <template lwc:if={vatDownloadUrl}>
+                                            <a href={vatDownloadUrl} target="_blank" rel="noopener">{vatDocumentLabel}</a>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="file-empty">No VAT File Available</span>
+                                        </template>
+                                    </dd>
+                                </div>
+                            </dl>
+                            <template lwc:if={canShowVatButton}>
+                                <button class="agency-button" type="button" onclick={openVatModal}> Update VAT Details </button>
+                            </template>
+                            <template lwc:if={vatRejectionComment}>
+                                <p class="rejection-note"><strong>Rejection Comment:</strong> {vatRejectionComment}</p>
+                            </template>
+                            <template lwc:if={vatSubmitted}>
+                                <p class="pending-note">Your VAT info update is under approval. You cannot make further changes until it is completed.</p>
+                            </template>
+                            <template lwc:if={showVatLockNote}>
+                                <p class="lock-note">{approvalLockMessage}</p>
+                            </template>
+                            </div>
+                            </template>
+                        </section>
+                    </template>
+
+                    <!-- ============ Trade License ============ -->
+                    <template lwc:if={showTradeSection}>
+                        <section class="info-card" aria-label="Trade License Information">
+                            <div class="section-head">
+                                <h2 class="section-title section-title--toggle">
+                                    <button class="section-toggle" type="button" aria-expanded={tradeAriaExpanded} onclick={toggleTradeSection}>
+                                        <span>Trade License Information</span>
+                                        <span class="section-caret" aria-hidden="true"></span>
+                                    </button>
+                                </h2>
+                                <span class="help-icon" tabindex="0" aria-label="Trade License guidance">
+                                    <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Help"></lightning-icon>
+                                    <span class="tooltip" role="tooltip">
+                                        <span>License number must match your trade license exactly.</span>
+                                        <span>Expiry date must be valid and active.</span>
+                                        <span>Upload a scanned PDF of the license showing all details (max 5MB).</span>
+                                        <span>Use file name format: <em>Trade_License_AgencyName.pdf</em></span>
+                                    </span>
+                                </span>
+                            </div>
+                            <template lwc:if={tradeSectionExpanded}>
+                            <div class="section-body">
+                            <dl class="info-grid">
+                                <div><dt>Company Name as per Trade License</dt><dd>{tradeCompanyName}</dd></div>
+                                <div><dt>Trade License Number</dt><dd>{tradeLicenseNumber}</dd></div>
+                                <div><dt>Licensing Authority</dt><dd>{licensingAuthority}</dd></div>
+                                <div><dt>Issuance Date</dt><dd>{issuanceDate}</dd></div>
+                                <div><dt>Trade Expiry Date</dt><dd>{tradeExpiryDate}</dd></div>
+                                <div class="info-grid__file">
+                                    <dt>Trade License File</dt>
+                                    <dd>
+                                        <template lwc:if={tradeDownloadUrl}>
+                                            <a href={tradeDownloadUrl} target="_blank" rel="noopener">View Trade License</a>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="file-empty">No Trade License Available</span>
+                                        </template>
+                                    </dd>
+                                </div>
+                            </dl>
+                            <template lwc:if={canShowTradeButton}>
+                                <button class="agency-button" type="button" onclick={openTradeModal}>Update Trade License Details</button>
+                            </template>
+                            <template lwc:if={tradeRejectionComment}>
+                                <p class="rejection-note"><strong>Rejection Comment:</strong> {tradeRejectionComment}</p>
+                            </template>
+                            <template lwc:if={tradeSubmitted}>
+                                <p class="pending-note">Your trade Info update is under approval. You cannot make further changes until it is completed.</p>
+                            </template>
+                            <template lwc:if={showTradeLockNote}>
+                                <p class="lock-note">{approvalLockMessage}</p>
+                            </template>
+                            </div>
+                            </template>
+                        </section>
+                    </template>
+
+                    <!-- ============ Bank ============ -->
+                    <template lwc:if={showBankSection}>
+                        <section class="info-card" aria-label="Bank Information">
+                            <div class="section-head">
+                                <h2 class="section-title section-title--toggle">
+                                    <button class="section-toggle" type="button" aria-expanded={bankAriaExpanded} onclick={toggleBankSection}>
+                                        <span>Bank Information</span>
+                                        <span class="section-caret" aria-hidden="true"></span>
+                                    </button>
+                                </h2>
+                                <span class="help-icon" tabindex="0" aria-label="Bank guidance">
+                                    <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Help"></lightning-icon>
+                                    <span class="tooltip" role="tooltip">
+                                        <span>Bank details must match your official bank documents.</span>
+                                        <span>IBAN must start with country code and have 21 digits (e.g., AE...)</span>
+                                        <span>Account number should match the last part of the IBAN.</span>
+                                        <span>Upload a stamped bank letter or statement in PDF format (max 5MB).</span>
+                                        <span>Use file name format: <em>Bank_Letter_AgencyName.pdf</em></span>
+                                    </span>
+                                </span>
+                            </div>
+                            <template lwc:if={bankSectionExpanded}>
+                            <div class="section-body">
+                            <dl class="info-grid">
+                                <div><dt>Bank Name</dt><dd>{bankName}</dd></div>
+                                <div><dt>Beneficiary Name</dt><dd>{beneficiaryName}</dd></div>
+                                <div><dt>Account Number</dt><dd>{bankAccountNumber}</dd></div>
+                                <div><dt>Bank Country</dt><dd>{bankCountry}</dd></div>
+                                <div><dt>IBAN Number</dt><dd>{ibanNumber}</dd></div>
+                                <div><dt>SWIFT Code</dt><dd>{swiftCode}</dd></div>
+                                <div><dt>Country</dt><dd>{accountCountry}</dd></div>
+                                <div class="info-grid__file">
+                                    <dt>Bank File</dt>
+                                    <dd>
+                                        <template lwc:if={bankDownloadUrl}>
+                                            <a href={bankDownloadUrl} target="_blank" rel="noopener">View Bank File</a>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="file-empty">No Bank File Available</span>
+                                        </template>
+                                    </dd>
+                                </div>
+                            </dl>
+                            <template lwc:if={canShowBankButton}>
+                                <button class="agency-button" type="button" onclick={openBankModal}>Update Bank Details</button>
+                            </template>
+                            <template lwc:if={bankRejectionComment}>
+                                <p class="rejection-note"><strong>Rejection Comment:</strong> {bankRejectionComment}</p>
+                            </template>
+                            <template lwc:if={bankSubmitted}>
+                                <p class="pending-note">Your Bank Info update is under approval. You cannot make further changes until it is completed.</p>
+                            </template>
+                            <template lwc:if={showBankLockNote}>
+                                <p class="lock-note">{approvalLockMessage}</p>
+                            </template>
+                            </div>
+                            </template>
+                        </section>
+                    </template>
+                </div>
+            </template>
+
+            <template lwc:if={isAgentsSubview}>
+                <c-mbpr_agents-roster broker-type={effectiveBrokerType}></c-mbpr_agents-roster>
+            </template>
+        </template>
+
+        <template lwc:else>
+            <div class="state-panel">
+                <c-mbpr_empty-state
+                    compact
+                    kicker="My Agency"
+                    title="No agency information available"
+                    message="Your account is not linked to an agency right now. Contact support if this continues."
+                ></c-mbpr_empty-state>
+            </div>
+        </template>
+    </div>
+
+    <!-- ================= Section update modal ================= -->
+    <template lwc:if={isModalOpen}>
+        <div class="overlay-layer" onkeydown={handleModalKeydown}>
+            <section class="overlay" role="dialog" aria-modal="true" aria-label={modalTitle}>
+                <header class="overlay__header">
+                    <h2>{modalTitle}</h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+
+                <div class="overlay__body">
+                    <!-- VAT form -->
+                    <template lwc:if={isVatModal}>
+                        <lightning-combobox
+                            label="Select VAT Certificate Type"
+                            data-field="vatTypeSelection"
+                            options={vatTypeOptions}
+                            value={vatTypeSelection}
+                            required
+                            onchange={handleVatTypeSelection}
+                        ></lightning-combobox>
+
+                        <template lwc:if={isVatUndertakingSelected}>
+                            <div class="template-card">
+                                <lightning-icon icon-name="doctype:word" size="small" alternative-text="VAT Undertaking Template"></lightning-icon>
+                                <div class="template-card__text">
+                                    <strong>VAT Undertaking Certificate</strong>
+                                    <p>Please download the VAT Undertaking Certificate, sign it, and upload it under the file section below.</p>
+                                </div>
+                                <button class="agency-button agency-button--ghost" type="button" onclick={downloadVAT}>
+                                    Download Template (DOCX)
+                                </button>
+                            </div>
+                        </template>
+
+                        <template lwc:else>
+                            <div class="form-grid">
+                                <lightning-input
+                                    class="form-span"
+                                    label="VAT Registration Number"
+                                    data-field="vatNumberTemp"
+                                    value={vatNumberTemp}
+                                    required
+                                    onchange={handleVatFieldChange}
+                                ></lightning-input>
+                                <label class="portal-date-field">
+                                    <span>VAT Start Date</span>
+                                    <input
+                                        type="date"
+                                        data-field="vatStartDateTemp"
+                                        value={vatStartDateTemp}
+                                        onchange={handleVatFieldChange}
+                                        required
+                                        />
+                                </label>
+                            </div>
+                        </template>
+
+                        <lightning-input
+                            label="Upload VAT File"
+                            type="file"
+                            data-section="VAT"
+                            onchange={handleFileChange}
+                        ></lightning-input>
+
+                        <div class="file-note">
+                            <p><strong>Note:</strong> The uploaded file size should <strong>not exceed 2 MB</strong>.</p>
+                            <template lwc:if={isVatUndertakingSelected}>
+                                <p>Please download the VAT Undertaking Certificate and <strong>upload the signed copy</strong>.</p>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Trade form -->
+                    <template lwc:if={isTradeModal}>
+                        <div class="form-grid">
+                            <lightning-input
+                                label="Trade License Number"
+                                data-field="tradeNumberTemp"
+                                value={tradeNumberTemp}
+                                required
+                                disabled
+                            ></lightning-input>
+                            <lightning-input
+                                label="Licensing Authority"
+                                data-field="licensingAuthorityTemp"
+                                value={licensingAuthorityTemp}
+                                required
+                                disabled
+                            ></lightning-input>
+                            <lightning-input
+                                class="form-span"
+                                label="Company Name as per Trade License"
+                                data-field="companyNameTradeLicenseTemp"
+                                value={companyNameTradeLicenseTemp}
+                                required
+                                disabled
+                            ></lightning-input>
+                            <label class="portal-date-field">
+                                <span>Issuance Date</span>
+                                <input
+                                    type="date"
+                                    data-field="tradeIssuanceDateTemp"
+                                    value={tradeIssuanceDateTemp}
+                                    onchange={handleTradeFieldChange}
+                                    required
+                                    />
+                            </label>
+                            <label class="portal-date-field">
+                                <span>Trade Expiry Date</span>
+                                <input
+                                    type="date"
+                                    data-field="tradeExpiryDateTemp"
+                                    value={tradeExpiryDateTemp}
+                                    onchange={handleTradeFieldChange}
+                                    required
+                                    />
+                            </label>
+                        </div>
+
+                        <lightning-input
+                            label="Upload Trade License File"
+                            type="file"
+                            data-section="TRADE"
+                            onchange={handleFileChange}
+                        ></lightning-input>
+
+                        <div class="file-note">
+                            <p>The uploaded file size should <strong>not exceed 2 MB</strong>.</p>
+                            <p><strong>Trade License Number must be unique</strong> - please ensure it is not duplicate.</p>
+                        </div>
+                    </template>
+
+                    <!-- Bank form (all 8 fields on every device) -->
+                    <template lwc:if={isBankModal}>
+                        <div class="form-grid">
+                            <lightning-input
+                                label="Bank Name"
+                                data-field="bankNameTemp"
+                                value={bankNameTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-input>
+                            <lightning-combobox
+                                label="Bank Country"
+                                data-field="bankCountryTemp"
+                                placeholder="Select Country"
+                                options={bankCountryOptions}
+                                value={bankCountryTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-combobox>
+                            <lightning-input
+                                label="Bank Branch Name"
+                                data-field="bankBranchNameTemp"
+                                value={bankBranchNameTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-input>
+                            <lightning-combobox
+                                label="Bank Branch Type"
+                                data-field="bankBranchTypeTemp"
+                                placeholder="Select Type"
+                                options={bankBranchTypeOptions}
+                                value={bankBranchTypeTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-combobox>
+                            <lightning-input
+                                label="Beneficiary Name"
+                                data-field="beneficiaryNameTemp"
+                                value={beneficiaryNameTemp}
+                                pattern="^[a-zA-Z0-9\s\-\.\,\&\(\)]+$"
+                                message-when-pattern-mismatch="Beneficiary Name should not contain special characters"
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-input>
+                            <lightning-input
+                                label="Account Number"
+                                data-field="accountNumberTemp"
+                                value={accountNumberTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-input>
+                            <lightning-input
+                                label="IBAN Number"
+                                data-field="ibanNumberTemp"
+                                value={ibanNumberTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-input>
+                            <lightning-input
+                                label="SWIFT Code"
+                                data-field="swiftCodeTemp"
+                                value={swiftCodeTemp}
+                                required
+                                onchange={handleBankFieldChange}
+                            ></lightning-input>
+                        </div>
+
+                        <lightning-input
+                            label="Upload Bank File"
+                            type="file"
+                            data-section="BANK"
+                            onchange={handleFileChange}
+                        ></lightning-input>
+
+                        <template lwc:if={bankDownloadUrl}>
+                            <p class="existing-file">
+                                <a href={bankDownloadUrl} target="_blank" rel="noopener">View Bank File</a>
+                            </p>
+                        </template>
+
+                        <div class="file-note">
+                            <p>The uploaded file size should <strong>not exceed 2 MB</strong>.</p>
+                            <p>While updating bank details, please <strong>delete the existing bank copy</strong> and <strong>upload the updated one</strong>.</p>
+                        </div>
+                    </template>
+
+                    <!-- Staged file chip (shared) -->
+                    <template lwc:if={hasStagedFile}>
+                        <div class="file-chip">
+                            <lightning-icon icon-name="utility:attach" size="xx-small" alternative-text=""></lightning-icon>
+                            <a href={stagedFilePreviewUrl} target="_blank" rel="noopener">{stagedFileName}</a>
+                            <button
+                                class="file-chip__delete"
+                                type="button"
+                                title="Delete File"
+                                onclick={handleDeleteStagedFile}
+                            >
+                                <lightning-icon icon-name="utility:delete" size="xx-small" alternative-text="Delete"></lightning-icon>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <footer class="overlay__footer">
+                    <button class="agency-button agency-button--ghost" type="button" onclick={closeModal}>Cancel</button>
+                    <button class="agency-button" type="button" disabled={isActionPending} onclick={submitModal}>Submit</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <!-- ================= OTP modal (Bank) ================= -->
+    <template lwc:if={showOtpModal}>
+        <div class="overlay-layer overlay-layer--top" onkeydown={handleOtpKeydown}>
+            <section class="overlay overlay--compact" role="dialog" aria-modal="true" aria-label="OTP Verification">
+                <header class="overlay__header">
+                    <h2>OTP Verification</h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={closeOtpModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="overlay__body">
+                    <p class="otp-copy">Enter the OTP sent to the Primary Owner email <b><i>({primaryOwnerEmail})</i></b> to continue.</p>
+                    <lightning-input
+                        label="Enter OTP"
+                        value={enteredOtp}
+                        onchange={handleOtpChange}
+                    ></lightning-input>
+                </div>
+                <footer class="overlay__footer">
+                    <button class="agency-button agency-button--ghost" type="button" onclick={closeOtpModal}>Cancel</button>
+                    <button class="agency-button" type="button" onclick={validateOtpAndOpenBankForm}>Verify OTP</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <!-- ================= Consent modal (Bank) ================= -->
+    <template lwc:if={showConsentModal}>
+        <div class="overlay-layer overlay-layer--top" onkeydown={handleConsentKeydown}>
+            <section class="overlay" role="dialog" aria-modal="true" aria-label="Consent Confirmation">
+                <header class="overlay__header">
+                    <h2>Consent Confirmation</h2>
+                    <button class="overlay__close" type="button" title="Close" onclick={closeConsentModal}>
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </header>
+                <div class="overlay__body">
+                    <p>Please review the following points. By proceeding, you confirm your agreement with Modon's data privacy and policy terms:</p>
+                    <ul class="consent-list">
+                        <li>All bank details must be accurate and verifiable.</li>
+                        <li>Uploaded documents are stored securely in accordance with Modon’s data protection policies.</li>
+                        <li>Third-party banking is not permitted.</li>
+                        <li>Only licensed banks operating in approved regions will be accepted.</li>
+                        <li>Any changes to bank details will trigger an internal compliance review.</li>
+                        <li>Submitting false or misleading information may result in disqualification from the process.</li>
+                        <li>Bank letters must be signed and stamped by the issuing bank.</li>
+                        <li>IBAN and Account Number must match exactly as provided in the documentation.</li>
+                        <li>We respect your privacy - your data will not be shared externally.</li>
+                        <li>Submission of your details implies consent to all the terms above.</li>
+                    </ul>
+                </div>
+                <footer class="overlay__footer">
+                    <button class="agency-button agency-button--ghost" type="button" onclick={closeConsentModal}>Cancel</button>
+                    <button class="agency-button" type="button" onclick={confirmConsentAndSubmitBank}>I Accept</button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+    <template lwc:if={isActionPending}>
+        <c-mbpr_loader label="Working"></c-mbpr_loader>
+    </template>
+</template>

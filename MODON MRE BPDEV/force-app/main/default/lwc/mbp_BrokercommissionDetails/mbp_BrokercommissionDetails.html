@@ -1,0 +1,369 @@
+<template>
+    <c-mbp_customshowtoast lwc:ref="toast"></c-mbp_customshowtoast>
+
+    <!-- Filters -->
+    <div class="filter-wrapper">
+        <button class="filter-fab" onclick={toggleFilterBox} title="Filters" aria-label="Open filters">
+            <img src={filterIcon} alt="Filter" class="filter-fab-icon" />
+        </button>
+
+        <div class={filterBoxClass} onmousedown={stopEvent}>
+            <div class="filter-panel-header">
+                <h3>Filter commissions</h3>
+                <button class="filter-close-btn" onclick={closeFilterBox} title="Close" aria-label="Close filters">✕</button>
+            </div>
+
+            <div class="filter-panel-body">
+                <lightning-input name="statusFilter" label="Search by unit number" value={unitSearchTerm}
+                    oninput={handleUnitSearch} class="placeholder">
+                </lightning-input>
+
+                <lightning-combobox name="statusFilter" label="Status" value={statusFilter}
+                    options={statusOptions} onchange={handleFilterChange} class="placeholder">
+                </lightning-combobox>
+
+                <lightning-combobox name="downPaymentFilter" label="Down payment status"
+                    value={downPaymentFilter} options={downPaymentOptions}
+                    onchange={handleFilterChange} class="placeholder">
+                </lightning-combobox>
+
+                <lightning-combobox name="spaFilter" label="SPA status" value={spaFilter}
+                    options={spaOptions} onchange={handleFilterChange} class="placeholder">
+                </lightning-combobox>
+
+                <div class="date-range-group">
+                    <div class="filter-item">
+                        <label class="filter-label">Start date</label>
+                        <input type="date" class="filter-input" value={customStartDate} onchange={handleStartDateChange} />
+                    </div>
+
+                    <div class="filter-item">
+                        <label class="filter-label">End date</label>
+                        <input type="date" class="filter-input" value={customEndDate} onchange={handleEndDateChange} />
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="reset-btn" onclick={resetFilters}>Reset</button>
+                <button class="apply-btn" onclick={applyFiltersAndClose}>Apply filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="custom-container">
+        <div class="tab-header">
+            <button class="tab-btn active-tab">Commissions</button>
+        </div>
+
+       <template if:true={showNoAccess}>
+    <div class="no-access-state">
+        <div class="no-access-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="4" y="10.5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M7.5 10.5V7.5C7.5 5.01472 9.51472 3 12 3C14.4853 3 16.5 5.01472 16.5 7.5V10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="12" cy="15" r="1.4" fill="currentColor"/>
+                <path d="M12 16.4V18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h2 class="no-access-title">You don't have access to this page</h2>
+        
+    </div>
+</template>
+
+        <template if:false={showNoAccess}>
+            <!-- Table scrolls horizontally instead of wrapping headers/cells onto
+                 multiple lines. Drag a column's right edge (resize handle) to
+                 widen it if its content is truncated - once widened, that
+                 column's text wraps onto multiple lines instead of clipping. -->
+            <div class="commission-list">
+                <div class="commission-table">
+                    <div class="commission-header">
+                        <span class="col resizable" title="S.No" data-col-key="sno">
+                            <span class="col-label">S.No</span>
+                        </span>
+                        <span class="col resizable" title="Unit number" data-col-key="unit-number">
+                            <span class="col-label">Unit number</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Unit price" data-col-key="unit-price">
+                            <span class="col-label">Unit price</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Project name" data-col-key="project">
+                            <span class="col-label">Project name</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Customer name" data-col-key="customer">
+                            <span class="col-label">Customer name</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Agent" data-col-key="agent">
+                            <span class="col-label">Agent</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Total commission" data-col-key="total-commission">
+                            <span class="col-label">Total commission</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Paid amount" data-col-key="paid-amount">
+                            <span class="col-label">Paid amount</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Tax invoice amount" data-col-key="tax-invoice">
+                            <span class="col-label">Tax invoice amount</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Invoice date" data-col-key="invoice-date">
+                            <span class="col-label">Invoice date</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Broker commission clearance date" data-col-key="clearance-date">
+                            <span class="col-label">Broker commission clearance date</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Down payment status" data-col-key="down-payment">
+                            <span class="col-label">Down payment status</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="SPA status" data-col-key="spa">
+                            <span class="col-label">SPA status</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Commission status" data-col-key="commission-status">
+                            <span class="col-label">Commission status</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                        <span class="col resizable" title="Actions" data-col-key="actions">
+                            <span class="col-label">Actions</span>
+                            <span class="resize-handle"></span>
+                        </span>
+                    </div>
+
+                    <template for:each={paginatedCommissions} for:item="commission">
+                        <div class="commission-row" key={commission.Id}>
+                            <span>{commission.serialNumber}</span>
+                            <span class="cell-strong" title={commission.UnitName}>{commission.UnitName}</span>
+                            <span title={commission.unitprice}>AED {commission.unitprice}</span>
+                            <span title={commission.ProjectName}>{commission.ProjectName}</span>
+                            <span title={commission.CustomerName}>{commission.CustomerName}</span>
+                            <span title={commission.Agent}>{commission.Agent}</span>
+                            <span class="cell-strong" title={commission.CommissionAmount}>AED {commission.CommissionAmount}</span>
+                            <span title={commission.TotalCommissionPaid}>AED {commission.TotalCommissionPaid}</span>
+                            <span title={commission.RemainingPayout}>{commission.RemainingPayout}</span>
+                            <span title={commission.InvoiceDate}>{commission.InvoiceDate}</span>
+                            <span title={commission.ClearanceDate}>{commission.ClearanceDate}</span>
+                            <span class="cell-badge-wrap">
+                                <span class={commission.DownPaymentIcon}>{commission.DownPaymentStatus}</span>
+                            </span>
+                            <span class="cell-badge-wrap">
+                                <span class={commission.SpaIcon}>{commission.SpaStatus}</span>
+                            </span>
+                            <span class="cell-badge-wrap">
+                                <span class={commission.StatusBadgeClass}>{commission.StatusLabel}</span>
+                            </span>
+                            <span title="Open Invoice" onclick={openInvoiceModalClick} data-id={commission.Id} class="action-cell">
+                                <span class="view-icon">
+                                    <svg class="view-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M6.5 3C6.5 2.44772 6.94772 2 7.5 2H14.1716C14.4368 2 14.6912 2.10536 14.8787 2.29289L17.7071 5.12132C17.8946 5.30886 18 5.56321 18 5.82843V20.5C18 21.0523 17.5523 21.5 17 21.5H7.5C6.94772 21.5 6.5 21.0523 6.5 20.5V3Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                                        <path d="M14 2.3V5.3C14 5.71 14.34 6 14.7 6H17.7" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                                        <line x1="9" y1="9.6" x2="13.4" y2="9.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                        <line x1="9" y1="12.4" x2="12.2" y2="12.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                        <path d="M8.8 16.7L10.5 18.4L15.2 13.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                            </span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="pagination-bar">
+                <div class="custom-pagination">
+                    <lightning-button
+                        label="⟵ Prev"
+                        variant="base"
+                        onclick={handlePrevPage}
+                        disabled={isPrevDisabled}>
+                    </lightning-button>
+
+                    <span class="page-info">Page {currentPage} of {totalPages}</span>
+
+                    <lightning-button
+                        label="Next ⟶"
+                        variant="base"
+                        onclick={handleNextPage}
+                        disabled={isNextDisabled}>
+                    </lightning-button>
+                </div>
+            </div>
+
+            <c-mbp_customspinner is-loading={isLoading}></c-mbp_customspinner>
+
+            <!-- ============================================================ -->
+            <!-- Self Billing Invoice modal — UNCHANGED, do not restyle/edit  -->
+            <!-- ============================================================ -->
+            <template if:true={showModal}>
+                <div class="modal-backdrop">
+                    <div class="modal-box quotation-modal">
+                        <div class="modal-header">
+                            <span>Self Billing Invoice</span>
+
+                            <button class="close-btn" onclick={closeModal}>×</button>
+                        </div>
+                        <div class="modal-body">
+                            <iframe src={invoiceVFPageUrl} onload={handleIframeLoad}
+                                frameborder="0"
+                                style="width:100%; height:600px; border:none;"></iframe>
+                        </div>
+                        <div class="modal-footer">
+                            <template if:true={selectedCommissionReady}>
+                                <button class="btn-black" onclick={handleReject}>Reject</button>
+                                <button class="btn-black" onclick={handleAccept}>Accept</button>
+                            </template>
+                            <button class="btn-black" onclick={handleDownload}>Download PDF</button>
+                            <template if:false={canAcceptCommission}>
+                                <div class="warning-banner">
+                                    <b>Note:</b> Bank details are missing.<br />
+                                    Please update your bank details to proceed with commission acceptance.
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Tax invoice submission modal -->
+            <template if:true={showVatUploadModal}>
+                <div class="google-backdrop">
+                    <div class="google-modal">
+                        <div class="google-header">
+                            <h2>Submit tax invoice details</h2>
+                            <span class="close-x" onclick={closeVatModal}>✕</span>
+                        </div>
+
+                        <div class="google-body">
+                            <div class="field-row">
+                                <lightning-input
+                                    label="Invoice Number"
+                                    value={invoiceNumber}
+                                    onchange={handleInvoiceNumber}>
+                                </lightning-input>
+
+                                <lightning-input
+                                    type="date"
+                                    label="Invoice Date"
+                                    onchange={handleInvoiceDate}>
+                                </lightning-input>
+                            </div>
+
+                            <div class="upload-section">
+                                <label>Upload invoice document</label>
+
+                                <div class="dropzone">
+                                    <input type="file"
+                                        accept=".pdf,.jpg,.png,.jpeg"
+                                        onchange={handleInvoiceFileSelect}
+                                        class="file-input"/>
+                                    <div class="dropzone-hint">
+                                        <span class="dropzone-icon">⬆</span>
+                                        <span>Click to choose a file, or drop it here</span>
+                                    </div>
+                                </div>
+
+                                <div class="upload-note">
+                                    Invoice document size should not exceed <b>2 MB</b>.
+                                </div>
+
+                                <template if:true={invoiceFileName}>
+                                    <div class="file-name">📄 {invoiceFileName}</div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="vat-warning">
+                            <div class="warning-icon">⚠</div>
+                            <div class="warning-text">
+                                <b>Important VAT notice</b><br/>
+                                If your agency's annual business turnover exceeds
+                                <b>375K</b>, you are required to update your
+                                <b>VAT certificate details</b> in the
+                                <b>"My Agency"</b> tab before submitting the invoice.
+                            </div>
+                        </div>
+
+                        <div class="google-footer">
+                            <button class="btn-cancel" onclick={closeVatModal}>Cancel</button>
+                            <button class="btn-primary" onclick={submitVatDetails}>
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- VAT certificate mandatory modal -->
+            <template if:true={showTradeLicenseModal}>
+                <div class="license-backdrop">
+                    <div class="license-modal">
+                        <div class="license-header">
+                            <span class="license-icon">⚠</span>
+                            VAT certificate update required
+                        </div>
+
+                        <div class="license-body">
+                            <p>
+                                Your agency has exceeded
+                                <b>AED 375,000</b> transaction value.
+                            </p>
+
+                            <p>
+                                To continue commission processing, please upload your
+                                <b>VAT registration certificate</b> under your agency profile.
+                            </p>
+
+                            <a href="https://modonproperties--uat.sandbox.my.site.com/Brokers/myagency"
+                               target="_blank"
+                               class="manage-link">
+                               Update your agency details →
+                            </a>
+                        </div>
+
+                        <div class="license-footer">
+                            <button class="btn-primary"
+                                onclick={closeTradeLicenseModal}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Generic commission status info modal -->
+            <template if:true={showStatusMessageModal}>
+                <div class="license-backdrop">
+                    <div class="license-modal">
+                        <div class="license-header info-header">
+                            <span class="license-icon">ℹ</span>
+                           Agency Information
+                        </div>
+
+                        <div class="license-body">
+                            <p class="status-message">
+                                {statusMessage}
+                            </p>
+                        </div>
+
+                        <div class="license-footer">
+                            <button class="btn-primary" onclick={closeStatusModal}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+        </template>
+    </div>
+</template>

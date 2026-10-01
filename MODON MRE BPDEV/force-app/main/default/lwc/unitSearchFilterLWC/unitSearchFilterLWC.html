@@ -1,0 +1,218 @@
+<template>
+    <div class="slds-box slds-theme_default dynamic-filter-box">
+        <h2 class="slds-text-heading_small slds-m-bottom_small">
+            Search Filters:
+        </h2>
+
+        <!-- Project Name Filter -->
+        <div class="slds-section slds-is-open">
+            <template if:true={unitProjectOptions}>
+                <lightning-combobox 
+                    name="Project" 
+                    label="Project"
+                    value={selectedProjectValue} 
+                    options={unitProjectOptions}
+                    placeholder="Select a project"
+                    onchange={handleProjectChange}>
+                </lightning-combobox>
+            </template>
+        </div>
+
+        <!-- Phase Filter -->
+        <div class="slds-section slds-is-open">
+            <template if:true={unitPhaseOptions}>
+                <lightning-combobox 
+                    name="Phase" 
+                    label="Phase"
+                    value={selectedPhaseValue} 
+                    options={unitPhaseOptions}
+                    placeholder="Select a phase"
+                    onchange={handlePhaseChange}>
+                </lightning-combobox>
+            </template>
+        </div>
+
+        <!-- Zone Name Filter -->
+        <div class="slds-section slds-is-open">
+            <lightning-input 
+                label="Zone Name"
+                value={selectedZoneValue} 
+                onchange={handleZoneChange}
+                type="text"
+                placeholder="Search by zone name">
+            </lightning-input>
+        </div>
+
+        <!-- Building Number Filter -->
+        <div class="slds-section slds-is-open">
+            <lightning-input 
+                label="Building Number"
+                value={selectedBuildingNoValue} 
+                onchange={handleBuildingNoChange}
+                type="text"
+                placeholder="Search by building number">"
+            </lightning-input>
+        </div>
+
+         <!-- Floor Filter -->
+        <div class="slds-section slds-is-open">
+            <template if:true={UnitFloorValues.data}>
+                <lightning-combobox
+                    name="Floor"
+                    label="Floor"
+                    value={selectedFloorValue}
+                    options={unitFloorOptions}
+                    placeholder="Select floor"
+                    onchange={handleFloorChange}>
+                </lightning-combobox>
+            </template>
+        </div>
+
+        <!-- Unit Name Filter -->
+        <div class="slds-section slds-is-open">
+            <lightning-input 
+                label="Unit Name"
+                value={selectedUnitNameValue}
+                onchange={handleUnitNameChange}
+                type="text"
+                placeholder="Search by unit name">
+            </lightning-input>
+        </div>
+
+        <!-- Unit Type Filter -->
+        <div class="slds-section slds-is-open">
+            <template if:true={UnitTypeValues.data}>
+                <lightning-combobox 
+                    label="Unit Type"
+                    options={unitTypeOptions} 
+                    value={selectedUnitTypeValue}
+                    placeholder="Select unit type" 
+                    onchange={handleUnitTypeChange}>
+                </lightning-combobox>
+            </template>            
+        </div>
+        <template if:true={showUnitStatusFilter}>
+        <!-- Unit Status Filter -->
+        <div class="slds-section slds-is-open">
+            <template if:true={UnitStatusValues.data}>
+                <lightning-combobox 
+                    label="Unit Status"
+                    value={selectedUnitStatusValue}
+                    options={unitStatusOptions} 
+                    placeholder="Select unit status" 
+                    onchange={handleUnitStatusChange}>
+                </lightning-combobox>
+            </template>            
+        </div>
+        <!-- Approval Status Filter -->
+        <div class="slds-section slds-is-open">
+                <lightning-combobox 
+                    label="Approval Status"
+                    value={selectedApprovalStatusValue}
+                    options={unitApprovalStatusOptions} 
+                    placeholder="Select approval status"
+                    onchange={handleApprovalStatusChange}>
+                </lightning-combobox>          
+        </div>
+        <!-- Sub Status Filter -->
+        <div class="slds-section slds-is-open">
+                <lightning-combobox 
+                    label="Sub Status"
+                    value={selectedSubStatusValue}
+                    options={unitSubStatusOptions} 
+                    placeholder="Select sub status"
+                    onchange={handleSubStatusChange}>
+                </lightning-combobox>         
+        </div>
+        <!-- selected Visible to MRE Sales Team Filter -->
+        <div class="slds-section slds-is-open">
+                <lightning-combobox 
+                    label="Visible to MRE Sales Team"
+                    value={selectedVisibletoMRESalesTeamValue}
+                    options={visibleToMREOptions} 
+                    placeholder="Select Value" 
+                    onchange={handleVisibletoMRESalesTeamChange}>
+                </lightning-combobox>           
+        </div>
+        </template>
+
+        <!-- Number of Bedrooms Slider -->
+        <div class="slds-section slds-is-open">
+            <template if:true={UnitNumberOfBedroomsValues.data}>
+                <lightning-combobox 
+                    label="Number Of Bedrooms"
+                    options={unitBedroomsOptions} 
+                    value={selectedNumberOfBedroomsValue}
+                    placeholder="Select Number Of Bedrooms" 
+                    onchange={handleNumberOfBedroomsChange}>
+                </lightning-combobox>
+            </template>
+        </div>
+
+        <!-- Currency Filter -->
+        <div class="slds-section slds-is-open">
+            <template if:true={UnitCurrencyValues.data}>
+                <lightning-combobox
+                    name="Currency"
+                    label="Currency"
+                    value={selectedCurrencyValue}
+                    options={UnitCurrencyValues.data.values}
+                    placeholder="Select currency"
+                    onchange={handleCurrencyChange}>
+                </lightning-combobox>
+            </template>
+        </div>
+
+        <!-- Price To Slider -->
+        <div class="slds-section slds-is-open">
+            <lightning-slider
+                label="Price To"
+                min={minPrice}
+                max={maxPrice}
+                step="1000"
+                value={selectedPriceToValue}
+                onpointerup={handlePriceChange}
+                style="width: 100%;">
+            </lightning-slider>
+        </div>
+
+        <!-- Gross Floor Area Slider -->
+        <div class="slds-section slds-is-open">
+            <lightning-slider
+                label="Gross Floor Area (m²)"
+                min={minArea}
+                max={maxArea}
+                value={selectedGrossFloorAreaValue}
+                onpointerup={handleGrossFloorAreaChange}
+                style="width: 100%;">
+            </lightning-slider>
+        </div>
+
+
+        <!-- Reset Button -->
+        <div class="rest-button">
+            <lightning-button 
+                label="Reset" 
+                title="Reset filters" 
+                icon-name="utility:loop" 
+                icon-position="right" 
+                onclick={resetButtonClick}>
+            </lightning-button>
+        </div>
+
+<template if:true={recordId}>
+    <!-- Save Button -->
+    <div class="rest-button">
+        <lightning-button 
+            label={saveButtonLabel}
+            title="Save selected" 
+            icon-name="utility:save" 
+            variant={saveButtonVariant}
+            icon-position="right" 
+            onclick={handleSave}
+            disabled={isSaving}>
+        </lightning-button>
+    </div>
+</template>
+    </div>
+</template>

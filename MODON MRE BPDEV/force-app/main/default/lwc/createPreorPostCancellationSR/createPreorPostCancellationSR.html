@@ -1,0 +1,260 @@
+<template>
+
+    <!-- ── SPINNER: shows while any async operation is in flight ── -->
+    <template if:true={showLoading}>
+        <lightning-spinner
+            alternative-text="Loading"
+            size="medium">
+        </lightning-spinner>
+    </template>
+
+    <!-- ── MODAL: only shown after all checks pass (showForm = true) ── -->
+    <template if:true={showForm}>
+
+        <section role="dialog" class="slds-modal slds-fade-in-open custom-sr-modal">
+            <div class="slds-modal__container custom-modal-container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close"
+                        onclick={close}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium slds-hyphenate">
+                        {modalHeader}
+                    </h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <lightning-record-edit-form
+                        object-api-name="ServiceRequest__c"
+                        record-type-id={recordTypeId}
+                        onsuccess={handleSuccess}
+                        onsubmit={handleSubmit}
+                        onerror={handleError}>
+
+                        <lightning-messages></lightning-messages>
+
+                        <!-- ================= INFORMATION SECTION ================= -->
+                        <div class="slds-section slds-is-open">
+                            <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                                <strong>Information</strong>
+                            </h3>
+
+                            <div class="slds-grid slds-wrap slds-gutters">
+
+                                <!-- LEFT COLUMN -->
+                                <div class="slds-col slds-size_1-of-2">
+
+                                    <lightning-input-field
+                                        field-name="SalesOrder__c"
+                                        value={recordId}>
+                                    </lightning-input-field>
+
+                                    <lightning-input-field
+                                        field-name="UnitId__c"
+                                        value={unitId}>
+                                    </lightning-input-field>
+
+                                    <lightning-input-field
+                                        field-name="AccountId__c"
+                                        value={accountId}>
+                                    </lightning-input-field>
+
+                                    <lightning-input-field
+                                        field-name="Cancellation_Type__c"
+                                        onchange={handleCancellationTypeChange}
+                                        required>
+                                    </lightning-input-field>
+
+                                </div>
+
+                                <!-- RIGHT COLUMN -->
+                                <div class="slds-col slds-size_1-of-2">
+
+                                    <lightning-input
+                                        label="ADM Payment Status"
+                                        value={admStatus}
+                                        readonly>
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        label="Down Payment Status"
+                                        value={downPaymentStatus}
+                                        readonly>
+                                    </lightning-input>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ================= CUSTOMER FINANCIALS (PRE CANCELLATION) ================= -->
+                        <template if:false={isPostCancellation}>
+                            <div class="slds-section slds-is-open slds-m-top_medium">
+                                <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                                    <strong>Customer Financials</strong>
+                                </h3>
+
+                                <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+
+                                    <div class="slds-col slds-size_1-of-2">
+
+                                        <lightning-input
+                                            label="ADM Amount"
+                                            value={admPaidAmount}
+                                            readonly>
+                                        </lightning-input>
+
+                                        <template if:true={showAdmPaidAmount}>
+                                            <lightning-input-field
+                                                field-name="Total_Paid_by_Customer_with_ADM__c">
+                                            </lightning-input-field>
+                                        </template>
+
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-2">
+
+                                        <lightning-input
+                                            label="Down Payment Amount"
+                                            value={downPaymentAmount}
+                                            readonly>
+                                        </lightning-input>
+
+                                        <template if:true={showPayableAmount}>
+                                            <lightning-input-field
+                                                field-name="Payable_to_Customer__c">
+                                            </lightning-input-field>
+                                        </template>
+
+                                    </div>
+
+                                    <!-- ADM Refund field — full width row, hidden for Cancellation without Refund -->
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <template if:true={showAdmRefundField}>
+                                            <lightning-input-field
+                                                field-name="Is_ADM_Refund_Needed__c"
+                                                onchange={handleAdmRefundChange}
+                                                required>
+                                            </lightning-input-field>
+                                        </template>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- ================= FILE UPLOAD ================= -->
+                        <div class="slds-m-top_large">
+
+                            <lightning-file-upload
+                                label="Upload Supporting Document"
+                                record-id={recordId}
+                                onuploadfinished={handleUploadFinished}
+                                accept=".pdf,.doc,.docx,.jpg,.png"
+                                required>
+                            </lightning-file-upload>
+
+                            <template if:true={uploadedFiles.length}>
+                                <div class="slds-m-top_small">
+                                    <p class="slds-text-title_bold">Uploaded Files:</p>
+
+                                    <template for:each={uploadedFiles} for:item="file">
+                                        <div
+                                            key={file.documentId}
+                                            class="slds-pill slds-m-top_x-small slds-grid slds-grid_align-spread slds-p-around_x-small">
+
+                                            <span class="slds-pill__label">
+                                                {file.name}
+                                            </span>
+
+                                            <lightning-button-icon
+                                                icon-name="utility:close"
+                                                alternative-text="Remove"
+                                                title="Remove File"
+                                                size="x-small"
+                                                data-id={file.documentId}
+                                                onclick={removeFile}>
+                                            </lightning-button-icon>
+
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                        </div>
+
+                    </lightning-record-edit-form>
+
+                    <!-- ================= CONSOLIDATION TABLE (outside record-edit-form) ================= -->
+                    <template if:true={showConsolidationTable}>
+                        <div class="slds-section slds-is-open slds-m-top_large">
+                            <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                                <strong>Unit Consolidation</strong>
+                            </h3>
+                             <!-- ── expected total banner ── -->
+                            <template if:true={totalRefundAmount}>
+                                <div class="slds-box slds-theme_info slds-m-around_small slds-p-around_small">
+                                    <p>
+                                        <strong>Expected Total Transfer Amount: </strong>
+                                        <lightning-formatted-number
+                                            value={consolidationTotalAmount}
+                                            format-style="currency"
+                                            currency-code="AED"
+                                            minimum-fraction-digits="2">
+                                        </lightning-formatted-number>
+                                        &nbsp;— the sum of all selected rows must match this amount.
+                                    </p>
+                                </div>
+                            </template>
+                            
+                            <div class="slds-p-around_small">
+                                <div class="datatable-wrapper">
+                                    <lightning-datatable
+                                        key-field="Id"
+                                        data={salesOrders}
+                                        columns={columns}
+                                        draft-values={draftValues}
+                                        onsave={handleDatatableSave}
+                                        hide-checkbox-column="true">
+                                    </lightning-datatable>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ================= FORM BUTTONS ================= -->
+                    <div class="slds-m-top_large slds-grid slds-grid_align-end">
+
+                        <lightning-button
+                            variant="neutral"
+                            label="Cancel"
+                            onclick={close}
+                            class="slds-m-right_x-small"
+                            title="Cancel and close">
+                        </lightning-button>
+
+                        <lightning-button
+                            variant="brand"
+                            label="Create Service Request"
+                            onclick={handleSave}
+                            disabled={disableCreateButton}
+                            title="Create service request">
+                        </lightning-button>
+
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open custom-backdrop"></div>
+
+    </template>
+
+</template>

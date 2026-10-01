@@ -1,0 +1,34 @@
+<template>
+    <template if:true={hasDocuments}>
+        <ul class="document-list">
+            <template for:each={documents} for:item="doc">
+                <li key={doc.documentId} class="document-row slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                    <div class="slds-grid slds-grid_vertical-align-center doc-info">
+                        <lightning-icon icon-name="doctype:attachment" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        <div class="doc-text">
+                            <p class="doc-name slds-truncate" title={doc.documentName}>{doc.documentName}</p>
+                            <template if:true={doc.reviewStatus}>
+                                <p class="slds-text-body_small slds-text-color_weak">{doc.reviewStatus}</p>
+                            </template>
+                        </div>
+                    </div>
+                    <template if:true={doc.hasFile}>
+                        <lightning-button
+                            label="View"
+                            variant="neutral"
+                            icon-name="utility:preview"
+                            data-id={doc.contentDocumentId}
+                            onclick={handleView}>
+                        </lightning-button>
+                    </template>
+                    <template if:false={doc.hasFile}>
+                        <span class="slds-text-body_small slds-text-color_weak">No file attached</span>
+                    </template>
+                </li>
+            </template>
+        </ul>
+    </template>
+    <template if:false={hasDocuments}>
+        <p class="slds-text-body_small slds-text-color_weak">No documents for this business process.</p>
+    </template>
+</template>

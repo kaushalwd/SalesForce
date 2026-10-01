@@ -1,0 +1,1094 @@
+/* MBP sidebar offset — pushes page content past the 240px vertical sidebar from portalTheme. */
+:host {
+  display: block;
+  margin-left: 240px;
+  background: var(--mbp-color-beige, #F6F1E6);
+  min-height: 100vh;
+}
+@media (max-width: 768px) {
+  :host { margin-left: 0; }
+}
+
+/* ===== MODON design tokens (inlined fallback) ===== */
+@font-face {
+  font-family: 'Suisse Intl';
+  font-style:  normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Regular.woff2') format('woff2'),
+       url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Suisse Intl';
+  font-style:  normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Medium.woff2') format('woff2'),
+       url('https://www.modon.com/ResourcePackages/ModonCorporate/Assets/src/Assets/fonts/SuisseIntl-Medium.woff') format('woff');
+}
+:host,
+.THIS {
+  --mbp-color-ink:        #0A0A0B;
+  --mbp-color-ink-2:      #15151A;
+  --mbp-color-paper:      #FBF8F1;
+  --mbp-color-paper-2:    #FFFFFF;
+  --mbp-color-beige:      #F6F1E6;
+  --mbp-color-beige-2:    #EFE7D2;
+  --mbp-color-beige-3:    #E1D6B8;
+  --mbp-color-gold:       #C4A249;
+  --mbp-color-gold-2:     #D9BD6B;
+  --mbp-color-gold-1:     #9C7E2E;
+  --mbp-color-gold-deep:  #7A5F1F;
+  --mbp-color-type:       #1A1814;
+  --mbp-color-type-2:     #3A352B;
+  --mbp-color-muted:      #8A8170;
+  --mbp-color-muted-2:    #A39A87;
+  --mbp-color-line:       rgba(10,10,11,.06);
+  --mbp-color-line-gold:  rgba(196,162,73,.14);
+  --mbp-color-ok:         #4F7D4D;
+  --mbp-color-ok-bg:      rgba(79,125,77,.10);
+  --mbp-color-warn:       #B58616;
+  --mbp-color-warn-bg:    rgba(181,134,22,.12);
+  --mbp-color-danger:     #B0463F;
+  --mbp-color-danger-bg:  rgba(176,70,63,.10);
+  --mbp-color-info:       #4A6B8A;
+  --mbp-color-info-bg:    rgba(74,107,138,.10);
+  --mbp-font-sans:        'Suisse Intl','Inter',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mbp-radius-sm:        8px;
+  --mbp-radius-md:        12px;
+  --mbp-radius-lg:        18px;
+  --mbp-shadow-1:         0 1px 2px rgba(10,10,11,.05), 0 1px 1px rgba(10,10,11,.04);
+  --mbp-shadow-2:         0 8px 24px -10px rgba(10,10,11,.18), 0 2px 6px rgba(10,10,11,.06);
+  --mbp-tx-fast:          .18s cubic-bezier(.2,.7,.2,1);
+  --mbp-tx:               .32s cubic-bezier(.2,.7,.2,1);
+}
+
+/* Surface polish: any page rendering tables / cards / forms picks these up */
+.slds-card,
+.contact-card,
+.help-card,
+.info-card,
+.tile,
+.panel,
+.detailsCard {
+  background: var(--mbp-color-paper-2, #FFFFFF) !important;
+  border-radius: var(--mbp-radius-lg, 18px) !important;
+  border: 1px solid var(--mbp-color-line, rgba(10,10,11,.06)) !important;
+  box-shadow: var(--mbp-shadow-1) !important;
+  font-family: var(--mbp-font-sans) !important;
+  color: var(--mbp-color-type) !important;
+}
+
+/* Datatable v2 */
+lightning-datatable .slds-table thead th,
+.slds-table thead th {
+  background-color: var(--mbp-color-ink) !important;
+  color: var(--mbp-color-beige-3) !important;
+  font: 600 10.5px/1.4 var(--mbp-font-sans) !important;
+  letter-spacing: .18em !important;
+  text-transform: uppercase !important;
+  padding: 14px 16px !important;
+}
+.slds-table tbody tr:hover { background: var(--mbp-color-beige-2) !important; }
+
+/* Brand-tinted primary buttons */
+.slds-button_brand,
+button.primary,
+.primary-btn {
+  background: linear-gradient(140deg, var(--mbp-color-gold-2), var(--mbp-color-gold-1)) !important;
+  color: #1A1408 !important;
+  border: 0 !important;
+  font-weight: 600 !important;
+  font-family: var(--mbp-font-sans) !important;
+  border-radius: var(--mbp-radius-sm) !important;
+  box-shadow: 0 6px 18px -8px rgba(196,162,73,.55) !important;
+}
+
+/* END inlined tokens */
+
+
+
+.custom-container{
+    color : black;
+}
+
+/* Style for disabled combobox */
+.slds-combobox_container[class*="slds-is-disabled"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Horizontal Toggle Container - Keeping for reference but not used in new design */
+.toggle-horizontal-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.toggle-horizontal-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 180px;
+}
+
+.toggle-label {
+    font-weight: 600;
+    color: #080707;
+    min-width: 100px;
+}
+
+.toggle-status {
+    color: #706e6b;
+    font-size: 0.875rem;
+    min-width: 60px;
+}
+
+/* Toggle Switch Styles - Keeping for reference but not used in new design */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+    margin: 0;
+}
+
+.toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #dddbda;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-input:checked + .toggle-slider {
+    background-color: #4bca81;
+}
+
+.toggle-input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+.toggle-input:focus + .toggle-slider {
+    box-shadow: 0 0 1px #4bca81;
+}
+
+/* Hover effects - Keeping for reference */
+.toggle-input:not(:checked):hover + .toggle-slider {
+    background-color: #c9c7c5;
+}
+
+.toggle-input:checked:hover + .toggle-slider {
+    background-color: #04844b;
+}
+
+/* Disabled state */
+.toggle-input:disabled + .toggle-slider {
+    background-color: #f3f2f2;
+    cursor: not-allowed;
+}
+
+.toggle-input:disabled + .toggle-slider:before {
+    background-color: #dddbda;
+}
+
+/* Modal footer layout for multiple buttons */
+.slds-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Draft-specific styling */
+.draft-indicator {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Enhanced rich text area styling */
+.banner-container {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.banner-container img {
+    max-width: 100%;
+    height: auto;
+    border: 0;
+}
+
+.email-content {
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Button variants for different actions */
+.save-draft-button {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.save-draft-button:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: white;
+}
+
+/* Loading spinner adjustments */
+.slds-spinner_container {
+    z-index: 9000;
+}
+
+/* Mode Selection Styles */
+.mode-selection-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.mode-box {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    height: 100%;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.mode-box:hover {
+    border-color: #0070d2;
+    background-color: #f3f2f2;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Draft List Styles */
+.draft-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+}
+
+.draft-item {
+    padding: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.draft-item:hover {
+    background-color: #f3f2f2;
+}
+
+.draft-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Selection Summary */
+.selection-summary {
+    background-color: #f3f2f2;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Recipient combobox styling */
+.recipient-combobox-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.recipient-help-text {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.25rem;
+}
+
+/* Disabled state styling for agencies combobox */
+.agencies-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.agencies-disabled .slds-combobox__input {
+    background-color: #f3f2f2;
+    border-color: #dddbda;
+    color: #706e6b;
+}
+
+/* Form element spacing */
+.slds-form-element {
+    margin-bottom: 1rem;
+}
+
+.slds-form-element__help {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.25rem;
+}
+
+/* Enhanced card styling */
+.communication-card {
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Section dividers */
+.section-divider {
+    border-top: 1px solid #dddbda;
+    margin: 1.5rem 0;
+    padding-top: 1.5rem;
+}
+
+/* Success and error states */
+.success-state {
+    background-color: #4bca81;
+    color: white;
+}
+
+.error-state {
+    background-color: #c23934;
+    color: white;
+}
+
+.warning-state {
+    background-color: #ffb75d;
+    color: #16325c;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mode-selection-container .slds-grid {
+        flex-direction: column;
+    }
+    
+    .mode-selection-container .slds-col {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .draft-item .slds-grid {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .draft-item .slds-grid > div {
+        width: 100%;
+    }
+    
+    .toggle-horizontal-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .toggle-horizontal-item {
+        min-width: auto;
+    }
+    
+    .slds-modal__footer {
+        flex-direction: column;
+    }
+    
+    .slds-modal__footer lightning-button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Mobile form adjustments */
+    .slds-form-element {
+        margin-bottom: 0.75rem;
+    }
+    
+    .communication-card {
+        margin: 0.5rem;
+    }
+    
+    /* Mobile modal adjustments */
+    .slds-modal__container {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 1rem auto;
+    }
+}
+
+/* Tablet responsive adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .mode-selection-container .slds-col {
+        width: 100%;
+    }
+    
+    .communication-card {
+        margin: 1rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .slds-modal,
+    .slds-backdrop {
+        display: none !important;
+    }
+    
+    .mode-box {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .mode-box {
+        border-color: #000;
+    }
+    
+    .slds-box {
+        border-color: #000;
+    }
+    
+    .toggle-slider {
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .mode-box {
+        transition: none;
+    }
+    
+    .toggle-slider {
+        transition: none;
+    }
+    
+    .toggle-slider:before {
+        transition: none;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .custom-container {
+        color: #f3f2f2;
+    }
+    
+    .mode-box:hover {
+        background-color: #2b2b2b;
+        border-color: #1ab9ff;
+    }
+    
+    .slds-box {
+        background-color: #2b2b2b;
+        border-color: #444;
+    }
+}
+
+/* Focus styles for accessibility */
+.slds-button:focus,
+.slds-combobox__input:focus,
+lightning-input:focus,
+lightning-combobox:focus,
+lightning-radio-group:focus,
+lightning-dual-listbox:focus {
+    outline: 2px solid #0070d2;
+    outline-offset: 2px;
+}
+
+/* Custom utility classes */
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mb-1 {
+    margin-bottom: 1rem;
+}
+
+.mt-1 {
+    margin-top: 1rem;
+}
+
+.p-1 {
+    padding: 1rem;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f3f2f2;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #dddbda;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #c9c7c5;
+}
+
+/* Add to your existing CSS */
+.slds-dual-listbox {
+    margin-bottom: 1rem;
+}
+
+.slds-dual-listbox__options {
+    min-height: 200px;
+}
+
+/* For better visual separation between fields */
+.slds-form-element + .slds-form-element {
+    margin-top: 1.5rem;
+}
+
+
+
+/* Preview Modal Styles */
+.email-preview {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.email-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+.email-preview p {
+    /* margin: 0 0 15px 0; */
+}
+
+.email-preview h1,
+.email-preview h2,
+.email-preview h3 {
+    margin: 20px 0 10px 0;
+}
+
+/* Test Email Modal */
+.slds-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Loading indicator for test email */
+.test-email-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+
+.custom-header {
+    display: flex;
+    justify-content: space-between; /* Push header left, close button right */
+    align-items: center; /* Vertical alignment */
+    
+}
+
+
+
+.custom-close-btn {
+    position: static !important; /* Override SLDS absolute position */
+    margin: 0; 
+    padding: 0.25rem; /* Make the icon small */
+}
+
+
+/* Modal width */
+.email-test-modal .email-test-container {
+    max-width: 450px;
+}
+
+/* Soft box (card look) */
+.email-test-softbox {
+    position: relative;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+/* Close button inside the box */
+.email-test-inner-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 10;
+    padding: 2px;
+}
+
+.email-test-inner-close-btn lightning-icon {
+    --lwc-square-icon-size: 14px;
+}
+
+/* Header */
+.email-test-header {
+    padding: 1rem;
+    padding-right: 2.5rem; /* spacing so close btn doesn't overlap title */
+    border-bottom: 1px solid #f1f1f1;
+}
+
+/* Body */
+.email-test-body {
+    padding: 1rem !important;
+}
+
+/* Footer */
+.email-test-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #f1f1f1;
+}
+
+
+/* Add to your existing CSS */
+.email-preview-screen img {
+    max-width: 100%;
+    height: auto;
+}
+
+.email-preview-screen p {
+   /* margin: 0 0 15px 0;*/
+}
+
+.email-preview-screen h1,
+.email-preview-screen h2,
+.email-preview-screen h3 {
+    margin: 20px 0 10px 0;
+}
+
+/* Action buttons styling */
+.slds-modal__footer .slds-grid {
+    width: 100%;
+}
+
+.slds-modal__footer .slds-col:last-child {
+    text-align: right;
+}
+
+
+/* Attachments Styling */
+.attachments-container {
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    background-color: #fafaf9;
+}
+
+.attachment-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0.75rem;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid #f3f2f2;
+    transition: background-color 0.2s ease;
+}
+
+.attachment-item:hover {
+    background-color: #f3f2f2;
+}
+
+.attachment-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0; /* For text truncation */
+}
+
+.attachment-icon {
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.attachment-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.attachment-name {
+    font-weight: 500;
+    color: #080707;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attachment-size {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.125rem;
+}
+
+.attachment-actions {
+    flex-shrink: 0;
+}
+
+.attachment-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-right: 0.5rem;
+}
+
+.status-uploading {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-uploaded {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* File uploader styling */
+.file-uploader {
+    border: 2px dashed #dddbda;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.file-uploader:hover {
+    border-color: #0070d2;
+    background-color: #fafaf9;
+}
+
+.file-uploader.dragover {
+    border-color: #4bca81;
+    background-color: #f0f8f0;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-icon {
+    color: #706e6b;
+    margin-bottom: 0.5rem;
+}
+
+.upload-text {
+    color: #080707;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.upload-hint {
+    color: #706e6b;
+    font-size: 0.875rem;
+}
+
+.file-requirements {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-top: 0.75rem;
+}
+
+/* Remove button styling */
+.remove-attachment-btn {
+    color: #c23934;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.remove-attachment-btn:hover {
+    background-color: #f8d7da;
+}
+
+.remove-attachment-btn:focus {
+    outline: 2px solid #c23934;
+    outline-offset: 2px;
+}
+
+/* Progress bar */
+.upload-progress {
+    width: 100%;
+    height: 4px;
+    background-color: #dddbda;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #4bca81;
+    transition: width 0.3s ease;
+}
+
+/* Empty state */
+.attachments-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #706e6b;
+}
+
+.attachments-empty lightning-icon {
+    margin-bottom: 0.5rem;
+}
+
+
+.remove-attachment-btn {
+    margin-left: 0.5rem;
+    cursor: pointer;
+}
+
+.remove-attachment-btn:hover {
+    background-color: #f3f3f3;
+}
+
+.attachment-actions {
+    display: flex;
+    align-items: center;
+}
+
+.remove-attachment-btn {
+    position: relative;
+    z-index: 10;
+}
+
+/* Banner Upload Styles */
+.banner-upload-section {
+    border: 2px dashed #d8dde6;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: #f3f2f2;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.banner-upload-section:hover {
+    border-color: #006dcc;
+    background-color: #f3f2f2;
+}
+
+.banner-upload-section.drag-over {
+    border-color: #1589ee;
+    background-color: #e3f2ff;
+}
+
+.banner-upload-section.uploaded {
+    border-color: #4bca81;
+    background-color: #f0f8f0;
+}
+
+.banner-upload-section.error {
+    border-color: #c23934;
+    background-color: #ffebea;
+}
+
+.banner-preview-container {
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    background-color: white;
+}
+
+.banner-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.banner-preview-image {
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0.25rem;
+}
+
+.banner-preview-img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.banner-upload-progress {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #dddbda;
+}
+
+/* Progress bar styles */
+.slds-progress-bar {
+    background-color: #dddbda;
+    height: 0.5rem;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.slds-progress-bar__value {
+    background-color: #1589ee;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Status badges for file list */
+.status-pending {
+    background-color: #ffb75d;
+    color: #000;
+}
+
+.status-uploading {
+    background-color: #1589ee;
+    color: white;
+}
+
+.status-uploaded {
+    background-color: #4bca81;
+    color: white;
+}
+
+.status-error {
+    background-color: #c23934;
+    color: white;
+}
+
+/* Attachment list styling */
+.attachment-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 0.5rem;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background-color: #f3f2f2;
+    border-radius: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.attachment-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.attachment-name {
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Remove button */
+.remove-btn {
+    margin-left: 0.5rem;
+    color: #c23934;
+}
+
+.remove-btn:hover {
+    background-color: #f8d7da;
+}
+
+/* Banner preview styling */
+.banner-preview-container {
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    background: white;
+}
+
+.banner-preview-img {
+    max-width: 100%;
+    max-height: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.post-actions {
+    display: inline-flex;
+    align-items: center;   /* vertical alignment */
+}
+
+/* spacing only */
+.whatsapp-btn {
+    margin-left: 0.75rem;
+    padding: 0 0.6rem;     /* match lightning button feel */
+}
+
+/* svg size */
+.whatsapp-icon {
+    width: 18px;
+    height: 28px;
+    fill: #25D366;
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sales_Journey_Flow__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(ISBLANK(HistoricalFlow__c),
+
+IF(
+  OR(
+    LOWER(TEXT(Unit__r.Phase__r.Is_Reservation_Form_Required__c)) = &quot;no&quot;
+  ),
+  /* Reservation NOT required (or blank) */
+  IF(
+    ISBLANK(Opportunity__r.BrokerAgency__c),
+    &quot;SPA Without Broker Form&quot;,
+    &quot;SPA With Broker Form&quot;
+  ),
+  /* Reservation required */
+  IF(
+    OR(
+    LOWER(TEXT(Unit__r.Phase__r.Is_Reservation_Form_Required__c)) = &quot;yes&quot;,
+    ISBLANK(TEXT(Unit__r.Phase__r.Is_Reservation_Form_Required__c))),
+    IF(
+      ISBLANK(Opportunity__r.BrokerAgency__c),
+      &quot;Reservation Without Broker Form&quot;,
+      &quot;Reservation With Broker Form&quot;
+    ),
+    /* Fallback */
+    &quot;&quot;
+  )
+),
+HistoricalFlow__c
+
+)</formula>
+    <label>Sales Journey Flow</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
